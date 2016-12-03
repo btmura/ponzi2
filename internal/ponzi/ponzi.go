@@ -33,6 +33,17 @@ func Run() {
 	checkErr(gl.Init()) // Must be run after MakeContextCurrent.
 	log.Printf("OpenGL version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
 
+	vs, err := shaderVertBytes()
+	checkErr(err)
+
+	fs, err := shaderFragBytes()
+	checkErr(err)
+
+	p, err := glCreateProgram(string(vs), string(fs))
+	checkErr(err)
+
+	gl.UseProgram(p)
+
 	for !win.ShouldClose() {
 		// Do OpenGL stuff.
 		win.SwapBuffers()
