@@ -44,7 +44,31 @@ func Run() {
 
 	gl.UseProgram(p)
 
+	vertices := []float32{
+		-1, -1, 0,
+		0, 1, 0,
+		1, -1, 0,
+	}
+
+	var vao uint32
+	gl.GenVertexArrays(1, &vao)
+	gl.BindVertexArray(vao)
+	{
+		gl.BindBuffer(gl.ARRAY_BUFFER, glCreateArrayBuffer(vertices))
+		gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
+		gl.EnableVertexAttribArray(0)
+	}
+	gl.BindVertexArray(0)
+
+	gl.ClearColor(0, 0, 0, 0)
+
 	for !win.ShouldClose() {
+		gl.Clear(gl.COLOR_BUFFER_BIT)
+
+		gl.BindVertexArray(vao)
+		gl.DrawArrays(gl.TRIANGLES, 0, 3)
+		gl.BindVertexArray(0)
+
 		// Do OpenGL stuff.
 		win.SwapBuffers()
 		glfw.PollEvents()

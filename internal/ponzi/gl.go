@@ -62,3 +62,12 @@ func glCreateShader(shaderSource string, shaderType uint32) (uint32, error) {
 
 	return sh, nil
 }
+
+func glCreateArrayBuffer(data []float32) uint32 {
+	var name uint32
+	gl.GenBuffers(1, &name)
+	gl.BindBuffer(gl.ARRAY_BUFFER, name)
+	gl.BufferData(gl.ARRAY_BUFFER, len(data)*4 /* total bytes */, gl.Ptr(data), gl.STATIC_DRAW)
+	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+	return name
+}
