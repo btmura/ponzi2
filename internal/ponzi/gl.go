@@ -7,13 +7,13 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
-func glCreateProgram(vertexShaderSource, fragmentShaderSource string) (uint32, error) {
-	vs, err := glCreateShader(vertexShaderSource, gl.VERTEX_SHADER)
+func createProgram(vertexShaderSource, fragmentShaderSource string) (uint32, error) {
+	vs, err := createShader(vertexShaderSource, gl.VERTEX_SHADER)
 	if err != nil {
 		return 0, err
 	}
 
-	fs, err := glCreateShader(fragmentShaderSource, gl.FRAGMENT_SHADER)
+	fs, err := createShader(fragmentShaderSource, gl.FRAGMENT_SHADER)
 	if err != nil {
 		return 0, err
 	}
@@ -32,7 +32,7 @@ func glCreateProgram(vertexShaderSource, fragmentShaderSource string) (uint32, e
 		log := strings.Repeat("\x00", int(logLen)+1)
 		gl.GetProgramInfoLog(p, logLen, nil, gl.Str(log))
 
-		return 0, fmt.Errorf("glCreateProgram: failed to create program: %q", log)
+		return 0, fmt.Errorf("createProgram: failed to create program: %q", log)
 	}
 
 	gl.DeleteShader(vs)
@@ -41,7 +41,7 @@ func glCreateProgram(vertexShaderSource, fragmentShaderSource string) (uint32, e
 	return p, nil
 }
 
-func glCreateShader(shaderSource string, shaderType uint32) (uint32, error) {
+func createShader(shaderSource string, shaderType uint32) (uint32, error) {
 	sh := gl.CreateShader(shaderType)
 	src, free := gl.Strs(shaderSource + "\x00")
 	defer free()
@@ -57,13 +57,13 @@ func glCreateShader(shaderSource string, shaderType uint32) (uint32, error) {
 		log := strings.Repeat("\x00", int(logLen)+1)
 		gl.GetShaderInfoLog(sh, logLen, nil, gl.Str(log))
 
-		return 0, fmt.Errorf("glCreateShader: failed to compile shader, type: %d, source: %q, log: %q", shaderType, src, logLen)
+		return 0, fmt.Errorf("createShader: failed to compile shader, type: %d, source: %q, log: %q", shaderType, src, logLen)
 	}
 
 	return sh, nil
 }
 
-func glCreateArrayBuffer(data []float32) uint32 {
+func createArrayBuffer(data []float32) uint32 {
 	var name uint32
 	gl.GenBuffers(1, &name)
 	gl.BindBuffer(gl.ARRAY_BUFFER, name)

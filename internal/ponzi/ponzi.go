@@ -39,7 +39,7 @@ func Run() {
 	fs, err := shaderFragBytes()
 	checkErr(err)
 
-	p, err := glCreateProgram(string(vs), string(fs))
+	p, err := createProgram(string(vs), string(fs))
 	checkErr(err)
 
 	gl.UseProgram(p)
@@ -54,7 +54,7 @@ func Run() {
 	gl.GenVertexArrays(1, &vao)
 	gl.BindVertexArray(vao)
 	{
-		gl.BindBuffer(gl.ARRAY_BUFFER, glCreateArrayBuffer(vertices))
+		gl.BindBuffer(gl.ARRAY_BUFFER, createArrayBuffer(vertices))
 		gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
 		gl.EnableVertexAttribArray(0)
 	}
