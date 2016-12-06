@@ -57,7 +57,7 @@ func createShader(shaderSource string, shaderType uint32) (uint32, error) {
 		log := strings.Repeat("\x00", int(logLen)+1)
 		gl.GetShaderInfoLog(sh, logLen, nil, gl.Str(log))
 
-		return 0, fmt.Errorf("createShader: failed to compile shader, type: %d, source: %q, log: %q", shaderType, src, logLen)
+		return 0, fmt.Errorf("createShader: failed to compile shader, type: %d, source: %q, log: %q", shaderType, src, log)
 	}
 
 	return sh, nil
