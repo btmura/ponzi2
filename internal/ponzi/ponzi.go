@@ -25,6 +25,12 @@ func Run() {
 	checkErr(glfw.Init())
 	defer glfw.Terminate()
 
+	// Set the following hints for Linux compatibility.
+	glfw.WindowHint(glfw.ContextVersionMajor, 3)
+	glfw.WindowHint(glfw.ContextVersionMinor, 3)
+	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
+	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+
 	win, err := glfw.CreateWindow(640, 480, "ponzi", nil, nil)
 	checkErr(err)
 
