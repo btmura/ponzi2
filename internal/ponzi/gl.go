@@ -71,3 +71,12 @@ func createArrayBuffer(data []float32) uint32 {
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	return name
 }
+
+func createElementArrayBuffer(data []uint16) uint32 {
+	var name uint32
+	gl.GenBuffers(1, &name)
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, name)
+	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(data)*2 /* total bytes */, gl.Ptr(data), gl.STATIC_DRAW)
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
+	return name
+}
