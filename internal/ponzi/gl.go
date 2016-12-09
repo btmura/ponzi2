@@ -8,7 +8,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/go-gl/gl/v4.4-core/gl"
+	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
 func createProgram(vertexShaderSource, fragmentShaderSource string) (uint32, error) {

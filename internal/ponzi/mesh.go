@@ -3,7 +3,7 @@ package ponzi
 import (
 	"log"
 
-	"github.com/go-gl/gl/v4.4-core/gl"
+	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
 // mesh is an OBJ file object with a bunch of vertex buffer objects.

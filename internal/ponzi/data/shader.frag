@@ -1,4 +1,4 @@
-#version 440 core
+#version 450 core
 
 layout(location = 9) uniform sampler2D texture;
 

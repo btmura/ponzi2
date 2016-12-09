@@ -1,4 +1,4 @@
-#version 440 core
+#version 450 core
 
 layout(location = 0) uniform mat4 projectionViewMatrix;
 layout(location = 1) uniform mat4 modelMatrix;

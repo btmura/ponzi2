@@ -5,7 +5,7 @@ import (
 	"log"
 	"math"
 
-	"github.com/go-gl/gl/v4.4-core/gl"
+	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
 // Locations for the vertex and fragment shaders.
