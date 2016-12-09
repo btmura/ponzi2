@@ -1,10 +1,8 @@
 package ponzi
 
 import (
-	"log"
 	"runtime"
 
-	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
@@ -26,8 +24,8 @@ func Run() {
 	defer glfw.Terminate()
 
 	// Set the following hints for Linux compatibility.
-	glfw.WindowHint(glfw.ContextVersionMajor, 3)
-	glfw.WindowHint(glfw.ContextVersionMinor, 3)
+	glfw.WindowHint(glfw.ContextVersionMajor, 4)
+	glfw.WindowHint(glfw.ContextVersionMinor, 4)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
@@ -36,46 +34,18 @@ func Run() {
 
 	win.MakeContextCurrent()
 
-	checkErr(gl.Init()) // Must be run after MakeContextCurrent.
-	log.Printf("OpenGL version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
-
-	vs, err := shaderVertBytes()
+	r, err := createRenderer()
 	checkErr(err)
 
-	fs, err := shaderFragBytes()
-	checkErr(err)
-
-	p, err := createProgram(string(vs), string(fs))
-	checkErr(err)
-
-	gl.UseProgram(p)
-
-	vertices := []float32{
-		-1, -1, 0,
-		0, 1, 0,
-		1, -1, 0,
-	}
-
-	var vao uint32
-	gl.GenVertexArrays(1, &vao)
-	gl.BindVertexArray(vao)
-	{
-		gl.BindBuffer(gl.ARRAY_BUFFER, createArrayBuffer(vertices))
-		gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
-		gl.EnableVertexAttribArray(0)
-	}
-	gl.BindVertexArray(0)
-
-	gl.ClearColor(0, 0, 0, 0)
+	// Call the size callback to set the initial viewport.
+	w, h := win.GetSize()
+	r.resize(w, h)
+	win.SetSizeCallback(func(w *glfw.Window, width, height int) {
+		r.resize(width, height)
+	})
 
 	for !win.ShouldClose() {
-		gl.Clear(gl.COLOR_BUFFER_BIT)
-
-		gl.BindVertexArray(vao)
-		gl.DrawArrays(gl.TRIANGLES, 0, 3)
-		gl.BindVertexArray(0)
-
-		// Do OpenGL stuff.
+		r.render()
 		win.SwapBuffers()
 		glfw.PollEvents()
 	}

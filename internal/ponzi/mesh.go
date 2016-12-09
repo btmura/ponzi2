@@ -3,14 +3,7 @@ package ponzi
 import (
 	"log"
 
-	"github.com/go-gl/gl/v3.3-core/gl"
-)
-
-// Locations for vertex shader inputs.
-const (
-	positionLocation = iota
-	normalLocation
-	texCoordLocation
+	"github.com/go-gl/gl/v4.4-core/gl"
 )
 
 // mesh is an OBJ file object with a bunch of vertex buffer objects.

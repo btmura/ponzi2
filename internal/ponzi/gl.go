@@ -2,9 +2,13 @@ package ponzi
 
 import (
 	"fmt"
+	"image"
+	"image/draw"
+	_ "image/png" // Needed to decode PNG images.
+	"io"
 	"strings"
 
-	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/go-gl/gl/v4.4-core/gl"
 )
 
 func createProgram(vertexShaderSource, fragmentShaderSource string) (uint32, error) {
@@ -57,10 +61,34 @@ func createShader(shaderSource string, shaderType uint32) (uint32, error) {
 		log := strings.Repeat("\x00", int(logLen)+1)
 		gl.GetShaderInfoLog(sh, logLen, nil, gl.Str(log))
 
-		return 0, fmt.Errorf("createShader: failed to compile shader, type: %d, source: %q, log: %q", shaderType, src, log)
+		return 0, fmt.Errorf("createShader: failed to compile shader:\n\ntype: %d\n\nsource: %q\n\nlog: %q", shaderType, shaderSource, log)
 	}
 
 	return sh, nil
+}
+
+func createTexture(textureUnit uint32, r io.Reader) (uint32, error) {
+	img, _, err := image.Decode(r)
+	if err != nil {
+		return 0, fmt.Errorf("createTexture: %v", err)
+	}
+
+	rgba := image.NewRGBA(img.Bounds())
+	draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
+
+	var texture uint32
+	gl.GenTextures(1, &texture)
+	gl.ActiveTexture(textureUnit)
+	gl.BindTexture(gl.TEXTURE_2D, texture)
+
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, int32(rgba.Rect.Size().X), int32(rgba.Rect.Size().Y), 0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(rgba.Pix))
+
+	return texture, nil
 }
 
 func createArrayBuffer(data []float32) uint32 {

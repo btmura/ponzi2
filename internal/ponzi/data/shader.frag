@@ -1,9 +1,13 @@
-#version 330 core
+#version 440 core
 
-in vec4 vertexColor;
+layout(location = 9) uniform sampler2D texture;
 
-out vec4 color;
+in vec2 texCoord;
+in vec3 lighting;
+
+out vec4 fragColor;
 
 void main(void) {
-	color = vertexColor;
+	vec4 color = texture2D(texture, texCoord);
+	fragColor = vec4(color.rgb * lighting, color.a);
 }
