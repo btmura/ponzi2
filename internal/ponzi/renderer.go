@@ -13,12 +13,15 @@ const (
 	projectionViewMatrixLocation = iota
 	modelMatrixLocation
 	normalMatrixLocation
+
 	ambientLightColorLocation
 	directionalLightColorLocation
 	directionalLightVectorLocation
+
 	positionLocation
 	normalLocation
 	texCoordLocation
+
 	textureLocation
 )
 
@@ -123,6 +126,10 @@ func createRenderer() (*renderer, error) {
 	meshMap := map[string]*mesh{}
 	for _, m := range createMeshes(objs) {
 		meshMap[m.id] = m
+	}
+
+	if err := writeText(); err != nil {
+		return nil, err
 	}
 
 	return &renderer{
