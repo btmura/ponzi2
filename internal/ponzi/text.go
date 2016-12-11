@@ -16,7 +16,7 @@ import (
 func writeText() error {
 	text := "Loading DATA..."
 
-	fontBytes, err := ptm55ftTtfBytes()
+	fontBytes, err := orbitronMediumTtfBytes()
 	if err != nil {
 		return err
 	}
@@ -27,7 +27,7 @@ func writeText() error {
 	}
 
 	face := truetype.NewFace(f, &truetype.Options{
-		Size:    12,
+		Size:    24,
 		DPI:     72,
 		Hinting: font.HintingFull,
 	})
