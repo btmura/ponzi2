@@ -1,11 +1,11 @@
 package ponzi
 
 import (
+	"bytes"
 	"fmt"
 	"image"
 	"image/draw"
 	_ "image/png" // Needed to decode PNG images.
-	"io"
 	"strings"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
@@ -67,15 +67,7 @@ func createShader(shaderSource string, shaderType uint32) (uint32, error) {
 	return sh, nil
 }
 
-func createTexture(textureUnit uint32, r io.Reader) (uint32, error) {
-	img, _, err := image.Decode(r)
-	if err != nil {
-		return 0, fmt.Errorf("createTexture: %v", err)
-	}
-
-	rgba := image.NewRGBA(img.Bounds())
-	draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
-
+func createTexture(textureUnit uint32, rgba *image.RGBA) (uint32, error) {
 	var texture uint32
 	gl.GenTextures(1, &texture)
 	gl.ActiveTexture(textureUnit)
@@ -107,4 +99,15 @@ func createElementArrayBuffer(data []uint16) uint32 {
 	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(data)*2 /* total bytes */, gl.Ptr(data), gl.STATIC_DRAW)
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
 	return name
+}
+
+func createImage(data []byte) (*image.RGBA, error) {
+	img, _, err := image.Decode(bytes.NewReader(data))
+	if err != nil {
+		return nil, fmt.Errorf("createImage: %v", err)
+	}
+
+	rgba := image.NewRGBA(img.Bounds())
+	draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
+	return rgba, nil
 }

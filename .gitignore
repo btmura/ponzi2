@@ -28,3 +28,6 @@ bindata.go
 
 # Linux executable produced by "go build"
 ponzi2
+
+# Blender backup files
+*.blend1

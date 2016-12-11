@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
+	"github.com/golang/freetype/truetype"
 )
 
 // Locations for the vertex and fragment shaders.
@@ -37,17 +38,23 @@ var (
 
 type renderer struct {
 	program uint32
-	meshMap map[string]*mesh
 
-	winWidth  int
-	winHeight int
+	planeMesh *mesh
+	cubeMesh  *mesh
+
+	texture        uint32
+	loadingTexture uint32
 
 	viewMatrix        matrix4
 	perspectiveMatrix matrix4
 	orthoMatrix       matrix4
+
+	winWidth  int
+	winHeight int
 }
 
 func createRenderer() (*renderer, error) {
+
 	// Initialize OpenGL and enable features.
 
 	if err := gl.Init(); err != nil {
@@ -104,12 +111,15 @@ func createRenderer() (*renderer, error) {
 		return nil, err
 	}
 
-	texture, err := createTexture(gl.TEXTURE0, bytes.NewReader(textureBytes))
+	textureImage, err := createImage(textureBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	gl.Uniform1i(textureLocation, int32(texture)-1)
+	texture, err := createTexture(gl.TEXTURE0, textureImage)
+	if err != nil {
+		return nil, err
+	}
 
 	// Load meshes and create vertex array objects.
 
@@ -123,28 +133,58 @@ func createRenderer() (*renderer, error) {
 		return nil, err
 	}
 
-	meshMap := map[string]*mesh{}
+	var planeMesh, cubeMesh *mesh
 	for _, m := range createMeshes(objs) {
-		meshMap[m.id] = m
+		switch m.id {
+		case "Plane":
+			planeMesh = m
+		case "Cube":
+			cubeMesh = m
+		}
 	}
 
-	if err := writeText(); err != nil {
+	fontBytes, err := orbitronMediumTtfBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	f, err := truetype.Parse(fontBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	face := newFace(f)
+
+	loadingTexture, err := createTexture(gl.TEXTURE1, createTextImage(face, "Loading DATA..."))
+	if err != nil {
 		return nil, err
 	}
 
 	return &renderer{
-		program:    p,
-		meshMap:    meshMap,
-		viewMatrix: vm,
+		program:        p,
+		planeMesh:      planeMesh,
+		cubeMesh:       cubeMesh,
+		texture:        texture,
+		loadingTexture: loadingTexture,
+		viewMatrix:     vm,
 	}, nil
 }
 
 func (r *renderer) render() {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.UniformMatrix4fv(projectionViewMatrixLocation, 1, false, &r.perspectiveMatrix[0])
-	for _, m := range r.meshMap {
-		m.drawElements()
-	}
+
+	mm := newScaleMatrix(1, 1, 1)
+	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &mm[0])
+
+	gl.Uniform1i(textureLocation, int32(r.texture)-1)
+	r.cubeMesh.drawElements()
+
+	mm = newTranslationMatrix(0, 0, 5)
+	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &mm[0])
+
+	gl.Uniform1i(textureLocation, int32(r.loadingTexture)-1)
+	r.planeMesh.drawElements()
 }
 
 func (r *renderer) resize(width, height int) {

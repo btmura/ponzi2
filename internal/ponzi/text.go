@@ -13,29 +13,19 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
-func writeText() error {
-	text := "Loading DATA..."
-
-	fontBytes, err := orbitronMediumTtfBytes()
-	if err != nil {
-		return err
-	}
-
-	f, err := truetype.Parse(fontBytes)
-	if err != nil {
-		return err
-	}
-
-	face := truetype.NewFace(f, &truetype.Options{
+func newFace(f *truetype.Font) font.Face {
+	return truetype.NewFace(f, &truetype.Options{
 		Size:    24,
 		DPI:     72,
 		Hinting: font.HintingFull,
 	})
+}
 
+func createTextImage(face font.Face, text string) *image.RGBA {
 	w := font.MeasureString(face, text)
 	m := face.Metrics() // Used for height and descent.
 
-	fg, bg := image.White, image.Black
+	fg, bg := image.White, image.Transparent
 
 	rgba := image.NewRGBA(image.Rect(0, 0, w.Round(), m.Height.Round())) // (MinX, MinY), (MaxX, MaxY)
 	draw.Draw(rgba, rgba.Bounds(), bg, image.ZP, draw.Src)
@@ -50,8 +40,10 @@ func writeText() error {
 	}
 	d.DrawString(text)
 
-	// Write the text image to a file.
+	return rgba
+}
 
+func writePNGFile(rgba *image.RGBA) error {
 	out, err := os.Create("text.png")
 	if err != nil {
 		return err
@@ -65,7 +57,7 @@ func writeText() error {
 	if err := b.Flush(); err != nil {
 		return err
 	}
-	log.Printf("Wrote text image: %s", out.Name())
+	log.Printf("Wrote PNG file: %s", out.Name())
 
 	return nil
 }
