@@ -67,20 +67,21 @@ func createShader(shaderSource string, shaderType uint32) (uint32, error) {
 	return sh, nil
 }
 
-func createTexture(textureUnit uint32, rgba *image.RGBA) (uint32, error) {
-	var texture uint32
-	gl.GenTextures(1, &texture)
-	gl.ActiveTexture(textureUnit)
-	gl.BindTexture(gl.TEXTURE_2D, texture)
+func createTexture(rgba *image.RGBA) (uint32, error) {
+	var tex uint32
+	gl.GenTextures(1, &tex)
+	gl.BindTexture(gl.TEXTURE_2D, tex)
+
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, int32(rgba.Rect.Size().X), int32(rgba.Rect.Size().Y), 0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(rgba.Pix))
 
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 
-	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, int32(rgba.Rect.Size().X), int32(rgba.Rect.Size().Y), 0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(rgba.Pix))
+	gl.BindTexture(gl.TEXTURE_2D, 0)
 
-	return texture, nil
+	return tex, nil
 }
 
 func createArrayBuffer(data []float32) uint32 {

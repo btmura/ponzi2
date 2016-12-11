@@ -116,7 +116,7 @@ func createRenderer() (*renderer, error) {
 		return nil, err
 	}
 
-	texture, err := createTexture(gl.TEXTURE0, textureImage)
+	texture, err := createTexture(textureImage)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +155,7 @@ func createRenderer() (*renderer, error) {
 
 	face := newFace(f)
 
-	loadingTexture, err := createTexture(gl.TEXTURE1, createTextImage(face, "Loading DATA..."))
+	loadingTexture, err := createTexture(createTextImage(face, "Loading DATA..."))
 	if err != nil {
 		return nil, err
 	}
@@ -177,13 +177,15 @@ func (r *renderer) render() {
 	mm := newScaleMatrix(1, 1, 1)
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &mm[0])
 
-	gl.Uniform1i(textureLocation, int32(r.texture)-1)
+	gl.BindTexture(gl.TEXTURE_2D, r.texture)
 	r.cubeMesh.drawElements()
 
-	mm = newTranslationMatrix(0, 0, 5)
+	gl.UniformMatrix4fv(projectionViewMatrixLocation, 1, false, &r.orthoMatrix[0])
+
+	mm = newScaleMatrix(320, 240, 1)
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &mm[0])
 
-	gl.Uniform1i(textureLocation, int32(r.loadingTexture)-1)
+	gl.BindTexture(gl.TEXTURE_2D, r.loadingTexture)
 	r.planeMesh.drawElements()
 }
 
