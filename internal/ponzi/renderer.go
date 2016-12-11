@@ -2,8 +2,13 @@ package ponzi
 
 import (
 	"bytes"
+	"fmt"
+	"image"
+	"image/draw"
 	"log"
 	"math"
+
+	"golang.org/x/image/font"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/golang/freetype/truetype"
@@ -42,8 +47,9 @@ type renderer struct {
 	planeMesh *mesh
 	cubeMesh  *mesh
 
-	texture        uint32
-	loadingTexture uint32
+	texture uint32
+
+	loadingText *renderableText
 
 	viewMatrix        matrix4
 	perspectiveMatrix matrix4
@@ -116,10 +122,7 @@ func createRenderer() (*renderer, error) {
 		return nil, err
 	}
 
-	texture, err := createTexture(textureImage)
-	if err != nil {
-		return nil, err
-	}
+	texture := createTexture(textureImage)
 
 	// Load meshes and create vertex array objects.
 
@@ -154,19 +157,15 @@ func createRenderer() (*renderer, error) {
 	}
 
 	face := newFace(f)
-
-	loadingTexture, err := createTexture(createTextImage(face, "Loading DATA..."))
-	if err != nil {
-		return nil, err
-	}
+	loadingText := createRenderableText(planeMesh, face, "Loading DATA...")
 
 	return &renderer{
-		program:        p,
-		planeMesh:      planeMesh,
-		cubeMesh:       cubeMesh,
-		texture:        texture,
-		loadingTexture: loadingTexture,
-		viewMatrix:     vm,
+		program:     p,
+		planeMesh:   planeMesh,
+		cubeMesh:    cubeMesh,
+		texture:     texture,
+		loadingText: loadingText,
+		viewMatrix:  vm,
 	}, nil
 }
 
@@ -182,11 +181,7 @@ func (r *renderer) render() {
 
 	gl.UniformMatrix4fv(projectionViewMatrixLocation, 1, false, &r.orthoMatrix[0])
 
-	mm = newScaleMatrix(320, 240, 1)
-	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &mm[0])
-
-	gl.BindTexture(gl.TEXTURE_2D, r.loadingTexture)
-	r.planeMesh.drawElements()
+	r.loadingText.render(float32(r.winWidth)/2, float32(r.winHeight)/2)
 }
 
 func (r *renderer) resize(width, height int) {
@@ -207,4 +202,40 @@ func (r *renderer) resize(width, height int) {
 
 	// Calculate the new ortho projection view matrix.
 	r.orthoMatrix = newOrthoMatrix(fw, fh, fw /* use width as depth */)
+}
+
+type renderableText struct {
+	mesh    *mesh
+	texture uint32
+	width   float32
+	height  float32
+}
+
+func createRenderableText(mesh *mesh, face font.Face, text string) *renderableText {
+	rgba := createTextImage(face, text)
+	return &renderableText{
+		mesh:    mesh,
+		texture: createTexture(rgba),
+		width:   float32(rgba.Bounds().Size().X),
+		height:  float32(rgba.Bounds().Size().Y),
+	}
+}
+
+func (rt *renderableText) render(x, y float32) {
+	m := newScaleMatrix(rt.width, rt.height, 1)
+	m = m.mult(newTranslationMatrix(x, y, 0))
+	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
+	gl.BindTexture(gl.TEXTURE_2D, rt.texture)
+	rt.mesh.drawElements()
+}
+
+func createImage(data []byte) (*image.RGBA, error) {
+	img, _, err := image.Decode(bytes.NewReader(data))
+	if err != nil {
+		return nil, fmt.Errorf("createImage: %v", err)
+	}
+
+	rgba := image.NewRGBA(img.Bounds())
+	draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
+	return rgba, nil
 }

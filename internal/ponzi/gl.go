@@ -1,10 +1,8 @@
 package ponzi
 
 import (
-	"bytes"
 	"fmt"
 	"image"
-	"image/draw"
 	_ "image/png" // Needed to decode PNG images.
 	"strings"
 
@@ -67,7 +65,7 @@ func createShader(shaderSource string, shaderType uint32) (uint32, error) {
 	return sh, nil
 }
 
-func createTexture(rgba *image.RGBA) (uint32, error) {
+func createTexture(rgba *image.RGBA) uint32 {
 	var tex uint32
 	gl.GenTextures(1, &tex)
 	gl.BindTexture(gl.TEXTURE_2D, tex)
@@ -81,7 +79,7 @@ func createTexture(rgba *image.RGBA) (uint32, error) {
 
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 
-	return tex, nil
+	return tex
 }
 
 func createArrayBuffer(data []float32) uint32 {
@@ -100,15 +98,4 @@ func createElementArrayBuffer(data []uint16) uint32 {
 	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(data)*2 /* total bytes */, gl.Ptr(data), gl.STATIC_DRAW)
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
 	return name
-}
-
-func createImage(data []byte) (*image.RGBA, error) {
-	img, _, err := image.Decode(bytes.NewReader(data))
-	if err != nil {
-		return nil, fmt.Errorf("createImage: %v", err)
-	}
-
-	rgba := image.NewRGBA(img.Bounds())
-	draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
-	return rgba, nil
 }
