@@ -16,6 +16,15 @@ import (
 	"time"
 )
 
+// tradingHistory is a list of trading sessions spanning some time.
+type tradingHistory struct {
+	symbol     string
+	startDate  time.Time
+	endDate    time.Time
+	dataSource dataSource
+	sessions   []*tradingSession
+}
+
 // tradingSession contains stats from a single trading session.
 // It often spans a day, but it could span any time period.
 type tradingSession struct {
@@ -37,31 +46,26 @@ const (
 	yahoo
 )
 
-// listTradingSessionsRequest is the request for listTradingSessions.
-type listTradingSessionsRequest struct {
+// getTradingHistoryRequest is the request for getTradingHistory.
+type getTradingHistoryRequest struct {
 	symbol     string
 	startDate  time.Time
 	endDate    time.Time
 	dataSource dataSource
 }
 
-// listTradingSessionsResponse is the response for listTradingSessions.
-type listTradingSessionsResponse struct {
-	sessions []*tradingSession
-}
-
-// listTradingSessions lists the trading sessions matching the request criteria.
-func listTradingSessions(req *listTradingSessionsRequest) (*listTradingSessionsResponse, error) {
+// getTradingHistory gets the trading history matching the request criteria.
+func getTradingHistory(req *getTradingHistoryRequest) (*tradingHistory, error) {
 	switch req.dataSource {
 	case yahoo:
-		return yahooListTradingSessions(req)
+		return yahooGetTradingHistory(req)
 
 	default:
-		return googleListTradingSessions(req)
+		return googleGetTradingHistory(req)
 	}
 }
 
-func googleListTradingSessions(req *listTradingSessionsRequest) (*listTradingSessionsResponse, error) {
+func googleGetTradingHistory(req *getTradingHistoryRequest) (*tradingHistory, error) {
 	formatTime := func(date time.Time) string {
 		return date.Format("Jan 02, 2006")
 	}
@@ -85,7 +89,12 @@ func googleListTradingSessions(req *listTradingSessionsRequest) (*listTradingSes
 	}
 	defer resp.Body.Close()
 
-	listResp := new(listTradingSessionsResponse)
+	history := &tradingHistory{
+		symbol:     req.symbol,
+		startDate:  req.startDate,
+		endDate:    req.endDate,
+		dataSource: req.dataSource,
+	}
 	r := csv.NewReader(resp.Body)
 	for i := 0; ; i++ {
 		record, err := r.Read()
@@ -145,7 +154,7 @@ func googleListTradingSessions(req *listTradingSessionsRequest) (*listTradingSes
 				return nil, err
 			}
 
-			listResp.sessions = append(listResp.sessions, &tradingSession{
+			history.sessions = append(history.sessions, &tradingSession{
 				date:   date,
 				open:   open,
 				high:   high,
@@ -157,12 +166,12 @@ func googleListTradingSessions(req *listTradingSessionsRequest) (*listTradingSes
 	}
 
 	// Most recent trading sessions at the front.
-	sort.Reverse(bySessionDate(listResp.sessions))
+	sort.Reverse(bySessionDate(history.sessions))
 
-	return listResp, nil
+	return history, nil
 }
 
-func yahooListTradingSessions(req *listTradingSessionsRequest) (*listTradingSessionsResponse, error) {
+func yahooGetTradingHistory(req *getTradingHistoryRequest) (*tradingHistory, error) {
 	v := url.Values{}
 	v.Set("s", req.symbol)
 	v.Set("a", strconv.Itoa(int(req.startDate.Month())-1))
@@ -187,7 +196,12 @@ func yahooListTradingSessions(req *listTradingSessionsRequest) (*listTradingSess
 	}
 	defer resp.Body.Close()
 
-	listResp := new(listTradingSessionsResponse)
+	history := &tradingHistory{
+		symbol:     req.symbol,
+		startDate:  req.startDate,
+		endDate:    req.endDate,
+		dataSource: req.dataSource,
+	}
 	r := csv.NewReader(resp.Body)
 	for i := 0; ; i++ {
 		record, err := r.Read()
@@ -249,7 +263,7 @@ func yahooListTradingSessions(req *listTradingSessionsRequest) (*listTradingSess
 
 			// Ignore adjusted close value to keep Google and Yahoo APIs the same.
 
-			listResp.sessions = append(listResp.sessions, &tradingSession{
+			history.sessions = append(history.sessions, &tradingSession{
 				date:   date,
 				open:   open,
 				high:   high,
@@ -261,9 +275,9 @@ func yahooListTradingSessions(req *listTradingSessionsRequest) (*listTradingSess
 	}
 
 	// Most recent trading sessions at the front.
-	sort.Reverse(bySessionDate(listResp.sessions))
+	sort.Reverse(bySessionDate(history.sessions))
 
-	return listResp, nil
+	return history, nil
 }
 
 // quote is a live stock quote.
