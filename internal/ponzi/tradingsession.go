@@ -2,8 +2,11 @@ package ponzi
 
 import (
 	"encoding/csv"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -259,6 +262,113 @@ func yahooListTradingSessions(req *listTradingSessionsRequest) (*listTradingSess
 
 	// Most recent trading sessions at the front.
 	sort.Reverse(bySessionDate(listResp.sessions))
+
+	return listResp, nil
+}
+
+// quote is a live stock quote.
+type quote struct {
+	symbol        string
+	timestamp     time.Time
+	price         float32
+	change        float32
+	percentChange float32
+}
+
+// listQuotesRequest is the request of listQuotes.
+type listQuotesRequest struct {
+	symbols []string
+}
+
+// listQuotesResponse is the response of listQuotes.
+type listQuotesResponse struct {
+	// quotes is a map from symbol to quote.
+	quotes map[string]*quote
+}
+
+// listQuotes lists the quotes matching the request criteria.
+func listQuotes(req *listQuotesRequest) (*listQuotesResponse, error) {
+	v := url.Values{}
+	v.Set("client", "ig")
+	v.Set("q", strings.Join(req.symbols, ","))
+
+	u, err := url.Parse("http://www.google.com/finance/info")
+	if err != nil {
+		return nil, err
+	}
+	u.RawQuery = v.Encode()
+	log.Printf("GET %s", u)
+
+	resp, err := http.Get(u.String())
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	parsed := []struct {
+		T      string // ticker symbol
+		L      string // price
+		C      string // change
+		Cp     string // percent change
+		Lt_dts string // time
+	}{}
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check that data has the expected "//" comment string to trim off.
+	if len(data) < 3 {
+		return nil, fmt.Errorf("expected data should be larger")
+	}
+
+	// Unmarshal the data after the "//" comment string.
+	if err := json.Unmarshal(data[3:], &parsed); err != nil {
+		return nil, err
+	}
+
+	if len(parsed) == 0 {
+		return nil, errors.New("expected at least one entry")
+	}
+
+	listResp := new(listQuotesResponse)
+	for _, p := range parsed {
+		timestamp, err := time.Parse("2006-01-02T15:04:05Z", p.Lt_dts)
+		if err != nil {
+			return nil, fmt.Errorf("p: %+v timestamp: %v", p, err)
+		}
+
+		price, err := parseFloat(p.L)
+		if err != nil {
+			return nil, fmt.Errorf("p: %+v price: %v", p, err)
+		}
+
+		var change float32
+		if p.C != "" { // C is empty after market close.
+			change, err = parseFloat(p.C)
+			if err != nil {
+				return nil, fmt.Errorf("p: %+v change: %v", p, err)
+			}
+		}
+
+		var percentChange float32
+		if p.Cp != "" { // Cp is empty after market close.
+			percentChange, err = parseFloat(p.Cp)
+			if err != nil {
+				return nil, fmt.Errorf("p: %+v percentChange: %v", p, err)
+			}
+			percentChange /= 100.0
+		}
+
+		listResp.quotes[p.T] = &quote{
+			symbol:        p.T,
+			timestamp:     timestamp,
+			price:         price,
+			change:        change,
+			percentChange: percentChange,
+		}
+	}
 
 	return listResp, nil
 }
