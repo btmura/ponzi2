@@ -56,8 +56,7 @@ type renderer struct {
 	perspectiveMatrix matrix4
 	orthoMatrix       matrix4
 
-	winWidth  int
-	winHeight int
+	winSize image.Point
 }
 
 func createRenderer() (*renderer, error) {
@@ -173,22 +172,22 @@ func (r *renderer) render() {
 
 	// Render symbol in upper left corner.
 	x := 0
-	y := r.winHeight - r.symbolText.height
+	y := r.winSize.Y - r.symbolText.height
 	r.symbolText.render(x, y)
 }
 
-func (r *renderer) resize(width, height int) {
+func (r *renderer) resize(newSize image.Point) {
 	// Return if the window has not changed size.
-	if r.winWidth == width && r.winHeight == height {
+	if r.winSize == newSize {
 		return
 	}
 
-	gl.Viewport(0, 0, int32(width), int32(height))
+	gl.Viewport(0, 0, int32(newSize.X), int32(newSize.Y))
 
-	r.winWidth, r.winHeight = width, height
+	r.winSize = newSize
 
 	// Calculate the new perspective projection view matrix.
-	fw, fh := float32(width), float32(height)
+	fw, fh := float32(r.winSize.X), float32(r.winSize.Y)
 	aspect := fw / fh
 	fovRadians := float32(math.Pi) / 3
 	r.perspectiveMatrix = r.viewMatrix.mult(newPerspectiveMatrix(fovRadians, aspect, 1, 2000))

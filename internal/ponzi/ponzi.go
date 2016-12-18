@@ -1,6 +1,7 @@
 package ponzi
 
 import (
+	"image"
 	"runtime"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -42,9 +43,9 @@ func Run() {
 
 	// Call the size callback to set the initial viewport.
 	w, h := win.GetSize()
-	r.resize(w, h)
+	r.resize(image.Pt(w, h))
 	win.SetSizeCallback(func(w *glfw.Window, width, height int) {
-		r.resize(width, height)
+		r.resize(image.Pt(width, height))
 	})
 
 	for !win.ShouldClose() {
