@@ -47,7 +47,6 @@ type renderer struct {
 	// orthoPlaneMesh is a plane with bounds from (0, 0) to (1, 1)
 	// which in convenient for positioning text.
 	orthoPlaneMesh *mesh
-	cubeMesh       *mesh
 
 	texture uint32
 
@@ -138,13 +137,11 @@ func createRenderer() (*renderer, error) {
 		return nil, err
 	}
 
-	var orthoPlaneMesh, cubeMesh *mesh
+	var orthoPlaneMesh *mesh
 	for _, m := range createMeshes(objs) {
 		switch m.id {
 		case "orthoPlane":
 			orthoPlaneMesh = m
-		case "Cube":
-			cubeMesh = m
 		}
 	}
 
@@ -164,7 +161,6 @@ func createRenderer() (*renderer, error) {
 	return &renderer{
 		program:        p,
 		orthoPlaneMesh: orthoPlaneMesh,
-		cubeMesh:       cubeMesh,
 		texture:        texture,
 		symbolText:     symbolText,
 		viewMatrix:     vm,
