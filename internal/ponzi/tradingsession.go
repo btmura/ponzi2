@@ -84,13 +84,11 @@ func listTradingSessions(req *listTradingSessionsRequest) (*listTradingSessionsR
 			}
 
 			parseRecordFloat := func(i int) (float32, error) {
-				f64, err := strconv.ParseFloat(strings.Replace(record[i], ",", "", -1), 32)
-				return float32(f64), err
+				return parseFloat(record[i])
 			}
 
 			parseRecordInt := func(i int) (int, error) {
-				i64, err := strconv.ParseInt(record[i], 10, 32)
-				return int(i64), err
+				return parseInt(record[i])
 			}
 
 			date, err := parseRecordTime(0)
@@ -138,6 +136,122 @@ func listTradingSessions(req *listTradingSessionsRequest) (*listTradingSessionsR
 	sort.Reverse(bySessionDate(listResp.sessions))
 
 	return listResp, nil
+}
+
+func yahooListTradingSessions(req *listTradingSessionsRequest) (*listTradingSessionsResponse, error) {
+	v := url.Values{}
+	v.Set("s", req.symbol)
+	v.Set("a", strconv.Itoa(int(req.startDate.Month())-1))
+	v.Set("b", strconv.Itoa(req.startDate.Day()))
+	v.Set("c", strconv.Itoa(req.startDate.Year()))
+	v.Set("d", strconv.Itoa(int(req.endDate.Month())-1))
+	v.Set("e", strconv.Itoa(req.endDate.Day()))
+	v.Set("f", strconv.Itoa(req.endDate.Year()))
+	v.Set("g", "d")
+	v.Set("ignore", ".csv")
+
+	u, err := url.Parse("http://ichart.yahoo.com/table.csv")
+	if err != nil {
+		return nil, err
+	}
+	u.RawQuery = v.Encode()
+	log.Printf("GET %s", u)
+
+	resp, err := http.Get(u.String())
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	listResp := new(listTradingSessionsResponse)
+	r := csv.NewReader(resp.Body)
+	for i := 0; ; i++ {
+		record, err := r.Read()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+
+		// format: Date, Open, High, Low, Close, Volume, Adj. Close
+		if len(record) != 7 {
+			return nil, fmt.Errorf("record length should be 7, got %d", len(record))
+		}
+
+		// skip header row
+		if i != 0 {
+			parseRecordTime := func(i int) (time.Time, error) {
+				return time.Parse("2006-01-02", record[i])
+			}
+
+			parseRecordFloat := func(i int) (float32, error) {
+				return parseFloat(record[i])
+			}
+
+			parseRecordInt := func(i int) (int, error) {
+				return parseInt(record[i])
+			}
+
+			date, err := parseRecordTime(0)
+			if err != nil {
+				return nil, err
+			}
+
+			open, err := parseRecordFloat(1)
+			if err != nil {
+				return nil, err
+			}
+
+			high, err := parseRecordFloat(2)
+			if err != nil {
+				return nil, err
+			}
+
+			low, err := parseRecordFloat(3)
+			if err != nil {
+				return nil, err
+			}
+
+			close, err := parseRecordFloat(4)
+			if err != nil {
+				return nil, err
+			}
+
+			volume, err := parseRecordInt(5)
+			if err != nil {
+				return nil, err
+			}
+
+			// Ignore adjusted close value to keep Google and Yahoo APIs the same.
+
+			listResp.sessions = append(listResp.sessions, &tradingSession{
+				date:   date,
+				open:   open,
+				high:   high,
+				low:    low,
+				close:  close,
+				volume: volume,
+			})
+		}
+	}
+
+	// Most recent trading sessions at the front.
+	sort.Reverse(bySessionDate(listResp.sessions))
+
+	return listResp, nil
+}
+
+// parseFloat removes commas and then calls parseFloat.
+func parseFloat(value string) (float32, error) {
+	f64, err := strconv.ParseFloat(strings.Replace(value, ",", "", -1), 32)
+	return float32(f64), err
+}
+
+// parseInt parses a string into an int.
+func parseInt(value string) (int, error) {
+	i64, err := strconv.ParseInt(value, 10, 64)
+	return int(i64), err
 }
 
 // bySessionDate is a sortable tradingSession slice.
