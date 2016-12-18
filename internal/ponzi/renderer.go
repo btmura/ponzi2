@@ -172,7 +172,7 @@ func (r *renderer) render() {
 
 	// Render symbol in upper left corner.
 	x := 0
-	y := r.winSize.Y - r.symbolText.height
+	y := r.winSize.Y - r.symbolText.size.Y
 	r.symbolText.render(x, y)
 }
 
@@ -199,8 +199,7 @@ func (r *renderer) resize(newSize image.Point) {
 type renderableText struct {
 	mesh    *mesh
 	texture uint32
-	width   int
-	height  int
+	size    image.Point
 }
 
 func createRenderableText(mesh *mesh, face font.Face, text string) *renderableText {
@@ -208,13 +207,12 @@ func createRenderableText(mesh *mesh, face font.Face, text string) *renderableTe
 	return &renderableText{
 		mesh:    mesh,
 		texture: createTexture(rgba),
-		width:   rgba.Bounds().Size().X,
-		height:  rgba.Bounds().Size().Y,
+		size:    rgba.Bounds().Size(),
 	}
 }
 
 func (rt *renderableText) render(x, y int) {
-	m := newScaleMatrix(float32(rt.width), float32(rt.height), 1)
+	m := newScaleMatrix(float32(rt.size.X), float32(rt.size.Y), 1)
 	m = m.mult(newTranslationMatrix(float32(x), float32(y), 0))
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 	gl.BindTexture(gl.TEXTURE_2D, rt.texture)
