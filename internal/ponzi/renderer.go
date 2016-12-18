@@ -170,9 +170,11 @@ func (r *renderer) render() {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.UniformMatrix4fv(projectionViewMatrixLocation, 1, false, &r.orthoMatrix[0])
 
-	// Render symbol in upper left corner.
-	x := 0
-	y := r.winSize.Y - r.symbolText.size.Y
+	p := 10 // padding
+
+	// Render symbol in upper left corner. (0, 0) is bottom left.
+	x := 0 + p
+	y := r.winSize.Y - r.symbolText.size.Y - p
 	r.symbolText.render(x, y)
 }
 
