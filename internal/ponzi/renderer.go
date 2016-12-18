@@ -44,12 +44,14 @@ var (
 type renderer struct {
 	program uint32
 
-	planeMesh *mesh
-	cubeMesh  *mesh
+	// orthoPlaneMesh is a plane with bounds from (0, 0) to (1, 1)
+	// which in convenient for positioning text.
+	orthoPlaneMesh *mesh
+	cubeMesh       *mesh
 
 	texture uint32
 
-	loadingText *renderableText
+	symbolText *renderableText
 
 	viewMatrix        matrix4
 	perspectiveMatrix matrix4
@@ -136,11 +138,11 @@ func createRenderer() (*renderer, error) {
 		return nil, err
 	}
 
-	var planeMesh, cubeMesh *mesh
+	var orthoPlaneMesh, cubeMesh *mesh
 	for _, m := range createMeshes(objs) {
 		switch m.id {
-		case "Plane":
-			planeMesh = m
+		case "orthoPlane":
+			orthoPlaneMesh = m
 		case "Cube":
 			cubeMesh = m
 		}
@@ -157,31 +159,26 @@ func createRenderer() (*renderer, error) {
 	}
 
 	face := newFace(f)
-	loadingText := createRenderableText(planeMesh, face, "Loading DATA...")
+	symbolText := createRenderableText(orthoPlaneMesh, face, "SPY")
 
 	return &renderer{
-		program:     p,
-		planeMesh:   planeMesh,
-		cubeMesh:    cubeMesh,
-		texture:     texture,
-		loadingText: loadingText,
-		viewMatrix:  vm,
+		program:        p,
+		orthoPlaneMesh: orthoPlaneMesh,
+		cubeMesh:       cubeMesh,
+		texture:        texture,
+		symbolText:     symbolText,
+		viewMatrix:     vm,
 	}, nil
 }
 
 func (r *renderer) render() {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	gl.UniformMatrix4fv(projectionViewMatrixLocation, 1, false, &r.perspectiveMatrix[0])
-
-	mm := newScaleMatrix(1, 1, 1)
-	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &mm[0])
-
-	gl.BindTexture(gl.TEXTURE_2D, r.texture)
-	r.cubeMesh.drawElements()
-
 	gl.UniformMatrix4fv(projectionViewMatrixLocation, 1, false, &r.orthoMatrix[0])
 
-	r.loadingText.render(float32(r.winWidth)/2, float32(r.winHeight)/2)
+	// Render symbol in upper left corner.
+	x := 0
+	y := r.winHeight - r.symbolText.height
+	r.symbolText.render(x, y)
 }
 
 func (r *renderer) resize(width, height int) {
@@ -207,8 +204,8 @@ func (r *renderer) resize(width, height int) {
 type renderableText struct {
 	mesh    *mesh
 	texture uint32
-	width   float32
-	height  float32
+	width   int
+	height  int
 }
 
 func createRenderableText(mesh *mesh, face font.Face, text string) *renderableText {
@@ -216,14 +213,14 @@ func createRenderableText(mesh *mesh, face font.Face, text string) *renderableTe
 	return &renderableText{
 		mesh:    mesh,
 		texture: createTexture(rgba),
-		width:   float32(rgba.Bounds().Size().X),
-		height:  float32(rgba.Bounds().Size().Y),
+		width:   rgba.Bounds().Size().X,
+		height:  rgba.Bounds().Size().Y,
 	}
 }
 
-func (rt *renderableText) render(x, y float32) {
-	m := newScaleMatrix(rt.width, rt.height, 1)
-	m = m.mult(newTranslationMatrix(x, y, 0))
+func (rt *renderableText) render(x, y int) {
+	m := newScaleMatrix(float32(rt.width), float32(rt.height), 1)
+	m = m.mult(newTranslationMatrix(float32(x), float32(y), 0))
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 	gl.BindTexture(gl.TEXTURE_2D, rt.texture)
 	rt.mesh.drawElements()
