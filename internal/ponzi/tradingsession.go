@@ -24,11 +24,22 @@ type tradingSession struct {
 	volume int
 }
 
+// dataSource is the data source to query for tradingSession data.
+type dataSource int
+
+// dataSource values.
+const (
+	defaultSource dataSource = iota
+	google
+	yahoo
+)
+
 // listTradingSessionsRequest is the request for listTradingSessions.
 type listTradingSessionsRequest struct {
-	symbol    string
-	startDate time.Time
-	endDate   time.Time
+	symbol     string
+	startDate  time.Time
+	endDate    time.Time
+	dataSource dataSource
 }
 
 // listTradingSessionsResponse is the response for listTradingSessions.
@@ -38,6 +49,16 @@ type listTradingSessionsResponse struct {
 
 // listTradingSessions lists the trading sessions matching the request criteria.
 func listTradingSessions(req *listTradingSessionsRequest) (*listTradingSessionsResponse, error) {
+	switch req.dataSource {
+	case yahoo:
+		return yahooListTradingSessions(req)
+
+	default:
+		return googleListTradingSessions(req)
+	}
+}
+
+func googleListTradingSessions(req *listTradingSessionsRequest) (*listTradingSessionsResponse, error) {
 	formatTime := func(date time.Time) string {
 		return date.Format("Jan 02, 2006")
 	}
