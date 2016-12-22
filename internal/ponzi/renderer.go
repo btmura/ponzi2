@@ -175,7 +175,7 @@ func createRenderer() (*renderer, error) {
 	}, nil
 }
 
-func (r *renderer) render() {
+func (r *renderer) render(v *view) {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.UniformMatrix4fv(projectionViewMatrixLocation, 1, false, &r.orthoMatrix[0])
 

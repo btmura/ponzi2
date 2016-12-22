@@ -47,6 +47,8 @@ func Run() {
 	checkErr(m.load())
 	log.Printf("model: %+v", m)
 
+	v := &view{m}
+
 	// Call the size callback to set the initial viewport.
 	w, h := win.GetSize()
 	r.resize(image.Pt(w, h))
@@ -55,7 +57,7 @@ func Run() {
 	})
 
 	for !win.ShouldClose() {
-		r.render()
+		r.render(v)
 		win.SwapBuffers()
 		glfw.PollEvents()
 	}
