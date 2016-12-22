@@ -30,7 +30,7 @@ func (f *textFactory) createStaticText(text string) *staticText {
 
 func (f *textFactory) createDynamicText() *dynamicText {
 	staticTextMap := map[rune]*staticText{}
-	for _, r := range "0123456789. " {
+	for _, r := range "0123456789.+-% " {
 		staticTextMap[r] = f.createStaticText(string(r))
 	}
 	return &dynamicText{
@@ -57,15 +57,6 @@ type dynamicText struct {
 }
 
 func (t *dynamicText) render(text string, x, y int) {
-	// Calculate total size of all letters.
-	var size image.Point
-	for _, r := range text {
-		if t.staticTextMap[r] != nil {
-			size.Add(t.staticTextMap[r].size)
-		}
-	}
-
-	// Render each letter.
 	for _, r := range text {
 		if st := t.staticTextMap[r]; st != nil {
 			st.render(x, y)
