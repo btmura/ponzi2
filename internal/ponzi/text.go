@@ -14,11 +14,14 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
+// textFactory is a factory that creates either static or dynamic text
+// that can be rendered on a given orthographic plane.
 type textFactory struct {
 	mesh *mesh
 	face font.Face
 }
 
+// newTextFactory creates a factory from an orthographic plane mesh and TTF bytes.
 func newTextFactory(mesh *mesh, fontBytes []byte) (*textFactory, error) {
 	f, err := truetype.Parse(fontBytes)
 	if err != nil {
@@ -37,6 +40,7 @@ func newTextFactory(mesh *mesh, fontBytes []byte) (*textFactory, error) {
 	}, nil
 }
 
+// createStaticText creates static text which cannot be changed later.
 func (f *textFactory) createStaticText(text string) *staticText {
 	rgba := createTextImage(f.face, text)
 	return &staticText{
@@ -46,6 +50,7 @@ func (f *textFactory) createStaticText(text string) *staticText {
 	}
 }
 
+// createDynamicText creates dynamic text which is rendered at runtime.
 func (f *textFactory) createDynamicText() *dynamicText {
 	staticTextMap := map[rune]*staticText{}
 	for _, r := range "0123456789.+-% " {
