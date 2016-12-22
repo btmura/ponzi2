@@ -50,6 +50,9 @@ type renderer struct {
 
 	texture uint32
 
+	dowText    *renderableText
+	sapText    *renderableText
+	nasdaqText *renderableText
 	symbolText *renderableText
 
 	viewMatrix        matrix4
@@ -155,12 +158,18 @@ func createRenderer() (*renderer, error) {
 	}
 
 	face := newFace(f)
+	dowText := createRenderableText(orthoPlaneMesh, face, "DOW")
+	sapText := createRenderableText(orthoPlaneMesh, face, "S&P")
+	nasdaqText := createRenderableText(orthoPlaneMesh, face, "NASDAQ")
 	symbolText := createRenderableText(orthoPlaneMesh, face, "SPY")
 
 	return &renderer{
 		program:        p,
 		orthoPlaneMesh: orthoPlaneMesh,
 		texture:        texture,
+		dowText:        dowText,
+		sapText:        sapText,
+		nasdaqText:     nasdaqText,
 		symbolText:     symbolText,
 		viewMatrix:     vm,
 	}, nil
@@ -174,7 +183,16 @@ func (r *renderer) render() {
 
 	// Render symbol in upper left corner. (0, 0) is bottom left.
 	x := 0 + p
-	y := r.winSize.Y - r.symbolText.size.Y - p
+	y := r.winSize.Y - r.dowText.size.Y - p
+	r.dowText.render(x, y)
+
+	y -= r.sapText.size.Y
+	r.sapText.render(x, y)
+
+	y -= r.nasdaqText.size.Y
+	r.nasdaqText.render(x, y)
+
+	y -= r.symbolText.size.Y
 	r.symbolText.render(x, y)
 }
 
