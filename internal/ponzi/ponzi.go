@@ -43,8 +43,10 @@ func Run() {
 
 	// GLFW, GL, and shaders OK! Initialize model before 1st render.
 	m := &model{}
-	checkErr(m.load())
 	v := &view{m}
+	go func() {
+		checkErr(m.load())
+	}()
 
 	// Call the size callback to set the initial viewport.
 	w, h := win.GetSize()
