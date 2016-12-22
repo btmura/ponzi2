@@ -30,7 +30,7 @@ func (f *textFactory) createStaticText(text string) *staticText {
 
 func (f *textFactory) createDynamicText() *dynamicText {
 	staticTextMap := map[rune]*staticText{}
-	for _, r := range "0123456789" {
+	for _, r := range "0123456789. " {
 		staticTextMap[r] = f.createStaticText(string(r))
 	}
 	return &dynamicText{

@@ -1,18 +1,27 @@
 package ponzi
 
+import "fmt"
+
 // view describes how to render the model to the screen.
 type view struct {
 	model *model
 }
 
 func (v *view) dowPriceText() string {
-	return "123"
+	return formatQuote(v.model.dow)
 }
 
 func (v *view) sapPriceText() string {
-	return "456"
+	return formatQuote(v.model.sap)
 }
 
 func (v *view) nasdaqPriceText() string {
-	return "789"
+	return formatQuote(v.model.nasdaq)
+}
+
+func formatQuote(q *quote) string {
+	if q != nil {
+		return fmt.Sprintf("%10.2f", q.price)
+	}
+	return "..."
 }
