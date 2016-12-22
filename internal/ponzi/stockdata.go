@@ -346,7 +346,9 @@ func listQuotes(req *listQuotesRequest) (*listQuotesResponse, error) {
 		return nil, errors.New("expected at least one entry")
 	}
 
-	listResp := new(listQuotesResponse)
+	listResp := &listQuotesResponse{
+		quotes: map[string]*quote{},
+	}
 	for _, p := range parsed {
 		timestamp, err := time.Parse("2006-01-02T15:04:05Z", p.Lt_dts)
 		if err != nil {

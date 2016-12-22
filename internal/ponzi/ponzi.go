@@ -2,6 +2,7 @@ package ponzi
 
 import (
 	"image"
+	"log"
 	"runtime"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -40,6 +41,11 @@ func Run() {
 
 	r, err := createRenderer()
 	checkErr(err)
+
+	// GLFW, GL, and shaders OK! Initialize model before 1st render.
+	m := &model{}
+	checkErr(m.load())
+	log.Printf("model: %+v", m)
 
 	// Call the size callback to set the initial viewport.
 	w, h := win.GetSize()
