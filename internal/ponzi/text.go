@@ -19,6 +19,24 @@ type textFactory struct {
 	face font.Face
 }
 
+func newTextFactory(mesh *mesh, fontBytes []byte) (*textFactory, error) {
+	f, err := truetype.Parse(fontBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	face := truetype.NewFace(f, &truetype.Options{
+		Size:    24,
+		DPI:     72,
+		Hinting: font.HintingFull,
+	})
+
+	return &textFactory{
+		mesh: mesh,
+		face: face,
+	}, nil
+}
+
 func (f *textFactory) createStaticText(text string) *staticText {
 	rgba := createTextImage(f.face, text)
 	return &staticText{
@@ -63,14 +81,6 @@ func (t *dynamicText) render(text string, x, y int) {
 			x += st.size.X
 		}
 	}
-}
-
-func newFace(f *truetype.Font) font.Face {
-	return truetype.NewFace(f, &truetype.Options{
-		Size:    24,
-		DPI:     72,
-		Hinting: font.HintingFull,
-	})
 }
 
 func createTextImage(face font.Face, text string) *image.RGBA {

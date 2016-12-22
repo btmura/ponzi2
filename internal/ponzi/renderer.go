@@ -9,7 +9,6 @@ import (
 	"math"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
-	"github.com/golang/freetype/truetype"
 )
 
 // Locations for the vertex and fragment shaders.
@@ -146,27 +145,25 @@ func createRenderer() (*renderer, error) {
 		}
 	}
 
-	fontBytes, err := orbitronMediumTtfBytes()
+	orbitronBytes, err := orbitronMediumTtfBytes()
 	if err != nil {
 		return nil, err
 	}
 
-	f, err := truetype.Parse(fontBytes)
+	orbitron, err := newTextFactory(orthoPlaneMesh, orbitronBytes)
 	if err != nil {
 		return nil, err
 	}
-
-	tf := &textFactory{orthoPlaneMesh, newFace(f)}
 
 	return &renderer{
 		program:        p,
 		orthoPlaneMesh: orthoPlaneMesh,
 		texture:        texture,
-		dowText:        tf.createStaticText("DOW"),
-		sapText:        tf.createStaticText("S&P"),
-		nasdaqText:     tf.createStaticText("NASDAQ"),
-		symbolText:     tf.createStaticText("SPY"),
-		priceText:      tf.createDynamicText(),
+		dowText:        orbitron.createStaticText("DOW"),
+		sapText:        orbitron.createStaticText("S&P"),
+		nasdaqText:     orbitron.createStaticText("NASDAQ"),
+		symbolText:     orbitron.createStaticText("SPY"),
+		priceText:      orbitron.createDynamicText(),
 		viewMatrix:     vm,
 	}, nil
 }
