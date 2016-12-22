@@ -8,8 +8,6 @@ import (
 	"log"
 	"math"
 
-	"golang.org/x/image/font"
-
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/golang/freetype/truetype"
 )
@@ -50,10 +48,11 @@ type renderer struct {
 
 	texture uint32
 
-	dowText    *renderableText
-	sapText    *renderableText
-	nasdaqText *renderableText
-	symbolText *renderableText
+	dowText    *staticText
+	sapText    *staticText
+	nasdaqText *staticText
+	symbolText *staticText
+	priceText  *dynamicText
 
 	viewMatrix        matrix4
 	perspectiveMatrix matrix4
@@ -157,20 +156,17 @@ func createRenderer() (*renderer, error) {
 		return nil, err
 	}
 
-	face := newFace(f)
-	dowText := createRenderableText(orthoPlaneMesh, face, "DOW")
-	sapText := createRenderableText(orthoPlaneMesh, face, "S&P")
-	nasdaqText := createRenderableText(orthoPlaneMesh, face, "NASDAQ")
-	symbolText := createRenderableText(orthoPlaneMesh, face, "SPY")
+	tf := &textFactory{orthoPlaneMesh, newFace(f)}
 
 	return &renderer{
 		program:        p,
 		orthoPlaneMesh: orthoPlaneMesh,
 		texture:        texture,
-		dowText:        dowText,
-		sapText:        sapText,
-		nasdaqText:     nasdaqText,
-		symbolText:     symbolText,
+		dowText:        tf.createStaticText("DOW"),
+		sapText:        tf.createStaticText("S&P"),
+		nasdaqText:     tf.createStaticText("NASDAQ"),
+		symbolText:     tf.createStaticText("SPY"),
+		priceText:      tf.createDynamicText(),
 		viewMatrix:     vm,
 	}, nil
 }
@@ -185,12 +181,15 @@ func (r *renderer) render(v *view) {
 	x := 0 + p
 	y := r.winSize.Y - r.dowText.size.Y - p
 	r.dowText.render(x, y)
+	r.priceText.render(v.dowPriceText(), x+r.dowText.size.X, y)
 
 	y -= r.sapText.size.Y
 	r.sapText.render(x, y)
+	r.priceText.render(v.sapPriceText(), x+r.sapText.size.X, y)
 
 	y -= r.nasdaqText.size.Y
 	r.nasdaqText.render(x, y)
+	r.priceText.render(v.nasdaqPriceText(), x+r.nasdaqText.size.X, y)
 
 	y -= r.symbolText.size.Y
 	r.symbolText.render(x, y)
@@ -214,29 +213,6 @@ func (r *renderer) resize(newSize image.Point) {
 
 	// Calculate the new ortho projection view matrix.
 	r.orthoMatrix = newOrthoMatrix(fw, fh, fw /* use width as depth */)
-}
-
-type renderableText struct {
-	mesh    *mesh
-	texture uint32
-	size    image.Point
-}
-
-func createRenderableText(mesh *mesh, face font.Face, text string) *renderableText {
-	rgba := createTextImage(face, text)
-	return &renderableText{
-		mesh:    mesh,
-		texture: createTexture(rgba),
-		size:    rgba.Bounds().Size(),
-	}
-}
-
-func (rt *renderableText) render(x, y int) {
-	m := newScaleMatrix(float32(rt.size.X), float32(rt.size.Y), 1)
-	m = m.mult(newTranslationMatrix(float32(x), float32(y), 0))
-	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
-	gl.BindTexture(gl.TEXTURE_2D, rt.texture)
-	rt.mesh.drawElements()
 }
 
 func createImage(data []byte) (*image.RGBA, error) {
