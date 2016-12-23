@@ -39,7 +39,7 @@ func Run() {
 	win.MakeContextCurrent()
 
 	m := &model{}
-	r, err := createRenderer(m)
+	v, err := createView(m)
 	checkErr(err)
 
 	// GLFW, GL, and shaders OK! Go fetch data for the model.
@@ -49,18 +49,18 @@ func Run() {
 
 	// Call the size callback to set the initial viewport.
 	w, h := win.GetSize()
-	r.resize(image.Pt(w, h))
+	v.resize(image.Pt(w, h))
 	win.SetSizeCallback(func(w *glfw.Window, width, height int) {
-		r.resize(image.Pt(width, height))
+		v.resize(image.Pt(width, height))
 	})
 
 	// Register the key callback.
 	win.SetKeyCallback(func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-		r.handleKey(key, action)
+		v.handleKey(key, action)
 	})
 
 	for !win.ShouldClose() {
-		r.render()
+		v.render()
 		win.SwapBuffers()
 		glfw.PollEvents()
 	}

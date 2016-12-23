@@ -39,7 +39,7 @@ var (
 	directionalVector     = [3]float32{0.5, 0.5, 0.5}
 )
 
-type renderer struct {
+type view struct {
 	// model is the model that will be rendered.
 	model *model
 
@@ -66,7 +66,7 @@ type renderer struct {
 	winSize image.Point
 }
 
-func createRenderer(model *model) (*renderer, error) {
+func createView(model *model) (*view, error) {
 
 	// Initialize OpenGL and enable features.
 
@@ -171,7 +171,7 @@ func createRenderer(model *model) (*renderer, error) {
 		return nil, err
 	}
 
-	return &renderer{
+	return &view{
 		model:          model,
 		program:        p,
 		orthoPlaneMesh: orthoPlaneMesh,
@@ -185,42 +185,42 @@ func createRenderer(model *model) (*renderer, error) {
 	}, nil
 }
 
-func (r *renderer) render() {
+func (v *view) render() {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	gl.UniformMatrix4fv(projectionViewMatrixLocation, 1, false, &r.orthoMatrix[0])
+	gl.UniformMatrix4fv(projectionViewMatrixLocation, 1, false, &v.orthoMatrix[0])
 
 	p := 10 // padding
 
 	// Start in the upper left corner. (0, 0) is bottom left.
-	c := image.Pt(p, r.winSize.Y-p-r.dowText.size.Y)
+	c := image.Pt(p, v.winSize.Y-p-v.dowText.size.Y)
 
 	// Render major indices on one line.
 	{
 		c := c
-		c = c.Add(r.dowText.render(c))
-		c = c.Add(r.monoText.render(r.dowPriceText(), c))
+		c = c.Add(v.dowText.render(c))
+		c = c.Add(v.monoText.render(v.dowPriceText(), c))
 
-		c = c.Add(r.sapText.render(c))
-		c = c.Add(r.monoText.render(r.sapPriceText(), c))
+		c = c.Add(v.sapText.render(c))
+		c = c.Add(v.monoText.render(v.sapPriceText(), c))
 
-		c = c.Add(r.nasdaqText.render(c))
-		c = c.Add(r.monoText.render(r.nasdaqPriceText(), c))
+		c = c.Add(v.nasdaqText.render(c))
+		c = c.Add(v.monoText.render(v.nasdaqPriceText(), c))
 	}
 
-	c.Y -= p + r.symbolText.size.Y
-	r.symbolText.render(c)
+	c.Y -= p + v.symbolText.size.Y
+	v.symbolText.render(c)
 }
 
-func (r *renderer) dowPriceText() string {
-	return formatQuote(r.model.dow)
+func (v *view) dowPriceText() string {
+	return formatQuote(v.model.dow)
 }
 
-func (r *renderer) sapPriceText() string {
-	return formatQuote(r.model.sap)
+func (v *view) sapPriceText() string {
+	return formatQuote(v.model.sap)
 }
 
-func (r *renderer) nasdaqPriceText() string {
-	return formatQuote(r.model.nasdaq)
+func (v *view) nasdaqPriceText() string {
+	return formatQuote(v.model.nasdaq)
 }
 
 func formatQuote(q *quote) string {
@@ -231,27 +231,27 @@ func formatQuote(q *quote) string {
 }
 
 // resize responds to window size changes by updating internal matrices.
-func (r *renderer) resize(newSize image.Point) {
+func (v *view) resize(newSize image.Point) {
 	// Return if the window has not changed size.
-	if r.winSize == newSize {
+	if v.winSize == newSize {
 		return
 	}
 
 	gl.Viewport(0, 0, int32(newSize.X), int32(newSize.Y))
 
-	r.winSize = newSize
+	v.winSize = newSize
 
 	// Calculate the new perspective projection view matrix.
-	fw, fh := float32(r.winSize.X), float32(r.winSize.Y)
+	fw, fh := float32(v.winSize.X), float32(v.winSize.Y)
 	aspect := fw / fh
 	fovRadians := float32(math.Pi) / 3
-	r.perspectiveMatrix = r.viewMatrix.mult(newPerspectiveMatrix(fovRadians, aspect, 1, 2000))
+	v.perspectiveMatrix = v.viewMatrix.mult(newPerspectiveMatrix(fovRadians, aspect, 1, 2000))
 
 	// Calculate the new ortho projection view matrix.
-	r.orthoMatrix = newOrthoMatrix(fw, fh, fw /* use width as depth */)
+	v.orthoMatrix = newOrthoMatrix(fw, fh, fw /* use width as depth */)
 }
 
-func (r *renderer) handleKey(key glfw.Key, action glfw.Action) {
+func (v *view) handleKey(key glfw.Key, action glfw.Action) {
 	log.Printf("key: %v", key)
 }
 
