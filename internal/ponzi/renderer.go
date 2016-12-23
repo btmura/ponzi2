@@ -50,7 +50,7 @@ type renderer struct {
 	dowText    *staticText
 	sapText    *staticText
 	nasdaqText *staticText
-	priceText  *dynamicText
+	monoText   *dynamicText
 
 	symbolText *staticText
 
@@ -146,12 +146,12 @@ func createRenderer() (*renderer, error) {
 		}
 	}
 
-	inconsolataBytes, err := inconsolataRegularTtfBytes()
+	monoBytes, err := inconsolataRegularTtfBytes()
 	if err != nil {
 		return nil, err
 	}
 
-	inconsolata, err := newTextFactory(orthoPlaneMesh, inconsolataBytes)
+	mono, err := newTextFactory(orthoPlaneMesh, monoBytes, 18)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func createRenderer() (*renderer, error) {
 		return nil, err
 	}
 
-	orbitron, err := newTextFactory(orthoPlaneMesh, orbitronBytes)
+	orbitron, err := newTextFactory(orthoPlaneMesh, orbitronBytes, 24)
 	if err != nil {
 		return nil, err
 	}
@@ -170,10 +170,10 @@ func createRenderer() (*renderer, error) {
 		program:        p,
 		orthoPlaneMesh: orthoPlaneMesh,
 		texture:        texture,
-		dowText:        inconsolata.createStaticText("DOW"),
-		sapText:        inconsolata.createStaticText("S&P"),
-		nasdaqText:     inconsolata.createStaticText("NASDAQ"),
-		priceText:      inconsolata.createDynamicText(),
+		dowText:        mono.createStaticText("DOW"),
+		sapText:        mono.createStaticText("S&P"),
+		nasdaqText:     mono.createStaticText("NASDAQ"),
+		monoText:       mono.createDynamicText(),
 		symbolText:     orbitron.createStaticText("SPY"),
 		viewMatrix:     vm,
 	}, nil
@@ -185,21 +185,24 @@ func (r *renderer) render(v *view) {
 
 	p := 10 // padding
 
-	// Render symbol in upper left corner. (0, 0) is bottom left.
-	x := 0 + p
+	// Start in the upper left corner. (0, 0) is bottom left.
+	x := p
 	y := r.winSize.Y - r.dowText.size.Y - p
-	r.dowText.render(x, y)
-	r.priceText.render(v.dowPriceText(), x+r.dowText.size.X, y)
 
-	y -= r.sapText.size.Y
-	r.sapText.render(x, y)
-	r.priceText.render(v.sapPriceText(), x+r.sapText.size.X, y)
+	// Render major indices on one line.
+	{
+		x := x
+		x += r.dowText.render(x, y)
+		x += r.monoText.render(v.dowPriceText(), x, y)
 
-	y -= r.nasdaqText.size.Y
-	r.nasdaqText.render(x, y)
-	r.priceText.render(v.nasdaqPriceText(), x+r.nasdaqText.size.X, y)
+		x += r.sapText.render(x, y)
+		x += r.monoText.render(v.sapPriceText(), x, y)
 
-	y -= r.symbolText.size.Y
+		x += r.nasdaqText.render(x, y)
+		x += r.monoText.render(v.nasdaqPriceText(), x, y)
+	}
+
+	y -= r.symbolText.size.Y + p
 	r.symbolText.render(x, y)
 }
 

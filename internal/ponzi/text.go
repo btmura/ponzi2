@@ -22,14 +22,14 @@ type textFactory struct {
 }
 
 // newTextFactory creates a factory from an orthographic plane mesh and TTF bytes.
-func newTextFactory(mesh *mesh, fontBytes []byte) (*textFactory, error) {
+func newTextFactory(mesh *mesh, fontBytes []byte, size int) (*textFactory, error) {
 	f, err := truetype.Parse(fontBytes)
 	if err != nil {
 		return nil, err
 	}
 
 	face := truetype.NewFace(f, &truetype.Options{
-		Size:    24,
+		Size:    float64(size),
 		DPI:     72,
 		Hinting: font.HintingFull,
 	})
@@ -67,25 +67,29 @@ type staticText struct {
 	size    image.Point
 }
 
-func (t *staticText) render(x, y int) {
+func (t *staticText) render(x, y int) int {
 	m := newScaleMatrix(float32(t.size.X), float32(t.size.Y), 1)
 	m = m.mult(newTranslationMatrix(float32(x), float32(y), 0))
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 	gl.BindTexture(gl.TEXTURE_2D, t.texture)
 	t.mesh.drawElements()
+	return t.size.X
 }
 
 type dynamicText struct {
 	staticTextMap map[rune]*staticText
 }
 
-func (t *dynamicText) render(text string, x, y int) {
+func (t *dynamicText) render(text string, x, y int) int {
+	size := 0
 	for _, r := range text {
 		if st := t.staticTextMap[r]; st != nil {
 			st.render(x, y)
 			x += st.size.X
+			size += st.size.X
 		}
 	}
+	return size
 }
 
 func createTextImage(face font.Face, text string) *image.RGBA {

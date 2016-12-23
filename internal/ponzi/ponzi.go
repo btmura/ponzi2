@@ -33,7 +33,7 @@ func Run() {
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
-	win, err := glfw.CreateWindow(640, 480, "ponzi", nil, nil)
+	win, err := glfw.CreateWindow(800, 600, "ponzi", nil, nil)
 	checkErr(err)
 
 	win.MakeContextCurrent()
