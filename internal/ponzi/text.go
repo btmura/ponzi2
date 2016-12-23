@@ -52,12 +52,12 @@ func (f *textFactory) createStaticText(text string) *staticText {
 
 // createDynamicText creates dynamic text which is rendered at runtime.
 func (f *textFactory) createDynamicText() *dynamicText {
-	staticTextMap := map[rune]*staticText{}
+	runeTextMap := make(map[rune]*staticText)
 	for _, r := range "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.+-% " {
-		staticTextMap[r] = f.createStaticText(string(r))
+		runeTextMap[r] = f.createStaticText(string(r))
 	}
 	return &dynamicText{
-		staticTextMap: staticTextMap,
+		runeTextMap: runeTextMap,
 	}
 }
 
@@ -77,13 +77,26 @@ func (t *staticText) render(c image.Point) image.Point {
 }
 
 type dynamicText struct {
-	staticTextMap map[rune]*staticText
+	runeTextMap map[rune]*staticText
+}
+
+func (t *dynamicText) measure(text string) image.Point {
+	s := image.ZP
+	for _, r := range text {
+		if st := t.runeTextMap[r]; st != nil {
+			s.X += st.size.X
+			if st.size.Y > s.Y {
+				s.Y = st.size.Y
+			}
+		}
+	}
+	return s
 }
 
 func (t *dynamicText) render(text string, c image.Point) image.Point {
 	w := 0
 	for _, r := range text {
-		if st := t.staticTextMap[r]; st != nil {
+		if st := t.runeTextMap[r]; st != nil {
 			st.render(c)
 			c.X += st.size.X
 			w += st.size.X

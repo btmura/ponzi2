@@ -219,7 +219,8 @@ func (v *view) render() {
 
 	// Render input symbol being typed in the center.
 	if v.model.inputSymbol != "" {
-		c := image.Pt(v.winSize.X/2, v.winSize.Y/2)
+		s := v.propText.measure(v.model.inputSymbol)
+		c := v.winSize.Sub(s).Div(2)
 		v.propText.render(v.model.inputSymbol, c)
 	}
 }
