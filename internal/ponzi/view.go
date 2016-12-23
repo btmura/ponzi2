@@ -75,6 +75,8 @@ type view struct {
 	monoText *dynamicText
 	propText *dynamicText
 
+	chart *chart
+
 	viewMatrix        matrix4
 	perspectiveMatrix matrix4
 	orthoMatrix       matrix4
@@ -200,6 +202,7 @@ func createView(model *model) (*view, error) {
 		nasdaqText:     mono.createStaticText("NASDAQ"),
 		monoText:       mono.createDynamicText(),
 		propText:       prop.createDynamicText(),
+		chart:          createChart(),
 		viewMatrix:     vm,
 	}, nil
 }
@@ -246,6 +249,12 @@ func (v *view) render() {
 	}
 
 	v.model.RUnlock()
+
+	m := newScaleMatrix(600, 400, 1)
+	m = m.mult(newTranslationMatrix(50, 50, 0))
+	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
+	gl.BindTexture(gl.TEXTURE_2D, v.texture)
+	v.chart.draw()
 }
 
 func (v *view) dowPriceText() string {
