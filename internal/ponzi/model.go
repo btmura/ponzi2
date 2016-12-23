@@ -37,11 +37,11 @@ func (m *model) submitSymbol() {
 	m.currentSymbol = m.inputSymbol
 	m.currentQuote = nil
 	m.inputSymbol = ""
-	m.triggerRefresh()
+	m.startRefresh()
 	m.Unlock()
 }
 
-func (m *model) triggerRefresh() error {
+func (m *model) startRefresh() error {
 	go func() {
 		m.refresh()
 	}()

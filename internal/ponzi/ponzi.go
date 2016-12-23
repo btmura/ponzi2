@@ -43,7 +43,7 @@ func Run() {
 	checkErr(err)
 
 	// GLFW, GL, and shaders OK! Go fetch data for the model.
-	m.triggerRefresh()
+	m.startRefresh()
 
 	// Call the size callback to set the initial viewport.
 	w, h := win.GetSize()
