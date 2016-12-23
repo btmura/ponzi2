@@ -191,14 +191,14 @@ func (r *renderer) render(v *view) {
 	// Render major indices on one line.
 	{
 		c := c
-		c.Add(r.dowText.render(c))
-		c.Add(r.monoText.render(v.dowPriceText(), c))
+		c = c.Add(r.dowText.render(c))
+		c = c.Add(r.monoText.render(v.dowPriceText(), c))
 
-		c.Add(r.sapText.render(c))
-		c.Add(r.monoText.render(v.sapPriceText(), c))
+		c = c.Add(r.sapText.render(c))
+		c = c.Add(r.monoText.render(v.sapPriceText(), c))
 
-		c.Add(r.nasdaqText.render(c))
-		c.Add(r.monoText.render(v.nasdaqPriceText(), c))
+		c = c.Add(r.nasdaqText.render(c))
+		c = c.Add(r.monoText.render(v.nasdaqPriceText(), c))
 	}
 
 	c.Y -= p + r.symbolText.size.Y
