@@ -186,24 +186,23 @@ func (r *renderer) render(v *view) {
 	p := 10 // padding
 
 	// Start in the upper left corner. (0, 0) is bottom left.
-	x := p
-	y := r.winSize.Y - r.dowText.size.Y - p
+	c := image.Pt(p, r.winSize.Y-p-r.dowText.size.Y)
 
 	// Render major indices on one line.
 	{
-		x := x
-		x += r.dowText.render(x, y)
-		x += r.monoText.render(v.dowPriceText(), x, y)
+		c := c
+		c.Add(r.dowText.render(c))
+		c.Add(r.monoText.render(v.dowPriceText(), c))
 
-		x += r.sapText.render(x, y)
-		x += r.monoText.render(v.sapPriceText(), x, y)
+		c.Add(r.sapText.render(c))
+		c.Add(r.monoText.render(v.sapPriceText(), c))
 
-		x += r.nasdaqText.render(x, y)
-		x += r.monoText.render(v.nasdaqPriceText(), x, y)
+		c.Add(r.nasdaqText.render(c))
+		c.Add(r.monoText.render(v.nasdaqPriceText(), c))
 	}
 
-	y -= r.symbolText.size.Y + p
-	r.symbolText.render(x, y)
+	c.Y -= p + r.symbolText.size.Y
+	r.symbolText.render(c)
 }
 
 func (r *renderer) resize(newSize image.Point) {

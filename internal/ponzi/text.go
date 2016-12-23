@@ -67,29 +67,29 @@ type staticText struct {
 	size    image.Point
 }
 
-func (t *staticText) render(x, y int) int {
+func (t *staticText) render(c image.Point) image.Point {
 	m := newScaleMatrix(float32(t.size.X), float32(t.size.Y), 1)
-	m = m.mult(newTranslationMatrix(float32(x), float32(y), 0))
+	m = m.mult(newTranslationMatrix(float32(c.X), float32(c.Y), 0))
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 	gl.BindTexture(gl.TEXTURE_2D, t.texture)
 	t.mesh.drawElements()
-	return t.size.X
+	return image.Pt(t.size.X, 0)
 }
 
 type dynamicText struct {
 	staticTextMap map[rune]*staticText
 }
 
-func (t *dynamicText) render(text string, x, y int) int {
-	size := 0
+func (t *dynamicText) render(text string, c image.Point) image.Point {
+	w := 0
 	for _, r := range text {
 		if st := t.staticTextMap[r]; st != nil {
-			st.render(x, y)
-			x += st.size.X
-			size += st.size.X
+			st.render(c)
+			c.X += st.size.X
+			w += st.size.X
 		}
 	}
-	return size
+	return image.Pt(w, 0)
 }
 
 func createTextImage(face font.Face, text string) *image.RGBA {
