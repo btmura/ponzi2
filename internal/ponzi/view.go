@@ -34,9 +34,9 @@ var (
 	targetPosition = vector3{}
 	up             = vector3{0, 1, 0}
 
-	ambientLightColor     = [3]float32{0.5, 0.5, 0.5}
-	directionalLightColor = [3]float32{0.5, 0.5, 0.5}
-	directionalVector     = [3]float32{0.5, 0.5, 0.5}
+	ambientLightColor     = [3]float32{1, 1, 1}
+	directionalLightColor = [3]float32{1, 1, 1}
+	directionalVector     = [3]float32{1, 1, 1}
 )
 
 var inputSymbolKeyMap = map[glfw.Key]string{
