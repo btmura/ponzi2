@@ -53,7 +53,7 @@ func (f *textFactory) createStaticText(text string) *staticText {
 // createDynamicText creates dynamic text which is rendered at runtime.
 func (f *textFactory) createDynamicText() *dynamicText {
 	staticTextMap := map[rune]*staticText{}
-	for _, r := range "0123456789.+-% " {
+	for _, r := range "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.+-% " {
 		staticTextMap[r] = f.createStaticText(string(r))
 	}
 	return &dynamicText{

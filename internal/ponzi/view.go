@@ -39,6 +39,16 @@ var (
 	directionalVector     = [3]float32{0.5, 0.5, 0.5}
 )
 
+var inputSymbolKeyMap = map[glfw.Key]string{
+	glfw.KeyA: "A", glfw.KeyB: "B", glfw.KeyC: "C", glfw.KeyD: "D",
+	glfw.KeyE: "E", glfw.KeyF: "F", glfw.KeyG: "G", glfw.KeyH: "H",
+	glfw.KeyI: "I", glfw.KeyJ: "J", glfw.KeyK: "K", glfw.KeyL: "L",
+	glfw.KeyM: "M", glfw.KeyN: "N", glfw.KeyO: "O", glfw.KeyP: "P",
+	glfw.KeyQ: "Q", glfw.KeyR: "R", glfw.KeyS: "S", glfw.KeyT: "T",
+	glfw.KeyU: "U", glfw.KeyV: "V", glfw.KeyW: "W", glfw.KeyX: "X",
+	glfw.KeyY: "Y", glfw.KeyZ: "Z",
+}
+
 type view struct {
 	// model is the model that will be rendered.
 	model *model
@@ -55,9 +65,9 @@ type view struct {
 	dowText    *staticText
 	sapText    *staticText
 	nasdaqText *staticText
-	monoText   *dynamicText
 
-	symbolText *staticText
+	monoText *dynamicText
+	propText *dynamicText
 
 	viewMatrix        matrix4
 	perspectiveMatrix matrix4
@@ -161,12 +171,12 @@ func createView(model *model) (*view, error) {
 		return nil, err
 	}
 
-	orbitronBytes, err := orbitronMediumTtfBytes()
+	propBytes, err := orbitronMediumTtfBytes()
 	if err != nil {
 		return nil, err
 	}
 
-	orbitron, err := newTextFactory(orthoPlaneMesh, orbitronBytes, 24)
+	prop, err := newTextFactory(orthoPlaneMesh, propBytes, 24)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +190,7 @@ func createView(model *model) (*view, error) {
 		sapText:        mono.createStaticText("S&P"),
 		nasdaqText:     mono.createStaticText("NASDAQ"),
 		monoText:       mono.createDynamicText(),
-		symbolText:     orbitron.createStaticText("SPY"),
+		propText:       prop.createDynamicText(),
 		viewMatrix:     vm,
 	}, nil
 }
@@ -207,8 +217,11 @@ func (v *view) render() {
 		c = c.Add(v.monoText.render(v.nasdaqPriceText(), c))
 	}
 
-	c.Y -= p + v.symbolText.size.Y
-	v.symbolText.render(c)
+	// Render input symbol being typed in the center.
+	if v.model.inputSymbol != "" {
+		c := image.Pt(v.winSize.X/2, v.winSize.Y/2)
+		v.propText.render(v.model.inputSymbol, c)
+	}
 }
 
 func (v *view) dowPriceText() string {
@@ -230,6 +243,22 @@ func formatQuote(q *quote) string {
 	return "..."
 }
 
+func (v *view) handleKey(key glfw.Key, action glfw.Action) {
+	if action != glfw.Release {
+		return
+	}
+
+	if s, ok := inputSymbolKeyMap[key]; ok {
+		v.model.inputSymbol += s
+		return
+	}
+
+	if key == glfw.KeyEnter {
+		v.model.inputSymbol = ""
+		return
+	}
+}
+
 // resize responds to window size changes by updating internal matrices.
 func (v *view) resize(newSize image.Point) {
 	// Return if the window has not changed size.
@@ -249,10 +278,6 @@ func (v *view) resize(newSize image.Point) {
 
 	// Calculate the new ortho projection view matrix.
 	v.orthoMatrix = newOrthoMatrix(fw, fh, fw /* use width as depth */)
-}
-
-func (v *view) handleKey(key glfw.Key, action glfw.Action) {
-	log.Printf("key: %v", key)
 }
 
 func createImage(data []byte) (*image.RGBA, error) {

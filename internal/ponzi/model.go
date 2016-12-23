@@ -5,6 +5,8 @@ type model struct {
 	dow    *quote
 	sap    *quote
 	nasdaq *quote
+
+	inputSymbol string
 }
 
 func (m *model) load() error {
