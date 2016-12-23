@@ -9,6 +9,7 @@ import (
 	"math"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
+	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
 // Locations for the vertex and fragment shaders.
@@ -39,6 +40,10 @@ var (
 )
 
 type renderer struct {
+	// model is the model that will be rendered.
+	model *model
+
+	// program is the OpenGL program created by createProgram.
 	program uint32
 
 	// orthoPlaneMesh is a plane with bounds from (0, 0) to (1, 1)
@@ -61,7 +66,7 @@ type renderer struct {
 	winSize image.Point
 }
 
-func createRenderer() (*renderer, error) {
+func createRenderer(model *model) (*renderer, error) {
 
 	// Initialize OpenGL and enable features.
 
@@ -167,6 +172,7 @@ func createRenderer() (*renderer, error) {
 	}
 
 	return &renderer{
+		model:          model,
 		program:        p,
 		orthoPlaneMesh: orthoPlaneMesh,
 		texture:        texture,
@@ -179,7 +185,7 @@ func createRenderer() (*renderer, error) {
 	}, nil
 }
 
-func (r *renderer) render(v *view) {
+func (r *renderer) render() {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.UniformMatrix4fv(projectionViewMatrixLocation, 1, false, &r.orthoMatrix[0])
 
@@ -192,19 +198,39 @@ func (r *renderer) render(v *view) {
 	{
 		c := c
 		c = c.Add(r.dowText.render(c))
-		c = c.Add(r.monoText.render(v.dowPriceText(), c))
+		c = c.Add(r.monoText.render(r.dowPriceText(), c))
 
 		c = c.Add(r.sapText.render(c))
-		c = c.Add(r.monoText.render(v.sapPriceText(), c))
+		c = c.Add(r.monoText.render(r.sapPriceText(), c))
 
 		c = c.Add(r.nasdaqText.render(c))
-		c = c.Add(r.monoText.render(v.nasdaqPriceText(), c))
+		c = c.Add(r.monoText.render(r.nasdaqPriceText(), c))
 	}
 
 	c.Y -= p + r.symbolText.size.Y
 	r.symbolText.render(c)
 }
 
+func (r *renderer) dowPriceText() string {
+	return formatQuote(r.model.dow)
+}
+
+func (r *renderer) sapPriceText() string {
+	return formatQuote(r.model.sap)
+}
+
+func (r *renderer) nasdaqPriceText() string {
+	return formatQuote(r.model.nasdaq)
+}
+
+func formatQuote(q *quote) string {
+	if q != nil {
+		return fmt.Sprintf(" %.2f %+5.2f %+5.2f%% ", q.price, q.change, q.percentChange*100.0)
+	}
+	return "..."
+}
+
+// resize responds to window size changes by updating internal matrices.
 func (r *renderer) resize(newSize image.Point) {
 	// Return if the window has not changed size.
 	if r.winSize == newSize {
@@ -223,6 +249,10 @@ func (r *renderer) resize(newSize image.Point) {
 
 	// Calculate the new ortho projection view matrix.
 	r.orthoMatrix = newOrthoMatrix(fw, fh, fw /* use width as depth */)
+}
+
+func (r *renderer) handleKey(key glfw.Key, action glfw.Action) {
+	log.Printf("key: %v", key)
 }
 
 func createImage(data []byte) (*image.RGBA, error) {

@@ -38,12 +38,11 @@ func Run() {
 
 	win.MakeContextCurrent()
 
-	r, err := createRenderer()
+	m := &model{}
+	r, err := createRenderer(m)
 	checkErr(err)
 
-	// GLFW, GL, and shaders OK! Initialize model before 1st render.
-	m := &model{}
-	v := &view{m}
+	// GLFW, GL, and shaders OK! Go fetch data for the model.
 	go func() {
 		checkErr(m.load())
 	}()
@@ -57,11 +56,11 @@ func Run() {
 
 	// Register the key callback.
 	win.SetKeyCallback(func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-		v.handleKey(key, action)
+		r.handleKey(key, action)
 	})
 
 	for !win.ShouldClose() {
-		r.render(v)
+		r.render()
 		win.SwapBuffers()
 		glfw.PollEvents()
 	}
