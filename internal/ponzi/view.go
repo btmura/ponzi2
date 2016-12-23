@@ -199,7 +199,9 @@ func (v *view) render() {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.UniformMatrix4fv(projectionViewMatrixLocation, 1, false, &v.orthoMatrix[0])
 
-	p := 10 // padding
+	v.model.RLock()
+
+	const p = 10 // padding
 
 	// Start in the upper left corner. (0, 0) is bottom left.
 	c := image.Pt(p, v.winSize.Y-p-v.dowText.size.Y)
@@ -217,12 +219,24 @@ func (v *view) render() {
 		c = c.Add(v.monoText.render(v.nasdaqPriceText(), c))
 	}
 
+	// Render the current symbol below the indices.
+	if v.model.currentSymbol != "" {
+		s := v.propText.measure(v.model.currentSymbol)
+		c.Y -= p + s.Y // padding below indices
+
+		c := c
+		c = c.Add(v.propText.render(v.model.currentSymbol, c))
+		c = c.Add(v.propText.render(v.currentPriceText(), c))
+	}
+
 	// Render input symbol being typed in the center.
 	if v.model.inputSymbol != "" {
 		s := v.propText.measure(v.model.inputSymbol)
 		c := v.winSize.Sub(s).Div(2)
 		v.propText.render(v.model.inputSymbol, c)
 	}
+
+	v.model.RUnlock()
 }
 
 func (v *view) dowPriceText() string {
@@ -237,11 +251,15 @@ func (v *view) nasdaqPriceText() string {
 	return formatQuote(v.model.nasdaq)
 }
 
+func (v *view) currentPriceText() string {
+	return formatQuote(v.model.currentQuote)
+}
+
 func formatQuote(q *quote) string {
 	if q != nil {
 		return fmt.Sprintf(" %.2f %+5.2f %+5.2f%% ", q.price, q.change, q.percentChange*100.0)
 	}
-	return "..."
+	return " ... "
 }
 
 func (v *view) handleKey(key glfw.Key, action glfw.Action) {
@@ -251,16 +269,14 @@ func (v *view) handleKey(key glfw.Key, action glfw.Action) {
 
 	switch key {
 	case glfw.KeyEnter:
-		v.model.inputSymbol = ""
+		v.model.submitSymbol()
 
 	case glfw.KeyBackspace:
-		if l := len(v.model.inputSymbol); l > 0 {
-			v.model.inputSymbol = v.model.inputSymbol[:l-1]
-		}
+		v.model.popSymbolLetter()
 
 	default:
 		if s, ok := inputSymbolKeyMap[key]; ok {
-			v.model.inputSymbol += s
+			v.model.pushSymbolLetter(s)
 		}
 	}
 }
