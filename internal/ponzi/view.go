@@ -1,10 +1,19 @@
 package ponzi
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+
+	"github.com/go-gl/glfw/v3.2/glfw"
+)
 
 // view describes how to render the model to the screen.
 type view struct {
 	model *model
+}
+
+func (v *view) handleKey(key glfw.Key, action glfw.Action) {
+	log.Printf("key: %v", key)
 }
 
 func (v *view) dowPriceText() string {

@@ -55,6 +55,11 @@ func Run() {
 		r.resize(image.Pt(width, height))
 	})
 
+	// Register the key callback.
+	win.SetKeyCallback(func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+		v.handleKey(key, action)
+	})
+
 	for !win.ShouldClose() {
 		r.render(v)
 		win.SwapBuffers()
