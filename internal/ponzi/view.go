@@ -249,14 +249,19 @@ func (v *view) handleKey(key glfw.Key, action glfw.Action) {
 		return
 	}
 
-	if s, ok := inputSymbolKeyMap[key]; ok {
-		v.model.inputSymbol += s
-		return
-	}
-
-	if key == glfw.KeyEnter {
+	switch key {
+	case glfw.KeyEnter:
 		v.model.inputSymbol = ""
-		return
+
+	case glfw.KeyBackspace:
+		if l := len(v.model.inputSymbol); l > 0 {
+			v.model.inputSymbol = v.model.inputSymbol[:l-1]
+		}
+
+	default:
+		if s, ok := inputSymbolKeyMap[key]; ok {
+			v.model.inputSymbol += s
+		}
 	}
 }
 
