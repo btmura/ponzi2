@@ -7,24 +7,34 @@ type model struct {
 	// mutex guards the entire model. Only use read lock outside of this file.
 	sync.RWMutex
 
-	dow    *quote
-	sap    *quote
-	nasdaq *quote
+	dow    *modelQuote
+	sap    *modelQuote
+	nasdaq *modelQuote
 
 	// inputSymbol is the symbol being entered by the user.
 	inputSymbol string
 
-	currentSymbol string
-	currentQuote  *quote
+	currentStock modelStock
 }
 
-func (m *model) pushSymbolLetter(s string) {
+type modelStock struct {
+	symbol string
+	quote  *modelQuote
+}
+
+type modelQuote struct {
+	price         float32
+	change        float32
+	percentChange float32
+}
+
+func (m *model) pushSymbolChar(ch rune) {
 	m.Lock()
-	m.inputSymbol += s
+	m.inputSymbol += string(ch)
 	m.Unlock()
 }
 
-func (m *model) popSymbolLetter() {
+func (m *model) popSymbolChar() {
 	m.Lock()
 	if l := len(m.inputSymbol); l > 0 {
 		m.inputSymbol = m.inputSymbol[:l-1]
@@ -34,8 +44,9 @@ func (m *model) popSymbolLetter() {
 
 func (m *model) submitSymbol() {
 	m.Lock()
-	m.currentSymbol = m.inputSymbol
-	m.currentQuote = nil
+	m.currentStock = modelStock{
+		symbol: m.inputSymbol,
+	}
 	m.inputSymbol = ""
 	m.startRefresh()
 	m.Unlock()
@@ -62,7 +73,7 @@ func (m *model) refresh() error {
 	}
 
 	m.RLock()
-	s := m.currentSymbol
+	s := m.currentStock.symbol
 	m.RUnlock()
 
 	if s != "" {
@@ -74,14 +85,23 @@ func (m *model) refresh() error {
 		return err
 	}
 
+	getQuote := func(resp *listQuotesResponse, symbol string) *modelQuote {
+		if q := resp.quotes[symbol]; q != nil {
+			return &modelQuote{
+				price:         q.price,
+				change:        q.change,
+				percentChange: q.percentChange,
+			}
+		}
+		return nil
+	}
+
 	m.Lock()
-	m.dow = resp.quotes[dowSymbol]
-	m.sap = resp.quotes[sapSymbol]
-	m.nasdaq = resp.quotes[nasdaqSymbol]
-	if s != "" && s == m.currentSymbol {
-		m.currentQuote = resp.quotes[m.currentSymbol]
-	} else {
-		m.currentQuote = nil
+	m.dow = getQuote(resp, dowSymbol)
+	m.sap = getQuote(resp, sapSymbol)
+	m.nasdaq = getQuote(resp, nasdaqSymbol)
+	if s != "" && s == m.currentStock.symbol {
+		m.currentStock.quote = getQuote(resp, s)
 	}
 	m.Unlock()
 

@@ -7,6 +7,7 @@ import (
 	"image/draw"
 	"log"
 	"math"
+	"unicode"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -39,14 +40,17 @@ var (
 	directionalVector     = [3]float32{1, 1, 1}
 )
 
-var inputSymbolKeyMap = map[glfw.Key]string{
-	glfw.KeyA: "A", glfw.KeyB: "B", glfw.KeyC: "C", glfw.KeyD: "D",
-	glfw.KeyE: "E", glfw.KeyF: "F", glfw.KeyG: "G", glfw.KeyH: "H",
-	glfw.KeyI: "I", glfw.KeyJ: "J", glfw.KeyK: "K", glfw.KeyL: "L",
-	glfw.KeyM: "M", glfw.KeyN: "N", glfw.KeyO: "O", glfw.KeyP: "P",
-	glfw.KeyQ: "Q", glfw.KeyR: "R", glfw.KeyS: "S", glfw.KeyT: "T",
-	glfw.KeyU: "U", glfw.KeyV: "V", glfw.KeyW: "W", glfw.KeyX: "X",
-	glfw.KeyY: "Y", glfw.KeyZ: "Z",
+// acceptedChars are the chars the user can enter for a symbol.
+var acceptedChars = map[rune]bool{
+	'A': true, 'B': true, 'C': true,
+	'D': true, 'E': true, 'F': true,
+	'G': true, 'H': true, 'I': true,
+	'J': true, 'K': true, 'L': true,
+	'M': true, 'N': true, 'O': true,
+	'P': true, 'Q': true, 'R': true,
+	'S': true, 'T': true, 'U': true,
+	'V': true, 'W': true, 'X': true,
+	'Y': true, 'Z': true,
 }
 
 type view struct {
@@ -220,12 +224,12 @@ func (v *view) render() {
 	}
 
 	// Render the current symbol below the indices.
-	if v.model.currentSymbol != "" {
-		s := v.propText.measure(v.model.currentSymbol)
+	if v.model.currentStock.symbol != "" {
+		s := v.propText.measure(v.model.currentStock.symbol)
 		c.Y -= p + s.Y // padding below indices
 
 		c := c
-		c = c.Add(v.propText.render(v.model.currentSymbol, c))
+		c = c.Add(v.propText.render(v.model.currentStock.symbol, c))
 		c = c.Add(v.propText.render(v.currentPriceText(), c))
 	}
 
@@ -252,10 +256,10 @@ func (v *view) nasdaqPriceText() string {
 }
 
 func (v *view) currentPriceText() string {
-	return formatQuote(v.model.currentQuote)
+	return formatQuote(v.model.currentStock.quote)
 }
 
-func formatQuote(q *quote) string {
+func formatQuote(q *modelQuote) string {
 	if q != nil {
 		return fmt.Sprintf(" %.2f %+5.2f %+5.2f%% ", q.price, q.change, q.percentChange*100.0)
 	}
@@ -272,12 +276,14 @@ func (v *view) handleKey(key glfw.Key, action glfw.Action) {
 		v.model.submitSymbol()
 
 	case glfw.KeyBackspace:
-		v.model.popSymbolLetter()
+		v.model.popSymbolChar()
+	}
+}
 
-	default:
-		if s, ok := inputSymbolKeyMap[key]; ok {
-			v.model.pushSymbolLetter(s)
-		}
+func (v *view) handleChar(ch rune) {
+	ch = unicode.ToUpper(ch)
+	if _, ok := acceptedChars[ch]; ok {
+		v.model.pushSymbolChar(ch)
 	}
 }
 

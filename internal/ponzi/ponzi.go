@@ -57,6 +57,11 @@ func Run() {
 		v.handleKey(key, action)
 	})
 
+	// Register the char callback.
+	win.SetCharCallback(func(w *glfw.Window, char rune) {
+		v.handleChar(char)
+	})
+
 	for !win.ShouldClose() {
 		v.render()
 		win.SwapBuffers()
