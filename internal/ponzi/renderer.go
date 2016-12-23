@@ -50,8 +50,9 @@ type renderer struct {
 	dowText    *staticText
 	sapText    *staticText
 	nasdaqText *staticText
-	symbolText *staticText
 	priceText  *dynamicText
+
+	symbolText *staticText
 
 	viewMatrix        matrix4
 	perspectiveMatrix matrix4
@@ -145,6 +146,16 @@ func createRenderer() (*renderer, error) {
 		}
 	}
 
+	inconsolataBytes, err := inconsolataRegularTtfBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	inconsolata, err := newTextFactory(orthoPlaneMesh, inconsolataBytes)
+	if err != nil {
+		return nil, err
+	}
+
 	orbitronBytes, err := orbitronMediumTtfBytes()
 	if err != nil {
 		return nil, err
@@ -159,11 +170,11 @@ func createRenderer() (*renderer, error) {
 		program:        p,
 		orthoPlaneMesh: orthoPlaneMesh,
 		texture:        texture,
-		dowText:        orbitron.createStaticText("DOW"),
-		sapText:        orbitron.createStaticText("S&P"),
-		nasdaqText:     orbitron.createStaticText("NASDAQ"),
+		dowText:        inconsolata.createStaticText("DOW"),
+		sapText:        inconsolata.createStaticText("S&P"),
+		nasdaqText:     inconsolata.createStaticText("NASDAQ"),
+		priceText:      inconsolata.createDynamicText(),
 		symbolText:     orbitron.createStaticText("SPY"),
-		priceText:      orbitron.createDynamicText(),
 		viewMatrix:     vm,
 	}, nil
 }
