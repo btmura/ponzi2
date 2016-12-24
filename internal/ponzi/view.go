@@ -214,7 +214,8 @@ func (v *view) render() {
 
 	const p = 10 // padding
 
-	// Start in the upper left corner. (0, 0) is bottom left.
+	// Start in the upper left corner. (0, 0) is lower left.
+	// Move down below the major indices line.
 	c := image.Pt(p, v.winSize.Y-p-v.dowText.size.Y)
 
 	// Render major indices on one line.
@@ -233,7 +234,7 @@ func (v *view) render() {
 	// Render the current symbol below the indices.
 	if v.model.currentSymbol != "" {
 		s := v.propText.measure(v.model.currentSymbol)
-		c.Y -= p + s.Y // padding below indices
+		c.Y -= p + s.Y // padding below indices plus the text
 
 		c := c
 		c = c.Add(v.propText.render(v.model.currentSymbol, c))
@@ -242,16 +243,10 @@ func (v *view) render() {
 
 	// Render the chart if trading session data available.
 	if v.model.currentTradingSessions != nil {
-		c.Y -= p
-
 		if v.chart == nil {
 			v.chart = createChart(v.model.currentTradingSessions)
 		}
-		m := newScaleMatrix(float32(v.winSize.X/2), float32(c.Y/2), 1)
-		m = m.mult(newTranslationMatrix(float32(v.winSize.X/2), float32(c.Y)/2, 0))
-		gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
-		gl.BindTexture(gl.TEXTURE_2D, v.texture)
-		v.chart.draw()
+		v.chart.render(image.Rect(p, p, v.winSize.X-p, c.Y-p))
 	}
 
 	// Render input symbol being typed in the center.

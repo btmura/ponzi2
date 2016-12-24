@@ -1,6 +1,10 @@
 package ponzi
 
-import "github.com/go-gl/gl/v4.5-core/gl"
+import (
+	"image"
+
+	"github.com/go-gl/gl/v4.5-core/gl"
+)
 
 type chart struct {
 	vao   uint32
@@ -40,7 +44,12 @@ func createChart(sessions []*modelTradingSession) *chart {
 	}
 }
 
-func (c *chart) draw() {
+func (c *chart) render(r image.Rectangle) {
+	m := newScaleMatrix(float32(r.Dx()/2), float32(r.Dy()/2), 1)
+	m = m.mult(newTranslationMatrix(float32(r.Min.X+r.Dx()/2), float32(r.Min.Y+r.Dy()/2), 0))
+	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
+	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
+
 	gl.BindVertexArray(c.vao)
 	gl.DrawElements(gl.LINES, c.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	gl.BindVertexArray(0)
