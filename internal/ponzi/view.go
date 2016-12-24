@@ -72,10 +72,10 @@ type view struct {
 	sapText    *staticText
 	nasdaqText *staticText
 
+	chart *chart
+
 	monoText *dynamicText
 	propText *dynamicText
-
-	chart *chart
 
 	viewMatrix        matrix4
 	perspectiveMatrix matrix4
@@ -238,18 +238,20 @@ func (v *view) render() {
 		c := c
 		c = c.Add(v.propText.render(v.model.currentStock.symbol, c))
 		c = c.Add(v.propText.render(v.currentPriceText(), c))
+	}
 
-		// Render the chart if trading session data available.
-		if v.model.currentStock.sessions != nil {
-			if v.chart == nil {
-				v.chart = createChart(v.model.currentStock)
-			}
-			m := newScaleMatrix(600, 400, 1)
-			m = m.mult(newTranslationMatrix(50, 50, 0))
-			gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
-			gl.BindTexture(gl.TEXTURE_2D, v.texture)
-			v.chart.draw()
+	// Render the chart if trading session data available.
+	if v.model.currentStock != nil && v.model.currentStock.sessions != nil {
+		c.Y -= p
+
+		if v.chart == nil {
+			v.chart = createChart(v.model.currentStock)
 		}
+		m := newScaleMatrix(float32(v.winSize.X/2), float32(c.Y/2), 1)
+		m = m.mult(newTranslationMatrix(float32(v.winSize.X/2), float32(c.Y)/2, 0))
+		gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
+		gl.BindTexture(gl.TEXTURE_2D, v.texture)
+		v.chart.draw()
 	}
 
 	// Render input symbol being typed in the center.

@@ -8,15 +8,16 @@ type chart struct {
 }
 
 func createChart(stock *modelStock) *chart {
-	vertices := []float32{
-		0, 0,
-		1, 0,
-		0, 1,
-		1, 1,
-	}
-	indices := []uint16{
-		1, 2, 0,
-		1, 3, 2,
+	ns := len(stock.sessions)
+	ws := 2.0 / float32(ns) // -1 to 1 on X-axis
+
+	x := -1.0 + ws/2.0
+	var vertices []float32
+	var indices []uint16
+	for i := 0; i < ns; i++ {
+		vertices = append(vertices, x, -1, x, 1)
+		indices = append(indices, uint16(i*2), uint16(i*2+1))
+		x += ws
 	}
 
 	vbo := createArrayBuffer(vertices)
