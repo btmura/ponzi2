@@ -17,7 +17,7 @@ type model struct {
 	// inputSymbol is the symbol being entered by the user.
 	inputSymbol string
 
-	currentStock modelStock
+	currentStock *modelStock
 }
 
 type modelStock struct {
@@ -57,7 +57,7 @@ func (m *model) popSymbolChar() {
 
 func (m *model) submitSymbol() {
 	m.Lock()
-	m.currentStock = modelStock{
+	m.currentStock = &modelStock{
 		symbol: m.inputSymbol,
 	}
 	m.inputSymbol = ""
@@ -105,7 +105,10 @@ func (m *model) refresh() error {
 	// Get the trading history for the current stock.
 
 	m.RLock()
-	s := m.currentStock.symbol
+	var s string
+	if m.currentStock != nil {
+		s = m.currentStock.symbol
+	}
 	m.RUnlock()
 
 	var hist *tradingHistory

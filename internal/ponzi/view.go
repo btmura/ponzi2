@@ -202,7 +202,6 @@ func createView(model *model) (*view, error) {
 		nasdaqText:     mono.createStaticText("NASDAQ"),
 		monoText:       mono.createDynamicText(),
 		propText:       prop.createDynamicText(),
-		chart:          createChart(),
 		viewMatrix:     vm,
 	}, nil
 }
@@ -232,13 +231,25 @@ func (v *view) render() {
 	}
 
 	// Render the current symbol below the indices.
-	if v.model.currentStock.symbol != "" {
+	if v.model.currentStock != nil {
 		s := v.propText.measure(v.model.currentStock.symbol)
 		c.Y -= p + s.Y // padding below indices
 
 		c := c
 		c = c.Add(v.propText.render(v.model.currentStock.symbol, c))
 		c = c.Add(v.propText.render(v.currentPriceText(), c))
+
+		// Render the chart if trading session data available.
+		if v.model.currentStock.sessions != nil {
+			if v.chart == nil {
+				v.chart = createChart(v.model.currentStock)
+			}
+			m := newScaleMatrix(600, 400, 1)
+			m = m.mult(newTranslationMatrix(50, 50, 0))
+			gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
+			gl.BindTexture(gl.TEXTURE_2D, v.texture)
+			v.chart.draw()
+		}
 	}
 
 	// Render input symbol being typed in the center.
@@ -249,12 +260,6 @@ func (v *view) render() {
 	}
 
 	v.model.RUnlock()
-
-	m := newScaleMatrix(600, 400, 1)
-	m = m.mult(newTranslationMatrix(50, 50, 0))
-	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
-	gl.BindTexture(gl.TEXTURE_2D, v.texture)
-	v.chart.draw()
 }
 
 func (v *view) dowPriceText() string {

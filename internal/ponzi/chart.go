@@ -7,7 +7,7 @@ type chart struct {
 	count int32
 }
 
-func createChart() *chart {
+func createChart(stock *modelStock) *chart {
 	vertices := []float32{
 		0, 0,
 		1, 0,
