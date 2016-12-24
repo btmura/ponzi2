@@ -7,8 +7,8 @@ type chart struct {
 	count int32
 }
 
-func createChart(stock *modelStock) *chart {
-	ns := len(stock.sessions)
+func createChart(sessions []*modelTradingSession) *chart {
+	ns := len(sessions)
 	ws := 2.0 / float32(ns) // -1 to 1 on X-axis
 
 	x := -1.0 + ws/2.0

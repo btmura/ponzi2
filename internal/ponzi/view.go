@@ -231,21 +231,21 @@ func (v *view) render() {
 	}
 
 	// Render the current symbol below the indices.
-	if v.model.currentStock != nil {
-		s := v.propText.measure(v.model.currentStock.symbol)
+	if v.model.currentSymbol != "" {
+		s := v.propText.measure(v.model.currentSymbol)
 		c.Y -= p + s.Y // padding below indices
 
 		c := c
-		c = c.Add(v.propText.render(v.model.currentStock.symbol, c))
+		c = c.Add(v.propText.render(v.model.currentSymbol, c))
 		c = c.Add(v.propText.render(v.currentPriceText(), c))
 	}
 
 	// Render the chart if trading session data available.
-	if v.model.currentStock != nil && v.model.currentStock.sessions != nil {
+	if v.model.currentTradingSessions != nil {
 		c.Y -= p
 
 		if v.chart == nil {
-			v.chart = createChart(v.model.currentStock)
+			v.chart = createChart(v.model.currentTradingSessions)
 		}
 		m := newScaleMatrix(float32(v.winSize.X/2), float32(c.Y/2), 1)
 		m = m.mult(newTranslationMatrix(float32(v.winSize.X/2), float32(c.Y)/2, 0))
@@ -277,7 +277,7 @@ func (v *view) nasdaqPriceText() string {
 }
 
 func (v *view) currentPriceText() string {
-	return formatQuote(v.model.currentStock.quote)
+	return formatQuote(v.model.currentQuote)
 }
 
 func formatQuote(q *modelQuote) string {

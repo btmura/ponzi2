@@ -17,13 +17,9 @@ type model struct {
 	// inputSymbol is the symbol being entered by the user.
 	inputSymbol string
 
-	currentStock *modelStock
-}
-
-type modelStock struct {
-	symbol   string
-	quote    *modelQuote
-	sessions []*modelTradingSession
+	currentSymbol          string
+	currentQuote           *modelQuote
+	currentTradingSessions []*modelTradingSession
 }
 
 type modelQuote struct {
@@ -57,10 +53,9 @@ func (m *model) popSymbolChar() {
 
 func (m *model) submitSymbol() {
 	m.Lock()
-	m.currentStock = &modelStock{
-		symbol: m.inputSymbol,
-	}
-	m.inputSymbol = ""
+	m.currentSymbol, m.inputSymbol = m.inputSymbol, ""
+	m.currentQuote = nil
+	m.currentTradingSessions = nil
 	m.startRefresh()
 	m.Unlock()
 }
@@ -105,10 +100,7 @@ func (m *model) refresh() error {
 	// Get the trading history for the current stock.
 
 	m.RLock()
-	var s string
-	if m.currentStock != nil {
-		s = m.currentStock.symbol
-	}
+	s := m.currentSymbol
 	m.RUnlock()
 
 	var hist *tradingHistory
@@ -131,15 +123,18 @@ func (m *model) refresh() error {
 	m.dow = getQuote(dowSymbol)
 	m.sap = getQuote(sapSymbol)
 	m.nasdaq = getQuote(nasdaqSymbol)
-	if s != "" && s == m.currentStock.symbol {
-		m.currentStock.sessions = convertTradingSessions(hist.sessions)
-		if len(m.currentStock.sessions) > 0 {
-			m.currentStock.quote = &modelQuote{
-				price:         m.currentStock.sessions[0].close,
-				change:        m.currentStock.sessions[0].change,
-				percentChange: m.currentStock.sessions[0].percentChange,
+	if s != "" && s == m.currentSymbol {
+		m.currentTradingSessions = convertTradingSessions(hist.sessions)
+		if len(m.currentTradingSessions) > 0 {
+			m.currentQuote = &modelQuote{
+				price:         m.currentTradingSessions[0].close,
+				change:        m.currentTradingSessions[0].change,
+				percentChange: m.currentTradingSessions[0].percentChange,
 			}
 		}
+	} else {
+		m.currentQuote = nil
+		m.currentTradingSessions = nil
 	}
 	m.Unlock()
 
