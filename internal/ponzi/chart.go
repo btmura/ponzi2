@@ -8,8 +8,17 @@ import (
 )
 
 type chart struct {
-	vao   uint32
-	count int32
+	// lineVAO is the Vertex Array Object for the lines.
+	lineVAO uint32
+
+	// lineCount is the number of elements to pass to gl.DrawElements.
+	lineCount int32
+
+	// triangleVAO is the Vertex Array Object for the triangles.
+	triangleVAO uint32
+
+	// triangleCount is the number of elements to pass to gl.DrawElements.
+	triangleCount int32
 }
 
 func createChart(sessions []*modelTradingSession) *chart {
@@ -27,7 +36,8 @@ func createChart(sessions []*modelTradingSession) *chart {
 
 	// Calculate vertices and indices for the candlesticks.
 	var vertices []float32
-	var indices []uint16
+	var lineIndices []uint16
+	var triangleIndices []uint16
 
 	stickWidth := 2.0 / float32(len(sessions)) // (-1 to 1) on X-axis
 	leftX := -1.0 + stickWidth*0.1
@@ -66,17 +76,27 @@ func createChart(sessions []*modelTradingSession) *chart {
 		}
 
 		// Add the vertex indices to render the candlestick.
-		indices = append(indices,
+		lineIndices = append(lineIndices,
 			// Top and bottom lines around the box.
 			idx(0), idx(1),
 			idx(2), idx(3),
-
-			// Lines for the box.
-			idx(4), idx(5),
-			idx(6), idx(7),
-			idx(4), idx(6),
-			idx(5), idx(7),
 		)
+
+		if s.close > s.open {
+			// Use lines for open candlestick on higher closes.
+			lineIndices = append(lineIndices,
+				idx(4), idx(5),
+				idx(6), idx(7),
+				idx(4), idx(6),
+				idx(5), idx(7),
+			)
+		} else {
+			// Use triangles for filled candlestick on lower closes.
+			triangleIndices = append(triangleIndices,
+				idx(4), idx(6), idx(5),
+				idx(5), idx(6), idx(7),
+			)
+		}
 
 		// Move the X coordinates one stick over.
 		leftX += stickWidth
@@ -85,22 +105,36 @@ func createChart(sessions []*modelTradingSession) *chart {
 	}
 
 	vbo := createArrayBuffer(vertices)
-	ibo := createElementArrayBuffer(indices)
+	lineIBO := createElementArrayBuffer(lineIndices)
+	triangleIBO := createElementArrayBuffer(triangleIndices)
 
-	var vao uint32
-	gl.GenVertexArrays(1, &vao)
-	gl.BindVertexArray(vao)
+	var lineVAO uint32
+	gl.GenVertexArrays(1, &lineVAO)
+	gl.BindVertexArray(lineVAO)
+	{
+		gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+		gl.EnableVertexAttribArray(positionLocation)
+		gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
+		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, lineIBO)
+	}
+	gl.BindVertexArray(0)
 
-	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.EnableVertexAttribArray(positionLocation)
-	gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
-
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo)
+	var triangleVAO uint32
+	gl.GenVertexArrays(1, &triangleVAO)
+	gl.BindVertexArray(triangleVAO)
+	{
+		gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+		gl.EnableVertexAttribArray(positionLocation)
+		gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
+		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleIBO)
+	}
 	gl.BindVertexArray(0)
 
 	return &chart{
-		vao:   vao,
-		count: int32(len(indices)),
+		lineVAO:       lineVAO,
+		lineCount:     int32(len(lineIndices)),
+		triangleVAO:   triangleVAO,
+		triangleCount: int32(len(triangleIndices)),
 	}
 }
 
@@ -110,7 +144,11 @@ func (c *chart) render(r image.Rectangle) {
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
 
-	gl.BindVertexArray(c.vao)
-	gl.DrawElements(gl.LINES, c.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.BindVertexArray(c.lineVAO)
+	gl.DrawElements(gl.LINES, c.lineCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.BindVertexArray(0)
+
+	gl.BindVertexArray(c.triangleVAO)
+	gl.DrawElements(gl.TRIANGLES, c.triangleCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	gl.BindVertexArray(0)
 }
