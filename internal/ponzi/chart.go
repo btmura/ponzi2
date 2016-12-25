@@ -2,6 +2,7 @@ package ponzi
 
 import (
 	"image"
+	"math"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
@@ -12,15 +13,31 @@ type chart struct {
 }
 
 func createChart(sessions []*modelTradingSession) *chart {
+	// Find the min and max price.
+	min := float32(math.MaxFloat32)
+	max := float32(0)
+	for _, s := range sessions {
+		if s.low < min {
+			min = s.low
+		}
+		if s.high > max {
+			max = s.high
+		}
+	}
+
 	ns := len(sessions)
 	ws := 2.0 / float32(ns) // -1 to 1 on X-axis
-
 	x := -1.0 + ws/2.0
+
 	var vertices []float32
 	var indices []uint16
-	for i := 0; i < ns; i++ {
-		vertices = append(vertices, x, -1, x, 1)
+	for i, s := range sessions {
+		lp := (s.low - min) / (max - min)
+		hp := (s.high - min) / (max - min)
+
+		vertices = append(vertices, x, 2*lp-1, x, 2*hp-1)
 		indices = append(indices, uint16(i*2), uint16(i*2+1))
+
 		x += ws
 	}
 

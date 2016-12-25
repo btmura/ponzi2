@@ -31,10 +31,12 @@ type modelQuote struct {
 type modelTradingSession struct {
 	date          time.Time
 	open          float32
+	high          float32
+	low           float32
 	close         float32
+	volume        int
 	change        float32
 	percentChange float32
-	volume        int
 }
 
 func (m *model) pushSymbolChar(ch rune) {
@@ -148,6 +150,8 @@ func convertTradingSessions(sessions []*tradingSession) []*modelTradingSession {
 		ms = append(ms, &modelTradingSession{
 			date:   s.date,
 			open:   s.open,
+			high:   s.high,
+			low:    s.low,
 			close:  s.close,
 			volume: s.volume,
 		})
