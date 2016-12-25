@@ -139,9 +139,7 @@ func createChart(sessions []*modelTradingSession) *chart {
 }
 
 func (c *chart) render(r image.Rectangle) {
-	m := newScaleMatrix(float32(r.Dx()/2), float32(r.Dy()/2), 1)
-	m = m.mult(newTranslationMatrix(float32(r.Min.X+r.Dx()/2), float32(r.Min.Y+r.Dy()/2), 0))
-	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
+	setModelMatrixRectangle(r)
 	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
 
 	gl.BindVertexArray(c.lineVAO)
@@ -150,5 +148,88 @@ func (c *chart) render(r image.Rectangle) {
 
 	gl.BindVertexArray(c.triangleVAO)
 	gl.DrawElements(gl.TRIANGLES, c.triangleCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.BindVertexArray(0)
+}
+
+type volumeBars struct {
+	vao   uint32
+	count int32
+}
+
+func createVolumeBars(sessions []*modelTradingSession) *volumeBars {
+	// Find the max volume for the y-axis.
+	var max int
+	for _, s := range sessions {
+		if s.volume > max {
+			max = s.volume
+		}
+	}
+
+	// Calculate vertices and indices for the candlesticks.
+	var vertices []float32
+	var indices []uint16
+
+	barWidth := 2.0 / float32(len(sessions)) // (-1 to 1) on X-axis
+	leftX := -1.0 + barWidth*0.1
+	rightX := -1.0 + barWidth*0.9
+
+	calcY := func(value int) float32 {
+		return 2*float32(value)/float32(max) - 1
+	}
+
+	for i, s := range sessions {
+		topY := calcY(s.volume)
+		botY := calcY(0)
+
+		// Add the vertices needed to create the candlestick.
+		vertices = append(vertices,
+			leftX, topY, // UL
+			rightX, topY, // UR
+			leftX, botY, // BL
+			rightX, botY, // BR
+		)
+
+		// idx is function to refer to the vertices above.
+		idx := func(j uint16) uint16 {
+			return uint16(i)*4 + j
+		}
+
+		// Use triangles for filled candlestick on lower closes.
+		indices = append(indices,
+			idx(0), idx(2), idx(1),
+			idx(1), idx(2), idx(3),
+		)
+
+		// Move the X coordinates one bar over.
+		leftX += barWidth
+		rightX += barWidth
+	}
+
+	vbo := createArrayBuffer(vertices)
+	ibo := createElementArrayBuffer(indices)
+
+	var vao uint32
+	gl.GenVertexArrays(1, &vao)
+	gl.BindVertexArray(vao)
+	{
+		gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+		gl.EnableVertexAttribArray(positionLocation)
+		gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
+		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo)
+	}
+	gl.BindVertexArray(0)
+
+	return &volumeBars{
+		vao:   vao,
+		count: int32(len(indices)),
+	}
+}
+
+func (v *volumeBars) render(r image.Rectangle) {
+	setModelMatrixRectangle(r)
+	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
+
+	gl.BindVertexArray(v.vao)
+	gl.DrawElements(gl.TRIANGLES, v.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	gl.BindVertexArray(0)
 }

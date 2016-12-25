@@ -72,7 +72,8 @@ type view struct {
 	sapText    *staticText
 	nasdaqText *staticText
 
-	chart *chart
+	chart      *chart
+	volumeBars *volumeBars
 
 	monoText *dynamicText
 	propText *dynamicText
@@ -243,10 +244,21 @@ func (v *view) render() {
 
 	// Render the chart if trading session data available.
 	if v.model.currentTradingSessions != nil {
+		leftX, rightX := p, v.winSize.X-p
+		botY, topY := p, c.Y-p
+
+		vr := image.Rect(leftX, botY, rightX, topY/3)
+		cr := image.Rect(leftX, topY/3, rightX, topY)
+
 		if v.chart == nil {
 			v.chart = createChart(v.model.currentTradingSessions)
 		}
-		v.chart.render(image.Rect(p, p, v.winSize.X-p, c.Y-p))
+		v.chart.render(cr)
+
+		if v.volumeBars == nil {
+			v.volumeBars = createVolumeBars(v.model.currentTradingSessions)
+		}
+		v.volumeBars.render(vr)
 	}
 
 	// Render input symbol being typed in the center.
@@ -333,4 +345,10 @@ func createImage(data []byte) (*image.RGBA, error) {
 	rgba := image.NewRGBA(img.Bounds())
 	draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
 	return rgba, nil
+}
+
+func setModelMatrixRectangle(r image.Rectangle) {
+	m := newScaleMatrix(float32(r.Dx()/2), float32(r.Dy()/2), 1)
+	m = m.mult(newTranslationMatrix(float32(r.Min.X+r.Dx()/2), float32(r.Min.Y+r.Dy()/2), 0))
+	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 }
