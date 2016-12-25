@@ -31,12 +31,19 @@ func createChart(sessions []*modelTradingSession) *chart {
 
 	var vertices []float32
 	var indices []uint16
+
 	for i, s := range sessions {
 		lp := (s.low - min) / (max - min)
 		hp := (s.high - min) / (max - min)
-
 		vertices = append(vertices, x, 2*lp-1, x, 2*hp-1)
-		indices = append(indices, uint16(i*2), uint16(i*2+1))
+
+		op := (s.open - min) / (max - min)
+		vertices = append(vertices, x-ws/2, 2*op-1, x, 2*op-1)
+
+		cp := (s.close - min) / (max - min)
+		vertices = append(vertices, x, 2*cp-1, x+ws/2, 2*cp-1)
+
+		indices = append(indices, uint16(i*6), uint16(i*6+1), uint16(i*6+2), uint16(i*6+3), uint16(i*6+4), uint16(i*6+5))
 
 		x += ws
 	}
