@@ -1,6 +1,7 @@
 package ponzi
 
 import (
+	"sort"
 	"sync"
 	"time"
 )
@@ -126,14 +127,7 @@ func (m *model) refresh() error {
 	m.sap = getQuote(sapSymbol)
 	m.nasdaq = getQuote(nasdaqSymbol)
 	if s != "" && s == m.currentSymbol {
-		m.currentTradingSessions = convertTradingSessions(hist.sessions)
-		if len(m.currentTradingSessions) > 0 {
-			m.currentQuote = &modelQuote{
-				price:         m.currentTradingSessions[0].close,
-				change:        m.currentTradingSessions[0].change,
-				percentChange: m.currentTradingSessions[0].percentChange,
-			}
-		}
+		m.currentQuote, m.currentTradingSessions = convertTradingSessions(hist.sessions)
 	} else {
 		m.currentQuote = nil
 		m.currentTradingSessions = nil
@@ -143,7 +137,7 @@ func (m *model) refresh() error {
 	return nil
 }
 
-func convertTradingSessions(sessions []*tradingSession) []*modelTradingSession {
+func convertTradingSessions(sessions []*tradingSession) (*modelQuote, []*modelTradingSession) {
 	// Copy the trading sessions into a slice of structs.
 	var ms []*modelTradingSession
 	for _, s := range sessions {
@@ -157,13 +151,44 @@ func convertTradingSessions(sessions []*tradingSession) []*modelTradingSession {
 		})
 	}
 
+	// Most recent trading sessions at the back.
+	sort.Sort(byModelTradingSessionDate(ms))
+
 	// Calculate the price change which is today's close minus yesterday's close.
 	for i := range ms {
-		if i+1 < len(ms) {
-			ms[i].change = ms[i].close - ms[i+1].close
-			ms[i].percentChange = ms[i].change / ms[i+1].close
+		if i > 0 {
+			ms[i].change = ms[i].close - ms[i-1].close
+			ms[i].percentChange = ms[i].change / ms[i-1].close
 		}
 	}
 
-	return ms
+	// Use the trading history to create the current quote.
+	var quote *modelQuote
+	if len(ms) != 0 {
+		quote = &modelQuote{
+			price:         ms[len(ms)-1].close,
+			change:        ms[len(ms)-1].change,
+			percentChange: ms[len(ms)-1].percentChange,
+		}
+	}
+
+	return quote, ms
+}
+
+// byModelTradingSessionDate is a sortable modelTradingSession slice.
+type byModelTradingSessionDate []*modelTradingSession
+
+// Len implements sort.Interface.
+func (sessions byModelTradingSessionDate) Len() int {
+	return len(sessions)
+}
+
+// Less implements sort.Interface.
+func (sessions byModelTradingSessionDate) Less(i, j int) bool {
+	return sessions[i].date.Before(sessions[j].date)
+}
+
+// Swap implements sort.Interface.
+func (sessions byModelTradingSessionDate) Swap(i, j int) {
+	sessions[i], sessions[j] = sessions[j], sessions[i]
 }

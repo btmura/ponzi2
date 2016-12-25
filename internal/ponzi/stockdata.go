@@ -165,8 +165,8 @@ func googleGetTradingHistory(req *getTradingHistoryRequest) (*tradingHistory, er
 		}
 	}
 
-	// Most recent trading sessions at the front.
-	sort.Reverse(bySessionDate(history.sessions))
+	// Most recent trading sessions at the back.
+	sort.Sort(byTradingSessionDate(history.sessions))
 
 	return history, nil
 }
@@ -274,8 +274,8 @@ func yahooGetTradingHistory(req *getTradingHistoryRequest) (*tradingHistory, err
 		}
 	}
 
-	// Most recent trading sessions at the front.
-	sort.Reverse(bySessionDate(history.sessions))
+	// Most recent trading sessions at the back.
+	sort.Sort(byTradingSessionDate(history.sessions))
 
 	return history, nil
 }
@@ -401,20 +401,20 @@ func parseInt(value string) (int, error) {
 	return int(i64), err
 }
 
-// bySessionDate is a sortable tradingSession slice.
-type bySessionDate []*tradingSession
+// byTradingSessionDate is a sortable tradingSession slice.
+type byTradingSessionDate []*tradingSession
 
 // Len implements sort.Interface.
-func (sessions bySessionDate) Len() int {
+func (sessions byTradingSessionDate) Len() int {
 	return len(sessions)
 }
 
 // Less implements sort.Interface.
-func (sessions bySessionDate) Less(i, j int) bool {
+func (sessions byTradingSessionDate) Less(i, j int) bool {
 	return sessions[i].date.Before(sessions[j].date)
 }
 
 // Swap implements sort.Interface.
-func (sessions bySessionDate) Swap(i, j int) {
+func (sessions byTradingSessionDate) Swap(i, j int) {
 	sessions[i], sessions[j] = sessions[j], sessions[i]
 }
