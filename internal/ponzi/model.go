@@ -109,7 +109,7 @@ func (m *model) refresh() error {
 	var hist *tradingHistory
 	if s != "" {
 		end := midnight(time.Now().In(newYorkLoc))
-		start := end.Add(-30 * 24 * time.Hour)
+		start := end.Add(-30 * 24 * time.Hour * 3)
 		hist, err = getTradingHistory(&getTradingHistoryRequest{
 			symbol:    s,
 			startDate: start,
