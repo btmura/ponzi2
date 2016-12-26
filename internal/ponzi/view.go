@@ -72,7 +72,8 @@ type view struct {
 	sapText    *staticText
 	nasdaqText *staticText
 
-	chart *chart
+	chart        *chart
+	cleanUpChart func()
 
 	monoText *dynamicText
 	propText *dynamicText
@@ -250,7 +251,10 @@ func (v *view) render() {
 		pr := image.Rect(leftX, topY/4, rightX, topY)
 
 		if v.chart == nil || v.chart.symbol != v.model.currentSymbol {
-			v.chart = createChart(v.model.currentSymbol, v.model.currentTradingSessions)
+			if v.cleanUpChart != nil {
+				v.cleanUpChart()
+			}
+			v.chart, v.cleanUpChart = createChart(v.model.currentSymbol, v.model.currentTradingSessions)
 		}
 		v.chart.renderPrices(pr)
 		v.chart.renderVolume(vr)

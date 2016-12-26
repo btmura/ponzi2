@@ -25,15 +25,20 @@ type chartVolume struct {
 	count int32
 }
 
-func createChart(symbol string, sessions []*modelTradingSession) *chart {
+func createChart(symbol string, sessions []*modelTradingSession) (*chart, func()) {
+	prices, cleanUpPrices := createChartPrices(sessions)
+	volume, cleanUpVolume := createChartVolume(sessions)
 	return &chart{
-		symbol: symbol,
-		prices: createChartPrices(sessions),
-		volume: createChartVolume(sessions),
-	}
+			symbol: symbol,
+			prices: prices,
+			volume: volume,
+		}, func() {
+			cleanUpPrices()
+			cleanUpVolume()
+		}
 }
 
-func createChartPrices(sessions []*modelTradingSession) *chartPrices {
+func createChartPrices(sessions []*modelTradingSession) (*chartPrices, func()) {
 	// Find the min and max prices for the y-axis.
 	min := float32(math.MaxFloat32)
 	max := float32(0)
@@ -143,14 +148,17 @@ func createChartPrices(sessions []*modelTradingSession) *chartPrices {
 	gl.BindVertexArray(0)
 
 	return &chartPrices{
-		lineVAO:       lineVAO,
-		lineCount:     int32(len(lineIndices)),
-		triangleVAO:   triangleVAO,
-		triangleCount: int32(len(triangleIndices)),
-	}
+			lineVAO:       lineVAO,
+			lineCount:     int32(len(lineIndices)),
+			triangleVAO:   triangleVAO,
+			triangleCount: int32(len(triangleIndices)),
+		}, func() {
+			gl.DeleteVertexArrays(1, &lineVAO)
+			gl.DeleteVertexArrays(1, &triangleVAO)
+		}
 }
 
-func createChartVolume(sessions []*modelTradingSession) *chartVolume {
+func createChartVolume(sessions []*modelTradingSession) (*chartVolume, func()) {
 	// Find the max volume for the y-axis.
 	var max int
 	for _, s := range sessions {
@@ -214,9 +222,11 @@ func createChartVolume(sessions []*modelTradingSession) *chartVolume {
 	gl.BindVertexArray(0)
 
 	return &chartVolume{
-		vao:   vao,
-		count: int32(len(indices)),
-	}
+			vao:   vao,
+			count: int32(len(indices)),
+		}, func() {
+			gl.DeleteVertexArrays(1, &vao)
+		}
 }
 
 func (c *chart) renderPrices(r image.Rectangle) {
