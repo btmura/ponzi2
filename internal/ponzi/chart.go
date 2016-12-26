@@ -8,9 +8,10 @@ import (
 )
 
 type chart struct {
-	symbol string
-	prices *chartPrices
-	volume *chartVolume
+	symbol      string
+	prices      *chartPrices
+	volume      *chartVolume
+	stochastics *chartStochastics
 }
 
 type chartPrices struct {
@@ -25,16 +26,24 @@ type chartVolume struct {
 	count int32
 }
 
+type chartStochastics struct {
+	vao   uint32
+	count int32
+}
+
 func createChart(symbol string, sessions []*modelTradingSession) (*chart, func()) {
 	prices, cleanUpPrices := createChartPrices(sessions)
 	volume, cleanUpVolume := createChartVolume(sessions)
+	stochastics, cleanUpStochastics := createChartStochastics(sessions)
 	return &chart{
-			symbol: symbol,
-			prices: prices,
-			volume: volume,
+			symbol:      symbol,
+			prices:      prices,
+			volume:      volume,
+			stochastics: stochastics,
 		}, func() {
 			cleanUpPrices()
 			cleanUpVolume()
+			cleanUpStochastics()
 		}
 }
 
@@ -229,6 +238,55 @@ func createChartVolume(sessions []*modelTradingSession) (*chartVolume, func()) {
 		}
 }
 
+func createChartStochastics(sessions []*modelTradingSession) (*chartStochastics, func()) {
+	// Calculate vertices and indices for the stochastics.
+	var vertices []float32
+	var indices []uint16
+
+	segmentWidth := 2.0 / float32(len(sessions)) // (-1 to 1) on X-axis
+	midX := -1.0 + segmentWidth*0.5
+
+	calcY := func(value float32) float32 {
+		return 2*float32(value) - 1
+	}
+
+	var i uint16
+	for _, s := range sessions {
+		if s.k > 0 {
+			y := calcY(s.k)
+			vertices = append(vertices, midX, y)
+			if i > 0 {
+				indices = append(indices, uint16(i), uint16(i-1))
+			}
+			i++
+		}
+
+		// Move the X coordinates one bar over.
+		midX += segmentWidth
+	}
+
+	vbo := createArrayBuffer(vertices)
+	ibo := createElementArrayBuffer(indices)
+
+	var vao uint32
+	gl.GenVertexArrays(1, &vao)
+	gl.BindVertexArray(vao)
+	{
+		gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+		gl.EnableVertexAttribArray(positionLocation)
+		gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
+		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo)
+	}
+	gl.BindVertexArray(0)
+
+	return &chartStochastics{
+			vao:   vao,
+			count: int32(len(indices)),
+		}, func() {
+			gl.DeleteVertexArrays(1, &vao)
+		}
+}
+
 func (c *chart) renderPrices(r image.Rectangle) {
 	setModelMatrixRectangle(r)
 	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
@@ -248,5 +306,14 @@ func (c *chart) renderVolume(r image.Rectangle) {
 
 	gl.BindVertexArray(c.volume.vao)
 	gl.DrawElements(gl.TRIANGLES, c.volume.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.BindVertexArray(0)
+}
+
+func (c *chart) renderStochastics(r image.Rectangle) {
+	setModelMatrixRectangle(r)
+	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
+
+	gl.BindVertexArray(c.stochastics.vao)
+	gl.DrawElements(gl.LINES, c.stochastics.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	gl.BindVertexArray(0)
 }

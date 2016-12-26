@@ -130,8 +130,7 @@ func (m *model) refresh() error {
 	if s != "" && s == m.currentSymbol {
 		m.currentQuote, m.currentTradingSessions = convertTradingSessions(hist.sessions)
 	} else {
-		m.currentQuote = nil
-		m.currentTradingSessions = nil
+		m.currentQuote, m.currentTradingSessions = nil, nil
 	}
 	m.Unlock()
 
@@ -170,8 +169,7 @@ func convertTradingSessions(sessions []*tradingSession) (*modelQuote, []*modelTr
 			continue
 		}
 
-		var highestHigh float32
-		var lowestLow float32
+		highestHigh, lowestLow := ms[i].high, ms[i].low
 		for j := 0; j < kDays; j++ {
 			if highestHigh < ms[i-j].high {
 				highestHigh = ms[i-j].high
@@ -180,7 +178,7 @@ func convertTradingSessions(sessions []*tradingSession) (*modelQuote, []*modelTr
 				lowestLow = ms[i-j].low
 			}
 		}
-		ms[i].k = (ms[i].close - lowestLow) / (highestHigh - lowestLow) * 100
+		ms[i].k = (ms[i].close - lowestLow) / (highestHigh - lowestLow)
 	}
 
 	// Use the trading history to create the current quote.

@@ -247,8 +247,9 @@ func (v *view) render() {
 		leftX, rightX := p, v.winSize.X-p
 		botY, topY := p, c.Y-p
 
-		vr := image.Rect(leftX, botY, rightX, topY/4)
-		pr := image.Rect(leftX, topY/4, rightX, topY)
+		sr := image.Rect(leftX, botY, rightX, topY/4)
+		vr := image.Rect(leftX, topY/4, rightX, topY/2)
+		pr := image.Rect(leftX, topY/2, rightX, topY)
 
 		if v.chart == nil || v.chart.symbol != v.model.currentSymbol {
 			if v.cleanUpChart != nil {
@@ -258,6 +259,7 @@ func (v *view) render() {
 		}
 		v.chart.renderPrices(pr)
 		v.chart.renderVolume(vr)
+		v.chart.renderStochastics(sr)
 	}
 
 	// Render input symbol being typed in the center.
