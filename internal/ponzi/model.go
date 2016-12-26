@@ -38,9 +38,8 @@ type modelTradingSession struct {
 	volume        int
 	change        float32
 	percentChange float32
-
-	k float32
-	d float32
+	k             float32
+	d             float32
 }
 
 func (m *model) pushSymbolChar(ch rune) {
@@ -164,8 +163,9 @@ func convertTradingSessions(sessions []*tradingSession) (*modelQuote, []*modelTr
 		}
 	}
 
-	// Calculate k percent for stochastics.
+	// Calculate fast %K for stochastics.
 	const kDays = 14
+	fastK := make([]float32, len(ms))
 	for i := range ms {
 		if i+1 < kDays {
 			continue
@@ -180,16 +180,23 @@ func convertTradingSessions(sessions []*tradingSession) (*modelQuote, []*modelTr
 				lowestLow = ms[i-j].low
 			}
 		}
-		ms[i].k = (ms[i].close - lowestLow) / (highestHigh - lowestLow)
+		fastK[i] = (ms[i].close - lowestLow) / (highestHigh - lowestLow)
 	}
 
-	// Calculate d percent for stochastics.
+	// Calculate fast %D (slow %K) for stochastics.
 	const dDays = 3
 	for i := range ms {
 		if i+1 < kDays+dDays {
 			continue
 		}
+		ms[i].k = (fastK[i] + fastK[i-1] + fastK[i-2]) / 3
+	}
 
+	// Calculate slow %D for stochastics.
+	for i := range ms {
+		if i+1 < kDays+dDays+dDays {
+			continue
+		}
 		ms[i].d = (ms[i].k + ms[i-1].k + ms[i-2].k) / 3
 	}
 
