@@ -38,7 +38,9 @@ type modelTradingSession struct {
 	volume        int
 	change        float32
 	percentChange float32
-	k             float32
+
+	k float32
+	d float32
 }
 
 func (m *model) pushSymbolChar(ch rune) {
@@ -179,6 +181,16 @@ func convertTradingSessions(sessions []*tradingSession) (*modelQuote, []*modelTr
 			}
 		}
 		ms[i].k = (ms[i].close - lowestLow) / (highestHigh - lowestLow)
+	}
+
+	// Calculate d percent for stochastics.
+	const dDays = 3
+	for i := range ms {
+		if i+1 < kDays+dDays {
+			continue
+		}
+
+		ms[i].d = (ms[i].k + ms[i-1].k + ms[i-2].k) / 3
 	}
 
 	// Use the trading history to create the current quote.
