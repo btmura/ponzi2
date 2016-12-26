@@ -247,16 +247,16 @@ func (v *view) render() {
 		leftX, rightX := p, v.winSize.X-p
 		botY, topY := p, c.Y-p
 
-		vr := image.Rect(leftX, botY, rightX, topY/3)
-		cr := image.Rect(leftX, topY/3, rightX, topY)
+		vr := image.Rect(leftX, botY, rightX, topY/4)
+		cr := image.Rect(leftX, topY/4, rightX, topY)
 
-		if v.chart == nil {
-			v.chart = createChart(v.model.currentTradingSessions)
+		if v.chart == nil || v.chart.symbol != v.model.currentSymbol {
+			v.chart = createChart(v.model.currentSymbol, v.model.currentTradingSessions)
 		}
 		v.chart.render(cr)
 
-		if v.volumeBars == nil {
-			v.volumeBars = createVolumeBars(v.model.currentTradingSessions)
+		if v.volumeBars == nil || v.volumeBars.symbol != v.model.currentSymbol {
+			v.volumeBars = createVolumeBars(v.model.currentSymbol, v.model.currentTradingSessions)
 		}
 		v.volumeBars.render(vr)
 	}

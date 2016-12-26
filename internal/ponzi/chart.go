@@ -8,6 +8,9 @@ import (
 )
 
 type chart struct {
+	// symbol is the symbol the chart is for.
+	symbol string
+
 	// lineVAO is the Vertex Array Object for the lines.
 	lineVAO uint32
 
@@ -21,7 +24,7 @@ type chart struct {
 	triangleCount int32
 }
 
-func createChart(sessions []*modelTradingSession) *chart {
+func createChart(symbol string, sessions []*modelTradingSession) *chart {
 	// Find the min and max prices for the y-axis.
 	min := float32(math.MaxFloat32)
 	max := float32(0)
@@ -131,6 +134,7 @@ func createChart(sessions []*modelTradingSession) *chart {
 	gl.BindVertexArray(0)
 
 	return &chart{
+		symbol:        symbol,
 		lineVAO:       lineVAO,
 		lineCount:     int32(len(lineIndices)),
 		triangleVAO:   triangleVAO,
@@ -152,11 +156,12 @@ func (c *chart) render(r image.Rectangle) {
 }
 
 type volumeBars struct {
-	vao   uint32
-	count int32
+	symbol string
+	vao    uint32
+	count  int32
 }
 
-func createVolumeBars(sessions []*modelTradingSession) *volumeBars {
+func createVolumeBars(symbol string, sessions []*modelTradingSession) *volumeBars {
 	// Find the max volume for the y-axis.
 	var max int
 	for _, s := range sessions {
@@ -220,8 +225,9 @@ func createVolumeBars(sessions []*modelTradingSession) *volumeBars {
 	gl.BindVertexArray(0)
 
 	return &volumeBars{
-		vao:   vao,
-		count: int32(len(indices)),
+		symbol: symbol,
+		vao:    vao,
+		count:  int32(len(indices)),
 	}
 }
 
