@@ -8,23 +8,32 @@ import (
 )
 
 type chart struct {
-	// symbol is the symbol the chart is for.
 	symbol string
+	prices *chartPrices
+	volume *chartVolume
+}
 
-	// lineVAO is the Vertex Array Object for the lines.
-	lineVAO uint32
-
-	// lineCount is the number of elements to pass to gl.DrawElements.
-	lineCount int32
-
-	// triangleVAO is the Vertex Array Object for the triangles.
-	triangleVAO uint32
-
-	// triangleCount is the number of elements to pass to gl.DrawElements.
+type chartPrices struct {
+	lineVAO       uint32
+	lineCount     int32
+	triangleVAO   uint32
 	triangleCount int32
 }
 
+type chartVolume struct {
+	vao   uint32
+	count int32
+}
+
 func createChart(symbol string, sessions []*modelTradingSession) *chart {
+	return &chart{
+		symbol: symbol,
+		prices: createChartPrices(sessions),
+		volume: createChartVolume(sessions),
+	}
+}
+
+func createChartPrices(sessions []*modelTradingSession) *chartPrices {
 	// Find the min and max prices for the y-axis.
 	min := float32(math.MaxFloat32)
 	max := float32(0)
@@ -133,8 +142,7 @@ func createChart(symbol string, sessions []*modelTradingSession) *chart {
 	}
 	gl.BindVertexArray(0)
 
-	return &chart{
-		symbol:        symbol,
+	return &chartPrices{
 		lineVAO:       lineVAO,
 		lineCount:     int32(len(lineIndices)),
 		triangleVAO:   triangleVAO,
@@ -142,26 +150,7 @@ func createChart(symbol string, sessions []*modelTradingSession) *chart {
 	}
 }
 
-func (c *chart) render(r image.Rectangle) {
-	setModelMatrixRectangle(r)
-	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
-
-	gl.BindVertexArray(c.lineVAO)
-	gl.DrawElements(gl.LINES, c.lineCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
-	gl.BindVertexArray(0)
-
-	gl.BindVertexArray(c.triangleVAO)
-	gl.DrawElements(gl.TRIANGLES, c.triangleCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
-	gl.BindVertexArray(0)
-}
-
-type volumeBars struct {
-	symbol string
-	vao    uint32
-	count  int32
-}
-
-func createVolumeBars(symbol string, sessions []*modelTradingSession) *volumeBars {
+func createChartVolume(sessions []*modelTradingSession) *chartVolume {
 	// Find the max volume for the y-axis.
 	var max int
 	for _, s := range sessions {
@@ -224,18 +213,30 @@ func createVolumeBars(symbol string, sessions []*modelTradingSession) *volumeBar
 	}
 	gl.BindVertexArray(0)
 
-	return &volumeBars{
-		symbol: symbol,
-		vao:    vao,
-		count:  int32(len(indices)),
+	return &chartVolume{
+		vao:   vao,
+		count: int32(len(indices)),
 	}
 }
 
-func (v *volumeBars) render(r image.Rectangle) {
+func (c *chart) renderPrices(r image.Rectangle) {
 	setModelMatrixRectangle(r)
 	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
 
-	gl.BindVertexArray(v.vao)
-	gl.DrawElements(gl.TRIANGLES, v.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.BindVertexArray(c.prices.lineVAO)
+	gl.DrawElements(gl.LINES, c.prices.lineCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.BindVertexArray(0)
+
+	gl.BindVertexArray(c.prices.triangleVAO)
+	gl.DrawElements(gl.TRIANGLES, c.prices.triangleCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.BindVertexArray(0)
+}
+
+func (c *chart) renderVolume(r image.Rectangle) {
+	setModelMatrixRectangle(r)
+	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
+
+	gl.BindVertexArray(c.volume.vao)
+	gl.DrawElements(gl.TRIANGLES, c.volume.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	gl.BindVertexArray(0)
 }

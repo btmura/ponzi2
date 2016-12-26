@@ -72,8 +72,7 @@ type view struct {
 	sapText    *staticText
 	nasdaqText *staticText
 
-	chart      *chart
-	volumeBars *volumeBars
+	chart *chart
 
 	monoText *dynamicText
 	propText *dynamicText
@@ -248,17 +247,13 @@ func (v *view) render() {
 		botY, topY := p, c.Y-p
 
 		vr := image.Rect(leftX, botY, rightX, topY/4)
-		cr := image.Rect(leftX, topY/4, rightX, topY)
+		pr := image.Rect(leftX, topY/4, rightX, topY)
 
 		if v.chart == nil || v.chart.symbol != v.model.currentSymbol {
 			v.chart = createChart(v.model.currentSymbol, v.model.currentTradingSessions)
 		}
-		v.chart.render(cr)
-
-		if v.volumeBars == nil || v.volumeBars.symbol != v.model.currentSymbol {
-			v.volumeBars = createVolumeBars(v.model.currentSymbol, v.model.currentTradingSessions)
-		}
-		v.volumeBars.render(vr)
+		v.chart.renderPrices(pr)
+		v.chart.renderVolume(vr)
 	}
 
 	// Render input symbol being typed in the center.
