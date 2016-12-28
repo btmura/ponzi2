@@ -18,9 +18,9 @@ type model struct {
 	// inputSymbol is the symbol being entered by the user.
 	inputSymbol string
 
-	currentSymbol          string
-	currentQuote           *modelQuote
-	currentTradingSessions []*modelTradingSession
+	currentSymbol        string
+	currentQuote         *modelQuote
+	currentDailySessions []*modelTradingSession
 }
 
 type modelQuote struct {
@@ -60,7 +60,7 @@ func (m *model) submitSymbol() {
 	m.Lock()
 	m.currentSymbol, m.inputSymbol = m.inputSymbol, ""
 	m.currentQuote = nil
-	m.currentTradingSessions = nil
+	m.currentDailySessions = nil
 	m.startRefresh()
 	m.Unlock()
 }
@@ -129,9 +129,9 @@ func (m *model) refresh() error {
 	m.sap = getQuote(sapSymbol)
 	m.nasdaq = getQuote(nasdaqSymbol)
 	if s != "" && s == m.currentSymbol {
-		m.currentQuote, m.currentTradingSessions = convertTradingSessions(hist.sessions)
+		m.currentQuote, m.currentDailySessions = convertTradingSessions(hist.sessions)
 	} else {
-		m.currentQuote, m.currentTradingSessions = nil, nil
+		m.currentQuote, m.currentDailySessions = nil, nil
 	}
 	m.Unlock()
 

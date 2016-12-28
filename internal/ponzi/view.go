@@ -243,7 +243,7 @@ func (v *view) render() {
 	}
 
 	// Render the chart if trading session data available.
-	if v.model.currentTradingSessions != nil {
+	if v.model.currentDailySessions != nil {
 		leftX, rightX := p, v.winSize.X-p
 		botY, topY := p, c.Y-p
 
@@ -255,7 +255,7 @@ func (v *view) render() {
 			if v.cleanUpChart != nil {
 				v.cleanUpChart()
 			}
-			v.chart, v.cleanUpChart = createChart(v.model.currentSymbol, v.model.currentTradingSessions)
+			v.chart, v.cleanUpChart = createChart(v.model.currentSymbol, v.model.currentDailySessions)
 		}
 		v.chart.renderPrices(pr)
 		v.chart.renderVolume(vr)
