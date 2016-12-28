@@ -8,10 +8,11 @@ import (
 )
 
 type chart struct {
-	symbol      string
-	prices      *chartPrices
-	volume      *chartVolume
-	stochastics *chartStochastics
+	symbol            string
+	prices            *chartPrices
+	volume            *chartVolume
+	dailyStochastics  *chartStochastics
+	weeklyStochastics *chartStochastics
 }
 
 type chartPrices struct {
@@ -31,27 +32,30 @@ type chartStochastics struct {
 	count int32
 }
 
-func createChart(symbol string, sessions []*modelTradingSession) (*chart, func()) {
-	prices, cleanUpPrices := createChartPrices(sessions)
-	volume, cleanUpVolume := createChartVolume(sessions)
-	stochastics, cleanUpStochastics := createChartStochastics(sessions)
+func createChart(symbol string, ds, ws []*modelTradingSession) (*chart, func()) {
+	prices, cleanUpPrices := createChartPrices(ds)
+	volume, cleanUpVolume := createChartVolume(ds)
+	dailyStochastics, cleanUpDS := createChartStochastics(ds)
+	weeklyStochastics, cleanUpWS := createChartStochastics(ws)
 	return &chart{
-			symbol:      symbol,
-			prices:      prices,
-			volume:      volume,
-			stochastics: stochastics,
+			symbol:            symbol,
+			prices:            prices,
+			volume:            volume,
+			dailyStochastics:  dailyStochastics,
+			weeklyStochastics: weeklyStochastics,
 		}, func() {
 			cleanUpPrices()
 			cleanUpVolume()
-			cleanUpStochastics()
+			cleanUpDS()
+			cleanUpWS()
 		}
 }
 
-func createChartPrices(sessions []*modelTradingSession) (*chartPrices, func()) {
+func createChartPrices(ss []*modelTradingSession) (*chartPrices, func()) {
 	// Find the min and max prices for the y-axis.
 	min := float32(math.MaxFloat32)
 	max := float32(0)
-	for _, s := range sessions {
+	for _, s := range ss {
 		if s.low < min {
 			min = s.low
 		}
@@ -65,7 +69,7 @@ func createChartPrices(sessions []*modelTradingSession) (*chartPrices, func()) {
 	var lineIndices []uint16
 	var triangleIndices []uint16
 
-	stickWidth := 2.0 / float32(len(sessions)) // (-1 to 1) on X-axis
+	stickWidth := 2.0 / float32(len(ss)) // (-1 to 1) on X-axis
 	leftX := -1.0 + stickWidth*0.1
 	midX := -1.0 + stickWidth*0.5
 	rightX := -1.0 + stickWidth*0.9
@@ -74,7 +78,7 @@ func createChartPrices(sessions []*modelTradingSession) (*chartPrices, func()) {
 		return 2*(value-min)/(max-min) - 1
 	}
 
-	for i, s := range sessions {
+	for i, s := range ss {
 		// Figure out Y coordinates of the key levels.
 		lowY, highY, openY, closeY := calcY(s.low), calcY(s.high), calcY(s.open), calcY(s.close)
 
@@ -167,10 +171,10 @@ func createChartPrices(sessions []*modelTradingSession) (*chartPrices, func()) {
 		}
 }
 
-func createChartVolume(sessions []*modelTradingSession) (*chartVolume, func()) {
+func createChartVolume(ss []*modelTradingSession) (*chartVolume, func()) {
 	// Find the max volume for the y-axis.
 	var max int
-	for _, s := range sessions {
+	for _, s := range ss {
 		if s.volume > max {
 			max = s.volume
 		}
@@ -180,7 +184,7 @@ func createChartVolume(sessions []*modelTradingSession) (*chartVolume, func()) {
 	var vertices []float32
 	var indices []uint16
 
-	barWidth := 2.0 / float32(len(sessions)) // (-1 to 1) on X-axis
+	barWidth := 2.0 / float32(len(ss)) // (-1 to 1) on X-axis
 	leftX := -1.0 + barWidth*0.1
 	rightX := -1.0 + barWidth*0.9
 
@@ -188,7 +192,7 @@ func createChartVolume(sessions []*modelTradingSession) (*chartVolume, func()) {
 		return 2*float32(value)/float32(max) - 1
 	}
 
-	for i, s := range sessions {
+	for i, s := range ss {
 		topY := calcY(s.volume)
 		botY := calcY(0)
 
@@ -238,12 +242,12 @@ func createChartVolume(sessions []*modelTradingSession) (*chartVolume, func()) {
 		}
 }
 
-func createChartStochastics(sessions []*modelTradingSession) (*chartStochastics, func()) {
+func createChartStochastics(ss []*modelTradingSession) (*chartStochastics, func()) {
 	// Calculate vertices and indices for the stochastics.
 	var vertices []float32
 	var indices []uint16
 
-	width := 2.0 / float32(len(sessions)) // (-1 to 1) on X-axis
+	width := 2.0 / float32(len(ss)) // (-1 to 1) on X-axis
 	calcX := func(i int) float32 {
 		return -1.0 + width*0.5 + width*float32(i)
 	}
@@ -255,7 +259,7 @@ func createChartStochastics(sessions []*modelTradingSession) (*chartStochastics,
 
 	// Add vertices and indices for k percent lines.
 	first := true
-	for i, s := range sessions {
+	for i, s := range ss {
 		if s.k == 0.0 {
 			continue
 		}
@@ -270,7 +274,7 @@ func createChartStochastics(sessions []*modelTradingSession) (*chartStochastics,
 
 	// Add vertices and indices for d percent lines.
 	first = true
-	for i, s := range sessions {
+	for i, s := range ss {
 		if s.d == 0.0 {
 			continue
 		}
@@ -327,11 +331,20 @@ func (c *chart) renderVolume(r image.Rectangle) {
 	gl.BindVertexArray(0)
 }
 
-func (c *chart) renderStochastics(r image.Rectangle) {
+func (c *chart) renderDailyStochastics(r image.Rectangle) {
 	setModelMatrixRectangle(r)
 	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
 
-	gl.BindVertexArray(c.stochastics.vao)
-	gl.DrawElements(gl.LINES, c.stochastics.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.BindVertexArray(c.dailyStochastics.vao)
+	gl.DrawElements(gl.LINES, c.dailyStochastics.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.BindVertexArray(0)
+}
+
+func (c *chart) renderWeeklyStochastics(r image.Rectangle) {
+	setModelMatrixRectangle(r)
+	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
+
+	gl.BindVertexArray(c.weeklyStochastics.vao)
+	gl.DrawElements(gl.LINES, c.weeklyStochastics.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	gl.BindVertexArray(0)
 }

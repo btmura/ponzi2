@@ -247,19 +247,21 @@ func (v *view) render() {
 		leftX, rightX := p, v.winSize.X-p
 		botY, topY := p, c.Y-p
 
-		sr := image.Rect(leftX, botY, rightX, topY/4)
-		vr := image.Rect(leftX, topY/4, rightX, topY/2)
+		wsr := image.Rect(leftX, botY, rightX, topY/6)
+		dsr := image.Rect(leftX, topY/6, rightX, topY/3)
+		vr := image.Rect(leftX, topY/3, rightX, topY/2)
 		pr := image.Rect(leftX, topY/2, rightX, topY)
 
 		if v.chart == nil || v.chart.symbol != v.model.currentSymbol {
 			if v.cleanUpChart != nil {
 				v.cleanUpChart()
 			}
-			v.chart, v.cleanUpChart = createChart(v.model.currentSymbol, v.model.currentDailySessions)
+			v.chart, v.cleanUpChart = createChart(v.model.currentSymbol, v.model.currentDailySessions, v.model.currentWeeklySessions)
 		}
 		v.chart.renderPrices(pr)
 		v.chart.renderVolume(vr)
-		v.chart.renderStochastics(sr)
+		v.chart.renderDailyStochastics(dsr)
+		v.chart.renderWeeklyStochastics(wsr)
 	}
 
 	// Render input symbol being typed in the center.

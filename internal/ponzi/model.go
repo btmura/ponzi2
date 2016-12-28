@@ -1,6 +1,7 @@
 package ponzi
 
 import (
+	"log"
 	"sort"
 	"sync"
 	"time"
@@ -113,7 +114,7 @@ func (m *model) refresh() error {
 	var hist *tradingHistory
 	if s != "" {
 		end := midnight(time.Now().In(newYorkLoc))
-		start := end.Add(-30 * 24 * time.Hour * 3)
+		start := end.Add(-6 * 30 * 24 * time.Hour)
 		hist, err = getTradingHistory(&getTradingHistoryRequest{
 			symbol:    s,
 			startDate: start,
@@ -202,7 +203,7 @@ func convertTradingSessions(sessions []*tradingSession) (*modelQuote, []*modelTr
 	// Fill in the stochastics.
 	addStochastics := func(ss []*modelTradingSession) {
 		const (
-			kDays = 14
+			kDays = 10
 			dDays = 3
 		)
 
@@ -254,6 +255,11 @@ func convertTradingSessions(sessions []*tradingSession) (*modelQuote, []*modelTr
 		}
 	}
 
+	log.Printf("ds: %d ws: %d", len(ds), len(ws))
+	for i, s := range ws {
+		log.Printf("%d: %+v", i, s)
+	}
+
 	return quote, ds, ws
 }
 
@@ -261,16 +267,16 @@ func convertTradingSessions(sessions []*tradingSession) (*modelQuote, []*modelTr
 type byModelTradingSessionDate []*modelTradingSession
 
 // Len implements sort.Interface.
-func (sessions byModelTradingSessionDate) Len() int {
-	return len(sessions)
+func (ss byModelTradingSessionDate) Len() int {
+	return len(ss)
 }
 
 // Less implements sort.Interface.
-func (sessions byModelTradingSessionDate) Less(i, j int) bool {
-	return sessions[i].date.Before(sessions[j].date)
+func (ss byModelTradingSessionDate) Less(i, j int) bool {
+	return ss[i].date.Before(ss[j].date)
 }
 
 // Swap implements sort.Interface.
-func (sessions byModelTradingSessionDate) Swap(i, j int) {
-	sessions[i], sessions[j] = sessions[j], sessions[i]
+func (ss byModelTradingSessionDate) Swap(i, j int) {
+	ss[i], ss[j] = ss[j], ss[i]
 }
