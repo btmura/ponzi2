@@ -43,7 +43,7 @@ func createChart(symbol string, ds, ws []*modelTradingSession) *chart {
 }
 
 func (c *chart) render(r image.Rectangle) {
-	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
+	gl.Uniform1f(colorMixAmountLocation, 1)
 
 	rects := sliceRectangle(r, 0.13, 0.13, 0.13, 0.6)
 
@@ -86,6 +86,7 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 
 	// Calculate vertices and indices for the candlesticks.
 	var vertices []float32
+	var colors []float32
 	var lineIndices []uint16
 	var triangleIndices []uint16
 
@@ -120,6 +121,44 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 			rightX, botY, // 7 - Bottom right of box
 		)
 
+		// Add the colors corresponding to the vertices.
+		switch {
+		case s.change > 0:
+			colors = append(colors,
+				0, 1, 0,
+				0, 1, 0,
+				0, 1, 0,
+				0, 1, 0,
+				0, 1, 0,
+				0, 1, 0,
+				0, 1, 0,
+				0, 1, 0,
+			)
+
+		case s.change < 0:
+			colors = append(colors,
+				1, 0, 0,
+				1, 0, 0,
+				1, 0, 0,
+				1, 0, 0,
+				1, 0, 0,
+				1, 0, 0,
+				1, 0, 0,
+				1, 0, 0,
+			)
+
+		default:
+			colors = append(colors,
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1,
+			)
+		}
 		// idx is function to refer to the vertices above.
 		idx := func(j uint16) uint16 {
 			return uint16(i)*8 + j
@@ -160,6 +199,7 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 	}
 
 	vbo := createArrayBuffer(vertices)
+	cbo := createArrayBuffer(colors)
 	lineIBO := createElementArrayBuffer(lineIndices)
 
 	var lineVAO uint32
@@ -169,6 +209,11 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 		gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
 		gl.EnableVertexAttribArray(positionLocation)
 		gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
+
+		gl.BindBuffer(gl.ARRAY_BUFFER, cbo)
+		gl.EnableVertexAttribArray(colorLocation)
+		gl.VertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
+
 		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, lineIBO)
 	}
 	gl.BindVertexArray(0)
@@ -182,6 +227,11 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 			gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
 			gl.EnableVertexAttribArray(positionLocation)
 			gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
+
+			gl.BindBuffer(gl.ARRAY_BUFFER, cbo)
+			gl.EnableVertexAttribArray(colorLocation)
+			gl.VertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
+
 			gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleIBO)
 		}
 		gl.BindVertexArray(0)
@@ -231,8 +281,9 @@ func createChartVolume(ss []*modelTradingSession) *chartVolume {
 		}
 	}
 
-	// Calculate vertices and indices for the candlesticks.
+	// Calculate vertices and indices for the volume bars.
 	var vertices []float32
+	var colors []float32
 	var indices []uint16
 
 	barWidth := 2.0 / float32(len(ss)) // (-1 to 1) on X-axis
@@ -247,13 +298,40 @@ func createChartVolume(ss []*modelTradingSession) *chartVolume {
 		topY := calcY(s.volume)
 		botY := calcY(0)
 
-		// Add the vertices needed to create the candlestick.
+		// Add the vertices needed to create the volume bar.
 		vertices = append(vertices,
 			leftX, topY, // UL
 			rightX, topY, // UR
 			leftX, botY, // BL
 			rightX, botY, // BR
 		)
+
+		// Add the colors corresponding to the volume bar.
+		switch {
+		case s.change > 0:
+			colors = append(colors,
+				0, 1, 0,
+				0, 1, 0,
+				0, 1, 0,
+				0, 1, 0,
+			)
+
+		case s.change < 0:
+			colors = append(colors,
+				1, 0, 0,
+				1, 0, 0,
+				1, 0, 0,
+				1, 0, 0,
+			)
+
+		default:
+			colors = append(colors,
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1,
+				1, 1, 1,
+			)
+		}
 
 		// idx is function to refer to the vertices above.
 		idx := func(j uint16) uint16 {
@@ -277,6 +355,7 @@ func createChartVolume(ss []*modelTradingSession) *chartVolume {
 	}
 
 	vbo := createArrayBuffer(vertices)
+	cbo := createArrayBuffer(colors)
 	ibo := createElementArrayBuffer(indices)
 
 	var vao uint32
@@ -286,6 +365,11 @@ func createChartVolume(ss []*modelTradingSession) *chartVolume {
 		gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
 		gl.EnableVertexAttribArray(positionLocation)
 		gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
+
+		gl.BindBuffer(gl.ARRAY_BUFFER, cbo)
+		gl.EnableVertexAttribArray(colorLocation)
+		gl.VertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
+
 		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo)
 	}
 	gl.BindVertexArray(0)
@@ -317,6 +401,7 @@ func (v *chartVolume) close() {
 func createChartStochastics(ss []*modelTradingSession) *chartStochastics {
 	// Calculate vertices and indices for the stochastics.
 	var vertices []float32
+	var colors []float32
 	var indices []uint16
 
 	width := 2.0 / float32(len(ss)) // (-1 to 1) on X-axis
@@ -337,6 +422,7 @@ func createChartStochastics(ss []*modelTradingSession) *chartStochastics {
 		}
 
 		vertices = append(vertices, calcX(i), calcY(s.k))
+		colors = append(colors, 1, 1, 0)
 		if !first {
 			indices = append(indices, v, v-1)
 		}
@@ -352,6 +438,7 @@ func createChartStochastics(ss []*modelTradingSession) *chartStochastics {
 		}
 
 		vertices = append(vertices, calcX(i), calcY(s.d))
+		colors = append(colors, 1, 0, 0)
 		if !first {
 			indices = append(indices, v, v-1)
 		}
@@ -365,6 +452,7 @@ func createChartStochastics(ss []*modelTradingSession) *chartStochastics {
 	}
 
 	vbo := createArrayBuffer(vertices)
+	cbo := createArrayBuffer(colors)
 	ibo := createElementArrayBuffer(indices)
 
 	var vao uint32
@@ -374,6 +462,11 @@ func createChartStochastics(ss []*modelTradingSession) *chartStochastics {
 		gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
 		gl.EnableVertexAttribArray(positionLocation)
 		gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
+
+		gl.BindBuffer(gl.ARRAY_BUFFER, cbo)
+		gl.EnableVertexAttribArray(colorLocation)
+		gl.VertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
+
 		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo)
 	}
 	gl.BindVertexArray(0)

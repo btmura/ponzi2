@@ -71,7 +71,10 @@ func (t *staticText) render(c image.Point) image.Point {
 	m := newScaleMatrix(float32(t.size.X), float32(t.size.Y), 1)
 	m = m.mult(newTranslationMatrix(float32(c.X), float32(c.Y), 0))
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
+
 	gl.BindTexture(gl.TEXTURE_2D, t.texture)
+	gl.Uniform1f(colorMixAmountLocation, 0)
+
 	t.mesh.drawElements()
 	return image.Pt(t.size.X, 0)
 }

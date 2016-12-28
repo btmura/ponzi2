@@ -26,10 +26,10 @@ const (
 	positionLocation
 	normalLocation
 	texCoordLocation
+	colorLocation
 
 	textureLocation
-	mixColorLocation
-	mixAmountLocation
+	colorMixAmountLocation
 )
 
 var (
@@ -149,9 +149,6 @@ func createView(model *model) (*view, error) {
 	}
 
 	texture := createTexture(textureImage)
-
-	gl.Uniform3fv(mixColorLocation, 1, &ambientLightColor[0])
-	gl.Uniform1f(mixAmountLocation, 1)
 
 	// Load meshes and create vertex array objects.
 

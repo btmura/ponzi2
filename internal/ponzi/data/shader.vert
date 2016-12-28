@@ -11,14 +11,17 @@ layout(location = 5) uniform vec3 directionalVector;
 layout(location = 6) in vec4 position;
 layout(location = 7) in vec4 normal;
 layout(location = 8) in vec2 inTexCoord;
+layout(location = 9) in vec4 inColor;
 
 out vec2 texCoord;
+out vec4 color;
 out vec3 lighting;
 
 void main(void) {
 	gl_Position = projectionViewMatrix * modelMatrix * position;
 
 	texCoord = inTexCoord;
+	color = inColor;
 
 	vec4 transformedNormal = normalMatrix * vec4(normal.xyz, 1.0);
 	float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
