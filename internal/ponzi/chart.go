@@ -32,34 +32,46 @@ type chartStochastics struct {
 	count int32
 }
 
-func createChart(symbol string, ds, ws []*modelTradingSession) (*chart, func()) {
-	prices, cleanUpPrices := createChartPrices(ds)
-	volume, cleanUpVolume := createChartVolume(ds)
-	dailyStochastics, cleanUpDS := createChartStochastics(ds)
-	weeklyStochastics, cleanUpWS := createChartStochastics(ws)
+func createChart(symbol string, ds, ws []*modelTradingSession) *chart {
 	return &chart{
-			symbol:            symbol,
-			prices:            prices,
-			volume:            volume,
-			dailyStochastics:  dailyStochastics,
-			weeklyStochastics: weeklyStochastics,
-		}, func() {
-			if cleanUpPrices != nil {
-				cleanUpPrices()
-			}
-			if cleanUpVolume != nil {
-				cleanUpVolume()
-			}
-			if cleanUpDS != nil {
-				cleanUpDS()
-			}
-			if cleanUpWS != nil {
-				cleanUpWS()
-			}
-		}
+		symbol:            symbol,
+		prices:            createChartPrices(ds),
+		volume:            createChartVolume(ds),
+		dailyStochastics:  createChartStochastics(ds),
+		weeklyStochastics: createChartStochastics(ws),
+	}
 }
 
-func createChartPrices(ss []*modelTradingSession) (*chartPrices, func()) {
+func (c *chart) render(r image.Rectangle) {
+	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
+
+	rects := sliceRectangle(r, 0.13, 0.13, 0.13, 0.6)
+
+	setModelMatrixRectangle(rects[3])
+	c.prices.render()
+
+	setModelMatrixRectangle(rects[2])
+	c.volume.render()
+
+	setModelMatrixRectangle(rects[1])
+	c.dailyStochastics.render()
+
+	setModelMatrixRectangle(rects[0])
+	c.weeklyStochastics.render()
+}
+
+func (c *chart) close() {
+	if c == nil {
+		return
+	}
+
+	c.prices.close()
+	c.volume.close()
+	c.dailyStochastics.close()
+	c.weeklyStochastics.close()
+}
+
+func createChartPrices(ss []*modelTradingSession) *chartPrices {
 	// Find the min and max prices for the y-axis.
 	min := float32(math.MaxFloat32)
 	max := float32(0)
@@ -144,7 +156,7 @@ func createChartPrices(ss []*modelTradingSession) (*chartPrices, func()) {
 
 	// Can't create empty buffer objects. Bail out if nothing to render.
 	if len(vertices) == 0 {
-		return nil, nil
+		return nil
 	}
 
 	vbo := createArrayBuffer(vertices)
@@ -174,17 +186,37 @@ func createChartPrices(ss []*modelTradingSession) (*chartPrices, func()) {
 	gl.BindVertexArray(0)
 
 	return &chartPrices{
-			lineVAO:       lineVAO,
-			lineCount:     int32(len(lineIndices)),
-			triangleVAO:   triangleVAO,
-			triangleCount: int32(len(triangleIndices)),
-		}, func() {
-			gl.DeleteVertexArrays(1, &lineVAO)
-			gl.DeleteVertexArrays(1, &triangleVAO)
-		}
+		lineVAO:       lineVAO,
+		lineCount:     int32(len(lineIndices)),
+		triangleVAO:   triangleVAO,
+		triangleCount: int32(len(triangleIndices)),
+	}
 }
 
-func createChartVolume(ss []*modelTradingSession) (*chartVolume, func()) {
+func (p *chartPrices) render() {
+	if p == nil {
+		return
+	}
+
+	gl.BindVertexArray(p.lineVAO)
+	gl.DrawElements(gl.LINES, p.lineCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.BindVertexArray(0)
+
+	gl.BindVertexArray(p.triangleVAO)
+	gl.DrawElements(gl.TRIANGLES, p.triangleCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.BindVertexArray(0)
+}
+
+func (p *chartPrices) close() {
+	if p == nil {
+		return
+	}
+
+	gl.DeleteVertexArrays(1, &p.lineVAO)
+	gl.DeleteVertexArrays(1, &p.triangleVAO)
+}
+
+func createChartVolume(ss []*modelTradingSession) *chartVolume {
 	// Find the max volume for the y-axis.
 	var max int
 	for _, s := range ss {
@@ -235,7 +267,7 @@ func createChartVolume(ss []*modelTradingSession) (*chartVolume, func()) {
 
 	// Can't create empty buffer objects. Bail out if nothing to render.
 	if len(vertices) == 0 {
-		return nil, nil
+		return nil
 	}
 
 	vbo := createArrayBuffer(vertices)
@@ -253,14 +285,30 @@ func createChartVolume(ss []*modelTradingSession) (*chartVolume, func()) {
 	gl.BindVertexArray(0)
 
 	return &chartVolume{
-			vao:   vao,
-			count: int32(len(indices)),
-		}, func() {
-			gl.DeleteVertexArrays(1, &vao)
-		}
+		vao:   vao,
+		count: int32(len(indices)),
+	}
 }
 
-func createChartStochastics(ss []*modelTradingSession) (*chartStochastics, func()) {
+func (v *chartVolume) render() {
+	if v == nil {
+		return
+	}
+
+	gl.BindVertexArray(v.vao)
+	gl.DrawElements(gl.TRIANGLES, v.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.BindVertexArray(0)
+}
+
+func (v *chartVolume) close() {
+	if v == nil {
+		return
+	}
+
+	gl.DeleteVertexArrays(1, &v.vao)
+}
+
+func createChartStochastics(ss []*modelTradingSession) *chartStochastics {
 	// Calculate vertices and indices for the stochastics.
 	var vertices []float32
 	var indices []uint16
@@ -307,7 +355,7 @@ func createChartStochastics(ss []*modelTradingSession) (*chartStochastics, func(
 
 	// Can't create empty buffer objects. Bail out if nothing to render.
 	if len(vertices) == 0 {
-		return nil, nil
+		return nil
 	}
 
 	vbo := createArrayBuffer(vertices)
@@ -325,65 +373,25 @@ func createChartStochastics(ss []*modelTradingSession) (*chartStochastics, func(
 	gl.BindVertexArray(0)
 
 	return &chartStochastics{
-			vao:   vao,
-			count: int32(len(indices)),
-		}, func() {
-			gl.DeleteVertexArrays(1, &vao)
-		}
+		vao:   vao,
+		count: int32(len(indices)),
+	}
 }
 
-func (c *chart) renderPrices(r image.Rectangle) {
-	if c.prices == nil {
+func (s *chartStochastics) render() {
+	if s == nil {
 		return
 	}
 
-	setModelMatrixRectangle(r)
-	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
-
-	gl.BindVertexArray(c.prices.lineVAO)
-	gl.DrawElements(gl.LINES, c.prices.lineCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
-	gl.BindVertexArray(0)
-
-	gl.BindVertexArray(c.prices.triangleVAO)
-	gl.DrawElements(gl.TRIANGLES, c.prices.triangleCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.BindVertexArray(s.vao)
+	gl.DrawElements(gl.LINES, s.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	gl.BindVertexArray(0)
 }
 
-func (c *chart) renderVolume(r image.Rectangle) {
-	if c.volume == nil {
+func (s *chartStochastics) close() {
+	if s == nil {
 		return
 	}
 
-	setModelMatrixRectangle(r)
-	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
-
-	gl.BindVertexArray(c.volume.vao)
-	gl.DrawElements(gl.TRIANGLES, c.volume.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
-	gl.BindVertexArray(0)
-}
-
-func (c *chart) renderDailyStochastics(r image.Rectangle) {
-	if c.dailyStochastics == nil {
-		return
-	}
-
-	setModelMatrixRectangle(r)
-	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
-
-	gl.BindVertexArray(c.dailyStochastics.vao)
-	gl.DrawElements(gl.LINES, c.dailyStochastics.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
-	gl.BindVertexArray(0)
-}
-
-func (c *chart) renderWeeklyStochastics(r image.Rectangle) {
-	if c.weeklyStochastics == nil {
-		return
-	}
-
-	setModelMatrixRectangle(r)
-	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
-
-	gl.BindVertexArray(c.weeklyStochastics.vao)
-	gl.DrawElements(gl.LINES, c.weeklyStochastics.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
-	gl.BindVertexArray(0)
+	gl.DeleteVertexArrays(1, &s.vao)
 }

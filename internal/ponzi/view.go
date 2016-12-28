@@ -244,24 +244,12 @@ func (v *view) render() {
 
 	// Render the chart if trading session data available.
 	if v.model.currentDailySessions != nil {
-		leftX, rightX := p, v.winSize.X-p
-		botY, topY := p, c.Y-p
-
-		wsr := image.Rect(leftX, botY, rightX, topY/6)
-		dsr := image.Rect(leftX, topY/6, rightX, topY/3)
-		vr := image.Rect(leftX, topY/3, rightX, topY/2)
-		pr := image.Rect(leftX, topY/2, rightX, topY)
-
+		r := image.Rect(p, p, v.winSize.X-p, c.Y-p)
 		if v.chart == nil || v.chart.symbol != v.model.currentSymbol {
-			if v.cleanUpChart != nil {
-				v.cleanUpChart()
-			}
-			v.chart, v.cleanUpChart = createChart(v.model.currentSymbol, v.model.currentDailySessions, v.model.currentWeeklySessions)
+			v.chart.close()
+			v.chart = createChart(v.model.currentSymbol, v.model.currentDailySessions, v.model.currentWeeklySessions)
 		}
-		v.chart.renderPrices(pr)
-		v.chart.renderVolume(vr)
-		v.chart.renderDailyStochastics(dsr)
-		v.chart.renderWeeklyStochastics(wsr)
+		v.chart.render(r)
 	}
 
 	// Render input symbol being typed in the center.
@@ -354,4 +342,15 @@ func setModelMatrixRectangle(r image.Rectangle) {
 	m := newScaleMatrix(float32(r.Dx()/2), float32(r.Dy()/2), 1)
 	m = m.mult(newTranslationMatrix(float32(r.Min.X+r.Dx()/2), float32(r.Min.Y+r.Dy()/2), 0))
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
+}
+
+func sliceRectangle(r image.Rectangle, percentages ...float32) []image.Rectangle {
+	var rects []image.Rectangle
+	y := 0
+	for _, p := range percentages {
+		dy := int(float32(r.Max.Y) * p)
+		rects = append(rects, image.Rect(r.Min.X, y, r.Max.X, y+dy))
+		y += dy
+	}
+	return rects
 }
