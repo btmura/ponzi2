@@ -7,13 +7,14 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/golang/glog"
 )
 
 // tradingHistory is a list of trading sessions spanning some time.
@@ -81,7 +82,7 @@ func googleGetTradingHistory(req *getTradingHistoryRequest) (*tradingHistory, er
 		return nil, err
 	}
 	u.RawQuery = v.Encode()
-	log.Printf("GET %s", u)
+	glog.Infof("GET %s", u)
 
 	resp, err := http.Get(u.String())
 	if err != nil {
@@ -188,7 +189,7 @@ func yahooGetTradingHistory(req *getTradingHistoryRequest) (*tradingHistory, err
 		return nil, err
 	}
 	u.RawQuery = v.Encode()
-	log.Printf("GET %s", u)
+	glog.Infof("GET %s", u)
 
 	resp, err := http.Get(u.String())
 	if err != nil {
@@ -311,7 +312,7 @@ func listQuotes(req *listQuotesRequest) (*listQuotesResponse, error) {
 		return nil, err
 	}
 	u.RawQuery = v.Encode()
-	log.Printf("GET %s", u)
+	glog.Infof("GET %s", u)
 
 	resp, err := http.Get(u.String())
 	if err != nil {

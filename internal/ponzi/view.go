@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"image"
 	"image/draw"
-	"log"
 	"math"
 	"unicode"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/golang/glog"
 )
 
 // Locations for the vertex and fragment shaders.
@@ -92,7 +92,7 @@ func createView(model *model) (*view, error) {
 	if err := gl.Init(); err != nil {
 		return nil, err
 	}
-	log.Printf("OpenGL version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
+	glog.Infof("OpenGL version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
 
 	gl.Enable(gl.CULL_FACE)
 	gl.CullFace(gl.BACK)

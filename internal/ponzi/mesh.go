@@ -1,9 +1,8 @@
 package ponzi
 
 import (
-	"log"
-
 	"github.com/go-gl/gl/v4.5-core/gl"
+	"github.com/golang/glog"
 )
 
 // mesh is an OBJ file object with a bunch of vertex buffer objects.
@@ -76,9 +75,9 @@ func createMeshes(objs []*obj) []*mesh {
 		iboNames = append(iboNames, createElementArrayBuffer(indices))
 	}
 
-	log.Printf("vertices: %d", len(vertexTable))
-	log.Printf("normals: %d", len(normalTable))
-	log.Printf("texCoords: %d", len(texCoordTable))
+	glog.Infof("vertices: %d", len(vertexTable))
+	glog.Infof("normals: %d", len(normalTable))
+	glog.Infof("texCoords: %d", len(texCoordTable))
 
 	vbo := createArrayBuffer(vertices)
 	nbo := createArrayBuffer(normals)

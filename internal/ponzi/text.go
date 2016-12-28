@@ -5,11 +5,11 @@ import (
 	"image"
 	"image/draw"
 	"image/png"
-	"log"
 	"os"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/golang/freetype/truetype"
+	"github.com/golang/glog"
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
 )
@@ -141,7 +141,7 @@ func writePNGFile(rgba *image.RGBA) error {
 	if err := b.Flush(); err != nil {
 		return err
 	}
-	log.Printf("Wrote PNG file: %s", out.Name())
+	glog.Infof("Wrote PNG file: %s", out.Name())
 
 	return nil
 }
