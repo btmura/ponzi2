@@ -18,9 +18,10 @@ type model struct {
 	// inputSymbol is the symbol being entered by the user.
 	inputSymbol string
 
-	currentSymbol        string
-	currentQuote         *modelQuote
-	currentDailySessions []*modelTradingSession
+	currentSymbol         string
+	currentQuote          *modelQuote
+	currentDailySessions  []*modelTradingSession
+	currentWeeklySessions []*modelTradingSession
 }
 
 type modelQuote struct {
@@ -61,6 +62,7 @@ func (m *model) submitSymbol() {
 	m.currentSymbol, m.inputSymbol = m.inputSymbol, ""
 	m.currentQuote = nil
 	m.currentDailySessions = nil
+	m.currentWeeklySessions = nil
 	m.startRefresh()
 	m.Unlock()
 }
@@ -129,20 +131,20 @@ func (m *model) refresh() error {
 	m.sap = getQuote(sapSymbol)
 	m.nasdaq = getQuote(nasdaqSymbol)
 	if s != "" && s == m.currentSymbol {
-		m.currentQuote, m.currentDailySessions = convertTradingSessions(hist.sessions)
+		m.currentQuote, m.currentDailySessions, m.currentWeeklySessions = convertTradingSessions(hist.sessions)
 	} else {
-		m.currentQuote, m.currentDailySessions = nil, nil
+		m.currentQuote, m.currentDailySessions, m.currentWeeklySessions = nil, nil, nil
 	}
 	m.Unlock()
 
 	return nil
 }
 
-func convertTradingSessions(sessions []*tradingSession) (*modelQuote, []*modelTradingSession) {
-	// Copy the trading sessions into a slice of structs.
-	var ms []*modelTradingSession
+func convertTradingSessions(sessions []*tradingSession) (*modelQuote, []*modelTradingSession, []*modelTradingSession) {
+	// Convert the trading sessions into daily sessions.
+	var ds []*modelTradingSession
 	for _, s := range sessions {
-		ms = append(ms, &modelTradingSession{
+		ds = append(ds, &modelTradingSession{
 			date:   s.date,
 			open:   s.open,
 			high:   s.high,
@@ -151,66 +153,108 @@ func convertTradingSessions(sessions []*tradingSession) (*modelQuote, []*modelTr
 			volume: s.volume,
 		})
 	}
+	sort.Sort(byModelTradingSessionDate(ds))
 
-	// Most recent trading sessions at the back.
-	sort.Sort(byModelTradingSessionDate(ms))
-
-	// Calculate the price change which is today's close minus yesterday's close.
-	for i := range ms {
-		if i > 0 {
-			ms[i].change = ms[i].close - ms[i-1].close
-			ms[i].percentChange = ms[i].change / ms[i-1].close
-		}
-	}
-
-	// Calculate fast %K for stochastics.
-	const kDays = 14
-	fastK := make([]float32, len(ms))
-	for i := range ms {
-		if i+1 < kDays {
-			continue
+	// Convert the daily sessions into weekly sessions.
+	var ws []*modelTradingSession
+	for _, s := range ds {
+		diffWeek := ws == nil
+		if !diffWeek {
+			_, week := s.date.ISOWeek()
+			_, prevWeek := ws[len(ws)-1].date.ISOWeek()
+			diffWeek = week != prevWeek
 		}
 
-		highestHigh, lowestLow := ms[i].high, ms[i].low
-		for j := 0; j < kDays; j++ {
-			if highestHigh < ms[i-j].high {
-				highestHigh = ms[i-j].high
+		if diffWeek {
+			ws = append(ws, &modelTradingSession{
+				date:   s.date,
+				open:   s.open,
+				high:   s.high,
+				low:    s.low,
+				close:  s.close,
+				volume: s.volume,
+			})
+		} else {
+			ls := ws[len(ws)-1]
+			if ls.high < s.high {
+				ls.high = s.high
 			}
-			if lowestLow > ms[i-j].low {
-				lowestLow = ms[i-j].low
+			if ls.low > s.low {
+				ls.low = s.low
+			}
+			ls.close = s.close
+			ls.volume += s.volume
+		}
+	}
+
+	// Fill in the change and percent change fields.
+	addChanges := func(ss []*modelTradingSession) {
+		for i := range ss {
+			if i > 0 {
+				ss[i].change = ss[i].close - ss[i-1].close
+				ss[i].percentChange = ss[i].change / ss[i-1].close
 			}
 		}
-		fastK[i] = (ms[i].close - lowestLow) / (highestHigh - lowestLow)
 	}
+	addChanges(ds)
+	addChanges(ws)
 
-	// Calculate fast %D (slow %K) for stochastics.
-	const dDays = 3
-	for i := range ms {
-		if i+1 < kDays+dDays {
-			continue
+	// Fill in the stochastics.
+	addStochastics := func(ss []*modelTradingSession) {
+		const (
+			kDays = 14
+			dDays = 3
+		)
+
+		// Calculate fast %K for stochastics.
+		fastK := make([]float32, len(ss))
+		for i := range ss {
+			if i+1 < kDays {
+				continue
+			}
+
+			highestHigh, lowestLow := ss[i].high, ss[i].low
+			for j := 0; j < kDays; j++ {
+				if highestHigh < ss[i-j].high {
+					highestHigh = ss[i-j].high
+				}
+				if lowestLow > ss[i-j].low {
+					lowestLow = ss[i-j].low
+				}
+			}
+			fastK[i] = (ss[i].close - lowestLow) / (highestHigh - lowestLow)
 		}
-		ms[i].k = (fastK[i] + fastK[i-1] + fastK[i-2]) / 3
-	}
 
-	// Calculate slow %D for stochastics.
-	for i := range ms {
-		if i+1 < kDays+dDays+dDays {
-			continue
+		// Calculate fast %D (slow %K) for stochastics.
+		for i := range ss {
+			if i+1 < kDays+dDays {
+				continue
+			}
+			ss[i].k = (fastK[i] + fastK[i-1] + fastK[i-2]) / 3
 		}
-		ms[i].d = (ms[i].k + ms[i-1].k + ms[i-2].k) / 3
-	}
 
-	// Use the trading history to create the current quote.
+		// Calculate slow %D for stochastics.
+		for i := range ss {
+			if i+1 < kDays+dDays+dDays {
+				continue
+			}
+			ss[i].d = (ss[i].k + ss[i-1].k + ss[i-2].k) / 3
+		}
+	}
+	addStochastics(ds)
+	addStochastics(ws)
+
+	// Use most recent daily session to create the current quote.
 	var quote *modelQuote
-	if len(ms) != 0 {
+	if len(ds) != 0 {
 		quote = &modelQuote{
-			price:         ms[len(ms)-1].close,
-			change:        ms[len(ms)-1].change,
-			percentChange: ms[len(ms)-1].percentChange,
+			price:         ds[len(ds)-1].close,
+			change:        ds[len(ds)-1].change,
+			percentChange: ds[len(ds)-1].percentChange,
 		}
 	}
 
-	return quote, ms
+	return quote, ds, ws
 }
 
 // byModelTradingSessionDate is a sortable modelTradingSession slice.
