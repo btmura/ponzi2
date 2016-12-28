@@ -44,10 +44,18 @@ func createChart(symbol string, ds, ws []*modelTradingSession) (*chart, func()) 
 			dailyStochastics:  dailyStochastics,
 			weeklyStochastics: weeklyStochastics,
 		}, func() {
-			cleanUpPrices()
-			cleanUpVolume()
-			cleanUpDS()
-			cleanUpWS()
+			if cleanUpPrices != nil {
+				cleanUpPrices()
+			}
+			if cleanUpVolume != nil {
+				cleanUpVolume()
+			}
+			if cleanUpDS != nil {
+				cleanUpDS()
+			}
+			if cleanUpWS != nil {
+				cleanUpWS()
+			}
 		}
 }
 
@@ -132,6 +140,11 @@ func createChartPrices(ss []*modelTradingSession) (*chartPrices, func()) {
 		leftX += stickWidth
 		midX += stickWidth
 		rightX += stickWidth
+	}
+
+	// Can't create empty buffer objects. Bail out if nothing to render.
+	if len(vertices) == 0 {
+		return nil, nil
 	}
 
 	vbo := createArrayBuffer(vertices)
@@ -220,6 +233,11 @@ func createChartVolume(ss []*modelTradingSession) (*chartVolume, func()) {
 		rightX += barWidth
 	}
 
+	// Can't create empty buffer objects. Bail out if nothing to render.
+	if len(vertices) == 0 {
+		return nil, nil
+	}
+
 	vbo := createArrayBuffer(vertices)
 	ibo := createElementArrayBuffer(indices)
 
@@ -287,6 +305,11 @@ func createChartStochastics(ss []*modelTradingSession) (*chartStochastics, func(
 		first = false
 	}
 
+	// Can't create empty buffer objects. Bail out if nothing to render.
+	if len(vertices) == 0 {
+		return nil, nil
+	}
+
 	vbo := createArrayBuffer(vertices)
 	ibo := createElementArrayBuffer(indices)
 
@@ -310,6 +333,10 @@ func createChartStochastics(ss []*modelTradingSession) (*chartStochastics, func(
 }
 
 func (c *chart) renderPrices(r image.Rectangle) {
+	if c.prices == nil {
+		return
+	}
+
 	setModelMatrixRectangle(r)
 	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
 
@@ -323,6 +350,10 @@ func (c *chart) renderPrices(r image.Rectangle) {
 }
 
 func (c *chart) renderVolume(r image.Rectangle) {
+	if c.volume == nil {
+		return
+	}
+
 	setModelMatrixRectangle(r)
 	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
 
@@ -332,6 +363,10 @@ func (c *chart) renderVolume(r image.Rectangle) {
 }
 
 func (c *chart) renderDailyStochastics(r image.Rectangle) {
+	if c.dailyStochastics == nil {
+		return
+	}
+
 	setModelMatrixRectangle(r)
 	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
 
@@ -341,6 +376,10 @@ func (c *chart) renderDailyStochastics(r image.Rectangle) {
 }
 
 func (c *chart) renderWeeklyStochastics(r image.Rectangle) {
+	if c.weeklyStochastics == nil {
+		return
+	}
+
 	setModelMatrixRectangle(r)
 	gl.BindTexture(gl.TEXTURE_2D, 0 /* dummy texture */)
 

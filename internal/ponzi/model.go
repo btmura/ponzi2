@@ -1,7 +1,6 @@
 package ponzi
 
 import (
-	"log"
 	"sort"
 	"sync"
 	"time"
@@ -253,11 +252,6 @@ func convertTradingSessions(sessions []*tradingSession) (*modelQuote, []*modelTr
 			change:        ds[len(ds)-1].change,
 			percentChange: ds[len(ds)-1].percentChange,
 		}
-	}
-
-	log.Printf("ds: %d ws: %d", len(ds), len(ws))
-	for i, s := range ws {
-		log.Printf("%d: %+v", i, s)
 	}
 
 	return quote, ds, ws
