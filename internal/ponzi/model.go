@@ -75,20 +75,24 @@ func (m *model) startRefresh() error {
 }
 
 func (m *model) refresh() error {
+	// Get the current symbol being viewed.
+	m.RLock()
+	s := m.currentSymbol
+	m.RUnlock()
 
-	// Get live quotes for the major indices.
-
+	// Get live quotes for the major indices and the current symbol.
 	const (
 		dowSymbol    = ".DJI"
 		sapSymbol    = ".INX"
 		nasdaqSymbol = ".IXIC"
 	)
 
-	resp, err := listQuotes(&listQuotesRequest{[]string{
-		dowSymbol,
-		sapSymbol,
-		nasdaqSymbol,
-	}})
+	symbols := []string{dowSymbol, sapSymbol, nasdaqSymbol}
+	if s != "" {
+		symbols = append(symbols, s)
+	}
+
+	resp, err := listQuotes(&listQuotesRequest{symbols})
 	if err != nil {
 		return err
 	}
@@ -105,10 +109,6 @@ func (m *model) refresh() error {
 	}
 
 	// Get the trading history for the current stock.
-
-	m.RLock()
-	s := m.currentSymbol
-	m.RUnlock()
 
 	var hist *tradingHistory
 	if s != "" {
@@ -131,7 +131,8 @@ func (m *model) refresh() error {
 	m.sap = getQuote(sapSymbol)
 	m.nasdaq = getQuote(nasdaqSymbol)
 	if s != "" && s == m.currentSymbol {
-		m.currentQuote, m.currentDailySessions, m.currentWeeklySessions = convertTradingSessions(hist.sessions)
+		m.currentQuote = getQuote(s)
+		m.currentDailySessions, m.currentWeeklySessions = convertTradingSessions(hist.sessions)
 	} else {
 		m.currentQuote, m.currentDailySessions, m.currentWeeklySessions = nil, nil, nil
 	}
@@ -140,7 +141,7 @@ func (m *model) refresh() error {
 	return nil
 }
 
-func convertTradingSessions(sessions []*tradingSession) (*modelQuote, []*modelTradingSession, []*modelTradingSession) {
+func convertTradingSessions(sessions []*tradingSession) ([]*modelTradingSession, []*modelTradingSession) {
 	// Convert the trading sessions into daily sessions.
 	var ds []*modelTradingSession
 	for _, s := range sessions {
@@ -244,17 +245,7 @@ func convertTradingSessions(sessions []*tradingSession) (*modelQuote, []*modelTr
 	addStochastics(ds)
 	addStochastics(ws)
 
-	// Use most recent daily session to create the current quote.
-	var quote *modelQuote
-	if len(ds) != 0 {
-		quote = &modelQuote{
-			price:         ds[len(ds)-1].close,
-			change:        ds[len(ds)-1].change,
-			percentChange: ds[len(ds)-1].percentChange,
-		}
-	}
-
-	return quote, ds, ws
+	return ds, ws
 }
 
 // byModelTradingSessionDate is a sortable modelTradingSession slice.
