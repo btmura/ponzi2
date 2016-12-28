@@ -161,7 +161,6 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 
 	vbo := createArrayBuffer(vertices)
 	lineIBO := createElementArrayBuffer(lineIndices)
-	triangleIBO := createElementArrayBuffer(triangleIndices)
 
 	var lineVAO uint32
 	gl.GenVertexArrays(1, &lineVAO)
@@ -175,15 +174,18 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 	gl.BindVertexArray(0)
 
 	var triangleVAO uint32
-	gl.GenVertexArrays(1, &triangleVAO)
-	gl.BindVertexArray(triangleVAO)
-	{
-		gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-		gl.EnableVertexAttribArray(positionLocation)
-		gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
-		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleIBO)
+	if len(triangleIndices) != 0 {
+		triangleIBO := createElementArrayBuffer(triangleIndices)
+		gl.GenVertexArrays(1, &triangleVAO)
+		gl.BindVertexArray(triangleVAO)
+		{
+			gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+			gl.EnableVertexAttribArray(positionLocation)
+			gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
+			gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleIBO)
+		}
+		gl.BindVertexArray(0)
 	}
-	gl.BindVertexArray(0)
 
 	return &chartPrices{
 		lineVAO:       lineVAO,
@@ -202,9 +204,11 @@ func (p *chartPrices) render() {
 	gl.DrawElements(gl.LINES, p.lineCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	gl.BindVertexArray(0)
 
-	gl.BindVertexArray(p.triangleVAO)
-	gl.DrawElements(gl.TRIANGLES, p.triangleCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
-	gl.BindVertexArray(0)
+	if p.triangleCount > 0 {
+		gl.BindVertexArray(p.triangleVAO)
+		gl.DrawElements(gl.TRIANGLES, p.triangleCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+		gl.BindVertexArray(0)
+	}
 }
 
 func (p *chartPrices) close() {
@@ -213,7 +217,9 @@ func (p *chartPrices) close() {
 	}
 
 	gl.DeleteVertexArrays(1, &p.lineVAO)
-	gl.DeleteVertexArrays(1, &p.triangleVAO)
+	if p.triangleCount > 0 {
+		gl.DeleteVertexArrays(1, &p.triangleVAO)
+	}
 }
 
 func createChartVolume(ss []*modelTradingSession) *chartVolume {
