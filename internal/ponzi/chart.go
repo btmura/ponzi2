@@ -123,7 +123,7 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 
 		// Add the colors corresponding to the vertices.
 		switch {
-		case s.change > 0:
+		case s.close > s.open:
 			colors = append(colors,
 				0, 1, 0,
 				0, 1, 0,
@@ -135,7 +135,7 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 				0, 1, 0,
 			)
 
-		case s.change < 0:
+		case s.close < s.open:
 			colors = append(colors,
 				1, 0, 0,
 				1, 0, 0,
@@ -308,7 +308,7 @@ func createChartVolume(ss []*modelTradingSession) *chartVolume {
 
 		// Add the colors corresponding to the volume bar.
 		switch {
-		case s.change > 0:
+		case s.close > s.open:
 			colors = append(colors,
 				0, 1, 0,
 				0, 1, 0,
@@ -316,7 +316,7 @@ func createChartVolume(ss []*modelTradingSession) *chartVolume {
 				0, 1, 0,
 			)
 
-		case s.change < 0:
+		case s.close < s.open:
 			colors = append(colors,
 				1, 0, 0,
 				1, 0, 0,
