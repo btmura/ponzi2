@@ -149,14 +149,14 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 
 		default:
 			colors = append(colors,
-				1, 1, 1,
-				1, 1, 1,
-				1, 1, 1,
-				1, 1, 1,
-				1, 1, 1,
-				1, 1, 1,
-				1, 1, 1,
-				1, 1, 1,
+				1, 1, 0,
+				1, 1, 0,
+				1, 1, 0,
+				1, 1, 0,
+				1, 1, 0,
+				1, 1, 0,
+				1, 1, 0,
+				1, 1, 0,
 			)
 		}
 		// idx is function to refer to the vertices above.
@@ -326,10 +326,10 @@ func createChartVolume(ss []*modelTradingSession) *chartVolume {
 
 		default:
 			colors = append(colors,
-				1, 1, 1,
-				1, 1, 1,
-				1, 1, 1,
-				1, 1, 1,
+				1, 1, 0,
+				1, 1, 0,
+				1, 1, 0,
+				1, 1, 0,
 			)
 		}
 
