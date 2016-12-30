@@ -398,7 +398,7 @@ func (v *chartVolume) close() {
 	gl.DeleteVertexArrays(1, &v.vao)
 }
 
-func createChartStochastics(ss []*modelTradingSession, kColor [3]float32) *chartStochastics {
+func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chartStochastics {
 	// Calculate vertices and indices for the stochastics.
 	var vertices []float32
 	var colors []float32
@@ -422,7 +422,7 @@ func createChartStochastics(ss []*modelTradingSession, kColor [3]float32) *chart
 		}
 
 		vertices = append(vertices, calcX(i), calcY(s.k))
-		colors = append(colors, kColor[0], kColor[1], kColor[2])
+		colors = append(colors, 1, 0, 0)
 		if !first {
 			indices = append(indices, v, v-1)
 		}
@@ -438,7 +438,7 @@ func createChartStochastics(ss []*modelTradingSession, kColor [3]float32) *chart
 		}
 
 		vertices = append(vertices, calcX(i), calcY(s.d))
-		colors = append(colors, 1, 0, 0)
+		colors = append(colors, dColor[0], dColor[1], dColor[2])
 		if !first {
 			indices = append(indices, v, v-1)
 		}
