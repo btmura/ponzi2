@@ -72,8 +72,7 @@ type view struct {
 	sapText    *staticText
 	nasdaqText *staticText
 
-	chart        *chart
-	cleanUpChart func()
+	chart *chart
 
 	monoText *dynamicText
 	propText *dynamicText
