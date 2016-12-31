@@ -38,7 +38,11 @@ func Run() {
 
 	win.MakeContextCurrent()
 
-	m := &model{currentSymbol: "SPY"}
+	m := &model{
+		currentStock: &modelStock{
+			symbol: "SPY",
+		},
+	}
 	v, err := createView(m)
 	checkErr(err)
 

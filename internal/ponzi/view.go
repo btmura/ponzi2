@@ -229,23 +229,20 @@ func (v *view) render() {
 	}
 
 	// Render the current symbol below the indices.
-	if v.model.currentSymbol != "" {
-		s := v.propText.measure(v.model.currentSymbol)
+	if v.model.currentSymbol() != "" {
+		s := v.propText.measure(v.model.currentSymbol())
 		c.Y -= p + s.Y // padding below indices plus the text
 
 		c := c
-		c = c.Add(v.propText.render(v.model.currentSymbol, c))
+		c = c.Add(v.propText.render(v.model.currentSymbol(), c))
 		c = c.Add(v.propText.render(v.currentPriceText(), c))
-	}
 
-	// Render the chart if trading session data available.
-	if v.model.currentDailySessions != nil {
 		r := image.Rect(p, p, v.winSize.X-p, c.Y-p)
-		if v.chart == nil || v.chart.symbol != v.model.currentSymbol {
+		if v.chart == nil || v.chart.symbol != v.model.currentSymbol() {
 			v.chart.close()
-			v.chart = createChart(v.model.currentSymbol, v.model.currentDailySessions, v.model.currentWeeklySessions)
+			v.chart = &chart{symbol: v.model.currentSymbol()}
 		}
-		v.chart.render(r)
+		v.chart.render(v.model.currentStock, r)
 	}
 
 	// Render input symbol being typed in the center.
@@ -271,7 +268,10 @@ func (v *view) nasdaqPriceText() string {
 }
 
 func (v *view) currentPriceText() string {
-	return formatQuote(v.model.currentQuote)
+	if v.model.currentStock == nil {
+		return " ... "
+	}
+	return formatQuote(v.model.currentStock.quote)
 }
 
 func formatQuote(q *modelQuote) string {

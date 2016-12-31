@@ -32,17 +32,14 @@ type chartStochastics struct {
 	count int32
 }
 
-func createChart(symbol string, ds, ws []*modelTradingSession) *chart {
-	return &chart{
-		symbol:            symbol,
-		prices:            createChartPrices(ds),
-		volume:            createChartVolume(ds),
-		dailyStochastics:  createChartStochastics(ds, [3]float32{1, 1, 0}),
-		weeklyStochastics: createChartStochastics(ws, [3]float32{1, 0, 1}),
+func (c *chart) render(stock *modelStock, r image.Rectangle) {
+	if c.prices == nil && stock.dailySessions != nil {
+		c.prices = createChartPrices(stock.dailySessions)
+		c.volume = createChartVolume(stock.dailySessions)
+		c.dailyStochastics = createChartStochastics(stock.dailySessions, [3]float32{1, 1, 0})
+		c.weeklyStochastics = createChartStochastics(stock.weeklySessions, [3]float32{1, 0, 1})
 	}
-}
 
-func (c *chart) render(r image.Rectangle) {
 	gl.Uniform1f(colorMixAmountLocation, 1)
 
 	rects := sliceRectangle(r, 0.13, 0.13, 0.13, 0.6)
