@@ -228,19 +228,15 @@ func (v *view) render() {
 		c = c.Add(v.monoText.render(v.nasdaqPriceText(), c))
 	}
 
+	// Move down a bit after the major indices.
+	c.Y -= p
+
 	// Render the current symbol below the indices.
 	if v.model.currentSymbol() != "" {
-		s := v.propText.measure(v.model.currentSymbol())
-		c.Y -= p + s.Y // padding below indices plus the text
-
-		c := c
-		c = c.Add(v.propText.render(v.model.currentSymbol(), c))
-		c = c.Add(v.propText.render(v.currentPriceText(), c))
-
-		r := image.Rect(p, p, v.winSize.X-p, c.Y-p)
+		r := image.Rect(c.X, p, v.winSize.X-p, c.Y)
 		if v.chart == nil || v.chart.symbol != v.model.currentSymbol() {
 			v.chart.close()
-			v.chart = &chart{symbol: v.model.currentSymbol()}
+			v.chart = createChart(v.model.currentSymbol(), v.propText)
 		}
 		v.chart.render(v.model.currentStock, r)
 	}
@@ -265,13 +261,6 @@ func (v *view) sapPriceText() string {
 
 func (v *view) nasdaqPriceText() string {
 	return formatQuote(v.model.nasdaq)
-}
-
-func (v *view) currentPriceText() string {
-	if v.model.currentStock == nil {
-		return " ... "
-	}
-	return formatQuote(v.model.currentStock.quote)
 }
 
 func formatQuote(q *modelQuote) string {
