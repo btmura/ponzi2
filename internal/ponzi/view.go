@@ -209,6 +209,13 @@ func (v *view) render() {
 
 	v.model.RLock()
 
+	// Render input symbol being typed in the center.
+	if v.model.inputSymbol != "" {
+		s := v.propText.measure(v.model.inputSymbol)
+		c := v.winSize.Sub(s).Div(2)
+		v.propText.render(v.model.inputSymbol, c)
+	}
+
 	const p = 10 // padding
 
 	// Start in the upper left corner. (0, 0) is lower left.
@@ -239,13 +246,6 @@ func (v *view) render() {
 			v.chart = createChart(v.model.currentSymbol(), v.propText)
 		}
 		v.chart.render(v.model.currentStock, r)
-	}
-
-	// Render input symbol being typed in the center.
-	if v.model.inputSymbol != "" {
-		s := v.propText.measure(v.model.inputSymbol)
-		c := v.winSize.Sub(s).Div(2)
-		v.propText.render(v.model.inputSymbol, c)
 	}
 
 	v.model.RUnlock()
