@@ -7,11 +7,12 @@ import (
 )
 
 type chartFrame struct {
-	vao   uint32
-	count int32
+	propText *dynamicText
+	vao      uint32
+	count    int32
 }
 
-func createChartFrame() *chartFrame {
+func createChartFrame(propText *dynamicText) *chartFrame {
 	vertices := []float32{
 		-1, 1,
 		-1, -1,
@@ -20,10 +21,10 @@ func createChartFrame() *chartFrame {
 	}
 
 	colors := []float32{
-		0, 0.5, 0.5,
-		0, 0.5, 0.5,
-		0, 0.5, 0.5,
-		0, 0.5, 0.5,
+		0.5, 0.5, 0.5,
+		0.5, 0.5, 0.5,
+		0.5, 0.5, 0.5,
+		0.5, 0.5, 0.5,
 	}
 
 	indices := []uint16{
@@ -54,8 +55,9 @@ func createChartFrame() *chartFrame {
 	gl.BindVertexArray(0)
 
 	return &chartFrame{
-		vao:   vao,
-		count: int32(len(indices)),
+		propText: propText,
+		vao:      vao,
+		count:    int32(len(indices)),
 	}
 }
 
@@ -63,12 +65,23 @@ func (f *chartFrame) render(stock *modelStock, r image.Rectangle) {
 	//
 	// Render the frame around the chart.
 	//
+
 	setModelMatrixRectangle(r)
 	gl.Uniform1f(colorMixAmountLocation, 1)
 
 	gl.BindVertexArray(f.vao)
 	gl.DrawElements(gl.LINES, f.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	gl.BindVertexArray(0)
+
+	//
+	// Render the symbol and its quote.
+	//
+
+	s := f.propText.measure(stock.symbol)
+	r.Max.Y -= s.Y
+	c := image.Pt(r.Min.X, r.Max.Y)
+	c = c.Add(f.propText.render(stock.symbol, c))
+	c = c.Add(f.propText.render(formatQuote(stock.quote), c))
 }
 
 func (f *chartFrame) close() {

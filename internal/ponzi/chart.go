@@ -14,7 +14,6 @@ type chart struct {
 	volume            *chartVolume
 	dailyStochastics  *chartStochastics
 	weeklyStochastics *chartStochastics
-	propText          *dynamicText
 }
 
 type chartPrices struct {
@@ -36,22 +35,13 @@ type chartStochastics struct {
 
 func createChart(symbol string, propText *dynamicText) *chart {
 	return &chart{
-		symbol:   symbol,
-		propText: propText,
-		frame:    createChartFrame(),
+		symbol: symbol,
+		frame:  createChartFrame(propText),
 	}
 }
 
 func (c *chart) render(stock *modelStock, r image.Rectangle) {
 	c.frame.render(stock, r)
-
-	s := c.propText.measure(stock.symbol)
-	r.Max.Y -= s.Y
-	p := image.Pt(r.Min.X, r.Max.Y)
-	p = p.Add(c.propText.render(stock.symbol, p))
-	if stock.quote != nil {
-		c.propText.render(formatQuote(stock.quote), p)
-	}
 
 	if c.prices == nil && stock.dailySessions != nil {
 		c.prices = createChartPrices(stock.dailySessions)
