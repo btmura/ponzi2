@@ -9,6 +9,7 @@ import (
 
 type chart struct {
 	symbol            string
+	frame             *chartFrame
 	prices            *chartPrices
 	volume            *chartVolume
 	dailyStochastics  *chartStochastics
@@ -37,10 +38,13 @@ func createChart(symbol string, propText *dynamicText) *chart {
 	return &chart{
 		symbol:   symbol,
 		propText: propText,
+		frame:    createChartFrame(),
 	}
 }
 
 func (c *chart) render(stock *modelStock, r image.Rectangle) {
+	c.frame.render(stock, r)
+
 	s := c.propText.measure(stock.symbol)
 	r.Max.Y -= s.Y
 	p := image.Pt(r.Min.X, r.Max.Y)
@@ -78,6 +82,7 @@ func (c *chart) close() {
 		return
 	}
 
+	c.frame.close()
 	c.prices.close()
 	c.volume.close()
 	c.dailyStochastics.close()
