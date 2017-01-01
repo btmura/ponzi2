@@ -1,6 +1,7 @@
 package ponzi
 
 import (
+	"image"
 	"math"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
@@ -187,10 +188,12 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 	}
 }
 
-func (p *chartPrices) render() {
+func (p *chartPrices) render(r image.Rectangle) {
 	if p == nil {
 		return
 	}
+
+	setModelMatrixRectangle(r)
 
 	gl.BindVertexArray(p.lineVAO)
 	gl.DrawElements(gl.LINES, p.lineCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))

@@ -1,6 +1,10 @@
 package ponzi
 
-import "github.com/go-gl/gl/v4.5-core/gl"
+import (
+	"image"
+
+	"github.com/go-gl/gl/v4.5-core/gl"
+)
 
 type chartVolume struct {
 	vao   uint32
@@ -115,10 +119,12 @@ func createChartVolume(ss []*modelTradingSession) *chartVolume {
 	}
 }
 
-func (v *chartVolume) render() {
+func (v *chartVolume) render(r image.Rectangle) {
 	if v == nil {
 		return
 	}
+
+	setModelMatrixRectangle(r)
 
 	gl.BindVertexArray(v.vao)
 	gl.DrawElements(gl.TRIANGLES, v.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))

@@ -1,6 +1,10 @@
 package ponzi
 
-import "github.com/go-gl/gl/v4.5-core/gl"
+import (
+	"image"
+
+	"github.com/go-gl/gl/v4.5-core/gl"
+)
 
 type chartStochastics struct {
 	vao   uint32
@@ -86,10 +90,12 @@ func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chart
 	}
 }
 
-func (s *chartStochastics) render() {
+func (s *chartStochastics) render(r image.Rectangle) {
 	if s == nil {
 		return
 	}
+
+	setModelMatrixRectangle(r)
 
 	gl.BindVertexArray(s.vao)
 	gl.DrawElements(gl.LINES, s.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))

@@ -29,18 +29,10 @@ func (f *chart) render(stock *modelStock, r image.Rectangle) {
 	}
 
 	rects := f.frame.render(stock, r)
-
-	setModelMatrixRectangle(rects[3])
-	f.prices.render()
-
-	setModelMatrixRectangle(rects[2])
-	f.volume.render()
-
-	setModelMatrixRectangle(rects[1])
-	f.dailyStochastics.render()
-
-	setModelMatrixRectangle(rects[0])
-	f.weeklyStochastics.render()
+	f.prices.render(rects[3])
+	f.volume.render(rects[2])
+	f.dailyStochastics.render(rects[1])
+	f.weeklyStochastics.render(rects[0])
 }
 
 func (f *chart) close() {
