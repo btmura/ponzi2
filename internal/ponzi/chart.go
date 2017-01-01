@@ -8,12 +8,8 @@ import (
 )
 
 type chart struct {
-	symbol            string
-	frame             *chartFrame
-	prices            *chartPrices
-	volume            *chartVolume
-	dailyStochastics  *chartStochastics
-	weeklyStochastics *chartStochastics
+	symbol string
+	frame  *chartFrame
 }
 
 type chartPrices struct {
@@ -41,29 +37,7 @@ func createChart(symbol string, propText *dynamicText) *chart {
 }
 
 func (c *chart) render(stock *modelStock, r image.Rectangle) {
-	rects := sliceRectangle(r, 0.13, 0.13, 0.13, 0.6)
 	c.frame.render(stock, r)
-
-	if c.prices == nil && stock.dailySessions != nil {
-		c.prices = createChartPrices(stock.dailySessions)
-		c.volume = createChartVolume(stock.dailySessions)
-		c.dailyStochastics = createChartStochastics(stock.dailySessions, [3]float32{1, 1, 0})
-		c.weeklyStochastics = createChartStochastics(stock.weeklySessions, [3]float32{1, 0, 1})
-	}
-
-	gl.Uniform1f(colorMixAmountLocation, 1)
-
-	setModelMatrixRectangle(rects[3])
-	c.prices.render()
-
-	setModelMatrixRectangle(rects[2])
-	c.volume.render()
-
-	setModelMatrixRectangle(rects[1])
-	c.dailyStochastics.render()
-
-	setModelMatrixRectangle(rects[0])
-	c.weeklyStochastics.render()
 }
 
 func (c *chart) close() {
@@ -72,10 +46,6 @@ func (c *chart) close() {
 	}
 
 	c.frame.close()
-	c.prices.close()
-	c.volume.close()
-	c.dailyStochastics.close()
-	c.weeklyStochastics.close()
 }
 
 func createChartPrices(ss []*modelTradingSession) *chartPrices {

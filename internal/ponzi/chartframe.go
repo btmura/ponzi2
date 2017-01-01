@@ -12,6 +12,11 @@ type chartFrame struct {
 	borderCount    int32
 	separatorVAO   uint32
 	separatorCount int32
+
+	prices            *chartPrices
+	volume            *chartVolume
+	dailyStochastics  *chartStochastics
+	weeklyStochastics *chartStochastics
 }
 
 func createChartFrame(propText *dynamicText) *chartFrame {
@@ -110,6 +115,13 @@ func createChartSeparatorVAO() (uint32, int32) {
 }
 
 func (f *chartFrame) render(stock *modelStock, r image.Rectangle) {
+	if f.prices == nil && stock.dailySessions != nil {
+		f.prices = createChartPrices(stock.dailySessions)
+		f.volume = createChartVolume(stock.dailySessions)
+		f.dailyStochastics = createChartStochastics(stock.dailySessions, [3]float32{1, 1, 0})
+		f.weeklyStochastics = createChartStochastics(stock.weeklySessions, [3]float32{1, 0, 1})
+	}
+
 	// Start rendering from the top left. Track position with point.
 	c := image.Pt(r.Min.X, r.Max.Y)
 
@@ -145,15 +157,33 @@ func (f *chartFrame) render(stock *modelStock, r image.Rectangle) {
 	r.Max.Y = c.Y
 	gl.Uniform1f(colorMixAmountLocation, 1)
 
-	for _, r := range sliceRectangle(r, 0.13, 0.13, 0.13, 0.6) {
+	rects := sliceRectangle(r, 0.13, 0.13, 0.13, 0.6)
+	for _, r := range rects {
 		setModelMatrixRectangle(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
 		gl.BindVertexArray(f.separatorVAO)
 		gl.DrawElements(gl.LINES, f.separatorCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 		gl.BindVertexArray(0)
 	}
+
+	setModelMatrixRectangle(rects[3])
+	f.prices.render()
+
+	setModelMatrixRectangle(rects[2])
+	f.volume.render()
+
+	setModelMatrixRectangle(rects[1])
+	f.dailyStochastics.render()
+
+	setModelMatrixRectangle(rects[0])
+	f.weeklyStochastics.render()
 }
 
 func (f *chartFrame) close() {
 	gl.DeleteVertexArrays(1, &f.borderVAO)
 	gl.DeleteVertexArrays(1, &f.separatorVAO)
+
+	f.prices.close()
+	f.volume.close()
+	f.dailyStochastics.close()
+	f.weeklyStochastics.close()
 }
