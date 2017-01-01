@@ -4,7 +4,6 @@ import "image"
 
 type chart struct {
 	symbol            string
-	propText          *dynamicText
 	frame             *chartFrame
 	prices            *chartPrices
 	volume            *chartVolume
@@ -14,9 +13,8 @@ type chart struct {
 
 func createChart(symbol string, propText *dynamicText) *chart {
 	return &chart{
-		symbol:   symbol,
-		propText: propText,
-		frame:    createChartFrame(propText),
+		symbol: symbol,
+		frame:  createChartFrame(propText),
 	}
 }
 
