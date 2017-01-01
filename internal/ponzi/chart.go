@@ -41,6 +41,7 @@ func createChart(symbol string, propText *dynamicText) *chart {
 }
 
 func (c *chart) render(stock *modelStock, r image.Rectangle) {
+	rects := sliceRectangle(r, 0.13, 0.13, 0.13, 0.6)
 	c.frame.render(stock, r)
 
 	if c.prices == nil && stock.dailySessions != nil {
@@ -51,8 +52,6 @@ func (c *chart) render(stock *modelStock, r image.Rectangle) {
 	}
 
 	gl.Uniform1f(colorMixAmountLocation, 1)
-
-	rects := sliceRectangle(r, 0.13, 0.13, 0.13, 0.6)
 
 	setModelMatrixRectangle(rects[3])
 	c.prices.render()

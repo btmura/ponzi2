@@ -142,13 +142,15 @@ func (f *chartFrame) render(stock *modelStock, r image.Rectangle) {
 	// Render the separator below the symbol and quote.
 	//
 
-	c.Y -= padding
-	setModelMatrixRectangle(image.Rect(c.X, c.Y, c.X+r.Dy(), c.Y))
+	r.Max.Y = c.Y
 	gl.Uniform1f(colorMixAmountLocation, 1)
 
-	gl.BindVertexArray(f.separatorVAO)
-	gl.DrawElements(gl.LINES, f.separatorCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
-	gl.BindVertexArray(0)
+	for _, r := range sliceRectangle(r, 0.13, 0.13, 0.13, 0.6) {
+		setModelMatrixRectangle(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
+		gl.BindVertexArray(f.separatorVAO)
+		gl.DrawElements(gl.LINES, f.separatorCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+		gl.BindVertexArray(0)
+	}
 }
 
 func (f *chartFrame) close() {
