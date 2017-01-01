@@ -77,9 +77,9 @@ func (f *chartFrame) render(stock *modelStock, r image.Rectangle) {
 	// Render the symbol and its quote.
 	//
 
+	const padding = 10
 	s := f.propText.measure(stock.symbol)
-	r.Max.Y -= s.Y
-	c := image.Pt(r.Min.X, r.Max.Y)
+	c := image.Pt(r.Min.X+padding, r.Max.Y-padding-s.Y)
 	c = c.Add(f.propText.render(stock.symbol, c))
 	c = c.Add(f.propText.render(formatQuote(stock.quote), c))
 }
