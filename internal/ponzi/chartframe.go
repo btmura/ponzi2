@@ -6,7 +6,9 @@ import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
-type chartFrame struct {
+type chart struct {
+	symbol string
+
 	propText       *dynamicText
 	borderVAO      uint32
 	borderCount    int32
@@ -19,10 +21,11 @@ type chartFrame struct {
 	weeklyStochastics *chartStochastics
 }
 
-func createChartFrame(propText *dynamicText) *chartFrame {
+func createChart(symbol string, propText *dynamicText) *chart {
 	borderVAO, borderCount := createChartBorderVAO()
 	separatorVAO, separatorCount := createChartSeparatorVAO()
-	return &chartFrame{
+	return &chart{
+		symbol:         symbol,
 		propText:       propText,
 		borderVAO:      borderVAO,
 		borderCount:    borderCount,
@@ -114,7 +117,7 @@ func createChartSeparatorVAO() (uint32, int32) {
 	return vao, int32(len(indices))
 }
 
-func (f *chartFrame) render(stock *modelStock, r image.Rectangle) {
+func (f *chart) render(stock *modelStock, r image.Rectangle) {
 	if f.prices == nil && stock.dailySessions != nil {
 		f.prices = createChartPrices(stock.dailySessions)
 		f.volume = createChartVolume(stock.dailySessions)
@@ -178,7 +181,11 @@ func (f *chartFrame) render(stock *modelStock, r image.Rectangle) {
 	f.weeklyStochastics.render()
 }
 
-func (f *chartFrame) close() {
+func (f *chart) close() {
+	if f == nil {
+		return
+	}
+
 	gl.DeleteVertexArrays(1, &f.borderVAO)
 	gl.DeleteVertexArrays(1, &f.separatorVAO)
 

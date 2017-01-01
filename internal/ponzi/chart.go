@@ -1,16 +1,10 @@
 package ponzi
 
 import (
-	"image"
 	"math"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
-
-type chart struct {
-	symbol string
-	frame  *chartFrame
-}
 
 type chartPrices struct {
 	lineVAO       uint32
@@ -27,25 +21,6 @@ type chartVolume struct {
 type chartStochastics struct {
 	vao   uint32
 	count int32
-}
-
-func createChart(symbol string, propText *dynamicText) *chart {
-	return &chart{
-		symbol: symbol,
-		frame:  createChartFrame(propText),
-	}
-}
-
-func (c *chart) render(stock *modelStock, r image.Rectangle) {
-	c.frame.render(stock, r)
-}
-
-func (c *chart) close() {
-	if c == nil {
-		return
-	}
-
-	c.frame.close()
 }
 
 func createChartPrices(ss []*modelTradingSession) *chartPrices {
