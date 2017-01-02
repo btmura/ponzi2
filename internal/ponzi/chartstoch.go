@@ -7,8 +7,17 @@ import (
 )
 
 type chartStochastics struct {
-	vao   uint32
-	count int32
+	// lineVAO is the VAO for the K and D lines.
+	lineVAO uint32
+
+	// lineCount is the number of elements to draw for lineVAO.
+	lineCount int32
+
+	// backgroundVAO is the VAO for the background behind the lines.
+	backgroundVAO uint32
+
+	// backgroundCount is the number of elements to draw for the background.
+	backgroundCount int32
 }
 
 func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chartStochastics {
@@ -68,6 +77,59 @@ func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chart
 	cbo := createArrayBuffer(colors)
 	ibo := createElementArrayBuffer(indices)
 
+	// lineVAO is the VAO for the K and D lines.
+	var lineVAO uint32
+	// lineVAO is the VAO for the K and D lines.
+	gl.GenVertexArrays(1, &lineVAO)
+	// lineVAO is the VAO for the K and D lines.
+	gl.BindVertexArray(lineVAO)
+	{
+		gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+		gl.EnableVertexAttribArray(positionLocation)
+		gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
+
+		gl.BindBuffer(gl.ARRAY_BUFFER, cbo)
+		gl.EnableVertexAttribArray(colorLocation)
+		gl.VertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
+
+		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo)
+	}
+	gl.BindVertexArray(0)
+
+	backgroundVAO, backgroundCount := createChartBackgroundVAO(ss, dColor)
+
+	return &chartStochastics{
+		lineVAO:         lineVAO,
+		lineCount:       int32(len(indices)),
+		backgroundVAO:   backgroundVAO,
+		backgroundCount: backgroundCount,
+	}
+}
+
+func createChartBackgroundVAO(ss []*modelTradingSession, dColor [3]float32) (uint32, int32) {
+	vertices := []float32{
+		-1, 1, // UL - 0
+		-1, -1, // BL - 1
+		1, -1, // BR - 2
+		1, 1, // UR -3
+	}
+
+	colors := []float32{
+		0, 0, 0,
+		0, 0, 0,
+		0, 0.25, 0.5,
+		0, 0, 0,
+	}
+
+	indices := []uint16{
+		0, 1, 3,
+		1, 2, 3,
+	}
+
+	vbo := createArrayBuffer(vertices)
+	cbo := createArrayBuffer(colors)
+	ibo := createElementArrayBuffer(indices)
+
 	var vao uint32
 	gl.GenVertexArrays(1, &vao)
 	gl.BindVertexArray(vao)
@@ -84,10 +146,7 @@ func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chart
 	}
 	gl.BindVertexArray(0)
 
-	return &chartStochastics{
-		vao:   vao,
-		count: int32(len(indices)),
-	}
+	return vao, int32(len(indices))
 }
 
 func (s *chartStochastics) render(r image.Rectangle) {
@@ -97,8 +156,12 @@ func (s *chartStochastics) render(r image.Rectangle) {
 
 	setModelMatrixRectangle(r)
 
-	gl.BindVertexArray(s.vao)
-	gl.DrawElements(gl.LINES, s.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.BindVertexArray(s.lineVAO)
+	gl.DrawElements(gl.LINES, s.lineCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.BindVertexArray(0)
+
+	gl.BindVertexArray(s.backgroundVAO)
+	gl.DrawElements(gl.TRIANGLES, s.backgroundCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	gl.BindVertexArray(0)
 }
 
@@ -107,5 +170,6 @@ func (s *chartStochastics) close() {
 		return
 	}
 
-	gl.DeleteVertexArrays(1, &s.vao)
+	gl.DeleteVertexArrays(1, &s.lineVAO)
+	gl.DeleteVertexArrays(1, &s.backgroundVAO)
 }
