@@ -35,10 +35,10 @@ func createChartBorderVAO() (uint32, int32) {
 	}
 
 	colors := []float32{
-		0.5, 0.5, 0.5,
-		0.5, 0.5, 0.5,
-		0.5, 0.5, 0.5,
-		0.5, 0.5, 0.5,
+		0, 0.25, 0.5,
+		0, 0.25, 0.5,
+		0, 0.25, 0.5,
+		0, 0.25, 0.5,
 	}
 
 	indices := []uint16{
@@ -78,8 +78,8 @@ func createChartSeparatorVAO() (uint32, int32) {
 	}
 
 	colors := []float32{
-		0.5, 0.5, 0.5,
-		0.5, 0.5, 0.5,
+		0, 0.25, 0.5,
+		0, 0.25, 0.5,
 	}
 
 	indices := []uint16{
