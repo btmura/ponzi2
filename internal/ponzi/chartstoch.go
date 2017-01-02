@@ -27,24 +27,8 @@ func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chart
 
 	var v uint16 // vertex index
 
-	// Add vertices and indices for k percent lines.
-	first := true
-	for i, s := range ss {
-		if s.k == 0.0 {
-			continue
-		}
-
-		vertices = append(vertices, calcX(i), calcY(s.k))
-		colors = append(colors, 1, 0, 0)
-		if !first {
-			indices = append(indices, v, v-1)
-		}
-		v++
-		first = false
-	}
-
 	// Add vertices and indices for d percent lines.
-	first = true
+	first := true
 	for i, s := range ss {
 		if s.d == 0.0 {
 			continue
@@ -52,6 +36,22 @@ func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chart
 
 		vertices = append(vertices, calcX(i), calcY(s.d))
 		colors = append(colors, dColor[0], dColor[1], dColor[2])
+		if !first {
+			indices = append(indices, v, v-1)
+		}
+		v++
+		first = false
+	}
+
+	// Add vertices and indices for k percent lines.
+	first = true
+	for i, s := range ss {
+		if s.k == 0.0 {
+			continue
+		}
+
+		vertices = append(vertices, calcX(i), calcY(s.k))
+		colors = append(colors, 1, 0, 0)
 		if !first {
 			indices = append(indices, v, v-1)
 		}
