@@ -7,22 +7,19 @@ import (
 )
 
 type chartFrame struct {
-	propText       *dynamicText
-	borderVAO      uint32
-	borderCount    int32
-	separatorVAO   uint32
-	separatorCount int32
+	propText    *dynamicText
+	borderVAO   uint32
+	borderCount int32
+	separator   *chartSeparator
 }
 
 func createChartFrame(propText *dynamicText) *chartFrame {
 	borderVAO, borderCount := createChartBorderVAO()
-	separatorVAO, separatorCount := createChartSeparatorVAO()
 	return &chartFrame{
-		propText:       propText,
-		borderVAO:      borderVAO,
-		borderCount:    borderCount,
-		separatorVAO:   separatorVAO,
-		separatorCount: separatorCount,
+		propText:    propText,
+		borderVAO:   borderVAO,
+		borderCount: borderCount,
+		separator:   createChartSeparator(blue, blue),
 	}
 }
 
@@ -46,44 +43,6 @@ func createChartBorderVAO() (uint32, int32) {
 		1, 2,
 		2, 3,
 		3, 0,
-	}
-
-	vbo := createArrayBuffer(vertices)
-	cbo := createArrayBuffer(colors)
-	ibo := createElementArrayBuffer(indices)
-
-	var vao uint32
-	gl.GenVertexArrays(1, &vao)
-	gl.BindVertexArray(vao)
-	{
-		gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-		gl.EnableVertexAttribArray(positionLocation)
-		gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
-
-		gl.BindBuffer(gl.ARRAY_BUFFER, cbo)
-		gl.EnableVertexAttribArray(colorLocation)
-		gl.VertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
-
-		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo)
-	}
-	gl.BindVertexArray(0)
-
-	return vao, int32(len(indices))
-}
-
-func createChartSeparatorVAO() (uint32, int32) {
-	vertices := []float32{
-		-1, 0,
-		1, 0,
-	}
-
-	colors := []float32{
-		0, 0.25, 0.5,
-		0, 0.25, 0.5,
-	}
-
-	indices := []uint16{
-		0, 1,
 	}
 
 	vbo := createArrayBuffer(vertices)
@@ -148,18 +107,14 @@ func (f *chartFrame) render(stock *modelStock, r image.Rectangle) []image.Rectan
 
 	rects := sliceRectangle(r, 0.13, 0.13, 0.13, 0.6)
 	for _, r := range rects {
-		setModelMatrixRectangle(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
-		gl.BindVertexArray(f.separatorVAO)
-		gl.DrawElements(gl.LINES, f.separatorCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
-		gl.BindVertexArray(0)
+		f.separator.render(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
 	}
-
 	return rects
 }
 
 func (f *chartFrame) close() {
 	gl.DeleteVertexArrays(1, &f.borderVAO)
-	gl.DeleteVertexArrays(1, &f.separatorVAO)
+	f.separator.close()
 }
 
 // createChartBackgroundVAO creates a 2-triangle VAO for a square centered around (0, 0).
