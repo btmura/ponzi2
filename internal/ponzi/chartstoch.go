@@ -13,11 +13,8 @@ type chartStochastics struct {
 	// lineCount is the number of elements to draw for lineVAO.
 	lineCount int32
 
-	// backgroundVAO is the VAO for the background behind the lines.
-	backgroundVAO uint32
-
-	// backgroundCount is the number of elements to draw for the background.
-	backgroundCount int32
+	// background is a rectangle used as a background.
+	background *chartRect
 }
 
 func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chartStochastics {
@@ -99,13 +96,11 @@ func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chart
 			c = stochasticColor(d)
 		}
 	}
-	backgroundVAO, backgroundCount := createChartBackgroundVAO(black, black, black, c)
 
 	return &chartStochastics{
-		lineVAO:         lineVAO,
-		lineCount:       int32(len(indices)),
-		backgroundVAO:   backgroundVAO,
-		backgroundCount: backgroundCount,
+		lineVAO:    lineVAO,
+		lineCount:  int32(len(indices)),
+		background: createChartRect(black, black, black, c),
 	}
 }
 
@@ -120,9 +115,7 @@ func (s *chartStochastics) render(r image.Rectangle) {
 	gl.DrawElements(gl.LINES, s.lineCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	gl.BindVertexArray(0)
 
-	gl.BindVertexArray(s.backgroundVAO)
-	gl.DrawElements(gl.TRIANGLES, s.backgroundCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
-	gl.BindVertexArray(0)
+	s.background.render(r)
 }
 
 func (s *chartStochastics) close() {
@@ -131,7 +124,7 @@ func (s *chartStochastics) close() {
 	}
 
 	gl.DeleteVertexArrays(1, &s.lineVAO)
-	gl.DeleteVertexArrays(1, &s.backgroundVAO)
+	s.background.close()
 }
 
 func stochasticColor(d float32) [3]float32 {

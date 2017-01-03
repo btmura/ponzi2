@@ -1,9 +1,18 @@
 package ponzi
 
-import "github.com/go-gl/gl/v4.5-core/gl"
+import (
+	"image"
 
-// createChartBackgroundVAO creates a 2-triangle VAO for a square centered around (0, 0).
-func createChartBackgroundVAO(ulColor, urColor, blColor, brColor [3]float32) (uint32, int32) {
+	"github.com/go-gl/gl/v4.5-core/gl"
+)
+
+type chartRect struct {
+	vao   uint32
+	count int32
+}
+
+// createChartRect creates a 2-triangle VAO for a square centered around (0, 0).
+func createChartRect(ulColor, urColor, blColor, brColor [3]float32) *chartRect {
 	vertices := []float32{
 		-1, 1, // UL - 0
 		1, 1, // UR - 1
@@ -43,5 +52,19 @@ func createChartBackgroundVAO(ulColor, urColor, blColor, brColor [3]float32) (ui
 	}
 	gl.BindVertexArray(0)
 
-	return vao, int32(len(indices))
+	return &chartRect{
+		vao:   vao,
+		count: int32(len(indices)),
+	}
+}
+
+func (cr *chartRect) render(r image.Rectangle) {
+	setModelMatrixRectangle(r)
+	gl.BindVertexArray(cr.vao)
+	gl.DrawElements(gl.TRIANGLES, cr.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.BindVertexArray(0)
+}
+
+func (cr *chartRect) close() {
+	gl.DeleteVertexArrays(1, &cr.vao)
 }
