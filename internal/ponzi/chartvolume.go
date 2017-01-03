@@ -49,26 +49,26 @@ func createChartVolume(ss []*modelTradingSession) *chartVolume {
 		switch {
 		case s.close > s.open:
 			colors = append(colors,
-				0, 1, 0,
-				0, 1, 0,
-				0, 1, 0,
-				0, 1, 0,
+				green[0], green[1], green[2],
+				green[0], green[1], green[2],
+				green[0], green[1], green[2],
+				green[0], green[1], green[2],
 			)
 
 		case s.close < s.open:
 			colors = append(colors,
-				1, 0, 0,
-				1, 0, 0,
-				1, 0, 0,
-				1, 0, 0,
+				red[0], red[1], red[2],
+				red[0], red[1], red[2],
+				red[0], red[1], red[2],
+				red[0], red[1], red[2],
 			)
 
 		default:
 			colors = append(colors,
-				1, 1, 0,
-				1, 1, 0,
-				1, 1, 0,
-				1, 1, 0,
+				yellow[0], yellow[1], yellow[2],
+				yellow[0], yellow[1], yellow[2],
+				yellow[0], yellow[1], yellow[2],
+				yellow[0], yellow[1], yellow[2],
 			)
 		}
 

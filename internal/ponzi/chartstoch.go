@@ -57,7 +57,7 @@ func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chart
 		}
 
 		vertices = append(vertices, calcX(i), calcY(s.k))
-		colors = append(colors, 1, 0, 0)
+		colors = append(colors, red[0], red[1], red[2])
 		if !first {
 			indices = append(indices, v, v-1)
 		}

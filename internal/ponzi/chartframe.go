@@ -32,10 +32,10 @@ func createChartBorderVAO() (uint32, int32) {
 	}
 
 	colors := []float32{
-		0, 0.25, 0.5,
-		0, 0.25, 0.5,
-		0, 0.25, 0.5,
-		0, 0.25, 0.5,
+		blue[0], blue[1], blue[2],
+		blue[0], blue[1], blue[2],
+		blue[0], blue[1], blue[2],
+		blue[0], blue[1], blue[2],
 	}
 
 	indices := []uint16{
