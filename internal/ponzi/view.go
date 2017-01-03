@@ -331,7 +331,7 @@ func setModelMatrixRectangle(r image.Rectangle) {
 
 func sliceRectangle(r image.Rectangle, percentages ...float32) []image.Rectangle {
 	var rects []image.Rectangle
-	y := 0
+	y := r.Min.Y
 	for _, p := range percentages {
 		dy := int(float32(r.Max.Y) * p)
 		rects = append(rects, image.Rect(r.Min.X, y, r.Max.X, y+dy))

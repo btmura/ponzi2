@@ -128,15 +128,16 @@ func (f *chartFrame) render(stock *modelStock, r image.Rectangle) []image.Rectan
 	// Render the symbol and its quote.
 	//
 
-	const padding = 10
+	const p = 10
 	s := f.propText.measure(stock.symbol)
-	c.Y -= padding + s.Y
+	c.Y -= p + s.Y
 	{
 		c := c
-		c.X += padding
+		c.X += p
 		c = c.Add(f.propText.render(stock.symbol, c))
 		c = c.Add(f.propText.render(formatQuote(stock.quote), c))
 	}
+	c.Y -= p
 
 	//
 	// Render the separator below the symbol and quote.
