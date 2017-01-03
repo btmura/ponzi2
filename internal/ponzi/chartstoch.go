@@ -77,11 +77,8 @@ func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chart
 	cbo := createArrayBuffer(colors)
 	ibo := createElementArrayBuffer(indices)
 
-	// lineVAO is the VAO for the K and D lines.
 	var lineVAO uint32
-	// lineVAO is the VAO for the K and D lines.
 	gl.GenVertexArrays(1, &lineVAO)
-	// lineVAO is the VAO for the K and D lines.
 	gl.BindVertexArray(lineVAO)
 	{
 		gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
@@ -96,7 +93,17 @@ func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chart
 	}
 	gl.BindVertexArray(0)
 
-	backgroundVAO, backgroundCount := createChartBackgroundVAO(ss, dColor)
+	bgColor := black
+	if len(ss) != 0 {
+		d := ss[len(ss)-1].d
+		lowColor := [3]float32{1, 0.4, 0}
+		highColor := [3]float32{0, 0.2, 1}
+		for i := 0; i < 3; i++ {
+			bgColor[i] = lowColor[i] + (highColor[i]-lowColor[i])*d
+		}
+	}
+
+	backgroundVAO, backgroundCount := createChartBackgroundVAO(black, black, black, bgColor)
 
 	return &chartStochastics{
 		lineVAO:         lineVAO,
@@ -104,49 +111,6 @@ func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chart
 		backgroundVAO:   backgroundVAO,
 		backgroundCount: backgroundCount,
 	}
-}
-
-func createChartBackgroundVAO(ss []*modelTradingSession, dColor [3]float32) (uint32, int32) {
-	vertices := []float32{
-		-1, 1, // UL - 0
-		-1, -1, // BL - 1
-		1, -1, // BR - 2
-		1, 1, // UR -3
-	}
-
-	colors := []float32{
-		0, 0, 0,
-		0, 0, 0,
-		0, 0.25, 0.5,
-		0, 0, 0,
-	}
-
-	indices := []uint16{
-		0, 1, 3,
-		1, 2, 3,
-	}
-
-	vbo := createArrayBuffer(vertices)
-	cbo := createArrayBuffer(colors)
-	ibo := createElementArrayBuffer(indices)
-
-	var vao uint32
-	gl.GenVertexArrays(1, &vao)
-	gl.BindVertexArray(vao)
-	{
-		gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-		gl.EnableVertexAttribArray(positionLocation)
-		gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
-
-		gl.BindBuffer(gl.ARRAY_BUFFER, cbo)
-		gl.EnableVertexAttribArray(colorLocation)
-		gl.VertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
-
-		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo)
-	}
-	gl.BindVertexArray(0)
-
-	return vao, int32(len(indices))
 }
 
 func (s *chartStochastics) render(r image.Rectangle) {
