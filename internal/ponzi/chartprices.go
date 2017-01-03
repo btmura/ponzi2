@@ -12,6 +12,7 @@ type chartPrices struct {
 	lineCount     int32
 	triangleVAO   uint32
 	triangleCount int32
+	background    *chartRect
 }
 
 func createChartPrices(ss []*modelTradingSession) *chartPrices {
@@ -171,6 +172,7 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 		lineCount:     int32(len(lineIndices)),
 		triangleVAO:   triangleVAO,
 		triangleCount: int32(len(triangleIndices)),
+		background:    createChartRect(darkBlue, darkBlue, black, black),
 	}
 }
 
@@ -190,6 +192,8 @@ func (p *chartPrices) render(r image.Rectangle) {
 		gl.DrawElements(gl.TRIANGLES, p.triangleCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 		gl.BindVertexArray(0)
 	}
+
+	p.background.render(r)
 }
 
 func (p *chartPrices) close() {
@@ -201,4 +205,5 @@ func (p *chartPrices) close() {
 	if p.triangleCount > 0 {
 		gl.DeleteVertexArrays(1, &p.triangleVAO)
 	}
+	p.background.close()
 }
