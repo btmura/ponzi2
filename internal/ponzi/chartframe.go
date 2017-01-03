@@ -10,7 +10,7 @@ type chartFrame struct {
 	propText    *dynamicText
 	borderVAO   uint32
 	borderCount int32
-	separator   *chartSeparator
+	line        *chartLine
 }
 
 func createChartFrame(propText *dynamicText) *chartFrame {
@@ -19,7 +19,7 @@ func createChartFrame(propText *dynamicText) *chartFrame {
 		propText:    propText,
 		borderVAO:   borderVAO,
 		borderCount: borderCount,
-		separator:   createChartSeparator(blue, blue),
+		line:        createChartLine(blue, blue),
 	}
 }
 
@@ -99,7 +99,7 @@ func (f *chartFrame) render(stock *modelStock, r image.Rectangle) []image.Rectan
 	c.Y -= p
 
 	//
-	// Render the separator below the symbol and quote.
+	// Render the line below the symbol and quote.
 	//
 
 	r.Max.Y = c.Y
@@ -107,12 +107,12 @@ func (f *chartFrame) render(stock *modelStock, r image.Rectangle) []image.Rectan
 
 	rects := sliceRectangle(r, 0.13, 0.13, 0.13, 0.6)
 	for _, r := range rects {
-		f.separator.render(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
+		f.line.render(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
 	}
 	return rects
 }
 
 func (f *chartFrame) close() {
 	gl.DeleteVertexArrays(1, &f.borderVAO)
-	f.separator.close()
+	f.line.close()
 }
