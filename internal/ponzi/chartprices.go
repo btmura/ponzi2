@@ -40,7 +40,8 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 	rightX := -1.0 + stickWidth*0.9
 
 	calcY := func(value float32) float32 {
-		return 2*(value-min)/(max-min) - 1
+		const p = 0.1 // padding
+		return (2-p)*(value-min)/(max-min) - (1 - p/2)
 	}
 
 	for i, s := range ss {

@@ -30,7 +30,8 @@ func createChartVolume(ss []*modelTradingSession) *chartVolume {
 	rightX := -1.0 + barWidth*0.9
 
 	calcY := func(value int) float32 {
-		return 2*float32(value)/float32(max) - 1
+		const p = 0.1 // padding
+		return (2-p)*float32(value)/float32(max) - 1
 	}
 
 	for i, s := range ss {
