@@ -65,43 +65,29 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 		)
 
 		// Add the colors corresponding to the vertices.
+		var c [3]float32
 		switch {
+		case s.d != 0:
+			c = stochasticColor(s.d)
 		case s.close > s.open:
-			colors = append(colors,
-				0, 1, 0,
-				0, 1, 0,
-				0, 1, 0,
-				0, 1, 0,
-				0, 1, 0,
-				0, 1, 0,
-				0, 1, 0,
-				0, 1, 0,
-			)
-
+			c = green
 		case s.close < s.open:
-			colors = append(colors,
-				1, 0, 0,
-				1, 0, 0,
-				1, 0, 0,
-				1, 0, 0,
-				1, 0, 0,
-				1, 0, 0,
-				1, 0, 0,
-				1, 0, 0,
-			)
-
+			c = red
 		default:
-			colors = append(colors,
-				1, 1, 0,
-				1, 1, 0,
-				1, 1, 0,
-				1, 1, 0,
-				1, 1, 0,
-				1, 1, 0,
-				1, 1, 0,
-				1, 1, 0,
-			)
+			c = yellow
 		}
+
+		colors = append(colors,
+			c[0], c[1], c[2],
+			c[0], c[1], c[2],
+			c[0], c[1], c[2],
+			c[0], c[1], c[2],
+			c[0], c[1], c[2],
+			c[0], c[1], c[2],
+			c[0], c[1], c[2],
+			c[0], c[1], c[2],
+		)
+
 		// idx is function to refer to the vertices above.
 		idx := func(j uint16) uint16 {
 			return uint16(i)*8 + j

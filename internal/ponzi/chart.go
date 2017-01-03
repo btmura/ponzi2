@@ -4,8 +4,11 @@ import "image"
 
 // Colors used by the chart.
 var (
-	black = [3]float32{0, 0, 0}
-	blue  = [3]float32{0, 0.25, 0.5}
+	black  = [3]float32{0, 0, 0}
+	blue   = [3]float32{0, 0.25, 0.5}
+	green  = [3]float32{0, 1, 0}
+	red    = [3]float32{1, 0, 0}
+	yellow = [3]float32{1, 1, 0}
 )
 
 type chart struct {

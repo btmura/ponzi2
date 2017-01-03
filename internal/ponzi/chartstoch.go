@@ -93,17 +93,13 @@ func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chart
 	}
 	gl.BindVertexArray(0)
 
-	bgColor := black
+	c := black
 	if len(ss) != 0 {
-		d := ss[len(ss)-1].d
-		lowColor := [3]float32{1, 0.4, 0}
-		highColor := [3]float32{0, 0.2, 1}
-		for i := 0; i < 3; i++ {
-			bgColor[i] = lowColor[i] + (highColor[i]-lowColor[i])*d
+		if d := ss[len(ss)-1].d; d != 0 {
+			c = stochasticColor(d)
 		}
 	}
-
-	backgroundVAO, backgroundCount := createChartBackgroundVAO(black, black, black, bgColor)
+	backgroundVAO, backgroundCount := createChartBackgroundVAO(black, black, black, c)
 
 	return &chartStochastics{
 		lineVAO:         lineVAO,
@@ -136,4 +132,14 @@ func (s *chartStochastics) close() {
 
 	gl.DeleteVertexArrays(1, &s.lineVAO)
 	gl.DeleteVertexArrays(1, &s.backgroundVAO)
+}
+
+func stochasticColor(d float32) [3]float32 {
+	low := [3]float32{1, 0.4, 0}
+	high := [3]float32{0, 0.2, 1}
+	mix := [3]float32{}
+	for i := 0; i < 3; i++ {
+		mix[i] = low[i] + (high[i]-low[i])*d
+	}
+	return mix
 }
