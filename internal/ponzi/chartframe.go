@@ -7,19 +7,19 @@ import (
 )
 
 type chartFrame struct {
-	propText    *dynamicText
-	borderVAO   uint32
-	borderCount int32
-	line        *chartLine
+	symbolQuoteText *dynamicText
+	borderVAO       uint32
+	borderCount     int32
+	line            *chartLine
 }
 
-func createChartFrame(propText *dynamicText) *chartFrame {
+func createChartFrame(symbolQuoteText *dynamicText) *chartFrame {
 	borderVAO, borderCount := createChartBorderVAO()
 	return &chartFrame{
-		propText:    propText,
-		borderVAO:   borderVAO,
-		borderCount: borderCount,
-		line:        createChartLine(blue, blue),
+		symbolQuoteText: symbolQuoteText,
+		borderVAO:       borderVAO,
+		borderCount:     borderCount,
+		line:            createChartLine(blue, blue),
 	}
 }
 
@@ -88,13 +88,13 @@ func (f *chartFrame) render(stock *modelStock, r image.Rectangle) []image.Rectan
 	//
 
 	const p = 10
-	s := f.propText.measure(stock.symbol)
+	s := f.symbolQuoteText.measure(stock.symbol)
 	c.Y -= p + s.Y
 	{
 		c := c
 		c.X += p
-		c = c.Add(f.propText.render(stock.symbol, c))
-		c = c.Add(f.propText.render(formatQuote(stock.quote), c))
+		c = c.Add(f.symbolQuoteText.render(stock.symbol, c))
+		c = c.Add(f.symbolQuoteText.render(formatQuote(stock.quote), c))
 	}
 	c.Y -= p
 

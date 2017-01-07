@@ -174,7 +174,7 @@ func createView(model *model) (*view, error) {
 		return nil, err
 	}
 
-	mono, err := newTextFactory(orthoPlaneMesh, monoBytes, 18)
+	mono, err := newTextFactory(orthoPlaneMesh, monoBytes, 16)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func createView(model *model) (*view, error) {
 		return nil, err
 	}
 
-	prop, err := newTextFactory(orthoPlaneMesh, propBytes, 24)
+	prop, err := newTextFactory(orthoPlaneMesh, propBytes, 20)
 	if err != nil {
 		return nil, err
 	}
