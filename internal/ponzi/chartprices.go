@@ -70,7 +70,7 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 		var c [3]float32
 		switch {
 		case s.d != 0:
-			c = stochasticColor(s.d)
+			c = stochasticColor(s.k)
 		case s.close > s.open:
 			c = green
 		case s.close < s.open:

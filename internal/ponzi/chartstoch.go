@@ -92,8 +92,8 @@ func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chart
 
 	c := black
 	if len(ss) != 0 {
-		if d := ss[len(ss)-1].d; d != 0 {
-			c = stochasticColor(d)
+		if k := ss[len(ss)-1].k; k != 0 {
+			c = stochasticColor(k)
 		}
 	}
 
@@ -127,12 +127,12 @@ func (s *chartStochastics) close() {
 	s.background.close()
 }
 
-func stochasticColor(d float32) [3]float32 {
+func stochasticColor(k float32) [3]float32 {
 	low := [3]float32{1, 0.4, 0}
 	high := [3]float32{0, 0.2, 1}
 	mix := [3]float32{}
 	for i := 0; i < 3; i++ {
-		mix[i] = low[i] + (high[i]-low[i])*d
+		mix[i] = low[i] + (high[i]-low[i])*k
 	}
 	return mix
 }
