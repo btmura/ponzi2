@@ -227,12 +227,15 @@ func (v *view) render() {
 		c := c
 		c = c.Add(v.dowText.render(c))
 		c = c.Add(v.monoText.render(v.dowPriceText(), c))
+		c.X += p
 
 		c = c.Add(v.sapText.render(c))
 		c = c.Add(v.monoText.render(v.sapPriceText(), c))
+		c.X += p
 
 		c = c.Add(v.nasdaqText.render(c))
 		c = c.Add(v.monoText.render(v.nasdaqPriceText(), c))
+		c.X += p
 	}
 
 	// Move down a bit after the major indices.
@@ -267,7 +270,7 @@ func formatQuote(q *modelQuote) string {
 	if q != nil {
 		return fmt.Sprintf(" %.2f %+5.2f %+5.2f%% ", q.price, q.change, q.percentChange*100.0)
 	}
-	return " ... "
+	return ""
 }
 
 func (v *view) handleKey(key glfw.Key, action glfw.Action) {
