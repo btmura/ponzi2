@@ -74,8 +74,9 @@ type view struct {
 
 	chart *chart
 
-	monoText *dynamicText
-	propText *dynamicText
+	monoText        *dynamicText
+	symbolQuoteText *dynamicText
+	inputSymbolText *dynamicText
 
 	viewMatrix        matrix4
 	perspectiveMatrix matrix4
@@ -189,17 +190,23 @@ func createView(model *model) (*view, error) {
 		return nil, err
 	}
 
+	largeProp, err := newTextFactory(orthoPlaneMesh, propBytes, 36)
+	if err != nil {
+		return nil, err
+	}
+
 	return &view{
-		model:          model,
-		program:        p,
-		orthoPlaneMesh: orthoPlaneMesh,
-		texture:        texture,
-		dowText:        mono.createStaticText("DOW"),
-		sapText:        mono.createStaticText("S&P"),
-		nasdaqText:     mono.createStaticText("NASDAQ"),
-		monoText:       mono.createDynamicText(),
-		propText:       prop.createDynamicText(),
-		viewMatrix:     vm,
+		model:           model,
+		program:         p,
+		orthoPlaneMesh:  orthoPlaneMesh,
+		texture:         texture,
+		dowText:         mono.createStaticText("DOW"),
+		sapText:         mono.createStaticText("S&P"),
+		nasdaqText:      mono.createStaticText("NASDAQ"),
+		monoText:        mono.createDynamicText(),
+		symbolQuoteText: prop.createDynamicText(),
+		inputSymbolText: largeProp.createDynamicText(),
+		viewMatrix:      vm,
 	}, nil
 }
 
@@ -211,14 +218,14 @@ func (v *view) render() {
 
 	// Render input symbol being typed in the center.
 	if v.model.inputSymbol != "" {
-		s := v.propText.measure(v.model.inputSymbol)
+		s := v.inputSymbolText.measure(v.model.inputSymbol)
 		c := v.winSize.Sub(s).Div(2)
-		v.propText.render(v.model.inputSymbol, c)
+		v.inputSymbolText.render(v.model.inputSymbol, c)
 	}
 
 	const p = 10 // padding
 
-	// Start in the upper left corner. (0, 0) is lower left.
+	// Start in theistforner. (0, 0) is lower left.
 	// Move down below the major indices line.
 	c := image.Pt(p, v.winSize.Y-p-v.dowText.size.Y)
 
@@ -246,7 +253,7 @@ func (v *view) render() {
 		r := image.Rect(c.X, p, v.winSize.X-p, c.Y)
 		if v.chart == nil || v.chart.symbol != v.model.currentSymbol() {
 			v.chart.close()
-			v.chart = createChart(v.model.currentSymbol(), v.propText)
+			v.chart = createChart(v.model.currentSymbol(), v.symbolQuoteText)
 		}
 		v.chart.render(v.model.currentStock, r)
 	}
