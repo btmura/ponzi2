@@ -6,13 +6,13 @@ import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
-// chartLine is a single line from one point to another.
-type chartLine struct {
-	vao   uint32
-	count int32
+// vaoLine is a Vertex Array Object (VAO) for a line segment.
+type vaoLine struct {
+	vao   uint32 // vao is the VAO name for gl.BindVertexArray.
+	count int32  // count is the number of elements for gl.DrawElements.
 }
 
-func createChartLine(lColor, rColor [3]float32) *chartLine {
+func createVAOLine(lColor, rColor [3]float32) *vaoLine {
 	vertices := []float32{
 		-1, 0,
 		1, 0,
@@ -47,19 +47,21 @@ func createChartLine(lColor, rColor [3]float32) *chartLine {
 	}
 	gl.BindVertexArray(0)
 
-	return &chartLine{
+	return &vaoLine{
 		vao:   vao,
 		count: int32(len(indices)),
 	}
 }
 
-func (l *chartLine) render(r image.Rectangle) {
+func (v *vaoLine) render(r image.Rectangle) {
 	setModelMatrixRectangle(r)
-	gl.BindVertexArray(l.vao)
-	gl.DrawElements(gl.LINES, l.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.BindVertexArray(v.vao)
+	{
+		gl.DrawElements(gl.LINES, v.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	}
 	gl.BindVertexArray(0)
 }
 
-func (l *chartLine) close() {
-	gl.DeleteVertexArrays(1, &l.vao)
+func (v *vaoLine) close() {
+	gl.DeleteVertexArrays(1, &v.vao)
 }

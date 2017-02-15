@@ -10,7 +10,7 @@ type chartFrame struct {
 	symbolQuoteText *dynamicText
 	borderVAO       uint32
 	borderCount     int32
-	line            *chartLine
+	line            *vaoLine
 }
 
 func createChartFrame(symbolQuoteText *dynamicText) *chartFrame {
@@ -19,7 +19,7 @@ func createChartFrame(symbolQuoteText *dynamicText) *chartFrame {
 		symbolQuoteText: symbolQuoteText,
 		borderVAO:       borderVAO,
 		borderCount:     borderCount,
-		line:            createChartLine(blue, blue),
+		line:            createVAOLine(blue, blue),
 	}
 }
 
