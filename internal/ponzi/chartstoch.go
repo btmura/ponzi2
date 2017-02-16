@@ -59,11 +59,6 @@ func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chart
 		first = false
 	}
 
-	// Can't create empty buffer objects. Bail out if nothing to render.
-	if len(vertices) == 0 {
-		return nil
-	}
-
 	c := black
 	if len(ss) != 0 {
 		if k := ss[len(ss)-1].k; k != 0 {

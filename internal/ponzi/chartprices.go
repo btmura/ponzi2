@@ -122,19 +122,9 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 		rightX += stickWidth
 	}
 
-	// Can't create empty buffer objects. Bail out if nothing to render.
-	if len(vertices) == 0 {
-		return nil
-	}
-
-	var stickRects *vao
-	if len(triangleIndices) != 0 {
-		stickRects = createVAO(gl.TRIANGLES, vertices, colors, triangleIndices)
-	}
-
 	return &chartPrices{
 		stickLines: createVAO(gl.LINES, vertices, colors, lineIndices),
-		stickRects: stickRects,
+		stickRects: createVAO(gl.TRIANGLES, vertices, colors, triangleIndices),
 		background: createFilledRectVAO(darkBlue, darkBlue, black, black),
 	}
 }

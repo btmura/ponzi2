@@ -77,6 +77,10 @@ func createFilledRectVAO(ulColor, urColor, blColor, brColor [3]float32) *vao {
 }
 
 func createVAO(mode uint32, vertices, colors []float32, indices []uint16) *vao {
+	if len(vertices) == 0 || len(colors) == 0 || len(indices) == 0 {
+		return nil // Can't create empty buffer objects. Bail out if nothing to render.
+	}
+
 	vbo := createArrayBuffer(vertices)
 	cbo := createArrayBuffer(colors)
 	ibo := createElementArrayBuffer(indices)
@@ -105,6 +109,9 @@ func createVAO(mode uint32, vertices, colors []float32, indices []uint16) *vao {
 }
 
 func (v *vao) render(r image.Rectangle) {
+	if v == nil {
+		return
+	}
 	setModelMatrixRectangle(r)
 	gl.BindVertexArray(v.array)
 	gl.DrawElements(v.mode, v.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
@@ -112,5 +119,8 @@ func (v *vao) render(r image.Rectangle) {
 }
 
 func (v *vao) close() {
+	if v == nil {
+		return
+	}
 	gl.DeleteVertexArrays(1, &v.array)
 }

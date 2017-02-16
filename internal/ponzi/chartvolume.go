@@ -88,11 +88,6 @@ func createChartVolume(ss []*modelTradingSession) *chartVolume {
 		rightX += barWidth
 	}
 
-	// Can't create empty buffer objects. Bail out if nothing to render.
-	if len(vertices) == 0 {
-		return nil
-	}
-
 	return &chartVolume{createVAO(gl.TRIANGLES, vertices, colors, indices)}
 }
 
