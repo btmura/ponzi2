@@ -7,14 +7,8 @@ import (
 )
 
 type chartStochastics struct {
-	// lineVAO is the VAO for the K and D lines.
-	lineVAO uint32
-
-	// lineCount is the number of elements to draw for lineVAO.
-	lineCount int32
-
-	// background is a rectangle used as a background.
-	background *vao
+	lines      *vao // lines is the VAO for the K and D lines.
+	background *vao // background is a rectangle used as a background.
 }
 
 func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chartStochastics {
@@ -70,26 +64,6 @@ func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chart
 		return nil
 	}
 
-	vbo := createArrayBuffer(vertices)
-	cbo := createArrayBuffer(colors)
-	ibo := createElementArrayBuffer(indices)
-
-	var lineVAO uint32
-	gl.GenVertexArrays(1, &lineVAO)
-	gl.BindVertexArray(lineVAO)
-	{
-		gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-		gl.EnableVertexAttribArray(positionLocation)
-		gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
-
-		gl.BindBuffer(gl.ARRAY_BUFFER, cbo)
-		gl.EnableVertexAttribArray(colorLocation)
-		gl.VertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
-
-		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo)
-	}
-	gl.BindVertexArray(0)
-
 	c := black
 	if len(ss) != 0 {
 		if k := ss[len(ss)-1].k; k != 0 {
@@ -98,8 +72,7 @@ func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chart
 	}
 
 	return &chartStochastics{
-		lineVAO:    lineVAO,
-		lineCount:  int32(len(indices)),
+		lines:      createVAO(gl.LINES, vertices, colors, indices),
 		background: createFilledRectVAO(black, black, black, c),
 	}
 }
@@ -108,13 +81,7 @@ func (s *chartStochastics) render(r image.Rectangle) {
 	if s == nil {
 		return
 	}
-
-	setModelMatrixRectangle(r)
-
-	gl.BindVertexArray(s.lineVAO)
-	gl.DrawElements(gl.LINES, s.lineCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
-	gl.BindVertexArray(0)
-
+	s.lines.render(r)
 	s.background.render(r)
 }
 
@@ -122,8 +89,7 @@ func (s *chartStochastics) close() {
 	if s == nil {
 		return
 	}
-
-	gl.DeleteVertexArrays(1, &s.lineVAO)
+	s.lines.close()
 	s.background.close()
 }
 

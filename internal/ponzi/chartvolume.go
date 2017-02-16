@@ -96,16 +96,16 @@ func createChartVolume(ss []*modelTradingSession) *chartVolume {
 	return &chartVolume{createVAO(gl.TRIANGLES, vertices, colors, indices)}
 }
 
-func (c *chartVolume) render(r image.Rectangle) {
-	if c == nil {
+func (v *chartVolume) render(r image.Rectangle) {
+	if v == nil {
 		return
 	}
-	c.vao.render(r)
+	v.vao.render(r)
 }
 
-func (c *chartVolume) close() {
-	if c == nil {
+func (v *chartVolume) close() {
+	if v == nil {
 		return
 	}
-	c.vao.close()
+	v.vao.close()
 }
