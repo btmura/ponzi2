@@ -7,8 +7,7 @@ import (
 )
 
 type chartVolume struct {
-	vao   uint32
-	count int32
+	vao *vao
 }
 
 func createChartVolume(ss []*modelTradingSession) *chartVolume {
@@ -94,48 +93,19 @@ func createChartVolume(ss []*modelTradingSession) *chartVolume {
 		return nil
 	}
 
-	vbo := createArrayBuffer(vertices)
-	cbo := createArrayBuffer(colors)
-	ibo := createElementArrayBuffer(indices)
-
-	var vao uint32
-	gl.GenVertexArrays(1, &vao)
-	gl.BindVertexArray(vao)
-	{
-		gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-		gl.EnableVertexAttribArray(positionLocation)
-		gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
-
-		gl.BindBuffer(gl.ARRAY_BUFFER, cbo)
-		gl.EnableVertexAttribArray(colorLocation)
-		gl.VertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
-
-		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo)
-	}
-	gl.BindVertexArray(0)
-
-	return &chartVolume{
-		vao:   vao,
-		count: int32(len(indices)),
-	}
+	return &chartVolume{createVAO(gl.TRIANGLES, vertices, colors, indices)}
 }
 
-func (v *chartVolume) render(r image.Rectangle) {
-	if v == nil {
+func (c *chartVolume) render(r image.Rectangle) {
+	if c == nil {
 		return
 	}
-
-	setModelMatrixRectangle(r)
-
-	gl.BindVertexArray(v.vao)
-	gl.DrawElements(gl.TRIANGLES, v.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
-	gl.BindVertexArray(0)
+	c.vao.render(r)
 }
 
-func (v *chartVolume) close() {
-	if v == nil {
+func (c *chartVolume) close() {
+	if c == nil {
 		return
 	}
-
-	gl.DeleteVertexArrays(1, &v.vao)
+	c.vao.close()
 }
