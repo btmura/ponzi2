@@ -29,7 +29,8 @@ func (f *chartFrame) render(stock *modelStock, r image.Rectangle) []image.Rectan
 	//
 
 	gl.Uniform1f(colorMixAmountLocation, 1)
-	f.border.render(r)
+	setModelMatrixRectangle(r)
+	f.border.render()
 
 	//
 	// Render the symbol and its quote.
@@ -55,7 +56,8 @@ func (f *chartFrame) render(stock *modelStock, r image.Rectangle) []image.Rectan
 
 	rects := sliceRectangle(r, 0.13, 0.13, 0.13, 0.6)
 	for _, r := range rects {
-		f.divider.render(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
+		setModelMatrixRectangle(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
+		f.divider.render()
 	}
 	return rects
 }

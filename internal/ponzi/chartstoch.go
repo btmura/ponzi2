@@ -76,8 +76,9 @@ func (s *chartStochastics) render(r image.Rectangle) {
 	if s == nil {
 		return
 	}
-	s.lines.render(r)
-	s.background.render(r)
+	setModelMatrixRectangle(r)
+	s.lines.render()
+	s.background.render()
 }
 
 func (s *chartStochastics) close() {

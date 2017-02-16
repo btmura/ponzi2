@@ -95,7 +95,8 @@ func (v *chartVolume) render(r image.Rectangle) {
 	if v == nil {
 		return
 	}
-	v.vao.render(r)
+	setModelMatrixRectangle(r)
+	v.vao.render()
 }
 
 func (v *chartVolume) close() {

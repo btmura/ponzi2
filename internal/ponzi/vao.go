@@ -1,8 +1,6 @@
 package ponzi
 
 import (
-	"image"
-
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
@@ -108,11 +106,10 @@ func createVAO(mode uint32, vertices, colors []float32, indices []uint16) *vao {
 	}
 }
 
-func (v *vao) render(r image.Rectangle) {
+func (v *vao) render() {
 	if v == nil {
 		return
 	}
-	setModelMatrixRectangle(r)
 	gl.BindVertexArray(v.array)
 	gl.DrawElements(v.mode, v.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	gl.BindVertexArray(0)

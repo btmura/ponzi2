@@ -133,9 +133,10 @@ func (p *chartPrices) render(r image.Rectangle) {
 	if p == nil {
 		return
 	}
-	p.stickLines.render(r)
-	p.stickRects.render(r)
-	p.background.render(r)
+	setModelMatrixRectangle(r)
+	p.stickLines.render()
+	p.stickRects.render()
+	p.background.render()
 }
 
 func (p *chartPrices) close() {
