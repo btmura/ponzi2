@@ -6,7 +6,7 @@ import (
 )
 
 // newYorkLoc is the New York timezone.
-var newYorkLoc *time.Location = mustLoadLocation("America/New_York")
+var newYorkLoc = mustLoadLocation("America/New_York")
 
 // mustLoadLocation loads the requested tz location or panics.
 func mustLoadLocation(name string) *time.Location {
