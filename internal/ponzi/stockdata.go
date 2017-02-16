@@ -321,11 +321,11 @@ func listQuotes(req *listQuotesRequest) (*listQuotesResponse, error) {
 	defer resp.Body.Close()
 
 	parsed := []struct {
-		T      string // ticker symbol
-		L      string // price
-		C      string // change
-		Cp     string // percent change
-		Lt_dts string // time
+		T     string // ticker symbol
+		L     string // price
+		C     string // change
+		Cp    string // percent change
+		LtDts string `json:"Lt_dts"` // time
 	}{}
 
 	data, err := ioutil.ReadAll(resp.Body)
@@ -351,7 +351,7 @@ func listQuotes(req *listQuotesRequest) (*listQuotesResponse, error) {
 		quotes: map[string]*quote{},
 	}
 	for _, p := range parsed {
-		timestamp, err := time.Parse("2006-01-02T15:04:05Z", p.Lt_dts)
+		timestamp, err := time.Parse("2006-01-02T15:04:05Z", p.LtDts)
 		if err != nil {
 			return nil, fmt.Errorf("p: %+v timestamp: %v", p, err)
 		}
