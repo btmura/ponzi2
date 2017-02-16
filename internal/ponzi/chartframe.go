@@ -8,64 +8,35 @@ import (
 
 type chartFrame struct {
 	symbolQuoteText *dynamicText
-	borderVAO       uint32
-	borderCount     int32
-	line            *vaoLine
+	border          *vaoLine
+	divider         *vaoLine
 }
 
 func createChartFrame(symbolQuoteText *dynamicText) *chartFrame {
-	borderVAO, borderCount := createChartBorderVAO()
 	return &chartFrame{
 		symbolQuoteText: symbolQuoteText,
-		borderVAO:       borderVAO,
-		borderCount:     borderCount,
-		line:            createVAOLine(blue, blue),
+		border: createVAOLine(
+			[]float32{
+				-1, 1,
+				-1, -1,
+				1, -1,
+				1, 1,
+			},
+			[]float32{
+				blue[0], blue[1], blue[2],
+				blue[0], blue[1], blue[2],
+				blue[0], blue[1], blue[2],
+				blue[0], blue[1], blue[2],
+			},
+			[]uint16{
+				0, 1,
+				1, 2,
+				2, 3,
+				3, 0,
+			},
+		),
+		divider: createVAOLineSegment(blue, blue),
 	}
-}
-
-func createChartBorderVAO() (uint32, int32) {
-	vertices := []float32{
-		-1, 1,
-		-1, -1,
-		1, -1,
-		1, 1,
-	}
-
-	colors := []float32{
-		blue[0], blue[1], blue[2],
-		blue[0], blue[1], blue[2],
-		blue[0], blue[1], blue[2],
-		blue[0], blue[1], blue[2],
-	}
-
-	indices := []uint16{
-		0, 1,
-		1, 2,
-		2, 3,
-		3, 0,
-	}
-
-	vbo := createArrayBuffer(vertices)
-	cbo := createArrayBuffer(colors)
-	ibo := createElementArrayBuffer(indices)
-
-	var vao uint32
-	gl.GenVertexArrays(1, &vao)
-	gl.BindVertexArray(vao)
-	{
-		gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-		gl.EnableVertexAttribArray(positionLocation)
-		gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
-
-		gl.BindBuffer(gl.ARRAY_BUFFER, cbo)
-		gl.EnableVertexAttribArray(colorLocation)
-		gl.VertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
-
-		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo)
-	}
-	gl.BindVertexArray(0)
-
-	return vao, int32(len(indices))
 }
 
 func (f *chartFrame) render(stock *modelStock, r image.Rectangle) []image.Rectangle {
@@ -76,12 +47,8 @@ func (f *chartFrame) render(stock *modelStock, r image.Rectangle) []image.Rectan
 	// Render the frame around the chart.
 	//
 
-	setModelMatrixRectangle(r)
 	gl.Uniform1f(colorMixAmountLocation, 1)
-
-	gl.BindVertexArray(f.borderVAO)
-	gl.DrawElements(gl.LINES, f.borderCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
-	gl.BindVertexArray(0)
+	f.border.render(r)
 
 	//
 	// Render the symbol and its quote.
@@ -99,7 +66,7 @@ func (f *chartFrame) render(stock *modelStock, r image.Rectangle) []image.Rectan
 	c.Y -= p
 
 	//
-	// Render the line below the symbol and quote.
+	// Render the dividers between the sections.
 	//
 
 	r.Max.Y = c.Y
@@ -107,12 +74,12 @@ func (f *chartFrame) render(stock *modelStock, r image.Rectangle) []image.Rectan
 
 	rects := sliceRectangle(r, 0.13, 0.13, 0.13, 0.6)
 	for _, r := range rects {
-		f.line.render(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
+		f.divider.render(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
 	}
 	return rects
 }
 
 func (f *chartFrame) close() {
-	gl.DeleteVertexArrays(1, &f.borderVAO)
-	f.line.close()
+	f.divider.close()
+	f.border.close()
 }

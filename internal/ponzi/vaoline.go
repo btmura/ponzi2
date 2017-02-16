@@ -6,27 +6,29 @@ import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
-// vaoLine is a Vertex Array Object (VAO) for a line segment from (-1, 0) to (1, 0).
+// vaoLine is a Vertex Array Object (VAO) for line segments.
 type vaoLine struct {
 	vao   uint32 // vao is the VAO name for gl.BindVertexArray.
 	count int32  // count is the number of elements for gl.DrawElements.
 }
 
-func createVAOLine(lColor, rColor [3]float32) *vaoLine {
-	vertices := []float32{
-		-1, 0,
-		1, 0,
-	}
+func createVAOLineSegment(lColor, rColor [3]float32) *vaoLine {
+	return createVAOLine(
+		[]float32{
+			-1, 0,
+			1, 0,
+		},
+		[]float32{
+			lColor[0], lColor[1], lColor[2],
+			rColor[0], rColor[1], rColor[2],
+		},
+		[]uint16{
+			0, 1,
+		},
+	)
+}
 
-	colors := []float32{
-		lColor[0], lColor[1], lColor[2],
-		rColor[0], rColor[1], rColor[2],
-	}
-
-	indices := []uint16{
-		0, 1,
-	}
-
+func createVAOLine(vertices, colors []float32, indices []uint16) *vaoLine {
 	vbo := createArrayBuffer(vertices)
 	cbo := createArrayBuffer(colors)
 	ibo := createElementArrayBuffer(indices)
