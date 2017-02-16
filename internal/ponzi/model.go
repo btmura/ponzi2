@@ -220,19 +220,19 @@ func createModelStock(symbol string, quote *modelQuote, sessions []*tradingSessi
 	// Fill in the stochastics.
 	addStochastics := func(ss []*modelTradingSession) {
 		const (
-			kDays = 10
-			dDays = 3
+			k = 10
+			d = 3
 		)
 
 		// Calculate fast %K for stochastics.
 		fastK := make([]float32, len(ss))
 		for i := range ss {
-			if i+1 < kDays {
+			if i+1 < k {
 				continue
 			}
 
 			highestHigh, lowestLow := ss[i].high, ss[i].low
-			for j := 0; j < kDays; j++ {
+			for j := 0; j < k; j++ {
 				if highestHigh < ss[i-j].high {
 					highestHigh = ss[i-j].high
 				}
@@ -245,7 +245,7 @@ func createModelStock(symbol string, quote *modelQuote, sessions []*tradingSessi
 
 		// Calculate fast %D (slow %K) for stochastics.
 		for i := range ss {
-			if i+1 < kDays+dDays {
+			if i+1 < k+d {
 				continue
 			}
 			ss[i].k = (fastK[i] + fastK[i-1] + fastK[i-2]) / 3
@@ -253,7 +253,7 @@ func createModelStock(symbol string, quote *modelQuote, sessions []*tradingSessi
 
 		// Calculate slow %D for stochastics.
 		for i := range ss {
-			if i+1 < kDays+dDays+dDays {
+			if i+1 < k+d+d {
 				continue
 			}
 			ss[i].d = (ss[i].k + ss[i-1].k + ss[i-2].k) / 3
