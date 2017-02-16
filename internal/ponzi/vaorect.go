@@ -6,13 +6,13 @@ import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
-type chartRect struct {
-	vao   uint32
-	count int32
+// vaoRect is a Vertex Array Object (VAO) for a filled square centered around (0, 0).
+type vaoRect struct {
+	vao   uint32 // vao is the VAO name for gl.BindVertexArray.
+	count int32  // count is the number of elements for gl.DrawElements.
 }
 
-// createChartRect creates a 2-triangle VAO for a square centered around (0, 0).
-func createChartRect(ulColor, urColor, blColor, brColor [3]float32) *chartRect {
+func createVAORect(ulColor, urColor, blColor, brColor [3]float32) *vaoRect {
 	vertices := []float32{
 		-1, 1, // UL - 0
 		1, 1, // UR - 1
@@ -52,19 +52,19 @@ func createChartRect(ulColor, urColor, blColor, brColor [3]float32) *chartRect {
 	}
 	gl.BindVertexArray(0)
 
-	return &chartRect{
+	return &vaoRect{
 		vao:   vao,
 		count: int32(len(indices)),
 	}
 }
 
-func (cr *chartRect) render(r image.Rectangle) {
+func (v *vaoRect) render(r image.Rectangle) {
 	setModelMatrixRectangle(r)
-	gl.BindVertexArray(cr.vao)
-	gl.DrawElements(gl.TRIANGLES, cr.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
+	gl.BindVertexArray(v.vao)
+	gl.DrawElements(gl.TRIANGLES, v.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	gl.BindVertexArray(0)
 }
 
-func (cr *chartRect) close() {
-	gl.DeleteVertexArrays(1, &cr.vao)
+func (v *vaoRect) close() {
+	gl.DeleteVertexArrays(1, &v.vao)
 }

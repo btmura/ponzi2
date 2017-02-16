@@ -6,7 +6,7 @@ import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
-// vaoLine is a Vertex Array Object (VAO) for a line segment.
+// vaoLine is a Vertex Array Object (VAO) for a line segment from (-1, 0) to (1, 0).
 type vaoLine struct {
 	vao   uint32 // vao is the VAO name for gl.BindVertexArray.
 	count int32  // count is the number of elements for gl.DrawElements.
@@ -56,9 +56,7 @@ func createVAOLine(lColor, rColor [3]float32) *vaoLine {
 func (v *vaoLine) render(r image.Rectangle) {
 	setModelMatrixRectangle(r)
 	gl.BindVertexArray(v.vao)
-	{
-		gl.DrawElements(gl.LINES, v.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
-	}
+	gl.DrawElements(gl.LINES, v.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	gl.BindVertexArray(0)
 }
 

@@ -12,7 +12,7 @@ type chartPrices struct {
 	lineCount     int32
 	triangleVAO   uint32
 	triangleCount int32
-	background    *chartRect
+	background    *vaoRect
 }
 
 func createChartPrices(ss []*modelTradingSession) *chartPrices {
@@ -173,7 +173,7 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 		lineCount:     int32(len(lineIndices)),
 		triangleVAO:   triangleVAO,
 		triangleCount: int32(len(triangleIndices)),
-		background:    createChartRect(darkBlue, darkBlue, black, black),
+		background:    createVAORect(darkBlue, darkBlue, black, black),
 	}
 }
 
