@@ -8,14 +8,15 @@ import (
 
 type chartFrame struct {
 	symbolQuoteText *dynamicText
-	border          *vaoLine
-	divider         *vaoLine
+	border          *vao
+	divider         *vao
 }
 
 func createChartFrame(symbolQuoteText *dynamicText) *chartFrame {
 	return &chartFrame{
 		symbolQuoteText: symbolQuoteText,
-		border: createVAOLine(
+		border: createVAO(
+			gl.LINES,
 			[]float32{
 				-1, 1,
 				-1, -1,
@@ -35,7 +36,20 @@ func createChartFrame(symbolQuoteText *dynamicText) *chartFrame {
 				3, 0,
 			},
 		),
-		divider: createVAOLineSegment(blue, blue),
+		divider: createVAO(
+			gl.LINES,
+			[]float32{
+				-1, 0,
+				1, 0,
+			},
+			[]float32{
+				blue[0], blue[1], blue[2],
+				blue[0], blue[1], blue[2],
+			},
+			[]uint16{
+				0, 1,
+			},
+		),
 	}
 }
 

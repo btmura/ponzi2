@@ -17,7 +17,7 @@ func createVAORect(ulColor, urColor, blColor, brColor [3]float32) *vaoRect {
 		-1, 1, // UL - 0
 		1, 1, // UR - 1
 		-1, -1, // BL - 2
-		1, -1, // BR - 3
+		1, -1, // BR - 31
 	}
 
 	colors := []float32{
