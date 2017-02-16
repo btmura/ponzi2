@@ -8,11 +8,9 @@ import (
 )
 
 type chartPrices struct {
-	lineVAO       uint32
-	lineCount     int32
-	triangleVAO   uint32
-	triangleCount int32
-	background    *vao
+	stickLines *vao
+	stickRects *vao
+	background *vao
 }
 
 func createChartPrices(ss []*modelTradingSession) *chartPrices {
@@ -129,51 +127,15 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 		return nil
 	}
 
-	vbo := createArrayBuffer(vertices)
-	cbo := createArrayBuffer(colors)
-	lineIBO := createElementArrayBuffer(lineIndices)
-
-	var lineVAO uint32
-	gl.GenVertexArrays(1, &lineVAO)
-	gl.BindVertexArray(lineVAO)
-	{
-		gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-		gl.EnableVertexAttribArray(positionLocation)
-		gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
-
-		gl.BindBuffer(gl.ARRAY_BUFFER, cbo)
-		gl.EnableVertexAttribArray(colorLocation)
-		gl.VertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
-
-		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, lineIBO)
-	}
-	gl.BindVertexArray(0)
-
-	var triangleVAO uint32
+	var stickRects *vao
 	if len(triangleIndices) != 0 {
-		triangleIBO := createElementArrayBuffer(triangleIndices)
-		gl.GenVertexArrays(1, &triangleVAO)
-		gl.BindVertexArray(triangleVAO)
-		{
-			gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-			gl.EnableVertexAttribArray(positionLocation)
-			gl.VertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
-
-			gl.BindBuffer(gl.ARRAY_BUFFER, cbo)
-			gl.EnableVertexAttribArray(colorLocation)
-			gl.VertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
-
-			gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, triangleIBO)
-		}
-		gl.BindVertexArray(0)
+		stickRects = createVAO(gl.TRIANGLES, vertices, colors, triangleIndices)
 	}
 
 	return &chartPrices{
-		lineVAO:       lineVAO,
-		lineCount:     int32(len(lineIndices)),
-		triangleVAO:   triangleVAO,
-		triangleCount: int32(len(triangleIndices)),
-		background:    createFilledRectVAO(darkBlue, darkBlue, black, black),
+		stickLines: createVAO(gl.LINES, vertices, colors, lineIndices),
+		stickRects: stickRects,
+		background: createFilledRectVAO(darkBlue, darkBlue, black, black),
 	}
 }
 
@@ -181,19 +143,8 @@ func (p *chartPrices) render(r image.Rectangle) {
 	if p == nil {
 		return
 	}
-
-	setModelMatrixRectangle(r)
-
-	gl.BindVertexArray(p.lineVAO)
-	gl.DrawElements(gl.LINES, p.lineCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
-	gl.BindVertexArray(0)
-
-	if p.triangleCount > 0 {
-		gl.BindVertexArray(p.triangleVAO)
-		gl.DrawElements(gl.TRIANGLES, p.triangleCount, gl.UNSIGNED_SHORT, gl.Ptr(nil))
-		gl.BindVertexArray(0)
-	}
-
+	p.stickLines.render(r)
+	p.stickRects.render(r)
 	p.background.render(r)
 }
 
@@ -201,10 +152,7 @@ func (p *chartPrices) close() {
 	if p == nil {
 		return
 	}
-
-	gl.DeleteVertexArrays(1, &p.lineVAO)
-	if p.triangleCount > 0 {
-		gl.DeleteVertexArrays(1, &p.triangleVAO)
-	}
+	p.stickLines.close()
+	p.stickRects.close()
 	p.background.close()
 }
