@@ -15,41 +15,8 @@ type chartFrame struct {
 func createChartFrame(symbolQuoteText *dynamicText) *chartFrame {
 	return &chartFrame{
 		symbolQuoteText: symbolQuoteText,
-		border: createVAO(
-			gl.LINES,
-			[]float32{
-				-1, 1,
-				-1, -1,
-				1, -1,
-				1, 1,
-			},
-			[]float32{
-				blue[0], blue[1], blue[2],
-				blue[0], blue[1], blue[2],
-				blue[0], blue[1], blue[2],
-				blue[0], blue[1], blue[2],
-			},
-			[]uint16{
-				0, 1,
-				1, 2,
-				2, 3,
-				3, 0,
-			},
-		),
-		divider: createVAO(
-			gl.LINES,
-			[]float32{
-				-1, 0,
-				1, 0,
-			},
-			[]float32{
-				blue[0], blue[1], blue[2],
-				blue[0], blue[1], blue[2],
-			},
-			[]uint16{
-				0, 1,
-			},
-		),
+		border:          createStrokedRectVAO(blue, blue, blue, blue),
+		divider:         createLineVAO(blue, blue),
 	}
 }
 

@@ -13,6 +13,69 @@ type vao struct {
 	count int32  // count is the number of elements for gl.DrawElements.
 }
 
+func createLineVAO(lColor, rColor [3]float32) *vao {
+	return createVAO(
+		gl.LINES,
+		[]float32{
+			-1, 0, // L
+			+1, 0, // R
+		},
+		[]float32{
+			lColor[0], lColor[1], lColor[2],
+			rColor[0], rColor[1], rColor[2],
+		},
+		[]uint16{
+			0, 1,
+		},
+	)
+}
+
+func createStrokedRectVAO(ulColor, urColor, blColor, brColor [3]float32) *vao {
+	return createVAO(
+		gl.LINES,
+		[]float32{
+			-1, +1, // UL - 0
+			+1, +1, // UR - 1
+			-1, -1, // BL - 2
+			+1, -1, // BR - 3
+		},
+		[]float32{
+			ulColor[0], ulColor[1], ulColor[2],
+			urColor[0], urColor[1], urColor[2],
+			blColor[0], blColor[1], blColor[2],
+			brColor[0], brColor[1], brColor[2],
+		},
+		[]uint16{
+			0, 1,
+			1, 3,
+			3, 2,
+			2, 0,
+		},
+	)
+}
+
+func createFilledRectVAO(ulColor, urColor, blColor, brColor [3]float32) *vao {
+	return createVAO(
+		gl.TRIANGLES,
+		[]float32{
+			-1, +1, // UL - 0
+			+1, +1, // UR - 1
+			-1, -1, // BL - 2
+			+1, -1, // BR - 3
+		},
+		[]float32{
+			ulColor[0], ulColor[1], ulColor[2],
+			urColor[0], urColor[1], urColor[2],
+			blColor[0], blColor[1], blColor[2],
+			brColor[0], brColor[1], brColor[2],
+		},
+		[]uint16{
+			0, 2, 1,
+			1, 2, 3,
+		},
+	)
+}
+
 func createVAO(mode uint32, vertices, colors []float32, indices []uint16) *vao {
 	vbo := createArrayBuffer(vertices)
 	cbo := createArrayBuffer(colors)

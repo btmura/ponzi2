@@ -14,7 +14,7 @@ type chartStochastics struct {
 	lineCount int32
 
 	// background is a rectangle used as a background.
-	background *vaoRect
+	background *vao
 }
 
 func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chartStochastics {
@@ -100,7 +100,7 @@ func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chart
 	return &chartStochastics{
 		lineVAO:    lineVAO,
 		lineCount:  int32(len(indices)),
-		background: createVAORect(black, black, black, c),
+		background: createFilledRectVAO(black, black, black, c),
 	}
 }
 
