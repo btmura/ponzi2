@@ -25,12 +25,11 @@ func createChartVolume(ss []*modelTradingSession) *chartVolume {
 	var indices []uint16
 
 	barWidth := 2.0 / float32(len(ss)) // (-1 to 1) on X-axis
-	leftX := -1.0 + barWidth*0.1
-	rightX := -1.0 + barWidth*0.9
+	leftX := -1.0 + barWidth*0.2
+	rightX := -1.0 + barWidth*0.8
 
 	calcY := func(value int) float32 {
-		const p = 0.1 // padding
-		return (2-p)*float32(value)/float32(max) - 1
+		return 2*float32(value)/float32(max) - 1
 	}
 
 	for i, s := range ss {

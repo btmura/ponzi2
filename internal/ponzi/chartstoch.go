@@ -7,8 +7,7 @@ import (
 )
 
 type chartStochastics struct {
-	lines      *vao // lines is the VAO for the K and D lines.
-	background *vao // background is a rectangle used as a background.
+	lines *vao // lines is the VAO for the K and D lines.
 }
 
 func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chartStochastics {
@@ -59,16 +58,8 @@ func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chart
 		first = false
 	}
 
-	c := black
-	if len(ss) != 0 {
-		if k := ss[len(ss)-1].k; k != 0 {
-			c = stochasticColor(k)
-		}
-	}
-
 	return &chartStochastics{
-		lines:      createVAO(gl.LINES, vertices, colors, indices),
-		background: createFilledRectVAO(black, black, black, c),
+		lines: createVAO(gl.LINES, vertices, colors, indices),
 	}
 }
 
@@ -78,7 +69,6 @@ func (s *chartStochastics) render(r image.Rectangle) {
 	}
 	setModelMatrixRectangle(r)
 	s.lines.render()
-	s.background.render()
 }
 
 func (s *chartStochastics) close() {
@@ -86,15 +76,4 @@ func (s *chartStochastics) close() {
 		return
 	}
 	s.lines.close()
-	s.background.close()
-}
-
-func stochasticColor(k float32) [3]float32 {
-	low := [3]float32{1, 0.4, 0}
-	high := [3]float32{0, 0.2, 1}
-	mix := [3]float32{}
-	for i := 0; i < 3; i++ {
-		mix[i] = low[i] + (high[i]-low[i])*k
-	}
-	return mix
 }

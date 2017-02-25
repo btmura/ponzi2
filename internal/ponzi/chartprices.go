@@ -10,7 +10,6 @@ import (
 type chartPrices struct {
 	stickLines *vao
 	stickRects *vao
-	background *vao
 }
 
 func createChartPrices(ss []*modelTradingSession) *chartPrices {
@@ -38,8 +37,7 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 	rightX := -1.0 + stickWidth*0.9
 
 	calcY := func(value float32) float32 {
-		const p = 0.1 // padding
-		return (2-p)*(value-min)/(max-min) - (1 - p/2)
+		return 2*(value-min)/(max-min) - 1
 	}
 
 	for i, s := range ss {
@@ -67,8 +65,6 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 		// Add the colors corresponding to the vertices.
 		var c [3]float32
 		switch {
-		case s.d != 0:
-			c = stochasticColor(s.k)
 		case s.close > s.open:
 			c = green
 		case s.close < s.open:
@@ -125,7 +121,6 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 	return &chartPrices{
 		stickLines: createVAO(gl.LINES, vertices, colors, lineIndices),
 		stickRects: createVAO(gl.TRIANGLES, vertices, colors, triangleIndices),
-		background: createFilledRectVAO(darkBlue, darkBlue, black, black),
 	}
 }
 
@@ -136,7 +131,6 @@ func (p *chartPrices) render(r image.Rectangle) {
 	setModelMatrixRectangle(r)
 	p.stickLines.render()
 	p.stickRects.render()
-	p.background.render()
 }
 
 func (p *chartPrices) close() {
@@ -145,5 +139,4 @@ func (p *chartPrices) close() {
 	}
 	p.stickLines.close()
 	p.stickRects.close()
-	p.background.close()
 }

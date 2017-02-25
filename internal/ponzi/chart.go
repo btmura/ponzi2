@@ -4,13 +4,12 @@ import "image"
 
 // Colors used by the chart.
 var (
-	black    = [3]float32{0, 0, 0}
-	blue     = [3]float32{0, 0.25, 0.5}
-	darkBlue = [3]float32{0, 0.05, 0.15}
-	green    = [3]float32{0.25, 1, 0}
-	red      = [3]float32{1, 0.3, 0}
-	yellow   = [3]float32{1, 1, 0}
-	purple   = [3]float32{0.5, 0, 1}
+	black  = [3]float32{0, 0, 0}
+	green  = [3]float32{0.25, 1, 0}
+	red    = [3]float32{1, 0.3, 0}
+	yellow = [3]float32{1, 1, 0}
+	purple = [3]float32{0.5, 0, 1}
+	white  = [3]float32{1, 1, 1}
 )
 
 type chart struct {
@@ -37,11 +36,12 @@ func (f *chart) render(stock *modelStock, r image.Rectangle) {
 		f.weeklyStochastics = createChartStochastics(stock.weeklySessions, purple)
 	}
 
+	const p = 3
 	rects := f.frame.render(stock, r)
-	f.prices.render(rects[3])
-	f.volume.render(rects[2])
-	f.dailyStochastics.render(rects[1])
-	f.weeklyStochastics.render(rects[0])
+	f.prices.render(rects[3].Inset(p))
+	f.volume.render(rects[2].Inset(p))
+	f.dailyStochastics.render(rects[1].Inset(p))
+	f.weeklyStochastics.render(rects[0].Inset(p))
 }
 
 func (f *chart) close() {

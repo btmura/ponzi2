@@ -52,28 +52,6 @@ func createStrokedRectVAO(ulColor, urColor, blColor, brColor [3]float32) *vao {
 	)
 }
 
-func createFilledRectVAO(ulColor, urColor, blColor, brColor [3]float32) *vao {
-	return createVAO(
-		gl.TRIANGLES,
-		[]float32{
-			-1, +1, // UL - 0
-			+1, +1, // UR - 1
-			-1, -1, // BL - 2
-			+1, -1, // BR - 3
-		},
-		[]float32{
-			ulColor[0], ulColor[1], ulColor[2],
-			urColor[0], urColor[1], urColor[2],
-			blColor[0], blColor[1], blColor[2],
-			brColor[0], brColor[1], brColor[2],
-		},
-		[]uint16{
-			0, 2, 1,
-			1, 2, 3,
-		},
-	)
-}
-
 func createVAO(mode uint32, vertices, colors []float32, indices []uint16) *vao {
 	if len(vertices) == 0 || len(colors) == 0 || len(indices) == 0 {
 		return nil // Can't create empty buffer objects. Bail out if nothing to render.

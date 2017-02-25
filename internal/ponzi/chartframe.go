@@ -15,8 +15,8 @@ type chartFrame struct {
 func createChartFrame(symbolQuoteText *dynamicText) *chartFrame {
 	return &chartFrame{
 		symbolQuoteText: symbolQuoteText,
-		border:          createStrokedRectVAO(blue, blue, blue, blue),
-		divider:         createLineVAO(blue, blue),
+		border:          createStrokedRectVAO(white, white, white, white),
+		divider:         createLineVAO(white, white),
 	}
 }
 
