@@ -106,17 +106,7 @@ func createView(model *model) (*view, error) {
 
 	// Create shaders and link them into a program.
 
-	vs, err := shaderVertBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	fs, err := shaderFragBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	p, err := createProgram(string(vs), string(fs))
+	p, err := createProgram(string(MustAsset("shader.vert")), string(MustAsset("shader.frag")))
 	if err != nil {
 		return nil, err
 	}
@@ -138,12 +128,7 @@ func createView(model *model) (*view, error) {
 
 	// Setup the fragment shader uniforms.
 
-	textureBytes, err := texturePngBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	textureImage, err := createImage(textureBytes)
+	textureImage, err := createImage(MustAsset("texture.png"))
 	if err != nil {
 		return nil, err
 	}
@@ -152,12 +137,7 @@ func createView(model *model) (*view, error) {
 
 	// Load meshes and create vertex array objects.
 
-	objBytes, err := meshesObjBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	objs, err := decodeObjs(bytes.NewReader(objBytes))
+	objs, err := decodeObjs(bytes.NewReader(MustAsset("meshes.obj")))
 	if err != nil {
 		return nil, err
 	}
@@ -170,20 +150,14 @@ func createView(model *model) (*view, error) {
 		}
 	}
 
-	monoBytes, err := inconsolataRegularTtfBytes()
-	if err != nil {
-		return nil, err
-	}
+	monoBytes := MustAsset("Inconsolata-Regular.ttf")
 
 	mono, err := newTextFactory(orthoPlaneMesh, monoBytes, 16)
 	if err != nil {
 		return nil, err
 	}
 
-	propBytes, err := orbitronMediumTtfBytes()
-	if err != nil {
-		return nil, err
-	}
+	propBytes := MustAsset("Orbitron Medium.ttf")
 
 	prop, err := newTextFactory(orthoPlaneMesh, propBytes, 20)
 	if err != nil {
