@@ -11,6 +11,7 @@ import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/golang/glog"
+	"golang.org/x/image/font/gofont/goregular"
 )
 
 // Locations for the vertex and fragment shaders.
@@ -74,7 +75,7 @@ type view struct {
 
 	chart *chart
 
-	monoText        *dynamicText
+	smallText       *dynamicText
 	symbolQuoteText *dynamicText
 	inputSymbolText *dynamicText
 
@@ -150,21 +151,17 @@ func createView(model *model) (*view, error) {
 		}
 	}
 
-	monoBytes := MustAsset("Inconsolata-Regular.ttf")
-
-	mono, err := newTextFactory(orthoPlaneMesh, monoBytes, 16)
+	small, err := newTextFactory(orthoPlaneMesh, goregular.TTF, 14)
 	if err != nil {
 		return nil, err
 	}
 
-	propBytes := MustAsset("Orbitron Medium.ttf")
-
-	prop, err := newTextFactory(orthoPlaneMesh, propBytes, 20)
+	medium, err := newTextFactory(orthoPlaneMesh, goregular.TTF, 24)
 	if err != nil {
 		return nil, err
 	}
 
-	largeProp, err := newTextFactory(orthoPlaneMesh, propBytes, 36)
+	large, err := newTextFactory(orthoPlaneMesh, goregular.TTF, 48)
 	if err != nil {
 		return nil, err
 	}
@@ -174,12 +171,12 @@ func createView(model *model) (*view, error) {
 		program:         p,
 		orthoPlaneMesh:  orthoPlaneMesh,
 		texture:         texture,
-		dowText:         mono.createStaticText("DOW"),
-		sapText:         mono.createStaticText("S&P"),
-		nasdaqText:      mono.createStaticText("NASDAQ"),
-		monoText:        mono.createDynamicText(),
-		symbolQuoteText: prop.createDynamicText(),
-		inputSymbolText: largeProp.createDynamicText(),
+		dowText:         small.createStaticText("DOW"),
+		sapText:         small.createStaticText("S&P"),
+		nasdaqText:      small.createStaticText("NASDAQ"),
+		smallText:       small.createDynamicText(),
+		symbolQuoteText: medium.createDynamicText(),
+		inputSymbolText: large.createDynamicText(),
 		viewMatrix:      vm,
 	}, nil
 }
@@ -207,15 +204,15 @@ func (v *view) render() {
 	{
 		c := c
 		c = c.Add(v.dowText.render(c))
-		c = c.Add(v.monoText.render(v.dowPriceText(), c))
+		c = c.Add(v.smallText.render(v.dowPriceText(), c))
 		c.X += p
 
 		c = c.Add(v.sapText.render(c))
-		c = c.Add(v.monoText.render(v.sapPriceText(), c))
+		c = c.Add(v.smallText.render(v.sapPriceText(), c))
 		c.X += p
 
 		c = c.Add(v.nasdaqText.render(c))
-		c = c.Add(v.monoText.render(v.nasdaqPriceText(), c))
+		c = c.Add(v.smallText.render(v.nasdaqPriceText(), c))
 		c.X += p
 	}
 
