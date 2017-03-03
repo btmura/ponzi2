@@ -3,12 +3,21 @@
     "tasks": [
         {
             "taskName": "build and run",
-            "command": "go build -v -x; if ($?) { ./ponzi2.exe }",
             "isBuildCommand": true,
-            "isShellCommand": true,
             "isBackground": true,
+
+            "command": "go build -v -x; if ($?) { ./ponzi2.exe }",
+            "isShellCommand": true,
             "options": {
                 "cwd": "${workspaceRoot}"
+            },
+            
+            "linux": {
+                "command": "go build -v -x && ./ponzi2",
+                "isShellCommand": true,
+                "options": {
+                    "cwd": "${workspaceRoot}"
+                }
             }
         }
     ]
