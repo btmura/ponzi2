@@ -1,0 +1,15 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "taskName": "build and run",
+            "command": "go build -v -x; if ($?) { ./ponzi2.exe }",
+            "isBuildCommand": true,
+            "isShellCommand": true,
+            "isBackground": true,
+            "options": {
+                "cwd": "${workspaceRoot}"
+            }
+        }
+    ]
+}
