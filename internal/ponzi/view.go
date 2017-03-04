@@ -182,6 +182,9 @@ func createView(model *model) (*view, error) {
 }
 
 func (v *view) render() {
+	v.model.Lock()
+	defer v.model.Unlock()
+
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.UniformMatrix4fv(projectionViewMatrixLocation, 1, false, &v.orthoMatrix[0])
 
@@ -253,7 +256,9 @@ func (v *view) handleKey(key glfw.Key, action glfw.Action) {
 	switch key {
 	case glfw.KeyEnter:
 		v.model.submitSymbol()
-		v.model.refresh()
+		go func() {
+			v.model.refresh()
+		}()
 
 	case glfw.KeyBackspace:
 		v.model.popSymbolChar()

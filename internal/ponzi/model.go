@@ -2,11 +2,15 @@ package ponzi
 
 import (
 	"sort"
+	"sync"
 	"time"
 )
 
 // model is the state of the program separate from the view.
 type model struct {
+	// Mutex guards the model.
+	sync.Mutex
+
 	// dow is a quote for the Dow Jones index.
 	dow *modelQuote
 
@@ -23,46 +27,6 @@ type model struct {
 	currentStock *modelStock
 }
 
-func newModel(symbol string) *model {
-	return &model{
-		dow:          newModelQuote(".DJI"),
-		sap:          newModelQuote(".INX"),
-		nasdaq:       newModelQuote(".IXIC"),
-		currentStock: newModelStock("SPY"),
-	}
-}
-
-func (m *model) pushSymbolChar(ch rune) {
-	m.inputSymbol += string(ch)
-}
-
-func (m *model) popSymbolChar() {
-	if l := len(m.inputSymbol); l > 0 {
-		m.inputSymbol = m.inputSymbol[:l-1]
-	}
-}
-
-func (m *model) submitSymbol() {
-	m.currentStock = newModelStock(m.inputSymbol)
-	m.inputSymbol = ""
-}
-
-func (m *model) refresh() error {
-	if err := m.dow.refresh(); err != nil {
-		return err
-	}
-	if err := m.sap.refresh(); err != nil {
-		return err
-	}
-	if err := m.nasdaq.refresh(); err != nil {
-		return err
-	}
-	if err := m.currentStock.refresh(); err != nil {
-		return err
-	}
-	return nil
-}
-
 type modelQuote struct {
 	symbol        string
 	price         float32
@@ -70,69 +34,11 @@ type modelQuote struct {
 	percentChange float32
 }
 
-func newModelQuote(symbol string) *modelQuote {
-	return &modelQuote{symbol: symbol}
-}
-
-func (m *modelQuote) refresh() error {
-	if m == nil {
-		return nil
-	}
-
-	resp, err := listQuotes(&listQuotesRequest{[]string{m.symbol}})
-	if err != nil {
-		return err
-	}
-
-	if q := resp.quotes[m.symbol]; q != nil {
-		*m = modelQuote{
-			symbol:        q.symbol,
-			price:         q.price,
-			change:        q.change,
-			percentChange: q.percentChange,
-		}
-	}
-	return nil
-}
-
 type modelStock struct {
 	symbol         string
 	quote          *modelQuote
 	dailySessions  []*modelTradingSession
 	weeklySessions []*modelTradingSession
-}
-
-func newModelStock(symbol string) *modelStock {
-	return &modelStock{
-		symbol: symbol,
-		quote:  &modelQuote{symbol: symbol},
-	}
-}
-
-func (m *modelStock) refresh() error {
-	if m == nil {
-		return nil
-	}
-
-	if err := m.quote.refresh(); err != nil {
-		return err
-	}
-
-	// Get the trading history for the current stock.
-	end := midnight(time.Now().In(newYorkLoc))
-	start := end.Add(-6 * 30 * 24 * time.Hour)
-	hist, err := getTradingHistory(&getTradingHistoryRequest{
-		symbol:    m.quote.symbol,
-		startDate: start,
-		endDate:   end,
-	})
-	if err != nil {
-		return err
-	}
-
-	m.dailySessions, m.weeklySessions = convertSessions(hist.sessions)
-
-	return nil
 }
 
 type modelTradingSession struct {
@@ -146,6 +52,94 @@ type modelTradingSession struct {
 	percentChange float32
 	k             float32
 	d             float32
+}
+
+func newModel(symbol string) *model {
+	return &model{
+		dow:          &modelQuote{symbol: ".DJI"},
+		sap:          &modelQuote{symbol: ".INX"},
+		nasdaq:       &modelQuote{symbol: ".IXIC"},
+		currentStock: newModelStock("SPY"),
+	}
+}
+
+func newModelStock(symbol string) *modelStock {
+	return &modelStock{
+		symbol: symbol,
+		quote:  &modelQuote{symbol: symbol},
+	}
+}
+
+func (m *model) pushSymbolChar(ch rune) {
+	m.Lock()
+	m.inputSymbol += string(ch)
+	m.Unlock()
+}
+
+func (m *model) popSymbolChar() {
+	m.Lock()
+	if l := len(m.inputSymbol); l > 0 {
+		m.inputSymbol = m.inputSymbol[:l-1]
+	}
+	m.Unlock()
+}
+
+func (m *model) submitSymbol() {
+	m.Lock()
+	m.currentStock = newModelStock(m.inputSymbol)
+	m.inputSymbol = ""
+	m.Unlock()
+}
+
+func (m *model) refresh() error {
+	m.Lock()
+	s := m.currentStock.symbol
+	m.Unlock()
+
+	symbols := []string{m.dow.symbol, m.sap.symbol, m.nasdaq.symbol}
+	if s != "" {
+		symbols = append(symbols, s)
+	}
+
+	resp, err := listQuotes(&listQuotesRequest{symbols})
+	if err != nil {
+		return err
+	}
+
+	// Get the trading history for the current stock.
+	var hist *tradingHistory
+	if s != "" {
+		end := midnight(time.Now().In(newYorkLoc))
+		start := end.Add(-6 * 30 * 24 * time.Hour)
+		hist, err = getTradingHistory(&getTradingHistoryRequest{
+			symbol:    s,
+			startDate: start,
+			endDate:   end,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	updateQuote := func(mq *modelQuote) {
+		if q := resp.quotes[mq.symbol]; q != nil {
+			mq.price = q.price
+			mq.change = q.change
+			mq.percentChange = q.percentChange
+		}
+	}
+
+	m.Lock()
+	updateQuote(m.dow)
+	updateQuote(m.sap)
+	updateQuote(m.nasdaq)
+	if s != "" && s == m.currentStock.symbol {
+		updateQuote(m.currentStock.quote)
+		m.currentStock.dailySessions, m.currentStock.weeklySessions = convertSessions(hist.sessions)
+	}
+	m.Unlock()
+
+	return nil
 }
 
 func convertSessions(sessions []*tradingSession) (dailySessions, weeklySessions []*modelTradingSession) {
