@@ -13,7 +13,7 @@ var (
 )
 
 type chart struct {
-	symbol            string
+	stock             *modelStock
 	frame             *chartFrame
 	prices            *chartPrices
 	volume            *chartVolume
@@ -21,34 +21,43 @@ type chart struct {
 	weeklyStochastics *chartStochastics
 }
 
-func createChart(symbol string, propText *dynamicText) *chart {
+func createChart(stock *modelStock, titleText *dynamicText) *chart {
 	return &chart{
-		symbol: symbol,
-		frame:  createChartFrame(propText),
+		stock:             stock,
+		frame:             createChartFrame(stock, titleText),
+		prices:            createChartPrices(stock),
+		volume:            createChartVolume(stock),
+		dailyStochastics:  createChartStochastics(stock, dailyInterval),
+		weeklyStochastics: createChartStochastics(stock, weeklyInterval),
 	}
 }
 
-func (f *chart) render(stock *modelStock, r image.Rectangle) {
-	if f.prices == nil && stock.dailySessions != nil {
-		f.prices = createChartPrices(stock.dailySessions)
-		f.volume = createChartVolume(stock.dailySessions)
-		f.dailyStochastics = createChartStochastics(stock.dailySessions, yellow)
-		f.weeklyStochastics = createChartStochastics(stock.weeklySessions, purple)
+func (f *chart) update() {
+	if f == nil {
+		return
 	}
+	f.prices.update()
+	f.volume.update()
+	f.dailyStochastics.update()
+	f.weeklyStochastics.update()
+}
 
-	const p = 3
-	rects := f.frame.render(stock, r)
-	f.prices.render(rects[3].Inset(p))
-	f.volume.render(rects[2].Inset(p))
-	f.dailyStochastics.render(rects[1].Inset(p))
-	f.weeklyStochastics.render(rects[0].Inset(p))
+func (f *chart) render(r image.Rectangle) {
+	if f == nil {
+		return
+	}
+	const pad = 3
+	subRects := f.frame.render(r)
+	f.prices.render(subRects[3].Inset(pad))
+	f.volume.render(subRects[2].Inset(pad))
+	f.dailyStochastics.render(subRects[1].Inset(pad))
+	f.weeklyStochastics.render(subRects[0].Inset(pad))
 }
 
 func (f *chart) close() {
 	if f == nil {
 		return
 	}
-
 	f.frame.close()
 	f.prices.close()
 	f.volume.close()

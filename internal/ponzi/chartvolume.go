@@ -7,13 +7,28 @@ import (
 )
 
 type chartVolume struct {
-	vao *vao
+	stock *modelStock
+	vao   *vao
 }
 
-func createChartVolume(ss []*modelTradingSession) *chartVolume {
+func createChartVolume(stock *modelStock) *chartVolume {
+	return &chartVolume{
+		stock: stock,
+	}
+}
+
+func (v *chartVolume) update() {
+	if v.stock.dailySessions == nil {
+		return
+	}
+
+	if v.vao != nil {
+		return
+	}
+
 	// Find the max volume for the y-axis.
 	var max int
-	for _, s := range ss {
+	for _, s := range v.stock.dailySessions {
 		if s.volume > max {
 			max = s.volume
 		}
@@ -24,7 +39,7 @@ func createChartVolume(ss []*modelTradingSession) *chartVolume {
 	var colors []float32
 	var indices []uint16
 
-	barWidth := 2.0 / float32(len(ss)) // (-1 to 1) on X-axis
+	barWidth := 2.0 / float32(len(v.stock.dailySessions)) // (-1 to 1) on X-axis
 	leftX := -1.0 + barWidth*0.2
 	rightX := -1.0 + barWidth*0.8
 
@@ -32,7 +47,7 @@ func createChartVolume(ss []*modelTradingSession) *chartVolume {
 		return 2*float32(value)/float32(max) - 1
 	}
 
-	for i, s := range ss {
+	for i, s := range v.stock.dailySessions {
 		topY := calcY(s.volume)
 		botY := calcY(0)
 
@@ -87,7 +102,7 @@ func createChartVolume(ss []*modelTradingSession) *chartVolume {
 		rightX += barWidth
 	}
 
-	return &chartVolume{createVAO(gl.TRIANGLES, vertices, colors, indices)}
+	v.vao = createVAO(gl.TRIANGLES, vertices, colors, indices)
 }
 
 func (v *chartVolume) render(r image.Rectangle) {

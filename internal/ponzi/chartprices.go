@@ -8,15 +8,30 @@ import (
 )
 
 type chartPrices struct {
+	stock      *modelStock
 	stickLines *vao
 	stickRects *vao
 }
 
-func createChartPrices(ss []*modelTradingSession) *chartPrices {
+func createChartPrices(stock *modelStock) *chartPrices {
+	return &chartPrices{
+		stock: stock,
+	}
+}
+
+func (p *chartPrices) update() {
+	if p.stock.dailySessions == nil {
+		return
+	}
+
+	if p.stickLines != nil {
+		return
+	}
+
 	// Find the min and max prices for the y-axis.
 	min := float32(math.MaxFloat32)
 	max := float32(0)
-	for _, s := range ss {
+	for _, s := range p.stock.dailySessions {
 		if s.low < min {
 			min = s.low
 		}
@@ -31,7 +46,7 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 	var lineIndices []uint16
 	var triangleIndices []uint16
 
-	stickWidth := 2.0 / float32(len(ss)) // (-1 to 1) on X-axis
+	stickWidth := 2.0 / float32(len(p.stock.dailySessions)) // (-1 to 1) on X-axis
 	leftX := -1.0 + stickWidth*0.1
 	midX := -1.0 + stickWidth*0.5
 	rightX := -1.0 + stickWidth*0.9
@@ -40,7 +55,7 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 		return 2*(value-min)/(max-min) - 1
 	}
 
-	for i, s := range ss {
+	for i, s := range p.stock.dailySessions {
 		// Figure out Y coordinates of the key levels.
 		lowY, highY, openY, closeY := calcY(s.low), calcY(s.high), calcY(s.open), calcY(s.close)
 
@@ -118,10 +133,8 @@ func createChartPrices(ss []*modelTradingSession) *chartPrices {
 		rightX += stickWidth
 	}
 
-	return &chartPrices{
-		stickLines: createVAO(gl.LINES, vertices, colors, lineIndices),
-		stickRects: createVAO(gl.TRIANGLES, vertices, colors, triangleIndices),
-	}
+	p.stickLines = createVAO(gl.LINES, vertices, colors, lineIndices)
+	p.stickRects = createVAO(gl.TRIANGLES, vertices, colors, triangleIndices)
 }
 
 func (p *chartPrices) render(r image.Rectangle) {

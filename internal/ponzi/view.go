@@ -218,14 +218,12 @@ func (v *view) render() {
 	c.Y -= p
 
 	// Render the current symbol below the indices.
-	if v.model.currentSymbol() != "" {
-		r := image.Rect(c.X, p, v.winSize.X-p, c.Y)
-		if v.chart == nil || v.chart.symbol != v.model.currentSymbol() {
-			v.chart.close()
-			v.chart = createChart(v.model.currentSymbol(), v.symbolQuoteText)
-		}
-		v.chart.render(v.model.currentStock, r)
+	if v.chart == nil || v.chart.stock != v.model.currentStock {
+		v.chart.close()
+		v.chart = createChart(v.model.currentStock, v.symbolQuoteText)
 	}
+	v.chart.update()
+	v.chart.render(image.Rect(c.X, p, v.winSize.X-p, c.Y))
 }
 
 func (v *view) dowPriceText() string {

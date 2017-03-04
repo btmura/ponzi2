@@ -6,11 +6,40 @@ import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
+type chartStochasticInterval int32
+
+const (
+	dailyInterval chartStochasticInterval = iota
+	weeklyInterval
+)
+
 type chartStochastics struct {
-	lines *vao // lines is the VAO for the K and D lines.
+	stock         *modelStock
+	stochInterval chartStochasticInterval
+	lines         *vao // lines is the VAO for the K and D lines.
 }
 
-func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chartStochastics {
+func createChartStochastics(stock *modelStock, stochInterval chartStochasticInterval) *chartStochastics {
+	return &chartStochastics{
+		stock:         stock,
+		stochInterval: stochInterval,
+	}
+}
+
+func (s *chartStochastics) update() {
+	if s.stock.dailySessions == nil {
+		return
+	}
+
+	if s.lines != nil {
+		return
+	}
+
+	ss, dColor := s.stock.dailySessions, yellow
+	if s.stochInterval == weeklyInterval {
+		ss, dColor = s.stock.weeklySessions, purple
+	}
+
 	// Calculate vertices and indices for the stochastics.
 	var vertices []float32
 	var colors []float32
@@ -58,9 +87,7 @@ func createChartStochastics(ss []*modelTradingSession, dColor [3]float32) *chart
 		first = false
 	}
 
-	return &chartStochastics{
-		lines: createVAO(gl.LINES, vertices, colors, indices),
-	}
+	s.lines = createVAO(gl.LINES, vertices, colors, indices)
 }
 
 func (s *chartStochastics) render(r image.Rectangle) {

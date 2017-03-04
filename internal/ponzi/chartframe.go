@@ -7,20 +7,22 @@ import (
 )
 
 type chartFrame struct {
-	symbolQuoteText *dynamicText
-	border          *vao
-	divider         *vao
+	stock     *modelStock
+	titleText *dynamicText
+	border    *vao
+	divider   *vao
 }
 
-func createChartFrame(symbolQuoteText *dynamicText) *chartFrame {
+func createChartFrame(stock *modelStock, titleText *dynamicText) *chartFrame {
 	return &chartFrame{
-		symbolQuoteText: symbolQuoteText,
-		border:          createStrokedRectVAO(white, white, white, white),
-		divider:         createLineVAO(white, white),
+		stock:     stock,
+		titleText: titleText,
+		border:    createStrokedRectVAO(white, white, white, white),
+		divider:   createLineVAO(white, white),
 	}
 }
 
-func (f *chartFrame) render(stock *modelStock, r image.Rectangle) []image.Rectangle {
+func (f *chartFrame) render(r image.Rectangle) []image.Rectangle {
 	// Start rendering from the top left. Track position with point.
 	c := image.Pt(r.Min.X, r.Max.Y)
 
@@ -37,13 +39,13 @@ func (f *chartFrame) render(stock *modelStock, r image.Rectangle) []image.Rectan
 	//
 
 	const p = 10
-	s := f.symbolQuoteText.measure(stock.symbol)
+	s := f.titleText.measure(f.stock.symbol)
 	c.Y -= p + s.Y
 	{
 		c := c
 		c.X += p
-		c = c.Add(f.symbolQuoteText.render(stock.symbol, c))
-		c = c.Add(f.symbolQuoteText.render(formatQuote(stock.quote), c))
+		c = c.Add(f.titleText.render(f.stock.symbol, c))
+		c = c.Add(f.titleText.render(formatQuote(f.stock.quote), c))
 	}
 	c.Y -= p
 
