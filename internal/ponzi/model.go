@@ -32,13 +32,6 @@ func newModel(symbol string) *model {
 	}
 }
 
-func (m *model) currentSymbol() string {
-	if m.currentStock == nil {
-		return ""
-	}
-	return m.currentStock.symbol
-}
-
 func (m *model) pushSymbolChar(ch rune) {
 	m.inputSymbol += string(ch)
 }
