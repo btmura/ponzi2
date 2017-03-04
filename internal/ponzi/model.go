@@ -2,15 +2,11 @@ package ponzi
 
 import (
 	"sort"
-	"sync"
 	"time"
 )
 
 // model is the state of the program separate from the view.
 type model struct {
-	// mutex guards the entire model. Only use read lock outside of this file.
-	sync.RWMutex
-
 	// dow is a quote for the Dow Jones index.
 	dow *modelQuote
 
@@ -27,6 +23,85 @@ type model struct {
 	currentStock *modelStock
 }
 
+func newModel(symbol string) *model {
+	return &model{
+		dow:          newModelQuote(".DJI"),
+		sap:          newModelQuote(".INX"),
+		nasdaq:       newModelQuote(".IXIC"),
+		currentStock: newModelStock("SPY"),
+	}
+}
+
+func (m *model) currentSymbol() string {
+	if m.currentStock == nil {
+		return ""
+	}
+	return m.currentStock.symbol
+}
+
+func (m *model) pushSymbolChar(ch rune) {
+	m.inputSymbol += string(ch)
+}
+
+func (m *model) popSymbolChar() {
+	if l := len(m.inputSymbol); l > 0 {
+		m.inputSymbol = m.inputSymbol[:l-1]
+	}
+}
+
+func (m *model) submitSymbol() {
+	m.currentStock = newModelStock(m.inputSymbol)
+	m.inputSymbol = ""
+}
+
+func (m *model) refresh() error {
+	if err := m.dow.refresh(); err != nil {
+		return err
+	}
+	if err := m.sap.refresh(); err != nil {
+		return err
+	}
+	if err := m.nasdaq.refresh(); err != nil {
+		return err
+	}
+	if err := m.currentStock.refresh(); err != nil {
+		return err
+	}
+	return nil
+}
+
+type modelQuote struct {
+	symbol        string
+	price         float32
+	change        float32
+	percentChange float32
+}
+
+func newModelQuote(symbol string) *modelQuote {
+	return &modelQuote{symbol: symbol}
+}
+
+func (m *modelQuote) refresh() error {
+	if m == nil {
+		return nil
+	}
+
+	resp, err := listQuotes(&listQuotesRequest{[]string{m.symbol}})
+	if err != nil {
+		return err
+	}
+
+	if q := resp.quotes[m.symbol]; q != nil {
+		*m = modelQuote{
+			symbol:        q.symbol,
+			price:         q.price,
+			change:        q.change,
+			percentChange: q.percentChange,
+		}
+	}
+	return nil
+}
+
 type modelStock struct {
 	symbol         string
 	quote          *modelQuote
@@ -34,10 +109,37 @@ type modelStock struct {
 	weeklySessions []*modelTradingSession
 }
 
-type modelQuote struct {
-	price         float32
-	change        float32
-	percentChange float32
+func newModelStock(symbol string) *modelStock {
+	return &modelStock{
+		symbol: symbol,
+		quote:  &modelQuote{symbol: symbol},
+	}
+}
+
+func (m *modelStock) refresh() error {
+	if m == nil {
+		return nil
+	}
+
+	if err := m.quote.refresh(); err != nil {
+		return err
+	}
+
+	// Get the trading history for the current stock.
+	end := midnight(time.Now().In(newYorkLoc))
+	start := end.Add(-6 * 30 * 24 * time.Hour)
+	hist, err := getTradingHistory(&getTradingHistoryRequest{
+		symbol:    m.quote.symbol,
+		startDate: start,
+		endDate:   end,
+	})
+	if err != nil {
+		return err
+	}
+
+	m.dailySessions, m.weeklySessions = convertSessions(hist.sessions)
+
+	return nil
 }
 
 type modelTradingSession struct {
@@ -53,112 +155,7 @@ type modelTradingSession struct {
 	d             float32
 }
 
-func (m *model) currentSymbol() string {
-	// TODO(btmura): fix locking issues
-	if m.currentStock == nil {
-		return ""
-	}
-	return m.currentStock.symbol
-}
-
-func (m *model) pushSymbolChar(ch rune) {
-	m.Lock()
-	m.inputSymbol += string(ch)
-	m.Unlock()
-}
-
-func (m *model) popSymbolChar() {
-	m.Lock()
-	if l := len(m.inputSymbol); l > 0 {
-		m.inputSymbol = m.inputSymbol[:l-1]
-	}
-	m.Unlock()
-}
-
-func (m *model) submitSymbol() {
-	m.Lock()
-	m.currentStock = &modelStock{
-		symbol: m.inputSymbol,
-	}
-	m.inputSymbol = ""
-	m.startRefresh()
-	m.Unlock()
-}
-
-func (m *model) startRefresh() error {
-	go func() {
-		m.refresh()
-	}()
-	return nil
-}
-
-func (m *model) refresh() error {
-	// Get the current symbol being viewed.
-	m.RLock()
-	s := m.currentSymbol()
-	m.RUnlock()
-
-	// Get live quotes for the major indices and the current symbol.
-	const (
-		dowSymbol    = ".DJI"
-		sapSymbol    = ".INX"
-		nasdaqSymbol = ".IXIC"
-	)
-
-	symbols := []string{dowSymbol, sapSymbol, nasdaqSymbol}
-	if s != "" {
-		symbols = append(symbols, s)
-	}
-
-	resp, err := listQuotes(&listQuotesRequest{symbols})
-	if err != nil {
-		return err
-	}
-
-	getQuote := func(symbol string) *modelQuote {
-		if q := resp.quotes[symbol]; q != nil {
-			return &modelQuote{
-				price:         q.price,
-				change:        q.change,
-				percentChange: q.percentChange,
-			}
-		}
-		return nil
-	}
-
-	// Get the trading history for the current stock.
-
-	var hist *tradingHistory
-	if s != "" {
-		end := midnight(time.Now().In(newYorkLoc))
-		start := end.Add(-6 * 30 * 24 * time.Hour)
-		hist, err = getTradingHistory(&getTradingHistoryRequest{
-			symbol:    s,
-			startDate: start,
-			endDate:   end,
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	// Acquire lock and update the model once.
-
-	m.Lock()
-	m.dow = getQuote(dowSymbol)
-	m.sap = getQuote(sapSymbol)
-	m.nasdaq = getQuote(nasdaqSymbol)
-	if s != "" && s == m.currentSymbol() {
-		m.currentStock = createModelStock(s, getQuote(s), hist.sessions)
-	} else {
-		m.currentStock = nil
-	}
-	m.Unlock()
-
-	return nil
-}
-
-func createModelStock(symbol string, quote *modelQuote, sessions []*tradingSession) *modelStock {
+func convertSessions(sessions []*tradingSession) (dailySessions, weeklySessions []*modelTradingSession) {
 	// Convert the trading sessions into daily sessions.
 	var ds []*modelTradingSession
 	for _, s := range sessions {
@@ -184,14 +181,8 @@ func createModelStock(symbol string, quote *modelQuote, sessions []*tradingSessi
 		}
 
 		if diffWeek {
-			ws = append(ws, &modelTradingSession{
-				date:   s.date,
-				open:   s.open,
-				high:   s.high,
-				low:    s.low,
-				close:  s.close,
-				volume: s.volume,
-			})
+			sc := *s
+			ws = append(ws, &sc)
 		} else {
 			ls := ws[len(ws)-1]
 			if ls.high < s.high {
@@ -262,12 +253,7 @@ func createModelStock(symbol string, quote *modelQuote, sessions []*tradingSessi
 	addStochastics(ds)
 	addStochastics(ws)
 
-	return &modelStock{
-		symbol:         symbol,
-		quote:          quote,
-		dailySessions:  ds,
-		weeklySessions: ws,
-	}
+	return ds, ws
 }
 
 // byModelTradingSessionDate is a sortable modelTradingSession slice.

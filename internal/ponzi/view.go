@@ -185,8 +185,6 @@ func (v *view) render() {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.UniformMatrix4fv(projectionViewMatrixLocation, 1, false, &v.orthoMatrix[0])
 
-	v.model.RLock()
-
 	// Render input symbol being typed in the center.
 	if v.model.inputSymbol != "" {
 		s := v.inputSymbolText.measure(v.model.inputSymbol)
@@ -228,8 +226,6 @@ func (v *view) render() {
 		}
 		v.chart.render(v.model.currentStock, r)
 	}
-
-	v.model.RUnlock()
 }
 
 func (v *view) dowPriceText() string {
@@ -259,6 +255,7 @@ func (v *view) handleKey(key glfw.Key, action glfw.Action) {
 	switch key {
 	case glfw.KeyEnter:
 		v.model.submitSymbol()
+		v.model.refresh()
 
 	case glfw.KeyBackspace:
 		v.model.popSymbolChar()
