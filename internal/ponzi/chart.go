@@ -4,7 +4,6 @@ import "image"
 
 // Colors used by the chart.
 var (
-	black  = [3]float32{0, 0, 0}
 	green  = [3]float32{0.25, 1, 0}
 	red    = [3]float32{1, 0.3, 0}
 	yellow = [3]float32{1, 1, 0}
