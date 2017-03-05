@@ -77,6 +77,7 @@ type view struct {
 
 	smallText       *dynamicText
 	symbolQuoteText *dynamicText
+	priceText       *dynamicText
 	inputSymbolText *dynamicText
 
 	viewMatrix        matrix4
@@ -166,6 +167,8 @@ func createView(model *model) (*view, error) {
 		return nil, err
 	}
 
+	smallDynamicText := small.createDynamicText()
+
 	return &view{
 		model:           model,
 		program:         p,
@@ -174,8 +177,9 @@ func createView(model *model) (*view, error) {
 		dowText:         small.createStaticText("DOW"),
 		sapText:         small.createStaticText("S&P"),
 		nasdaqText:      small.createStaticText("NASDAQ"),
-		smallText:       small.createDynamicText(),
+		smallText:       smallDynamicText,
 		symbolQuoteText: medium.createDynamicText(),
+		priceText:       smallDynamicText,
 		inputSymbolText: large.createDynamicText(),
 		viewMatrix:      vm,
 	}, nil
@@ -223,7 +227,7 @@ func (v *view) render() {
 	// Render the current symbol below the indices.
 	if v.chart == nil || v.chart.stock != v.model.currentStock {
 		v.chart.close()
-		v.chart = createChart(v.model.currentStock, v.symbolQuoteText)
+		v.chart = createChart(v.model.currentStock, v.symbolQuoteText, v.priceText)
 	}
 	v.chart.update()
 	v.chart.render(image.Rect(c.X, p, v.winSize.X-p, c.Y))

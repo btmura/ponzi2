@@ -4,18 +4,24 @@ import (
 	"image"
 	"math"
 
+	"strconv"
+
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
 type chartPrices struct {
 	stock      *modelStock
+	priceText  *dynamicText
+	minPrice   float32
+	maxPrice   float32
 	stickLines *vao
 	stickRects *vao
 }
 
-func createChartPrices(stock *modelStock) *chartPrices {
+func createChartPrices(stock *modelStock, priceText *dynamicText) *chartPrices {
 	return &chartPrices{
-		stock: stock,
+		stock:     stock,
+		priceText: priceText,
 	}
 }
 
@@ -29,14 +35,13 @@ func (p *chartPrices) update() {
 	}
 
 	// Find the min and max prices for the y-axis.
-	min := float32(math.MaxFloat32)
-	max := float32(0)
+	p.minPrice, p.maxPrice = math.MaxFloat32, 0
 	for _, s := range p.stock.dailySessions {
-		if s.low < min {
-			min = s.low
+		if p.minPrice > s.low {
+			p.minPrice = s.low
 		}
-		if s.high > max {
-			max = s.high
+		if p.maxPrice < s.high {
+			p.maxPrice = s.high
 		}
 	}
 
@@ -52,7 +57,7 @@ func (p *chartPrices) update() {
 	rightX := -1.0 + stickWidth*0.9
 
 	calcY := func(value float32) float32 {
-		return 2*(value-min)/(max-min) - 1
+		return 2*(value-p.minPrice)/(p.maxPrice-p.minPrice) - 1
 	}
 
 	for i, s := range p.stock.dailySessions {
@@ -141,6 +146,50 @@ func (p *chartPrices) render(r image.Rectangle) {
 	if p == nil {
 		return
 	}
+
+	if p.stock.dailySessions != nil {
+		makeLabel := func(v float32) string {
+			return strconv.FormatFloat(float64(v), 'f', 2, 32)
+		}
+
+		labelSize := p.priceText.measure(makeLabel(p.maxPrice))
+		labelPadding := labelSize.Y / 2
+		pricePerPixel := (p.maxPrice - p.minPrice) / float32(r.Dy())
+
+		// Start at top and decrement one label with top and bottom padding.
+		c := r.Max
+		dc := image.Pt(0, labelPadding+labelSize.Y+labelPadding)
+
+		// Start at top with max price and decrement change in price of a label with padding.
+		v := p.maxPrice // Start at the top with the max price.
+		dv := pricePerPixel * float32(dc.Y)
+
+		// Offets to the cursor and price value when drawing.
+		dcy := labelPadding + labelSize.Y   // Puts cursor at the baseline of the text.
+		dvy := labelPadding + labelSize.Y/2 // Uses value in the middle of the label.
+
+		for {
+			{
+				c := image.Pt(c.X, c.Y-dcy)
+				if c.Y < r.Min.Y {
+					break
+				}
+
+				v := v - pricePerPixel*float32(dvy)
+				l := makeLabel(v)
+				s := p.priceText.measure(l)
+				c.X -= s.X
+				p.priceText.render(l, c)
+			}
+
+			c = c.Sub(dc)
+			v -= dv
+		}
+
+		r.Max.X -= labelSize.X + 5 /* padding */
+	}
+
+	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
 	p.stickLines.render()
 	p.stickRects.render()

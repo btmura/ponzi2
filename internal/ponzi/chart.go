@@ -20,11 +20,11 @@ type chart struct {
 	weeklyStochastics *chartStochastics
 }
 
-func createChart(stock *modelStock, titleText *dynamicText) *chart {
+func createChart(stock *modelStock, titleText, priceText *dynamicText) *chart {
 	return &chart{
 		stock:             stock,
 		frame:             createChartFrame(stock, titleText),
-		prices:            createChartPrices(stock),
+		prices:            createChartPrices(stock, priceText),
 		volume:            createChartVolume(stock),
 		dailyStochastics:  createChartStochastics(stock, dailyInterval),
 		weeklyStochastics: createChartStochastics(stock, weeklyInterval),
