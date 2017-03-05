@@ -153,20 +153,20 @@ func (p *chartPrices) render(r image.Rectangle) {
 		}
 
 		labelSize := p.priceText.measure(makeLabel(p.maxPrice))
-		labelPadding := labelSize.Y / 2
+		labelPaddingX, labelPaddingY := 4, labelSize.Y/2
 		pricePerPixel := (p.maxPrice - p.minPrice) / float32(r.Dy())
 
 		// Start at top and decrement one label with top and bottom padding.
 		c := r.Max
-		dc := image.Pt(0, labelPadding+labelSize.Y+labelPadding)
+		dc := image.Pt(0, labelPaddingY+labelSize.Y+labelPaddingY)
 
 		// Start at top with max price and decrement change in price of a label with padding.
 		v := p.maxPrice // Start at the top with the max price.
 		dv := pricePerPixel * float32(dc.Y)
 
 		// Offets to the cursor and price value when drawing.
-		dcy := labelPadding + labelSize.Y   // Puts cursor at the baseline of the text.
-		dvy := labelPadding + labelSize.Y/2 // Uses value in the middle of the label.
+		dcy := labelPaddingY + labelSize.Y   // Puts cursor at the baseline of the text.
+		dvy := labelPaddingY + labelSize.Y/2 // Uses value in the middle of the label.
 
 		for {
 			{
@@ -178,7 +178,7 @@ func (p *chartPrices) render(r image.Rectangle) {
 				v := v - pricePerPixel*float32(dvy)
 				l := makeLabel(v)
 				s := p.priceText.measure(l)
-				c.X -= s.X
+				c.X -= s.X + labelPaddingX
 				p.priceText.render(l, c)
 			}
 
@@ -186,7 +186,7 @@ func (p *chartPrices) render(r image.Rectangle) {
 			v -= dv
 		}
 
-		r.Max.X -= labelSize.X + 5 /* padding */
+		r.Max.X -= labelSize.X + labelPaddingX*2
 	}
 
 	gl.Uniform1f(colorMixAmountLocation, 1)
