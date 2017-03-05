@@ -161,7 +161,7 @@ func (p *chartPrices) render(r image.Rectangle) {
 		dc := image.Pt(0, labelPaddingY+labelSize.Y+labelPaddingY)
 
 		// Start at top with max price and decrement change in price of a label with padding.
-		v := p.maxPrice // Start at the top with the max price.
+		v := p.maxPrice
 		dv := pricePerPixel * float32(dc.Y)
 
 		// Offets to the cursor and price value when drawing.
