@@ -246,7 +246,7 @@ func (v *view) nasdaqPriceText() string {
 }
 
 func formatQuote(q *modelQuote) string {
-	if q != nil {
+	if q.price != 0 {
 		return fmt.Sprintf(" %.2f %+5.2f %+5.2f%% ", q.price, q.change, q.percentChange*100.0)
 	}
 	return ""
