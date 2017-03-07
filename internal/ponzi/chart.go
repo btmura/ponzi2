@@ -31,35 +31,35 @@ func createChart(stock *modelStock, titleText, labelText *dynamicText) *chart {
 	}
 }
 
-func (f *chart) update() {
-	if f == nil {
+func (ch *chart) update() {
+	if ch == nil {
 		return
 	}
-	f.prices.update()
-	f.volume.update()
-	f.dailyStochastics.update()
-	f.weeklyStochastics.update()
+	ch.prices.update()
+	ch.volume.update()
+	ch.dailyStochastics.update()
+	ch.weeklyStochastics.update()
 }
 
-func (f *chart) render(r image.Rectangle) {
-	if f == nil {
+func (ch *chart) render(r image.Rectangle) {
+	if ch == nil {
 		return
 	}
 	const pad = 3
-	subRects := f.frame.render(r)
-	f.prices.render(subRects[3].Inset(pad))
-	f.volume.render(subRects[2].Inset(pad))
-	f.dailyStochastics.render(subRects[1].Inset(pad))
-	f.weeklyStochastics.render(subRects[0].Inset(pad))
+	subRects := ch.frame.render(r)
+	ch.prices.render(subRects[3].Inset(pad))
+	ch.volume.render(subRects[2].Inset(pad))
+	ch.dailyStochastics.render(subRects[1].Inset(pad))
+	ch.weeklyStochastics.render(subRects[0].Inset(pad))
 }
 
-func (f *chart) close() {
-	if f == nil {
+func (ch *chart) close() {
+	if ch == nil {
 		return
 	}
-	f.frame.close()
-	f.prices.close()
-	f.volume.close()
-	f.dailyStochastics.close()
-	f.weeklyStochastics.close()
+	ch.frame.close()
+	ch.prices.close()
+	ch.volume.close()
+	ch.dailyStochastics.close()
+	ch.weeklyStochastics.close()
 }
