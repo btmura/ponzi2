@@ -26,8 +26,8 @@ func createChart(stock *modelStock, titleText, labelText *dynamicText) *chart {
 		frame:             createChartFrame(stock, titleText),
 		prices:            createChartPrices(stock, labelText),
 		volume:            createChartVolume(stock, labelText),
-		dailyStochastics:  createChartStochastics(stock, dailyInterval),
-		weeklyStochastics: createChartStochastics(stock, weeklyInterval),
+		dailyStochastics:  createChartStochastics(stock, dailyInterval, labelText),
+		weeklyStochastics: createChartStochastics(stock, weeklyInterval, labelText),
 	}
 }
 

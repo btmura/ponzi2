@@ -1,6 +1,7 @@
 package ponzi
 
 import (
+	"fmt"
 	"image"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
@@ -13,16 +14,20 @@ const (
 	weeklyInterval
 )
 
+const chartLabelPadding = 2
+
 type chartStochastics struct {
 	stock         *modelStock
 	stochInterval chartStochasticInterval
+	labelText     *dynamicText
 	lines         *vao // lines is the VAO for the K and D lines.
 }
 
-func createChartStochastics(stock *modelStock, stochInterval chartStochasticInterval) *chartStochastics {
+func createChartStochastics(stock *modelStock, stochInterval chartStochasticInterval, labelText *dynamicText) *chartStochastics {
 	return &chartStochastics{
 		stock:         stock,
 		stochInterval: stochInterval,
+		labelText:     labelText,
 	}
 }
 
@@ -94,8 +99,35 @@ func (ch *chartStochastics) render(r image.Rectangle) {
 	if ch == nil {
 		return
 	}
+
+	r.Max.X -= ch.renderLabels(r)
+	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
 	ch.lines.render()
+}
+
+func (ch *chartStochastics) renderLabels(r image.Rectangle) (maxLabelWidth int) {
+	if ch == nil {
+		return
+	}
+
+	if ch.stock.dailySessions == nil {
+		return
+	}
+
+	render := func(percent float32) (width int) {
+		t := fmt.Sprintf("%.f%%", percent*100)
+		s := ch.labelText.measure(t)
+		p := image.Pt(r.Max.X-s.X-chartLabelPadding, r.Min.Y+int(float32(r.Dy())*percent)-s.Y/2)
+		ch.labelText.render(t, p)
+		return s.X + chartLabelPadding*2
+	}
+
+	w1, w2 := render(.3), render(.7)
+	if w1 > w2 {
+		return w1
+	}
+	return w2
 }
 
 func (ch *chartStochastics) close() {
