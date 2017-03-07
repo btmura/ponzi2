@@ -26,18 +26,18 @@ func createChartStochastics(stock *modelStock, stochInterval chartStochasticInte
 	}
 }
 
-func (s *chartStochastics) update() {
-	if s.stock.dailySessions == nil {
+func (ch *chartStochastics) update() {
+	if ch.stock.dailySessions == nil {
 		return
 	}
 
-	if s.lines != nil {
+	if ch.lines != nil {
 		return
 	}
 
-	ss, dColor := s.stock.dailySessions, yellow
-	if s.stochInterval == weeklyInterval {
-		ss, dColor = s.stock.weeklySessions, purple
+	ss, dColor := ch.stock.dailySessions, yellow
+	if ch.stochInterval == weeklyInterval {
+		ss, dColor = ch.stock.weeklySessions, purple
 	}
 
 	// Calculate vertices and indices for the stochastics.
@@ -87,20 +87,20 @@ func (s *chartStochastics) update() {
 		first = false
 	}
 
-	s.lines = createVAO(gl.LINES, vertices, colors, indices)
+	ch.lines = createVAO(gl.LINES, vertices, colors, indices)
 }
 
-func (s *chartStochastics) render(r image.Rectangle) {
-	if s == nil {
+func (ch *chartStochastics) render(r image.Rectangle) {
+	if ch == nil {
 		return
 	}
 	setModelMatrixRectangle(r)
-	s.lines.render()
+	ch.lines.render()
 }
 
-func (s *chartStochastics) close() {
-	if s == nil {
+func (ch *chartStochastics) close() {
+	if ch == nil {
 		return
 	}
-	s.lines.close()
+	ch.lines.close()
 }
