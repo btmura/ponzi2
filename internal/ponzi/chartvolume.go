@@ -21,18 +21,18 @@ func createChartVolume(stock *modelStock, labelText *dynamicText) *chartVolume {
 	}
 }
 
-func (cv *chartVolume) update() {
-	if cv.stock.dailySessions == nil {
+func (ch *chartVolume) update() {
+	if ch.stock.dailySessions == nil {
 		return
 	}
 
-	if cv.vao != nil {
+	if ch.vao != nil {
 		return
 	}
 
 	// Find the max volume for the y-axis.
 	var max int
-	for _, s := range cv.stock.dailySessions {
+	for _, s := range ch.stock.dailySessions {
 		if s.volume > max {
 			max = s.volume
 		}
@@ -43,7 +43,7 @@ func (cv *chartVolume) update() {
 	var colors []float32
 	var indices []uint16
 
-	barWidth := 2.0 / float32(len(cv.stock.dailySessions)) // (-1 to 1) on X-axis
+	barWidth := 2.0 / float32(len(ch.stock.dailySessions)) // (-1 to 1) on X-axis
 	leftX := -1.0 + barWidth*0.2
 	rightX := -1.0 + barWidth*0.8
 
@@ -51,7 +51,7 @@ func (cv *chartVolume) update() {
 		return 2*float32(value)/float32(max) - 1
 	}
 
-	for i, s := range cv.stock.dailySessions {
+	for i, s := range ch.stock.dailySessions {
 		topY := calcY(s.volume)
 		botY := calcY(0)
 
@@ -106,31 +106,31 @@ func (cv *chartVolume) update() {
 		rightX += barWidth
 	}
 
-	cv.vao = createVAO(gl.TRIANGLES, vertices, colors, indices)
+	ch.vao = createVAO(gl.TRIANGLES, vertices, colors, indices)
 }
 
-func (cv *chartVolume) render(r image.Rectangle) {
-	if cv == nil {
+func (ch *chartVolume) render(r image.Rectangle) {
+	if ch == nil {
 		return
 	}
 
-	r = cv.renderLabels(r)
+	r = ch.renderLabels(r)
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
-	cv.vao.render()
+	ch.vao.render()
 }
 
-func (cv *chartVolume) renderLabels(r image.Rectangle) image.Rectangle {
-	if cv == nil {
+func (ch *chartVolume) renderLabels(r image.Rectangle) image.Rectangle {
+	if ch == nil {
 		return r
 	}
 
-	if cv.stock.dailySessions == nil {
+	if ch.stock.dailySessions == nil {
 		return r
 	}
 
 	var maxVol int
-	for _, ds := range cv.stock.dailySessions {
+	for _, ds := range ch.stock.dailySessions {
 		if maxVol < ds.volume {
 			maxVol = ds.volume
 		}
@@ -148,7 +148,7 @@ func (cv *chartVolume) renderLabels(r image.Rectangle) image.Rectangle {
 		return strconv.Itoa(v)
 	}
 
-	labelSize := cv.labelText.measure(makeLabel(maxVol))
+	labelSize := ch.labelText.measure(makeLabel(maxVol))
 	labelPadX, labelPadY := 4, labelSize.Y/2
 
 	volPerPixel := float32(maxVol) / float32(r.Dy())
@@ -157,12 +157,12 @@ func (cv *chartVolume) renderLabels(r image.Rectangle) image.Rectangle {
 	var maxTextWidth int
 	render := func(v, y int) {
 		l := makeLabel(v)
-		s := cv.labelText.measure(l)
+		s := ch.labelText.measure(l)
 		if maxTextWidth < s.X {
 			maxTextWidth = s.X
 		}
 		x := r.Max.X - s.X - labelPadX
-		cv.labelText.render(l, image.Pt(x, y))
+		ch.labelText.render(l, image.Pt(x, y))
 	}
 
 	render(maxVol-volOffset, r.Max.Y-labelPadY-labelSize.Y)
@@ -172,9 +172,9 @@ func (cv *chartVolume) renderLabels(r image.Rectangle) image.Rectangle {
 	return r
 }
 
-func (cv *chartVolume) close() {
-	if cv == nil {
+func (ch *chartVolume) close() {
+	if ch == nil {
 		return
 	}
-	cv.vao.close()
+	ch.vao.close()
 }
