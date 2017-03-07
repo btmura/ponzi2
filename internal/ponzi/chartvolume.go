@@ -1,34 +1,38 @@
 package ponzi
 
 import (
+	"fmt"
 	"image"
+	"strconv"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
 type chartVolume struct {
-	stock *modelStock
-	vao   *vao
+	stock     *modelStock
+	labelText *dynamicText
+	vao       *vao
 }
 
-func createChartVolume(stock *modelStock) *chartVolume {
+func createChartVolume(stock *modelStock, labelText *dynamicText) *chartVolume {
 	return &chartVolume{
-		stock: stock,
+		stock:     stock,
+		labelText: labelText,
 	}
 }
 
-func (v *chartVolume) update() {
-	if v.stock.dailySessions == nil {
+func (cv *chartVolume) update() {
+	if cv.stock.dailySessions == nil {
 		return
 	}
 
-	if v.vao != nil {
+	if cv.vao != nil {
 		return
 	}
 
 	// Find the max volume for the y-axis.
 	var max int
-	for _, s := range v.stock.dailySessions {
+	for _, s := range cv.stock.dailySessions {
 		if s.volume > max {
 			max = s.volume
 		}
@@ -39,7 +43,7 @@ func (v *chartVolume) update() {
 	var colors []float32
 	var indices []uint16
 
-	barWidth := 2.0 / float32(len(v.stock.dailySessions)) // (-1 to 1) on X-axis
+	barWidth := 2.0 / float32(len(cv.stock.dailySessions)) // (-1 to 1) on X-axis
 	leftX := -1.0 + barWidth*0.2
 	rightX := -1.0 + barWidth*0.8
 
@@ -47,7 +51,7 @@ func (v *chartVolume) update() {
 		return 2*float32(value)/float32(max) - 1
 	}
 
-	for i, s := range v.stock.dailySessions {
+	for i, s := range cv.stock.dailySessions {
 		topY := calcY(s.volume)
 		botY := calcY(0)
 
@@ -102,20 +106,75 @@ func (v *chartVolume) update() {
 		rightX += barWidth
 	}
 
-	v.vao = createVAO(gl.TRIANGLES, vertices, colors, indices)
+	cv.vao = createVAO(gl.TRIANGLES, vertices, colors, indices)
 }
 
-func (v *chartVolume) render(r image.Rectangle) {
-	if v == nil {
+func (cv *chartVolume) render(r image.Rectangle) {
+	if cv == nil {
 		return
 	}
+
+	r = cv.renderLabels(r)
+	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
-	v.vao.render()
+	cv.vao.render()
 }
 
-func (v *chartVolume) close() {
-	if v == nil {
+func (cv *chartVolume) renderLabels(r image.Rectangle) image.Rectangle {
+	if cv == nil {
+		return r
+	}
+
+	if cv.stock.dailySessions == nil {
+		return r
+	}
+
+	var maxVol int
+	for _, ds := range cv.stock.dailySessions {
+		if maxVol < ds.volume {
+			maxVol = ds.volume
+		}
+	}
+
+	makeLabel := func(v int) string {
+		switch {
+		case v > 1000000000:
+			return fmt.Sprintf("%dB", v/1000000000)
+		case v > 1000000:
+			return fmt.Sprintf("%dM", v/1000000)
+		case v > 1000:
+			return fmt.Sprintf("%dK", v/1000)
+		}
+		return strconv.Itoa(v)
+	}
+
+	labelSize := cv.labelText.measure(makeLabel(maxVol))
+	labelPadX, labelPadY := 4, labelSize.Y/2
+
+	volPerPixel := float32(maxVol) / float32(r.Dy())
+	volOffset := int(float32(labelPadY+labelSize.Y/2) * volPerPixel)
+
+	var maxTextWidth int
+	render := func(v, y int) {
+		l := makeLabel(v)
+		s := cv.labelText.measure(l)
+		if maxTextWidth < s.X {
+			maxTextWidth = s.X
+		}
+		x := r.Max.X - s.X - labelPadX
+		cv.labelText.render(l, image.Pt(x, y))
+	}
+
+	render(maxVol-volOffset, r.Max.Y-labelPadY-labelSize.Y)
+	render(volOffset, r.Min.Y+labelPadY)
+
+	r.Max.X -= maxTextWidth + labelPadX*2
+	return r
+}
+
+func (cv *chartVolume) close() {
+	if cv == nil {
 		return
 	}
-	v.vao.close()
+	cv.vao.close()
 }
