@@ -18,10 +18,13 @@ var (
 	white  = [3]float32{1, 1, 1}
 )
 
+const chartLabelPadding = 2
+
 type chart struct {
-	stock             *modelStock
-	dailyStochastics  *chartStochastics
-	weeklyStochastics *chartStochastics
+	stock *modelStock
+
+	minPrice float32
+	maxPrice float32
 
 	symbolQuoteText *dynamicText
 	labelText       *dynamicText
@@ -30,17 +33,13 @@ type chart struct {
 	stickLines      *vao
 	stickRects      *vao
 	volRects        *vao
-
-	minPrice float32
-	maxPrice float32
+	dailyStoLines   *vao
+	weeklyStoLines  *vao
 }
 
 func createChart(stock *modelStock, symbolQuoteText, labelText *dynamicText) *chart {
 	return &chart{
-		stock:             stock,
-		dailyStochastics:  createChartStochastics(stock, dailyInterval, labelText),
-		weeklyStochastics: createChartStochastics(stock, weeklyInterval, labelText),
-
+		stock:           stock,
 		symbolQuoteText: symbolQuoteText,
 		labelText:       labelText,
 		frameBorder:     createStrokedRectVAO(white, white, white, white),
@@ -54,8 +53,7 @@ func (ch *chart) update() {
 	}
 	ch.updatePrices()
 	ch.updateVolume()
-	ch.dailyStochastics.update()
-	ch.weeklyStochastics.update()
+	ch.updateStochastics()
 }
 
 func (ch *chart) updatePrices() {
@@ -263,6 +261,73 @@ func (ch *chart) updateVolume() {
 	ch.volRects = createVAO(gl.TRIANGLES, vertices, colors, indices)
 }
 
+func (ch *chart) updateStochastics() {
+	if ch == nil {
+		return
+	}
+
+	if ch.stock.dailySessions == nil {
+		return
+	}
+
+	if ch.dailyStoLines != nil {
+		return
+	}
+
+	ch.dailyStoLines = ch.createStoLines(ch.stock.dailySessions, yellow)
+	ch.weeklyStoLines = ch.createStoLines(ch.stock.weeklySessions, purple)
+}
+
+func (ch *chart) createStoLines(ss []*modelTradingSession, dColor [3]float32) *vao {
+	var vertices []float32
+	var colors []float32
+	var indices []uint16
+
+	width := 2.0 / float32(len(ss)) // (-1 to 1) on X-axis
+	calcX := func(i int) float32 {
+		return -1.0 + width*0.5 + width*float32(i)
+	}
+	calcY := func(value float32) float32 {
+		return 2*float32(value) - 1
+	}
+
+	var v uint16 // vertex index
+
+	// Add vertices and indices for d percent lines.
+	first := true
+	for i, s := range ss {
+		if s.d == 0.0 {
+			continue
+		}
+
+		vertices = append(vertices, calcX(i), calcY(s.d))
+		colors = append(colors, dColor[0], dColor[1], dColor[2])
+		if !first {
+			indices = append(indices, v, v-1)
+		}
+		v++
+		first = false
+	}
+
+	// Add vertices and indices for k percent lines.
+	first = true
+	for i, s := range ss {
+		if s.k == 0.0 {
+			continue
+		}
+
+		vertices = append(vertices, calcX(i), calcY(s.k))
+		colors = append(colors, red[0], red[1], red[2])
+		if !first {
+			indices = append(indices, v, v-1)
+		}
+		v++
+		first = false
+	}
+
+	return createVAO(gl.LINES, vertices, colors, indices)
+}
+
 func (ch *chart) render(r image.Rectangle) {
 	if ch == nil {
 		return
@@ -271,8 +336,8 @@ func (ch *chart) render(r image.Rectangle) {
 	subRects := ch.renderFrame(r)
 	ch.renderPrices(subRects[3].Inset(pad))
 	ch.renderVolume(subRects[2].Inset(pad))
-	ch.dailyStochastics.render(subRects[1].Inset(pad))
-	ch.weeklyStochastics.render(subRects[0].Inset(pad))
+	ch.renderStochastics(ch.dailyStoLines, subRects[1].Inset(pad))
+	ch.renderStochastics(ch.weeklyStoLines, subRects[0].Inset(pad))
 }
 
 func (ch *chart) renderFrame(r image.Rectangle) []image.Rectangle {
@@ -437,16 +502,50 @@ func (ch *chart) renderVolumeLabels(r image.Rectangle) image.Rectangle {
 	return r
 }
 
+func (ch *chart) renderStochastics(vao *vao, r image.Rectangle) {
+	if ch == nil {
+		return
+	}
+
+	r.Max.X -= ch.renderStochasticLabels(r)
+	gl.Uniform1f(colorMixAmountLocation, 1)
+	setModelMatrixRectangle(r)
+	vao.render()
+}
+
+func (ch *chart) renderStochasticLabels(r image.Rectangle) (maxLabelWidth int) {
+	if ch == nil {
+		return
+	}
+
+	if ch.stock.dailySessions == nil {
+		return
+	}
+
+	render := func(percent float32) (width int) {
+		t := fmt.Sprintf("%.f%%", percent*100)
+		s := ch.labelText.measure(t)
+		p := image.Pt(r.Max.X-s.X-chartLabelPadding, r.Min.Y+int(float32(r.Dy())*percent)-s.Y/2)
+		ch.labelText.render(t, p)
+		return s.X + chartLabelPadding*2
+	}
+
+	w1, w2 := render(.3), render(.7)
+	if w1 > w2 {
+		return w1
+	}
+	return w2
+}
+
 func (ch *chart) close() {
 	if ch == nil {
 		return
 	}
-	ch.dailyStochastics.close()
-	ch.weeklyStochastics.close()
-
 	ch.frameDivider.close()
 	ch.frameBorder.close()
 	ch.stickLines.close()
 	ch.stickRects.close()
 	ch.volRects.close()
+	ch.dailyStoLines.close()
+	ch.weeklyStoLines.close()
 }
