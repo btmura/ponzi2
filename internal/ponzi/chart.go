@@ -23,18 +23,20 @@ const chartLabelPadding = 2
 type chart struct {
 	stock *modelStock
 
-	minPrice float32
-	maxPrice float32
-
 	symbolQuoteText *dynamicText
 	labelText       *dynamicText
-	frameBorder     *vao
-	frameDivider    *vao
-	stickLines      *vao
-	stickRects      *vao
-	volRects        *vao
-	dailyStoLines   *vao
-	weeklyStoLines  *vao
+
+	minPrice  float32
+	maxPrice  float32
+	maxVolume int
+
+	frameBorder    *vao
+	frameDivider   *vao
+	stickLines     *vao
+	stickRects     *vao
+	volRects       *vao
+	dailyStoLines  *vao
+	weeklyStoLines *vao
 }
 
 func createChart(stock *modelStock, symbolQuoteText, labelText *dynamicText) *chart {
@@ -48,25 +50,12 @@ func createChart(stock *modelStock, symbolQuoteText, labelText *dynamicText) *ch
 }
 
 func (ch *chart) update() {
-	if ch == nil {
-		return
-	}
-	ch.updatePrices()
-	ch.updateVolume()
-	ch.updateStochastics()
-}
-
-func (ch *chart) updatePrices() {
-	if ch.stock.dailySessions == nil {
+	if ch == nil || ch.stock.dailySessions == nil {
 		return
 	}
 
-	if ch.stickLines != nil {
-		return
-	}
-
-	// Find the min and max prices for the y-axis.
 	ch.minPrice, ch.maxPrice = math.MaxFloat32, 0
+	ch.maxVolume = 0
 	for _, s := range ch.stock.dailySessions {
 		if ch.minPrice > s.low {
 			ch.minPrice = s.low
@@ -74,8 +63,18 @@ func (ch *chart) updatePrices() {
 		if ch.maxPrice < s.high {
 			ch.maxPrice = s.high
 		}
+		if ch.maxVolume < s.volume {
+			ch.maxVolume = s.volume
+		}
 	}
 
+	ch.stickLines, ch.stickRects = ch.createPriceVAOs()
+	ch.volRects = ch.createVolumeVAOs()
+	ch.dailyStoLines = ch.createStochasticVAOs(ch.stock.dailySessions, yellow)
+	ch.weeklyStoLines = ch.createStochasticVAOs(ch.stock.weeklySessions, purple)
+}
+
+func (ch *chart) createPriceVAOs() (stickLines, stickRects *vao) {
 	// Calculate vertices and indices for the candlesticks.
 	var vertices []float32
 	var colors []float32
@@ -169,28 +168,11 @@ func (ch *chart) updatePrices() {
 		rightX += stickWidth
 	}
 
-	ch.stickLines = createVAO(gl.LINES, vertices, colors, lineIndices)
-	ch.stickRects = createVAO(gl.TRIANGLES, vertices, colors, triangleIndices)
+	return createVAO(gl.LINES, vertices, colors, lineIndices),
+		createVAO(gl.TRIANGLES, vertices, colors, triangleIndices)
 }
 
-func (ch *chart) updateVolume() {
-	if ch.stock.dailySessions == nil {
-		return
-	}
-
-	if ch.volRects != nil {
-		return
-	}
-
-	// Find the max volume for the y-axis.
-	var max int
-	for _, s := range ch.stock.dailySessions {
-		if s.volume > max {
-			max = s.volume
-		}
-	}
-
-	// Calculate vertices and indices for the volume bars.
+func (ch *chart) createVolumeVAOs() (volRects *vao) {
 	var vertices []float32
 	var colors []float32
 	var indices []uint16
@@ -200,7 +182,7 @@ func (ch *chart) updateVolume() {
 	rightX := -1.0 + barWidth*0.8
 
 	calcY := func(value int) float32 {
-		return 2*float32(value)/float32(max) - 1
+		return 2*float32(value)/float32(ch.maxVolume) - 1
 	}
 
 	for i, s := range ch.stock.dailySessions {
@@ -258,27 +240,10 @@ func (ch *chart) updateVolume() {
 		rightX += barWidth
 	}
 
-	ch.volRects = createVAO(gl.TRIANGLES, vertices, colors, indices)
+	return createVAO(gl.TRIANGLES, vertices, colors, indices)
 }
 
-func (ch *chart) updateStochastics() {
-	if ch == nil {
-		return
-	}
-
-	if ch.stock.dailySessions == nil {
-		return
-	}
-
-	if ch.dailyStoLines != nil {
-		return
-	}
-
-	ch.dailyStoLines = ch.createStoLines(ch.stock.dailySessions, yellow)
-	ch.weeklyStoLines = ch.createStoLines(ch.stock.weeklySessions, purple)
-}
-
-func (ch *chart) createStoLines(ss []*modelTradingSession, dColor [3]float32) *vao {
+func (ch *chart) createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLines *vao) {
 	var vertices []float32
 	var colors []float32
 	var indices []uint16
@@ -336,8 +301,8 @@ func (ch *chart) render(r image.Rectangle) {
 	subRects := ch.renderFrame(r)
 	ch.renderPrices(subRects[3].Inset(pad))
 	ch.renderVolume(subRects[2].Inset(pad))
-	ch.renderStochastics(ch.dailyStoLines, subRects[1].Inset(pad))
-	ch.renderStochastics(ch.weeklyStoLines, subRects[0].Inset(pad))
+	ch.renderStochastics(subRects[1].Inset(pad), ch.dailyStoLines)
+	ch.renderStochastics(subRects[0].Inset(pad), ch.weeklyStoLines)
 }
 
 func (ch *chart) renderFrame(r image.Rectangle) []image.Rectangle {
@@ -387,52 +352,7 @@ func (ch *chart) renderFrame(r image.Rectangle) []image.Rectangle {
 }
 
 func (ch *chart) renderPrices(r image.Rectangle) {
-	if ch == nil {
-		return
-	}
-
-	if ch.stock.dailySessions != nil {
-		makeLabel := func(v float32) string {
-			return strconv.FormatFloat(float64(v), 'f', 2, 32)
-		}
-
-		labelSize := ch.labelText.measure(makeLabel(ch.maxPrice))
-		labelPaddingX, labelPaddingY := 4, labelSize.Y/2
-		pricePerPixel := (ch.maxPrice - ch.minPrice) / float32(r.Dy())
-
-		// Start at top and decrement one label with top and bottom padding.
-		c := r.Max
-		dc := image.Pt(0, labelPaddingY+labelSize.Y+labelPaddingY)
-
-		// Start at top with max price and decrement change in price of a label with padding.
-		v := ch.maxPrice
-		dv := pricePerPixel * float32(dc.Y)
-
-		// Offets to the cursor and price value when drawing.
-		dcy := labelPaddingY + labelSize.Y   // Puts cursor at the baseline of the text.
-		dvy := labelPaddingY + labelSize.Y/2 // Uses value in the middle of the label.
-
-		for {
-			{
-				c := image.Pt(c.X, c.Y-dcy)
-				if c.Y < r.Min.Y {
-					break
-				}
-
-				v := v - pricePerPixel*float32(dvy)
-				l := makeLabel(v)
-				s := ch.labelText.measure(l)
-				c.X -= s.X + labelPaddingX
-				ch.labelText.render(l, c)
-			}
-
-			c = c.Sub(dc)
-			v -= dv
-		}
-
-		r.Max.X -= labelSize.X + labelPaddingX*2
-	}
-
+	r = ch.renderPriceLabels(r)
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
 	ch.stickLines.render()
@@ -440,30 +360,69 @@ func (ch *chart) renderPrices(r image.Rectangle) {
 }
 
 func (ch *chart) renderVolume(r image.Rectangle) {
-	if ch == nil {
-		return
-	}
-
 	r = ch.renderVolumeLabels(r)
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
 	ch.volRects.render()
 }
 
-func (ch *chart) renderVolumeLabels(r image.Rectangle) image.Rectangle {
-	if ch == nil {
-		return r
-	}
+func (ch *chart) renderStochastics(r image.Rectangle, vao *vao) {
+	r.Max.X -= ch.renderStochasticLabels(r)
+	gl.Uniform1f(colorMixAmountLocation, 1)
+	setModelMatrixRectangle(r)
+	vao.render()
+}
 
+func (ch *chart) renderPriceLabels(r image.Rectangle) image.Rectangle {
 	if ch.stock.dailySessions == nil {
 		return r
 	}
 
-	var maxVol int
-	for _, ds := range ch.stock.dailySessions {
-		if maxVol < ds.volume {
-			maxVol = ds.volume
+	makeLabel := func(v float32) string {
+		return strconv.FormatFloat(float64(v), 'f', 2, 32)
+	}
+
+	labelSize := ch.labelText.measure(makeLabel(ch.maxPrice))
+	labelPaddingX, labelPaddingY := 4, labelSize.Y/2
+	pricePerPixel := (ch.maxPrice - ch.minPrice) / float32(r.Dy())
+
+	// Start at top and decrement one label with top and bottom padding.
+	c := r.Max
+	dc := image.Pt(0, labelPaddingY+labelSize.Y+labelPaddingY)
+
+	// Start at top with max price and decrement change in price of a label with padding.
+	v := ch.maxPrice
+	dv := pricePerPixel * float32(dc.Y)
+
+	// Offets to the cursor and price value when drawing.
+	dcy := labelPaddingY + labelSize.Y   // Puts cursor at the baseline of the text.
+	dvy := labelPaddingY + labelSize.Y/2 // Uses value in the middle of the label.
+
+	for {
+		{
+			c := image.Pt(c.X, c.Y-dcy)
+			if c.Y < r.Min.Y {
+				break
+			}
+
+			v := v - pricePerPixel*float32(dvy)
+			l := makeLabel(v)
+			s := ch.labelText.measure(l)
+			c.X -= s.X + labelPaddingX
+			ch.labelText.render(l, c)
 		}
+
+		c = c.Sub(dc)
+		v -= dv
+	}
+
+	r.Max.X -= labelSize.X + labelPaddingX*2
+	return r
+}
+
+func (ch *chart) renderVolumeLabels(r image.Rectangle) image.Rectangle {
+	if ch.stock.dailySessions == nil {
+		return r
 	}
 
 	makeLabel := func(v int) string {
@@ -478,10 +437,10 @@ func (ch *chart) renderVolumeLabels(r image.Rectangle) image.Rectangle {
 		return strconv.Itoa(v)
 	}
 
-	labelSize := ch.labelText.measure(makeLabel(maxVol))
+	labelSize := ch.labelText.measure(makeLabel(ch.maxVolume))
 	labelPadX, labelPadY := 4, labelSize.Y/2
 
-	volPerPixel := float32(maxVol) / float32(r.Dy())
+	volPerPixel := float32(ch.maxVolume) / float32(r.Dy())
 	volOffset := int(float32(labelPadY+labelSize.Y/2) * volPerPixel)
 
 	var maxTextWidth int
@@ -495,29 +454,14 @@ func (ch *chart) renderVolumeLabels(r image.Rectangle) image.Rectangle {
 		ch.labelText.render(l, image.Pt(x, y))
 	}
 
-	render(maxVol-volOffset, r.Max.Y-labelPadY-labelSize.Y)
+	render(ch.maxVolume-volOffset, r.Max.Y-labelPadY-labelSize.Y)
 	render(volOffset, r.Min.Y+labelPadY)
 
 	r.Max.X -= maxTextWidth + labelPadX*2
 	return r
 }
 
-func (ch *chart) renderStochastics(vao *vao, r image.Rectangle) {
-	if ch == nil {
-		return
-	}
-
-	r.Max.X -= ch.renderStochasticLabels(r)
-	gl.Uniform1f(colorMixAmountLocation, 1)
-	setModelMatrixRectangle(r)
-	vao.render()
-}
-
 func (ch *chart) renderStochasticLabels(r image.Rectangle) (maxLabelWidth int) {
-	if ch == nil {
-		return
-	}
-
 	if ch.stock.dailySessions == nil {
 		return
 	}
