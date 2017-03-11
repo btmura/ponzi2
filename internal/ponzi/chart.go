@@ -467,7 +467,7 @@ func (ch *chart) renderStochasticLabels(r image.Rectangle) (maxLabelWidth int) {
 	}
 
 	render := func(percent float32) (width int) {
-		t := fmt.Sprintf("%.f%%", percent*100)
+		t := stochasticLabelText(percent)
 		s := ch.labelText.measure(t)
 		p := image.Pt(r.Max.X-s.X-chartLabelPadding, r.Min.Y+int(float32(r.Dy())*percent)-s.Y/2)
 		ch.labelText.render(t, p)
