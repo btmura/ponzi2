@@ -22,15 +22,14 @@ type chart struct {
 	symbolQuoteText *dynamicText
 	labelText       *dynamicText
 
-	minPrice  float32
-	maxPrice  float32
-	maxVolume int
+	minPrice float32
+	maxPrice float32
 
 	frameBorder    *vao
 	frameDivider   *vao
 	stickLines     *vao
 	stickRects     *vao
-	volRects       *vao
+	volume         *chartVolume
 	dailyStoLines  *vao
 	weeklyStoLines *vao
 }
@@ -42,6 +41,7 @@ func createChart(stock *modelStock, symbolQuoteText, labelText *dynamicText) *ch
 		labelText:       labelText,
 		frameBorder:     createStrokedRectVAO(white, white, white, white),
 		frameDivider:    createLineVAO(white, white),
+		volume:          createChartVolume(stock, labelText),
 	}
 }
 
@@ -51,7 +51,6 @@ func (ch *chart) update() {
 	}
 
 	ch.minPrice, ch.maxPrice = math.MaxFloat32, 0
-	ch.maxVolume = 0
 	for _, s := range ch.stock.dailySessions {
 		if ch.minPrice > s.low {
 			ch.minPrice = s.low
@@ -59,13 +58,10 @@ func (ch *chart) update() {
 		if ch.maxPrice < s.high {
 			ch.maxPrice = s.high
 		}
-		if ch.maxVolume < s.volume {
-			ch.maxVolume = s.volume
-		}
 	}
 
 	ch.stickLines, ch.stickRects = ch.createPriceVAOs()
-	ch.volRects = ch.createVolumeVAOs()
+	ch.volume.update()
 	ch.dailyStoLines = ch.createStochasticVAOs(ch.stock.dailySessions, yellow)
 	ch.weeklyStoLines = ch.createStochasticVAOs(ch.stock.weeklySessions, purple)
 }
@@ -85,7 +81,7 @@ func (ch *chart) render(r image.Rectangle) {
 	wr = wr.Inset(pad)
 
 	maxWidth := ch.renderPriceLabels(pr)
-	if w := ch.renderVolumeLabels(vr); w > maxWidth {
+	if w := ch.volume.renderLabels(vr); w > maxWidth {
 		maxWidth = w
 	}
 	if w := ch.renderStochasticLabels(dr); w > maxWidth {
@@ -101,7 +97,7 @@ func (ch *chart) render(r image.Rectangle) {
 	wr.Max.X -= maxWidth + pad
 
 	ch.renderPrices(pr)
-	ch.renderVolume(vr)
+	ch.volume.renderGraph(vr)
 	ch.renderStochastics(dr, ch.dailyStoLines)
 	ch.renderStochastics(wr, ch.weeklyStoLines)
 }
@@ -114,7 +110,7 @@ func (ch *chart) close() {
 	ch.frameBorder.close()
 	ch.stickLines.close()
 	ch.stickRects.close()
-	ch.volRects.close()
+	ch.volume.close()
 	ch.dailyStoLines.close()
 	ch.weeklyStoLines.close()
 }

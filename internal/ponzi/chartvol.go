@@ -8,7 +8,33 @@ import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
-func (ch *chart) createVolumeVAOs() (volRects *vao) {
+type chartVolume struct {
+	stock     *modelStock
+	labelText *dynamicText
+
+	maxVolume int
+	volRects  *vao
+}
+
+func createChartVolume(stock *modelStock, labelText *dynamicText) *chartVolume {
+	return &chartVolume{
+		stock:     stock,
+		labelText: labelText,
+	}
+}
+
+func (ch *chartVolume) update() {
+	if ch == nil || ch.stock.dailySessions == nil {
+		return
+	}
+
+	ch.maxVolume = 0
+	for _, s := range ch.stock.dailySessions {
+		if ch.maxVolume < s.volume {
+			ch.maxVolume = s.volume
+		}
+	}
+
 	var vertices []float32
 	var colors []float32
 	var indices []uint16
@@ -76,16 +102,16 @@ func (ch *chart) createVolumeVAOs() (volRects *vao) {
 		rightX += barWidth
 	}
 
-	return createVAO(gl.TRIANGLES, vertices, colors, indices)
+	ch.volRects = createVAO(gl.TRIANGLES, vertices, colors, indices)
 }
 
-func (ch *chart) renderVolume(r image.Rectangle) {
+func (ch *chartVolume) renderGraph(r image.Rectangle) {
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
 	ch.volRects.render()
 }
 
-func (ch *chart) renderVolumeLabels(r image.Rectangle) (maxLabelWidth int) {
+func (ch *chartVolume) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 	if ch.stock.dailySessions == nil {
 		return
 	}
@@ -109,7 +135,7 @@ func (ch *chart) renderVolumeLabels(r image.Rectangle) (maxLabelWidth int) {
 	return s.X + chartLabelPadding*2
 }
 
-func (ch *chart) volumeLabelText(v int) (text string, size image.Point) {
+func (ch *chartVolume) volumeLabelText(v int) (text string, size image.Point) {
 	var t string
 	switch {
 	case v > 1000000000:
@@ -122,4 +148,8 @@ func (ch *chart) volumeLabelText(v int) (text string, size image.Point) {
 		t = strconv.Itoa(v)
 	}
 	return t, ch.labelText.measure(t)
+}
+
+func (ch *chartVolume) close() {
+	ch.volRects.close()
 }
