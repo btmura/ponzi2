@@ -26,23 +26,25 @@ type chart struct {
 	minPrice float32
 	maxPrice float32
 
-	frameBorder    *vao
-	frameDivider   *vao
-	stickLines     *vao
-	stickRects     *vao
-	volume         *chartVolume
-	dailyStoLines  *vao
-	weeklyStoLines *vao
+	frameBorder       *vao
+	frameDivider      *vao
+	stickLines        *vao
+	stickRects        *vao
+	volume            *chartVolume
+	dailyStochastics  *chartStochastics
+	weeklyStochastics *chartStochastics
 }
 
 func createChart(stock *modelStock, symbolQuoteText, labelText *dynamicText) *chart {
 	return &chart{
-		stock:           stock,
-		symbolQuoteText: symbolQuoteText,
-		labelText:       labelText,
-		frameBorder:     createStrokedRectVAO(white, white, white, white),
-		frameDivider:    createLineVAO(white, white),
-		volume:          createChartVolume(stock, labelText),
+		stock:             stock,
+		symbolQuoteText:   symbolQuoteText,
+		labelText:         labelText,
+		frameBorder:       createStrokedRectVAO(white, white, white, white),
+		frameDivider:      createLineVAO(white, white),
+		volume:            createChartVolume(stock, labelText),
+		dailyStochastics:  createChartStochastics(stock, labelText, daily),
+		weeklyStochastics: createChartStochastics(stock, labelText, weekly),
 	}
 }
 
@@ -63,8 +65,8 @@ func (ch *chart) update() {
 
 	ch.stickLines, ch.stickRects = ch.createPriceVAOs()
 	ch.volume.update()
-	ch.dailyStoLines = ch.createStochasticVAOs(ch.stock.dailySessions, yellow)
-	ch.weeklyStoLines = ch.createStochasticVAOs(ch.stock.weeklySessions, purple)
+	ch.dailyStochastics.update()
+	ch.weeklyStochastics.update()
 }
 
 func (ch *chart) render(r image.Rectangle) {
@@ -85,10 +87,10 @@ func (ch *chart) render(r image.Rectangle) {
 	if w := ch.volume.renderLabels(vr); w > maxWidth {
 		maxWidth = w
 	}
-	if w := ch.renderStochasticLabels(dr); w > maxWidth {
+	if w := ch.dailyStochastics.renderLabels(dr); w > maxWidth {
 		maxWidth = w
 	}
-	if w := ch.renderStochasticLabels(wr); w > maxWidth {
+	if w := ch.weeklyStochastics.renderLabels(wr); w > maxWidth {
 		maxWidth = w
 	}
 
@@ -99,8 +101,8 @@ func (ch *chart) render(r image.Rectangle) {
 
 	ch.renderPrices(pr)
 	ch.volume.renderGraph(vr)
-	ch.renderStochastics(dr, ch.dailyStoLines)
-	ch.renderStochastics(wr, ch.weeklyStoLines)
+	ch.dailyStochastics.renderGraph(dr)
+	ch.weeklyStochastics.renderGraph(wr)
 }
 
 func (ch *chart) close() {
@@ -112,6 +114,6 @@ func (ch *chart) close() {
 	ch.stickLines.close()
 	ch.stickRects.close()
 	ch.volume.close()
-	ch.dailyStoLines.close()
-	ch.weeklyStoLines.close()
+	ch.dailyStochastics.close()
+	ch.weeklyStochastics.close()
 }

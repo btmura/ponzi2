@@ -7,7 +7,42 @@ import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
-func (ch *chart) createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLines *vao) {
+type chartStochasticType int32
+
+const (
+	daily chartStochasticType = iota
+	weekly
+)
+
+type chartStochastics struct {
+	stock     *modelStock
+	labelText *dynamicText
+	stoType   chartStochasticType
+
+	stoLines *vao
+}
+
+func createChartStochastics(stock *modelStock, labelText *dynamicText, stoType chartStochasticType) *chartStochastics {
+	return &chartStochastics{
+		stock:     stock,
+		labelText: labelText,
+		stoType:   stoType,
+	}
+}
+
+func (ch *chartStochastics) update() {
+	if ch == nil || ch.stock.dailySessions == nil {
+		return
+	}
+
+	ss, dColor := ch.stock.dailySessions, yellow
+	if ch.stoType == weekly {
+		ss, dColor = ch.stock.weeklySessions, purple
+	}
+	ch.stoLines = ch.createStochasticVAOs(ss, dColor)
+}
+
+func (ch *chartStochastics) createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLines *vao) {
 	var vertices []float32
 	var colors []float32
 	var indices []uint16
@@ -57,13 +92,13 @@ func (ch *chart) createStochasticVAOs(ss []*modelTradingSession, dColor [3]float
 	return createVAO(gl.LINES, vertices, colors, indices)
 }
 
-func (ch *chart) renderStochastics(r image.Rectangle, vao *vao) {
+func (ch *chartStochastics) renderGraph(r image.Rectangle) {
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
-	vao.render()
+	ch.stoLines.render()
 }
 
-func (ch *chart) renderStochasticLabels(r image.Rectangle) (maxLabelWidth int) {
+func (ch *chartStochastics) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 	if ch.stock.dailySessions == nil {
 		return
 	}
@@ -87,7 +122,15 @@ func (ch *chart) renderStochasticLabels(r image.Rectangle) (maxLabelWidth int) {
 	return s.X + chartLabelPadding*2
 }
 
-func (ch *chart) stochasticLabelText(percent float32) (text string, size image.Point) {
+func (ch *chartStochastics) stochasticLabelText(percent float32) (text string, size image.Point) {
 	t := fmt.Sprintf("%.f%%", percent*100)
 	return t, ch.labelText.measure(t)
+}
+
+func (ch *chartStochastics) close() {
+	if ch == nil {
+		return
+	}
+	ch.stoLines.close()
+	ch.stoLines = nil
 }
