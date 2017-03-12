@@ -12,11 +12,12 @@ type chartPrices struct {
 	stock     *modelStock
 	labelText *dynamicText
 
-	minPrice float32
-	maxPrice float32
-
-	stickLines *vao
-	stickRects *vao
+	minPrice    float32
+	maxPrice    float32
+	labelHeight int
+	stickLines  *vao
+	stickRects  *vao
+	labelLine   *vao
 }
 
 func createChartPrices(stock *modelStock, labelText *dynamicText) *chartPrices {
@@ -42,6 +43,10 @@ func (ch *chartPrices) update() {
 	}
 
 	ch.stickLines, ch.stickRects = ch.createPriceVAOs()
+	ch.labelLine = createLineVAO(gray, gray)
+
+	_, labelSize := ch.priceLabelText(ch.maxPrice)
+	ch.labelHeight = labelSize.Y
 }
 
 func (ch *chartPrices) createPriceVAOs() (stickLines, stickRects *vao) {
@@ -147,6 +152,24 @@ func (ch *chartPrices) renderGraph(r image.Rectangle) {
 	setModelMatrixRectangle(r)
 	ch.stickLines.render()
 	ch.stickRects.render()
+
+	if ch.labelHeight != 0 {
+		labelPaddingY := ch.labelHeight / 2
+		y := r.Max.Y - labelPaddingY - ch.labelHeight/2
+		dy := ch.labelHeight + labelPaddingY*2
+
+		for {
+			{
+				if y < r.Min.Y {
+					break
+				}
+
+				setModelMatrixRectangle(image.Rect(r.Min.X, y, r.Max.X, y))
+				ch.labelLine.render()
+			}
+			y -= dy
+		}
+	}
 }
 
 func (ch *chartPrices) renderLabels(r image.Rectangle) (maxLabelWidth int) {
@@ -154,11 +177,7 @@ func (ch *chartPrices) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 		return
 	}
 
-	makeLabel := func(v float32) string {
-		return strconv.FormatFloat(float64(v), 'f', 2, 32)
-	}
-
-	labelSize := ch.labelText.measure(makeLabel(ch.maxPrice))
+	_, labelSize := ch.priceLabelText(ch.maxPrice)
 	labelPaddingX, labelPaddingY := chartLabelPadding, labelSize.Y/2
 	pricePerPixel := (ch.maxPrice - ch.minPrice) / float32(r.Dy())
 
@@ -182,10 +201,9 @@ func (ch *chartPrices) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 			}
 
 			v := v - pricePerPixel*float32(dvy)
-			l := makeLabel(v)
-			s := ch.labelText.measure(l)
+			t, s := ch.priceLabelText(v)
 			c.X -= s.X + labelPaddingX
-			ch.labelText.render(l, c)
+			ch.labelText.render(t, c)
 		}
 
 		c = c.Sub(dc)
@@ -193,6 +211,11 @@ func (ch *chartPrices) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 	}
 
 	return labelSize.X + labelPaddingX*2
+}
+
+func (ch *chartPrices) priceLabelText(v float32) (text string, size image.Point) {
+	t := strconv.FormatFloat(float64(v), 'f', 2, 32)
+	return t, ch.labelText.measure(t)
 }
 
 func (ch *chartPrices) close() {
@@ -204,4 +227,6 @@ func (ch *chartPrices) close() {
 	ch.stickLines = nil
 	ch.stickRects.close()
 	ch.stickRects = nil
+	ch.labelLine.close()
+	ch.labelLine = nil
 }
