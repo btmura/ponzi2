@@ -2,7 +2,6 @@ package ponzi
 
 import (
 	"image"
-	"math"
 )
 
 // Colors used by the chart.
@@ -23,13 +22,10 @@ type chart struct {
 	symbolQuoteText *dynamicText
 	labelText       *dynamicText
 
-	minPrice float32
-	maxPrice float32
+	frameBorder  *vao
+	frameDivider *vao
 
-	frameBorder       *vao
-	frameDivider      *vao
-	stickLines        *vao
-	stickRects        *vao
+	prices            *chartPrices
 	volume            *chartVolume
 	dailyStochastics  *chartStochastics
 	weeklyStochastics *chartStochastics
@@ -42,6 +38,7 @@ func createChart(stock *modelStock, symbolQuoteText, labelText *dynamicText) *ch
 		labelText:         labelText,
 		frameBorder:       createStrokedRectVAO(white, white, white, white),
 		frameDivider:      createLineVAO(white, white),
+		prices:            createChartPrices(stock, labelText),
 		volume:            createChartVolume(stock, labelText),
 		dailyStochastics:  createChartStochastics(stock, labelText, daily),
 		weeklyStochastics: createChartStochastics(stock, labelText, weekly),
@@ -49,21 +46,11 @@ func createChart(stock *modelStock, symbolQuoteText, labelText *dynamicText) *ch
 }
 
 func (ch *chart) update() {
-	if ch == nil || ch.stock.dailySessions == nil {
+	if ch == nil {
 		return
 	}
 
-	ch.minPrice, ch.maxPrice = math.MaxFloat32, 0
-	for _, s := range ch.stock.dailySessions {
-		if ch.minPrice > s.low {
-			ch.minPrice = s.low
-		}
-		if ch.maxPrice < s.high {
-			ch.maxPrice = s.high
-		}
-	}
-
-	ch.stickLines, ch.stickRects = ch.createPriceVAOs()
+	ch.prices.update()
 	ch.volume.update()
 	ch.dailyStochastics.update()
 	ch.weeklyStochastics.update()
@@ -83,7 +70,7 @@ func (ch *chart) render(r image.Rectangle) {
 	dr = dr.Inset(pad)
 	wr = wr.Inset(pad)
 
-	maxWidth := ch.renderPriceLabels(pr)
+	maxWidth := ch.prices.renderLabels(pr)
 	if w := ch.volume.renderLabels(vr); w > maxWidth {
 		maxWidth = w
 	}
@@ -99,7 +86,7 @@ func (ch *chart) render(r image.Rectangle) {
 	dr.Max.X -= maxWidth + pad
 	wr.Max.X -= maxWidth + pad
 
-	ch.renderPrices(pr)
+	ch.prices.renderGraph(pr)
 	ch.volume.renderGraph(vr)
 	ch.dailyStochastics.renderGraph(dr)
 	ch.weeklyStochastics.renderGraph(wr)
@@ -111,8 +98,7 @@ func (ch *chart) close() {
 	}
 	ch.frameDivider.close()
 	ch.frameBorder.close()
-	ch.stickLines.close()
-	ch.stickRects.close()
+	ch.prices.close()
 	ch.volume.close()
 	ch.dailyStochastics.close()
 	ch.weeklyStochastics.close()

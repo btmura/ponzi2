@@ -2,12 +2,49 @@ package ponzi
 
 import (
 	"image"
+	"math"
 	"strconv"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
-func (ch *chart) createPriceVAOs() (stickLines, stickRects *vao) {
+type chartPrices struct {
+	stock     *modelStock
+	labelText *dynamicText
+
+	minPrice float32
+	maxPrice float32
+
+	stickLines *vao
+	stickRects *vao
+}
+
+func createChartPrices(stock *modelStock, labelText *dynamicText) *chartPrices {
+	return &chartPrices{
+		stock:     stock,
+		labelText: labelText,
+	}
+}
+
+func (ch *chartPrices) update() {
+	if ch == nil || ch.stock.dailySessions == nil {
+		return
+	}
+
+	ch.minPrice, ch.maxPrice = math.MaxFloat32, 0
+	for _, s := range ch.stock.dailySessions {
+		if ch.minPrice > s.low {
+			ch.minPrice = s.low
+		}
+		if ch.maxPrice < s.high {
+			ch.maxPrice = s.high
+		}
+	}
+
+	ch.stickLines, ch.stickRects = ch.createPriceVAOs()
+}
+
+func (ch *chartPrices) createPriceVAOs() (stickLines, stickRects *vao) {
 	// Calculate vertices and indices for the candlesticks.
 	var vertices []float32
 	var colors []float32
@@ -105,14 +142,14 @@ func (ch *chart) createPriceVAOs() (stickLines, stickRects *vao) {
 		createVAO(gl.TRIANGLES, vertices, colors, triangleIndices)
 }
 
-func (ch *chart) renderPrices(r image.Rectangle) {
+func (ch *chartPrices) renderGraph(r image.Rectangle) {
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
 	ch.stickLines.render()
 	ch.stickRects.render()
 }
 
-func (ch *chart) renderPriceLabels(r image.Rectangle) (maxLabelWidth int) {
+func (ch *chartPrices) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 	if ch.stock.dailySessions == nil {
 		return
 	}
@@ -156,4 +193,15 @@ func (ch *chart) renderPriceLabels(r image.Rectangle) (maxLabelWidth int) {
 	}
 
 	return labelSize.X + labelPaddingX*2
+}
+
+func (ch *chartPrices) close() {
+	if ch == nil {
+		return
+	}
+
+	ch.stickLines.close()
+	ch.stickLines = nil
+	ch.stickRects.close()
+	ch.stickRects = nil
 }
