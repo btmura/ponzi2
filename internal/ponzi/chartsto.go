@@ -19,7 +19,8 @@ type chartStochastics struct {
 	labelText *dynamicText
 	stoType   chartStochasticType
 
-	stoLines *vao
+	stoLines  *vao
+	labelLine *vao
 }
 
 func createChartStochastics(stock *modelStock, labelText *dynamicText, stoType chartStochasticType) *chartStochastics {
@@ -40,6 +41,7 @@ func (ch *chartStochastics) update() {
 		ss, dColor = ch.stock.weeklySessions, purple
 	}
 	ch.stoLines = ch.createStochasticVAOs(ss, dColor)
+	ch.labelLine = createLineVAO(gray, gray)
 }
 
 func (ch *chartStochastics) createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLines *vao) {
@@ -96,6 +98,12 @@ func (ch *chartStochastics) renderGraph(r image.Rectangle) {
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
 	ch.stoLines.render()
+
+	for _, yLocPercent := range []float32{0.3, 0.7} {
+		y := r.Min.Y + int(float32(r.Dy())*yLocPercent)
+		setModelMatrixRectangle(image.Rect(r.Min.X, y, r.Max.X, y))
+		ch.labelLine.render()
+	}
 }
 
 func (ch *chartStochastics) renderLabels(r image.Rectangle) (maxLabelWidth int) {
