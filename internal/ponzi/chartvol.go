@@ -14,6 +14,7 @@ type chartVolume struct {
 
 	maxVolume int
 	volRects  *vao
+	labelLine *vao
 }
 
 func createChartVolume(stock *modelStock, labelText *dynamicText) *chartVolume {
@@ -103,12 +104,19 @@ func (ch *chartVolume) update() {
 	}
 
 	ch.volRects = createVAO(gl.TRIANGLES, vertices, colors, indices)
+	ch.labelLine = createLineVAO(gray, gray)
 }
 
 func (ch *chartVolume) renderGraph(r image.Rectangle) {
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
 	ch.volRects.render()
+
+	for _, yLocPercent := range []float32{0.3, 0.7} {
+		y := r.Min.Y + int(float32(r.Dy())*yLocPercent)
+		setModelMatrixRectangle(image.Rect(r.Min.X, y, r.Max.X, y))
+		ch.labelLine.render()
+	}
 }
 
 func (ch *chartVolume) renderLabels(r image.Rectangle) (maxLabelWidth int) {
@@ -151,5 +159,11 @@ func (ch *chartVolume) volumeLabelText(v int) (text string, size image.Point) {
 }
 
 func (ch *chartVolume) close() {
+	if ch == nil {
+		return
+	}
 	ch.volRects.close()
+	ch.volRects = nil
+	ch.labelLine.close()
+	ch.labelLine = nil
 }

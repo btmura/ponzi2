@@ -12,6 +12,7 @@ var (
 	yellow = [3]float32{1, 1, 0}
 	purple = [3]float32{0.5, 0, 1}
 	white  = [3]float32{1, 1, 1}
+	gray   = [3]float32{0.2, 0.2, 0.2}
 )
 
 const chartLabelPadding = 2

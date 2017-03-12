@@ -8,7 +8,7 @@ import (
 
 func (ch *chart) renderFrame(r image.Rectangle) []image.Rectangle {
 	if ch == nil {
-		return nil
+		return nil	
 	}
 
 	// Start rendering from the top left. Track position with point.
