@@ -14,8 +14,6 @@ var (
 	gray   = [3]float32{0.15, 0.15, 0.15}
 )
 
-const chartLabelPadding = 2
-
 type chart struct {
 	stock             *modelStock
 	frame             *chartFrame
@@ -58,7 +56,7 @@ func (ch *chart) render(r image.Rectangle) {
 	subRects := ch.frame.render(r)
 	pr, vr, dr, wr := subRects[3], subRects[2], subRects[1], subRects[0]
 
-	const pad = 3
+	const pad = 5
 	pr = pr.Inset(pad)
 	vr = vr.Inset(pad)
 	dr = dr.Inset(pad)
@@ -80,10 +78,10 @@ func (ch *chart) render(r image.Rectangle) {
 	dr.Max.X -= maxWidth + pad
 	wr.Max.X -= maxWidth + pad
 
-	ch.prices.renderGraph(pr)
-	ch.volume.renderGraph(vr)
-	ch.dailyStochastics.renderGraph(dr)
-	ch.weeklyStochastics.renderGraph(wr)
+	ch.prices.render(pr)
+	ch.volume.render(vr)
+	ch.dailyStochastics.render(dr)
+	ch.weeklyStochastics.render(wr)
 
 	ch.lines.render(pr)
 	ch.lines.render(vr)

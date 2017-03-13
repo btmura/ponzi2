@@ -107,7 +107,7 @@ func (ch *chartVolume) update() {
 	ch.labelLine = createLineVAO(gray, gray)
 }
 
-func (ch *chartVolume) renderGraph(r image.Rectangle) {
+func (ch *chartVolume) render(r image.Rectangle) {
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
 	ch.volRects.render()
@@ -128,7 +128,7 @@ func (ch *chartVolume) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 	t2, s2 := ch.volumeLabelText(int(float32(ch.maxVolume) * .3))
 
 	render := func(t string, s image.Point, yLocPercent float32) {
-		x := r.Max.X - chartLabelPadding - s.X
+		x := r.Max.X - s.X
 		y := r.Min.Y + int(float32(r.Dy())*yLocPercent) - s.Y/2
 		ch.labelText.render(t, image.Pt(x, y))
 	}
@@ -140,7 +140,7 @@ func (ch *chartVolume) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 	if s.X < s2.X {
 		s = s2
 	}
-	return s.X + chartLabelPadding*2
+	return s.X
 }
 
 func (ch *chartVolume) volumeLabelText(v int) (text string, size image.Point) {

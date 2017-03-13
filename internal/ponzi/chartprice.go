@@ -147,7 +147,7 @@ func (ch *chartPrices) createPriceVAOs() (stickLines, stickRects *vao) {
 		createVAO(gl.TRIANGLES, vertices, colors, triangleIndices)
 }
 
-func (ch *chartPrices) renderGraph(r image.Rectangle) {
+func (ch *chartPrices) render(r image.Rectangle) {
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
 	ch.stickLines.render()
@@ -178,7 +178,7 @@ func (ch *chartPrices) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 	}
 
 	_, labelSize := ch.priceLabelText(ch.maxPrice)
-	labelPaddingX, labelPaddingY := chartLabelPadding, labelSize.Y/2
+	labelPaddingY := labelSize.Y / 2
 	pricePerPixel := (ch.maxPrice - ch.minPrice) / float32(r.Dy())
 
 	// Start at top and decrement one label with top and bottom padding.
@@ -202,7 +202,7 @@ func (ch *chartPrices) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 
 			v := v - pricePerPixel*float32(dvy)
 			t, s := ch.priceLabelText(v)
-			c.X -= s.X + labelPaddingX
+			c.X -= s.X
 			ch.labelText.render(t, c)
 		}
 
@@ -210,7 +210,7 @@ func (ch *chartPrices) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 		v -= dv
 	}
 
-	return labelSize.X + labelPaddingX*2
+	return labelSize.X
 }
 
 func (ch *chartPrices) priceLabelText(v float32) (text string, size image.Point) {
