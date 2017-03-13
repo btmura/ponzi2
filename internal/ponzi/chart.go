@@ -19,6 +19,7 @@ const chartLabelPadding = 2
 type chart struct {
 	stock             *modelStock
 	frame             *chartFrame
+	lines             *chartLines
 	prices            *chartPrices
 	volume            *chartVolume
 	dailyStochastics  *chartStochastics
@@ -29,6 +30,7 @@ func createChart(stock *modelStock, symbolQuoteText, labelText *dynamicText) *ch
 	return &chart{
 		stock:             stock,
 		frame:             createChartFrame(stock, symbolQuoteText),
+		lines:             createChartLines(stock),
 		prices:            createChartPrices(stock, labelText),
 		volume:            createChartVolume(stock, labelText),
 		dailyStochastics:  createChartStochastics(stock, labelText, daily),
@@ -41,6 +43,7 @@ func (ch *chart) update() {
 		return
 	}
 
+	ch.lines.update()
 	ch.prices.update()
 	ch.volume.update()
 	ch.dailyStochastics.update()
@@ -81,6 +84,11 @@ func (ch *chart) render(r image.Rectangle) {
 	ch.volume.renderGraph(vr)
 	ch.dailyStochastics.renderGraph(dr)
 	ch.weeklyStochastics.renderGraph(wr)
+
+	ch.lines.render(pr)
+	ch.lines.render(vr)
+	ch.lines.render(dr)
+	ch.lines.render(wr)
 }
 
 func (ch *chart) close() {
