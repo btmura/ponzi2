@@ -7,8 +7,8 @@ import (
 )
 
 type chartLines struct {
-	stock      *modelStock
-	monthLines *vao
+	stock     *modelStock
+	vertLines *vao
 }
 
 func createChartLines(stock *modelStock) *chartLines {
@@ -56,13 +56,13 @@ func (ch *chartLines) update() {
 		)
 	}
 
-	ch.monthLines = createVAO(gl.LINES, vertices, colors, indices)
+	ch.vertLines = createVAO(gl.LINES, vertices, colors, indices)
 }
 
 func (ch *chartLines) render(r image.Rectangle) {
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
-	ch.monthLines.render()
+	ch.vertLines.render()
 }
 
 func (ch *chartLines) close() {
@@ -70,6 +70,6 @@ func (ch *chartLines) close() {
 		return
 	}
 
-	ch.monthLines.close()
-	ch.monthLines = nil
+	ch.vertLines.close()
+	ch.vertLines = nil
 }
