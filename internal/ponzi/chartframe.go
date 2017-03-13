@@ -6,9 +6,25 @@ import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
-func (ch *chart) renderFrame(r image.Rectangle) []image.Rectangle {
+type chartFrame struct {
+	stock           *modelStock
+	symbolQuoteText *dynamicText
+	frameBorder     *vao
+	frameDivider    *vao
+}
+
+func createChartFrame(stock *modelStock, symbolQuoteText *dynamicText) *chartFrame {
+	return &chartFrame{
+		stock:           stock,
+		symbolQuoteText: symbolQuoteText,
+		frameBorder:     createStrokedRectVAO(white, white, white, white),
+		frameDivider:    createLineVAO(white, white),
+	}
+}
+
+func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
 	if ch == nil {
-		return nil	
+		return nil
 	}
 
 	// Start rendering from the top left. Track position with point.
@@ -50,4 +66,14 @@ func (ch *chart) renderFrame(r image.Rectangle) []image.Rectangle {
 		ch.frameDivider.render()
 	}
 	return rects
+}
+
+func (ch *chartFrame) close() {
+	if ch == nil {
+		return
+	}
+	ch.frameDivider.close()
+	ch.frameDivider = nil
+	ch.frameBorder.close()
+	ch.frameBorder = nil
 }

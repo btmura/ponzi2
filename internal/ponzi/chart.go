@@ -17,14 +17,8 @@ var (
 const chartLabelPadding = 2
 
 type chart struct {
-	stock *modelStock
-
-	symbolQuoteText *dynamicText
-	labelText       *dynamicText
-
-	frameBorder  *vao
-	frameDivider *vao
-
+	stock             *modelStock
+	frame             *chartFrame
 	prices            *chartPrices
 	volume            *chartVolume
 	dailyStochastics  *chartStochastics
@@ -34,10 +28,7 @@ type chart struct {
 func createChart(stock *modelStock, symbolQuoteText, labelText *dynamicText) *chart {
 	return &chart{
 		stock:             stock,
-		symbolQuoteText:   symbolQuoteText,
-		labelText:         labelText,
-		frameBorder:       createStrokedRectVAO(white, white, white, white),
-		frameDivider:      createLineVAO(white, white),
+		frame:             createChartFrame(stock, symbolQuoteText),
 		prices:            createChartPrices(stock, labelText),
 		volume:            createChartVolume(stock, labelText),
 		dailyStochastics:  createChartStochastics(stock, labelText, daily),
@@ -61,7 +52,7 @@ func (ch *chart) render(r image.Rectangle) {
 		return
 	}
 
-	subRects := ch.renderFrame(r)
+	subRects := ch.frame.render(r)
 	pr, vr, dr, wr := subRects[3], subRects[2], subRects[1], subRects[0]
 
 	const pad = 3
@@ -96,10 +87,14 @@ func (ch *chart) close() {
 	if ch == nil {
 		return
 	}
-	ch.frameDivider.close()
-	ch.frameBorder.close()
+	ch.frame.close()
+	ch.frame = nil
 	ch.prices.close()
+	ch.prices = nil
 	ch.volume.close()
+	ch.volume = nil
 	ch.dailyStochastics.close()
+	ch.dailyStochastics = nil
 	ch.weeklyStochastics.close()
+	ch.weeklyStochastics = nil
 }
