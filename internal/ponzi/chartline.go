@@ -8,7 +8,7 @@ import (
 
 type chartLines struct {
 	stock     *modelStock
-	vertLines *vao
+	weekLines *vao
 }
 
 func createChartLines(stock *modelStock) *chartLines {
@@ -22,6 +22,10 @@ func (ch *chartLines) update() {
 		return
 	}
 
+	ch.weekLines = ch.createWeekLineVAO()
+}
+
+func (ch *chartLines) createWeekLineVAO() *vao {
 	var vertices []float32
 	var colors []float32
 	var indices []uint16
@@ -56,13 +60,13 @@ func (ch *chartLines) update() {
 		)
 	}
 
-	ch.vertLines = createVAO(gl.LINES, vertices, colors, indices)
+	return createVAO(gl.LINES, vertices, colors, indices)
 }
 
 func (ch *chartLines) render(r image.Rectangle) {
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
-	ch.vertLines.render()
+	ch.weekLines.render()
 }
 
 func (ch *chartLines) close() {
@@ -70,6 +74,6 @@ func (ch *chartLines) close() {
 		return
 	}
 
-	ch.vertLines.close()
-	ch.vertLines = nil
+	ch.weekLines.close()
+	ch.weekLines = nil
 }
