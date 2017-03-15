@@ -54,18 +54,32 @@ func Run() {
 		v.resize(image.Pt(width, height))
 	})
 
-	// Register the key callback.
 	win.SetKeyCallback(func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 		v.handleKey(key, action)
 	})
 
-	// Register the char callback.
 	win.SetCharCallback(func(w *glfw.Window, char rune) {
 		v.handleChar(char)
 	})
 
+	const secPerUpdate = 1.0 / 60
+
+	var lag float64
+	prevTime := glfw.GetTime()
 	for !win.ShouldClose() {
-		v.render()
+		currTime := glfw.GetTime()
+		elapsed := currTime - prevTime
+		prevTime = currTime
+		lag += elapsed
+
+		for lag >= secPerUpdate {
+			v.update()
+			lag -= secPerUpdate
+		}
+
+		fudge := float32(lag / secPerUpdate)
+		v.render(fudge)
+
 		win.SwapBuffers()
 		glfw.PollEvents()
 	}

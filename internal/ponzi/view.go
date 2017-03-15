@@ -185,7 +185,14 @@ func createView(model *model) (*view, error) {
 	}, nil
 }
 
-func (v *view) render() {
+func (v *view) update() {
+	v.model.Lock()
+	defer v.model.Unlock()
+
+	v.chart.update()
+}
+
+func (v *view) render(fudge float32) {
 	v.model.Lock()
 	defer v.model.Unlock()
 
@@ -229,7 +236,7 @@ func (v *view) render() {
 		v.chart.close()
 		v.chart = createChart(v.model.currentStock, v.symbolQuoteText, v.priceText)
 	}
-	v.chart.update()
+
 	v.chart.render(image.Rect(c.X, p, v.winSize.X-p, c.Y))
 }
 
