@@ -10,6 +10,7 @@ import (
 type chartLines struct {
 	stock               *modelStock
 	lastStockUpdateTime time.Time
+	renderable          bool
 	weekLines           *vao
 }
 
@@ -26,19 +27,7 @@ func (ch *chartLines) update() {
 	ch.lastStockUpdateTime = ch.stock.lastUpdateTime
 	ch.weekLines.close()
 	ch.weekLines = createChartWeekLinesVAO(ch.stock.dailySessions)
-}
-
-func (ch *chartLines) render(r image.Rectangle) {
-	if ch.weekLines != nil {
-		gl.Uniform1f(colorMixAmountLocation, 1)
-		setModelMatrixRectangle(r)
-		ch.weekLines.render()
-	}
-}
-
-func (ch *chartLines) close() {
-	ch.weekLines.close()
-	ch.weekLines = nil
+	ch.renderable = true
 }
 
 func createChartWeekLinesVAO(ds []*modelTradingSession) *vao {
@@ -77,4 +66,19 @@ func createChartWeekLinesVAO(ds []*modelTradingSession) *vao {
 	}
 
 	return createVAO(gl.LINES, vertices, colors, indices)
+}
+
+func (ch *chartLines) render(r image.Rectangle) {
+	if !ch.renderable {
+		return
+	}
+	gl.Uniform1f(colorMixAmountLocation, 1)
+	setModelMatrixRectangle(r)
+	ch.weekLines.render()
+}
+
+func (ch *chartLines) close() {
+	ch.renderable = false
+	ch.weekLines.close()
+	ch.weekLines = nil
 }

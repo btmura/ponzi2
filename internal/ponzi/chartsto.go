@@ -3,6 +3,7 @@ package ponzi
 import (
 	"fmt"
 	"image"
+	"time"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
@@ -15,12 +16,13 @@ const (
 )
 
 type chartStochastics struct {
-	stock     *modelStock
-	labelText *dynamicText
-	stoType   chartStochasticType
-
-	stoLines  *vao
-	labelLine *vao
+	stock               *modelStock
+	lastStockUpdateTime time.Time
+	renderable          bool
+	labelText           *dynamicText
+	stoType             chartStochasticType
+	stoLines            *vao
+	labelLine           *vao
 }
 
 func createChartStochastics(stock *modelStock, labelText *dynamicText, stoType chartStochasticType) *chartStochastics {
@@ -32,19 +34,26 @@ func createChartStochastics(stock *modelStock, labelText *dynamicText, stoType c
 }
 
 func (ch *chartStochastics) update() {
-	if ch == nil || ch.stock.dailySessions == nil {
+	if ch.lastStockUpdateTime == ch.stock.lastUpdateTime {
 		return
 	}
+	ch.lastStockUpdateTime = ch.stock.lastUpdateTime
 
 	ss, dColor := ch.stock.dailySessions, yellow
 	if ch.stoType == weekly {
 		ss, dColor = ch.stock.weeklySessions, purple
 	}
-	ch.stoLines = ch.createStochasticVAOs(ss, dColor)
+
+	ch.stoLines.close()
+	ch.stoLines = createStochasticVAOs(ss, dColor)
+
+	ch.labelLine.close()
 	ch.labelLine = createLineVAO(gray, gray)
+
+	ch.renderable = true
 }
 
-func (ch *chartStochastics) createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLines *vao) {
+func createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLines *vao) {
 	var vertices []float32
 	var colors []float32
 	var indices []uint16
@@ -95,6 +104,10 @@ func (ch *chartStochastics) createStochasticVAOs(ss []*modelTradingSession, dCol
 }
 
 func (ch *chartStochastics) render(r image.Rectangle) {
+	if !ch.renderable {
+		return
+	}
+
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
 	ch.stoLines.render()
@@ -107,7 +120,7 @@ func (ch *chartStochastics) render(r image.Rectangle) {
 }
 
 func (ch *chartStochastics) renderLabels(r image.Rectangle) (maxLabelWidth int) {
-	if ch.stock.dailySessions == nil {
+	if !ch.renderable {
 		return
 	}
 
@@ -136,9 +149,7 @@ func (ch *chartStochastics) stochasticLabelText(percent float32) (text string, s
 }
 
 func (ch *chartStochastics) close() {
-	if ch == nil {
-		return
-	}
+	ch.renderable = false
 	ch.stoLines.close()
 	ch.stoLines = nil
 }

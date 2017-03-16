@@ -189,7 +189,9 @@ func (v *view) update() {
 	v.model.Lock()
 	defer v.model.Unlock()
 
-	v.chart.update()
+	if v.chart != nil {
+		v.chart.update()
+	}
 }
 
 func (v *view) render(fudge float32) {
@@ -233,11 +235,15 @@ func (v *view) render(fudge float32) {
 
 	// Render the current symbol below the indices.
 	if v.chart == nil || v.chart.stock != v.model.currentStock {
-		v.chart.close()
+		if v.chart != nil {
+			v.chart.close()
+		}
 		v.chart = createChart(v.model.currentStock, v.symbolQuoteText, v.priceText)
 	}
 
-	v.chart.render(image.Rect(c.X, p, v.winSize.X-p, c.Y))
+	if v.chart != nil {
+		v.chart.render(image.Rect(c.X, p, v.winSize.X-p, c.Y))
+	}
 }
 
 func (v *view) dowPriceText() string {

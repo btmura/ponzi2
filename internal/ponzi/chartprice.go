@@ -4,20 +4,22 @@ import (
 	"image"
 	"math"
 	"strconv"
+	"time"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
 type chartPrices struct {
-	stock     *modelStock
-	labelText *dynamicText
-
-	minPrice    float32
-	maxPrice    float32
-	labelHeight int
-	stickLines  *vao
-	stickRects  *vao
-	labelLine   *vao
+	stock               *modelStock
+	lastStockUpdateTime time.Time
+	renderable          bool
+	labelText           *dynamicText
+	minPrice            float32
+	maxPrice            float32
+	labelHeight         int
+	stickLines          *vao
+	stickRects          *vao
+	labelLine           *vao
 }
 
 func createChartPrices(stock *modelStock, labelText *dynamicText) *chartPrices {
@@ -28,9 +30,10 @@ func createChartPrices(stock *modelStock, labelText *dynamicText) *chartPrices {
 }
 
 func (ch *chartPrices) update() {
-	if ch == nil || ch.stock.dailySessions == nil {
+	if ch.lastStockUpdateTime == ch.stock.lastUpdateTime {
 		return
 	}
+	ch.lastStockUpdateTime = ch.stock.lastUpdateTime
 
 	ch.minPrice, ch.maxPrice = math.MaxFloat32, 0
 	for _, s := range ch.stock.dailySessions {
@@ -42,30 +45,36 @@ func (ch *chartPrices) update() {
 		}
 	}
 
-	ch.stickLines, ch.stickRects = ch.createPriceVAOs()
+	ch.stickLines.close()
+	ch.stickRects.close()
+	ch.stickLines, ch.stickRects = createChartCandlestickVAOs(ch.stock.dailySessions, ch.minPrice, ch.maxPrice)
+
+	ch.labelLine.close()
 	ch.labelLine = createLineVAO(gray, gray)
 
 	_, labelSize := ch.priceLabelText(ch.maxPrice)
 	ch.labelHeight = labelSize.Y
+
+	ch.renderable = true
 }
 
-func (ch *chartPrices) createPriceVAOs() (stickLines, stickRects *vao) {
+func createChartCandlestickVAOs(ds []*modelTradingSession, minPrice, maxPrice float32) (stickLines, stickRects *vao) {
 	// Calculate vertices and indices for the candlesticks.
 	var vertices []float32
 	var colors []float32
 	var lineIndices []uint16
 	var triangleIndices []uint16
 
-	stickWidth := 2.0 / float32(len(ch.stock.dailySessions)) // (-1 to 1) on X-axis
+	stickWidth := 2.0 / float32(len(ds)) // (-1 to 1) on X-axis
 	leftX := -1.0 + stickWidth*0.1
 	midX := -1.0 + stickWidth*0.5
 	rightX := -1.0 + stickWidth*0.9
 
 	calcY := func(value float32) float32 {
-		return 2*(value-ch.minPrice)/(ch.maxPrice-ch.minPrice) - 1
+		return 2*(value-minPrice)/(maxPrice-minPrice) - 1
 	}
 
-	for i, s := range ch.stock.dailySessions {
+	for i, s := range ds {
 		// Figure out Y coordinates of the key levels.
 		lowY, highY, openY, closeY := calcY(s.low), calcY(s.high), calcY(s.open), calcY(s.close)
 
@@ -148,50 +157,53 @@ func (ch *chartPrices) createPriceVAOs() (stickLines, stickRects *vao) {
 }
 
 func (ch *chartPrices) render(r image.Rectangle) {
+	if !ch.renderable {
+		return
+	}
+
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
 	ch.stickLines.render()
 	ch.stickRects.render()
 
-	if ch.labelHeight != 0 {
-		labelPaddingY := ch.labelHeight / 2
-		y := r.Max.Y - labelPaddingY - ch.labelHeight/2
-		dy := ch.labelHeight + labelPaddingY*2
+	labelPaddingY := ch.labelHeight / 2
+	y := r.Max.Y - labelPaddingY - ch.labelHeight/2
+	dy := ch.labelHeight + labelPaddingY*2
 
-		for {
-			{
-				if y < r.Min.Y {
-					break
-				}
-
-				setModelMatrixRectangle(image.Rect(r.Min.X, y, r.Max.X, y))
-				ch.labelLine.render()
+	for {
+		{
+			if y < r.Min.Y {
+				break
 			}
-			y -= dy
+
+			setModelMatrixRectangle(image.Rect(r.Min.X, y, r.Max.X, y))
+			ch.labelLine.render()
 		}
+		y -= dy
 	}
 }
 
 func (ch *chartPrices) renderLabels(r image.Rectangle) (maxLabelWidth int) {
-	if ch.stock.dailySessions == nil {
+	if !ch.renderable {
 		return
 	}
 
-	_, labelSize := ch.priceLabelText(ch.maxPrice)
-	labelPaddingY := labelSize.Y / 2
+	labelPaddingY := ch.labelHeight / 2
 	pricePerPixel := (ch.maxPrice - ch.minPrice) / float32(r.Dy())
 
 	// Start at top and decrement one label with top and bottom padding.
 	c := r.Max
-	dc := image.Pt(0, labelPaddingY+labelSize.Y+labelPaddingY)
+	dc := image.Pt(0, labelPaddingY+ch.labelHeight+labelPaddingY)
 
 	// Start at top with max price and decrement change in price of a label with padding.
 	v := ch.maxPrice
 	dv := pricePerPixel * float32(dc.Y)
 
 	// Offets to the cursor and price value when drawing.
-	dcy := labelPaddingY + labelSize.Y   // Puts cursor at the baseline of the text.
-	dvy := labelPaddingY + labelSize.Y/2 // Uses value in the middle of the label.
+	dcy := labelPaddingY + ch.labelHeight   // Puts cursor at the baseline of the text.
+	dvy := labelPaddingY + ch.labelHeight/2 // Uses value in the middle of the label.
+
+	maxWidth := 0
 
 	for {
 		{
@@ -204,13 +216,17 @@ func (ch *chartPrices) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 			t, s := ch.priceLabelText(v)
 			c.X -= s.X
 			ch.labelText.render(t, c)
+
+			if maxWidth < s.X {
+				maxWidth = s.X
+			}
 		}
 
 		c = c.Sub(dc)
 		v -= dv
 	}
 
-	return labelSize.X
+	return maxWidth
 }
 
 func (ch *chartPrices) priceLabelText(v float32) (text string, size image.Point) {
@@ -219,10 +235,7 @@ func (ch *chartPrices) priceLabelText(v float32) (text string, size image.Point)
 }
 
 func (ch *chartPrices) close() {
-	if ch == nil {
-		return
-	}
-
+	ch.renderable = false
 	ch.stickLines.close()
 	ch.stickLines = nil
 	ch.stickRects.close()

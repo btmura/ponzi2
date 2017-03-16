@@ -37,10 +37,6 @@ func createChart(stock *modelStock, symbolQuoteText, labelText *dynamicText) *ch
 }
 
 func (ch *chart) update() {
-	if ch == nil {
-		return
-	}
-
 	ch.lines.update()
 	ch.prices.update()
 	ch.volume.update()
@@ -49,10 +45,6 @@ func (ch *chart) update() {
 }
 
 func (ch *chart) render(r image.Rectangle) {
-	if ch == nil {
-		return
-	}
-
 	subRects := ch.frame.render(r)
 	pr, vr, dr, wr := subRects[3], subRects[2], subRects[1], subRects[0]
 
@@ -90,9 +82,6 @@ func (ch *chart) render(r image.Rectangle) {
 }
 
 func (ch *chart) close() {
-	if ch == nil {
-		return
-	}
 	ch.frame.close()
 	ch.frame = nil
 	ch.prices.close()

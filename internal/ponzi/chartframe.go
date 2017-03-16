@@ -23,10 +23,6 @@ func createChartFrame(stock *modelStock, symbolQuoteText *dynamicText) *chartFra
 }
 
 func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
-	if ch == nil {
-		return nil
-	}
-
 	// Start rendering from the top left. Track position with point.
 	pt := image.Pt(r.Min.X, r.Max.Y)
 
@@ -69,9 +65,6 @@ func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
 }
 
 func (ch *chartFrame) close() {
-	if ch == nil {
-		return
-	}
 	ch.frameDivider.close()
 	ch.frameDivider = nil
 	ch.frameBorder.close()

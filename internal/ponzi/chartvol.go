@@ -4,17 +4,19 @@ import (
 	"fmt"
 	"image"
 	"strconv"
+	"time"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
 type chartVolume struct {
-	stock     *modelStock
-	labelText *dynamicText
-
-	maxVolume int
-	volRects  *vao
-	labelLine *vao
+	stock               *modelStock
+	lastStockUpdateTime time.Time
+	renderable          bool
+	labelText           *dynamicText
+	maxVolume           int
+	volRects            *vao
+	labelLine           *vao
 }
 
 func createChartVolume(stock *modelStock, labelText *dynamicText) *chartVolume {
@@ -25,9 +27,10 @@ func createChartVolume(stock *modelStock, labelText *dynamicText) *chartVolume {
 }
 
 func (ch *chartVolume) update() {
-	if ch == nil || ch.stock.dailySessions == nil {
+	if ch.lastStockUpdateTime == ch.stock.lastUpdateTime {
 		return
 	}
+	ch.lastStockUpdateTime = ch.stock.lastUpdateTime
 
 	ch.maxVolume = 0
 	for _, s := range ch.stock.dailySessions {
@@ -36,19 +39,29 @@ func (ch *chartVolume) update() {
 		}
 	}
 
+	ch.volRects.close()
+	ch.volRects = createChartVolumeBarsVAO(ch.stock.dailySessions, ch.maxVolume)
+
+	ch.labelLine.close()
+	ch.labelLine = createLineVAO(gray, gray)
+
+	ch.renderable = true
+}
+
+func createChartVolumeBarsVAO(ds []*modelTradingSession, maxVolume int) *vao {
 	var vertices []float32
 	var colors []float32
 	var indices []uint16
 
-	barWidth := 2.0 / float32(len(ch.stock.dailySessions)) // (-1 to 1) on X-axis
+	barWidth := 2.0 / float32(len(ds)) // (-1 to 1) on X-axis
 	leftX := -1.0 + barWidth*0.2
 	rightX := -1.0 + barWidth*0.8
 
 	calcY := func(value int) float32 {
-		return 2*float32(value)/float32(ch.maxVolume) - 1
+		return 2*float32(value)/float32(maxVolume) - 1
 	}
 
-	for i, s := range ch.stock.dailySessions {
+	for i, s := range ds {
 		topY := calcY(s.volume)
 		botY := calcY(0)
 
@@ -103,11 +116,14 @@ func (ch *chartVolume) update() {
 		rightX += barWidth
 	}
 
-	ch.volRects = createVAO(gl.TRIANGLES, vertices, colors, indices)
-	ch.labelLine = createLineVAO(gray, gray)
+	return createVAO(gl.TRIANGLES, vertices, colors, indices)
 }
 
 func (ch *chartVolume) render(r image.Rectangle) {
+	if !ch.renderable {
+		return
+	}
+
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
 	ch.volRects.render()
@@ -120,7 +136,7 @@ func (ch *chartVolume) render(r image.Rectangle) {
 }
 
 func (ch *chartVolume) renderLabels(r image.Rectangle) (maxLabelWidth int) {
-	if ch.stock.dailySessions == nil {
+	if !ch.renderable {
 		return
 	}
 
@@ -159,9 +175,7 @@ func (ch *chartVolume) volumeLabelText(v int) (text string, size image.Point) {
 }
 
 func (ch *chartVolume) close() {
-	if ch == nil {
-		return
-	}
+	ch.renderable = false
 	ch.volRects.close()
 	ch.volRects = nil
 	ch.labelLine.close()
