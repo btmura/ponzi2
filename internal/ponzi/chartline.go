@@ -2,13 +2,15 @@ package ponzi
 
 import (
 	"image"
+	"time"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
 type chartLines struct {
-	stock     *modelStock
-	weekLines *vao
+	stock               *modelStock
+	lastStockUpdateTime time.Time
+	weekLines           *vao
 }
 
 func createChartLines(stock *modelStock) *chartLines {
@@ -18,28 +20,42 @@ func createChartLines(stock *modelStock) *chartLines {
 }
 
 func (ch *chartLines) update() {
-	if ch == nil || ch.stock.dailySessions == nil {
+	if ch.lastStockUpdateTime == ch.stock.lastUpdateTime {
 		return
 	}
-
-	ch.weekLines = ch.createWeekLineVAO()
+	ch.lastStockUpdateTime = ch.stock.lastUpdateTime
+	ch.weekLines.close()
+	ch.weekLines = createChartWeekLinesVAO(ch.stock.dailySessions)
 }
 
-func (ch *chartLines) createWeekLineVAO() *vao {
+func (ch *chartLines) render(r image.Rectangle) {
+	if ch.weekLines != nil {
+		gl.Uniform1f(colorMixAmountLocation, 1)
+		setModelMatrixRectangle(r)
+		ch.weekLines.render()
+	}
+}
+
+func (ch *chartLines) close() {
+	ch.weekLines.close()
+	ch.weekLines = nil
+}
+
+func createChartWeekLinesVAO(ds []*modelTradingSession) *vao {
 	var vertices []float32
 	var colors []float32
 	var indices []uint16
 
 	// Amount to move on X-axis for one session.
-	dx := 2.0 / float32(len(ch.stock.dailySessions))
+	dx := 2.0 / float32(len(ds))
 
 	// Render lines whenever the week number changes.
-	for i, s := range ch.stock.dailySessions {
+	for i, s := range ds {
 		if i == 0 {
 			continue // Can't check previous week.
 		}
 
-		_, pwk := ch.stock.dailySessions[i-1].date.ISOWeek()
+		_, pwk := ds[i-1].date.ISOWeek()
 		_, wk := s.date.ISOWeek()
 		if pwk == wk {
 			continue
@@ -61,19 +77,4 @@ func (ch *chartLines) createWeekLineVAO() *vao {
 	}
 
 	return createVAO(gl.LINES, vertices, colors, indices)
-}
-
-func (ch *chartLines) render(r image.Rectangle) {
-	gl.Uniform1f(colorMixAmountLocation, 1)
-	setModelMatrixRectangle(r)
-	ch.weekLines.render()
-}
-
-func (ch *chartLines) close() {
-	if ch == nil {
-		return
-	}
-
-	ch.weekLines.close()
-	ch.weekLines = nil
 }

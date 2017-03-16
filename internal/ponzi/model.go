@@ -39,6 +39,7 @@ type modelStock struct {
 	quote          *modelQuote
 	dailySessions  []*modelTradingSession
 	weeklySessions []*modelTradingSession
+	lastUpdateTime time.Time
 }
 
 type modelTradingSession struct {
@@ -136,6 +137,7 @@ func (m *model) refresh() error {
 	if s != "" && s == m.currentStock.symbol {
 		updateQuote(m.currentStock.quote)
 		m.currentStock.dailySessions, m.currentStock.weeklySessions = convertSessions(hist.sessions)
+		m.currentStock.lastUpdateTime = time.Now()
 	}
 	m.Unlock()
 
