@@ -215,7 +215,7 @@ func (ch *chartPrices) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 			v := v - pricePerPixel*float32(dvy)
 			t, s := ch.priceLabelText(v)
 			c.X -= s.X
-			ch.labelText.render(t, c)
+			ch.labelText.render(t, c, white)
 
 			if maxWidth < s.X {
 				maxWidth = s.X

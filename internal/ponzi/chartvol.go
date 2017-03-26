@@ -146,7 +146,7 @@ func (ch *chartVolume) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 	render := func(t string, s image.Point, yLocPercent float32) {
 		x := r.Max.X - s.X
 		y := r.Min.Y + int(float32(r.Dy())*yLocPercent) - s.Y/2
-		ch.labelText.render(t, image.Pt(x, y))
+		ch.labelText.render(t, image.Pt(x, y), white)
 	}
 
 	render(t1, s1, .7)

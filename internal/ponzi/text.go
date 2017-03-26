@@ -7,6 +7,8 @@ import (
 	"image/png"
 	"os"
 
+	"image/color"
+
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/golang/freetype/truetype"
 	"github.com/golang/glog"
@@ -67,12 +69,13 @@ type staticText struct {
 	size    image.Point
 }
 
-func (t *staticText) render(c image.Point) image.Point {
+func (t *staticText) render(c image.Point, color [3]float32) image.Point {
 	m := newScaleMatrix(float32(t.size.X), float32(t.size.Y), 1)
 	m = m.mult(newTranslationMatrix(float32(c.X), float32(c.Y), 0))
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 
 	gl.BindTexture(gl.TEXTURE_2D, t.texture)
+	gl.Uniform3fv(textColorLocation, 1, &color[0])
 	gl.Uniform1f(colorMixAmountLocation, 0)
 
 	t.mesh.drawElements()
@@ -96,11 +99,11 @@ func (t *dynamicText) measure(text string) image.Point {
 	return s
 }
 
-func (t *dynamicText) render(text string, c image.Point) image.Point {
+func (t *dynamicText) render(text string, c image.Point, color [3]float32) image.Point {
 	w := 0
 	for _, r := range text {
 		if st := t.runeTextMap[r]; st != nil {
-			st.render(c)
+			st.render(c, color)
 			c.X += st.size.X
 			w += st.size.X
 		}
@@ -112,7 +115,7 @@ func createTextImage(face font.Face, text string) *image.RGBA {
 	w := font.MeasureString(face, text)
 	m := face.Metrics() // Used for height and descent.
 
-	fg, bg := image.White, image.Transparent
+	fg, bg := image.NewUniform(color.RGBA{255, 0, 0, 255}), image.Transparent
 
 	rgba := image.NewRGBA(image.Rect(0, 0, w.Round(), m.Height.Round())) // (MinX, MinY), (MaxX, MaxY)
 	draw.Draw(rgba, rgba.Bounds(), bg, image.ZP, draw.Src)

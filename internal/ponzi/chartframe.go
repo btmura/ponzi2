@@ -44,8 +44,8 @@ func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
 	{
 		c := pt
 		c.X += pad
-		c = c.Add(ch.symbolQuoteText.render(ch.stock.symbol, c))
-		c = c.Add(ch.symbolQuoteText.render(formatQuote(ch.stock.quote), c))
+		c = c.Add(ch.symbolQuoteText.render(ch.stock.symbol, c, white))
+		c = c.Add(ch.symbolQuoteText.render(formatQuote(ch.stock.quote), c, quoteColor(ch.stock.quote)))
 	}
 	pt.Y -= pad
 

@@ -31,6 +31,7 @@ const (
 
 	textureLocation
 	colorMixAmountLocation
+	textColorLocation
 )
 
 var (
@@ -205,7 +206,7 @@ func (v *view) render(fudge float32) {
 	if v.model.inputSymbol != "" {
 		s := v.inputSymbolText.measure(v.model.inputSymbol)
 		c := v.winSize.Sub(s).Div(2)
-		v.inputSymbolText.render(v.model.inputSymbol, c)
+		v.inputSymbolText.render(v.model.inputSymbol, c, white)
 	}
 
 	const p = 10 // padding
@@ -216,17 +217,21 @@ func (v *view) render(fudge float32) {
 
 	// Render major indices on one line.
 	{
+		render := func(c image.Point, q *modelQuote) image.Point {
+			return v.smallText.render(formatQuote(q), c, quoteColor(q))
+		}
+
 		c := c
-		c = c.Add(v.dowText.render(c))
-		c = c.Add(v.smallText.render(v.dowPriceText(), c))
+		c = c.Add(v.dowText.render(c, white))
+		c = c.Add(render(c, v.model.dow))
 		c.X += p
 
-		c = c.Add(v.sapText.render(c))
-		c = c.Add(v.smallText.render(v.sapPriceText(), c))
+		c = c.Add(v.sapText.render(c, white))
+		c = c.Add(render(c, v.model.sap))
 		c.X += p
 
-		c = c.Add(v.nasdaqText.render(c))
-		c = c.Add(v.smallText.render(v.nasdaqPriceText(), c))
+		c = c.Add(v.nasdaqText.render(c, white))
+		c = c.Add(render(c, v.model.nasdaq))
 		c.X += p
 	}
 
@@ -246,23 +251,22 @@ func (v *view) render(fudge float32) {
 	}
 }
 
-func (v *view) dowPriceText() string {
-	return formatQuote(v.model.dow)
-}
-
-func (v *view) sapPriceText() string {
-	return formatQuote(v.model.sap)
-}
-
-func (v *view) nasdaqPriceText() string {
-	return formatQuote(v.model.nasdaq)
-}
-
 func formatQuote(q *modelQuote) string {
 	if q.price != 0 {
 		return fmt.Sprintf(" %.2f %+5.2f %+5.2f%% ", q.price, q.change, q.percentChange*100.0)
 	}
 	return ""
+}
+
+func quoteColor(q *modelQuote) [3]float32 {
+	switch {
+	case q.percentChange > 0:
+		return green
+
+	case q.percentChange < 0:
+		return red
+	}
+	return white
 }
 
 func (v *view) handleKey(key glfw.Key, action glfw.Action) {
