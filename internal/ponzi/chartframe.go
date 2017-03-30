@@ -47,7 +47,6 @@ func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
 		c = c.Add(ch.symbolQuoteText.render(ch.stock.symbol, c, white))
 		c = c.Add(ch.symbolQuoteText.render(formatQuote(ch.stock.quote), c, quoteColor(ch.stock.quote)))
 	}
-	pt.Y -= pad
 
 	//
 	// Render the dividers between the sections.

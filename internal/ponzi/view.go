@@ -74,7 +74,8 @@ type view struct {
 	sapText    *staticText
 	nasdaqText *staticText
 
-	chart *chart
+	chart     *chart
+	miniChart *miniChart
 
 	smallText       *dynamicText
 	symbolQuoteText *dynamicText
@@ -193,6 +194,9 @@ func (v *view) update() {
 	if v.chart != nil {
 		v.chart.update()
 	}
+	if v.miniChart != nil {
+		v.miniChart.update()
+	}
 }
 
 func (v *view) render(fudge float32) {
@@ -246,8 +250,21 @@ func (v *view) render(fudge float32) {
 		v.chart = createChart(v.model.currentStock, v.symbolQuoteText, v.priceText)
 	}
 
+	if v.miniChart == nil || v.miniChart.stock != v.model.currentStock {
+		if v.miniChart != nil {
+			v.miniChart.close()
+		}
+		v.miniChart = createMiniChart(v.model.currentStock, v.priceText)
+	}
+
+	ms := image.Pt(150, 100)
+
 	if v.chart != nil {
-		v.chart.render(image.Rect(c.X, p, v.winSize.X-p, c.Y))
+		v.chart.render(image.Rect(c.X+ms.X+p, p, v.winSize.X-p, c.Y))
+	}
+
+	if v.miniChart != nil {
+		v.miniChart.render(image.Rect(c.X, c.Y-ms.Y, c.X+ms.X, c.Y))
 	}
 }
 
@@ -335,7 +352,7 @@ func sliceRectangle(r image.Rectangle, percentages ...float32) []image.Rectangle
 	var rects []image.Rectangle
 	y := r.Min.Y
 	for _, p := range percentages {
-		dy := int(float32(r.Max.Y) * p)
+		dy := int(float32(r.Dy()) * p)
 		rects = append(rects, image.Rect(r.Min.X, y, r.Max.X, y+dy))
 		y += dy
 	}
