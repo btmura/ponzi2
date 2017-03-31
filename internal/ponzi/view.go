@@ -154,7 +154,7 @@ func createView(model *model) (*view, error) {
 		}
 	}
 
-	small, err := newTextFactory(orthoPlaneMesh, goregular.TTF, 14)
+	small, err := newTextFactory(orthoPlaneMesh, goregular.TTF, 12)
 	if err != nil {
 		return nil, err
 	}
@@ -271,6 +271,13 @@ func (v *view) render(fudge float32) {
 func formatQuote(q *modelQuote) string {
 	if q.price != 0 {
 		return fmt.Sprintf(" %.2f %+5.2f %+5.2f%% ", q.price, q.change, q.percentChange*100.0)
+	}
+	return ""
+}
+
+func shortFormatQuote(q *modelQuote) string {
+	if q.price != 0 {
+		return fmt.Sprintf(" %.2f %+5.2f%% ", q.price, q.percentChange*100.0)
 	}
 	return ""
 }
