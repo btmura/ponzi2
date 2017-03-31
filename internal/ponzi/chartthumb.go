@@ -6,7 +6,7 @@ import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
-type miniChart struct {
+type chartThumbnail struct {
 	stock             *modelStock
 	stockQuoteText    *dynamicText
 	lines             *chartLines
@@ -16,8 +16,8 @@ type miniChart struct {
 	weeklyStochastics *chartStochastics
 }
 
-func createMiniChart(stock *modelStock, stockQuoteText *dynamicText) *miniChart {
-	return &miniChart{
+func createchartThumbnail(stock *modelStock, stockQuoteText *dynamicText) *chartThumbnail {
+	return &chartThumbnail{
 		stock:             stock,
 		stockQuoteText:    stockQuoteText,
 		lines:             createChartLines(stock),
@@ -28,13 +28,13 @@ func createMiniChart(stock *modelStock, stockQuoteText *dynamicText) *miniChart 
 	}
 }
 
-func (mc *miniChart) update() {
-	mc.lines.update()
-	mc.dailyStochastics.update()
-	mc.weeklyStochastics.update()
+func (ct *chartThumbnail) update() {
+	ct.lines.update()
+	ct.dailyStochastics.update()
+	ct.weeklyStochastics.update()
 }
 
-func (mc *miniChart) render(r image.Rectangle) {
+func (ct *chartThumbnail) render(r image.Rectangle) {
 	// Start rendering from the top left. Track position with point.
 	pt := image.Pt(r.Min.X, r.Max.Y)
 
@@ -44,20 +44,20 @@ func (mc *miniChart) render(r image.Rectangle) {
 
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
-	mc.frameBorder.render()
+	ct.frameBorder.render()
 
 	//
 	// Render the symbol and its quote.
 	//
 
 	const pad = 5
-	s := mc.stockQuoteText.measure(mc.stock.symbol)
+	s := ct.stockQuoteText.measure(ct.stock.symbol)
 	pt.Y -= pad + s.Y
 	{
 		pt := pt
 		pt.X += pad
-		pt = pt.Add(mc.stockQuoteText.render(mc.stock.symbol, pt, white))
-		pt = pt.Add(mc.stockQuoteText.render(shortFormatQuote(mc.stock.quote), pt, quoteColor(mc.stock.quote)))
+		pt = pt.Add(ct.stockQuoteText.render(ct.stock.symbol, pt, white))
+		pt = pt.Add(ct.stockQuoteText.render(shortFormatQuote(ct.stock.quote), pt, quoteColor(ct.stock.quote)))
 	}
 
 	//
@@ -70,28 +70,28 @@ func (mc *miniChart) render(r image.Rectangle) {
 	rects := sliceRectangle(r, 0.5, 0.5)
 	for _, r := range rects {
 		setModelMatrixRectangle(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
-		mc.frameDivider.render()
+		ct.frameDivider.render()
 	}
 
 	//
 	// Render the graphs.
 	//
 
-	mc.dailyStochastics.render(rects[1].Inset(pad))
-	mc.weeklyStochastics.render(rects[0].Inset(pad))
-	mc.lines.render(rects[1].Inset(pad))
-	mc.lines.render(rects[0].Inset(pad))
+	ct.dailyStochastics.render(rects[1].Inset(pad))
+	ct.weeklyStochastics.render(rects[0].Inset(pad))
+	ct.lines.render(rects[1].Inset(pad))
+	ct.lines.render(rects[0].Inset(pad))
 }
 
-func (mc *miniChart) close() {
-	mc.lines.close()
-	mc.lines = nil
-	mc.frameBorder.close()
-	mc.frameBorder = nil
-	mc.frameDivider.close()
-	mc.frameDivider = nil
-	mc.dailyStochastics.close()
-	mc.dailyStochastics = nil
-	mc.weeklyStochastics.close()
-	mc.weeklyStochastics = nil
+func (ct *chartThumbnail) close() {
+	ct.lines.close()
+	ct.lines = nil
+	ct.frameBorder.close()
+	ct.frameBorder = nil
+	ct.frameDivider.close()
+	ct.frameDivider = nil
+	ct.dailyStochastics.close()
+	ct.dailyStochastics = nil
+	ct.weeklyStochastics.close()
+	ct.weeklyStochastics = nil
 }

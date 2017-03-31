@@ -74,8 +74,8 @@ type view struct {
 	sapText    *staticText
 	nasdaqText *staticText
 
-	chart     *chart
-	miniChart *miniChart
+	chart          *chart
+	chartThumbnail *chartThumbnail
 
 	smallText       *dynamicText
 	symbolQuoteText *dynamicText
@@ -194,8 +194,8 @@ func (v *view) update() {
 	if v.chart != nil {
 		v.chart.update()
 	}
-	if v.miniChart != nil {
-		v.miniChart.update()
+	if v.chartThumbnail != nil {
+		v.chartThumbnail.update()
 	}
 }
 
@@ -250,11 +250,11 @@ func (v *view) render(fudge float32) {
 		v.chart = createChart(v.model.currentStock, v.symbolQuoteText, v.priceText)
 	}
 
-	if v.miniChart == nil || v.miniChart.stock != v.model.currentStock {
-		if v.miniChart != nil {
-			v.miniChart.close()
+	if v.chartThumbnail == nil || v.chartThumbnail.stock != v.model.currentStock {
+		if v.chartThumbnail != nil {
+			v.chartThumbnail.close()
 		}
-		v.miniChart = createMiniChart(v.model.currentStock, v.priceText)
+		v.chartThumbnail = createchartThumbnail(v.model.currentStock, v.priceText)
 	}
 
 	ms := image.Pt(150, 100)
@@ -263,8 +263,8 @@ func (v *view) render(fudge float32) {
 		v.chart.render(image.Rect(c.X+ms.X+p, p, v.winSize.X-p, c.Y))
 	}
 
-	if v.miniChart != nil {
-		v.miniChart.render(image.Rect(c.X, c.Y-ms.Y, c.X+ms.X, c.Y))
+	if v.chartThumbnail != nil {
+		v.chartThumbnail.render(image.Rect(c.X, c.Y-ms.Y, c.X+ms.X, c.Y))
 	}
 }
 
