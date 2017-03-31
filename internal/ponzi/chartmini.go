@@ -9,6 +9,7 @@ import (
 type miniChart struct {
 	stock             *modelStock
 	stockQuoteText    *dynamicText
+	lines             *chartLines
 	frameBorder       *vao
 	frameDivider      *vao
 	dailyStochastics  *chartStochastics
@@ -19,6 +20,7 @@ func createMiniChart(stock *modelStock, stockQuoteText *dynamicText) *miniChart 
 	return &miniChart{
 		stock:             stock,
 		stockQuoteText:    stockQuoteText,
+		lines:             createChartLines(stock),
 		frameBorder:       createStrokedRectVAO(white, white, white, white),
 		frameDivider:      createLineVAO(white, white),
 		dailyStochastics:  createChartStochastics(stock, stockQuoteText, daily),
@@ -27,6 +29,7 @@ func createMiniChart(stock *modelStock, stockQuoteText *dynamicText) *miniChart 
 }
 
 func (mc *miniChart) update() {
+	mc.lines.update()
 	mc.dailyStochastics.update()
 	mc.weeklyStochastics.update()
 }
@@ -76,9 +79,13 @@ func (mc *miniChart) render(r image.Rectangle) {
 
 	mc.dailyStochastics.render(rects[1].Inset(pad))
 	mc.weeklyStochastics.render(rects[0].Inset(pad))
+	mc.lines.render(rects[1].Inset(pad))
+	mc.lines.render(rects[0].Inset(pad))
 }
 
 func (mc *miniChart) close() {
+	mc.lines.close()
+	mc.lines = nil
 	mc.frameBorder.close()
 	mc.frameBorder = nil
 	mc.frameDivider.close()
