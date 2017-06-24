@@ -1,4 +1,4 @@
-package ponzi
+package gl2
 
 import (
 	"fmt"
@@ -9,13 +9,14 @@ import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
-func createProgram(vertexShaderSource, fragmentShaderSource string) (uint32, error) {
-	vs, err := createShader(vertexShaderSource, gl.VERTEX_SHADER)
+// CreateProgram creates a program from vertex and fragment shader source code.
+func CreateProgram(vertexShaderSrc, fragmentShaderSrc string) (uint32, error) {
+	vs, err := createShader(vertexShaderSrc, gl.VERTEX_SHADER)
 	if err != nil {
 		return 0, err
 	}
 
-	fs, err := createShader(fragmentShaderSource, gl.FRAGMENT_SHADER)
+	fs, err := createShader(fragmentShaderSrc, gl.FRAGMENT_SHADER)
 	if err != nil {
 		return 0, err
 	}
@@ -65,7 +66,8 @@ func createShader(shaderSource string, shaderType uint32) (uint32, error) {
 	return sh, nil
 }
 
-func createTexture(rgba *image.RGBA) uint32 {
+// CreateTexture creates a texture from an image.
+func CreateTexture(rgba *image.RGBA) uint32 {
 	var tex uint32
 	gl.GenTextures(1, &tex)
 	gl.BindTexture(gl.TEXTURE_2D, tex)
@@ -82,7 +84,8 @@ func createTexture(rgba *image.RGBA) uint32 {
 	return tex
 }
 
-func createArrayBuffer(data []float32) uint32 {
+// CreateArrayBuffer creates an array buffer from a slice of floats.
+func CreateArrayBuffer(data []float32) uint32 {
 	var name uint32
 	gl.GenBuffers(1, &name)
 	gl.BindBuffer(gl.ARRAY_BUFFER, name)
@@ -91,7 +94,8 @@ func createArrayBuffer(data []float32) uint32 {
 	return name
 }
 
-func createElementArrayBuffer(data []uint16) uint32 {
+// CreateElementArrayBuffer creates an element array buffer from a slice of floats.
+func CreateElementArrayBuffer(data []uint16) uint32 {
 	var name uint32
 	gl.GenBuffers(1, &name)
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, name)

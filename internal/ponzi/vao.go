@@ -1,6 +1,7 @@
 package ponzi
 
 import (
+	"github.com/btmura/ponzi2/internal/gl2"
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
@@ -57,9 +58,9 @@ func createVAO(mode uint32, vertices, colors []float32, indices []uint16) *vao {
 		return nil // Can't create empty buffer objects. Bail out if nothing to render.
 	}
 
-	vbo := createArrayBuffer(vertices)
-	cbo := createArrayBuffer(colors)
-	ibo := createElementArrayBuffer(indices)
+	vbo := gl2.CreateArrayBuffer(vertices)
+	cbo := gl2.CreateArrayBuffer(colors)
+	ibo := gl2.CreateElementArrayBuffer(indices)
 
 	var array uint32
 	gl.GenVertexArrays(1, &array)

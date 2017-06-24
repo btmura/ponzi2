@@ -5,6 +5,7 @@ import (
 	"errors"
 	"image"
 
+	"github.com/btmura/ponzi2/internal/gl2"
 	"github.com/btmura/ponzi2/internal/obj"
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
@@ -45,7 +46,7 @@ func createButtonRenderer() (*buttonRenderer, error) {
 		return nil, err
 	}
 
-	tex := createTexture(img)
+	tex := gl2.CreateTexture(img)
 
 	return &buttonRenderer{
 		mesh:    bm,

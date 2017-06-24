@@ -1,6 +1,7 @@
 package ponzi
 
 import (
+	"github.com/btmura/ponzi2/internal/gl2"
 	"github.com/btmura/ponzi2/internal/obj"
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/golang/glog"
@@ -73,16 +74,16 @@ func createMeshes(objs []*obj.Object) []*mesh {
 			id:    o.ID,
 			count: int32(len(indices)),
 		})
-		iboNames = append(iboNames, createElementArrayBuffer(indices))
+		iboNames = append(iboNames, gl2.CreateElementArrayBuffer(indices))
 	}
 
 	glog.Infof("vertices: %d", len(vertexTable))
 	glog.Infof("normals: %d", len(normalTable))
 	glog.Infof("texCoords: %d", len(texCoordTable))
 
-	vbo := createArrayBuffer(vertices)
-	nbo := createArrayBuffer(normals)
-	tbo := createArrayBuffer(texCoords)
+	vbo := gl2.CreateArrayBuffer(vertices)
+	nbo := gl2.CreateArrayBuffer(normals)
+	tbo := gl2.CreateArrayBuffer(texCoords)
 
 	for i, m := range meshes {
 		gl.GenVertexArrays(1, &m.vao)

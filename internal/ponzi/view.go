@@ -8,6 +8,7 @@ import (
 	"math"
 	"unicode"
 
+	"github.com/btmura/ponzi2/internal/gl2"
 	"github.com/btmura/ponzi2/internal/obj"
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -113,7 +114,7 @@ func createView(model *model) (*view, error) {
 
 	// Create shaders and link them into a program.
 
-	p, err := createProgram(string(MustAsset("shader.vert")), string(MustAsset("shader.frag")))
+	p, err := gl2.CreateProgram(string(MustAsset("shader.vert")), string(MustAsset("shader.frag")))
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +141,7 @@ func createView(model *model) (*view, error) {
 		return nil, err
 	}
 
-	texture := createTexture(textureImage)
+	texture := gl2.CreateTexture(textureImage)
 
 	// Load meshes and create vertex array objects.
 

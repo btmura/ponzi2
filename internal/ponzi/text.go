@@ -9,6 +9,7 @@ import (
 
 	"image/color"
 
+	"github.com/btmura/ponzi2/internal/gl2"
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/golang/freetype/truetype"
 	"github.com/golang/glog"
@@ -47,7 +48,7 @@ func (f *textFactory) createStaticText(text string) *staticText {
 	rgba := createTextImage(f.face, text)
 	return &staticText{
 		mesh:    f.mesh,
-		texture: createTexture(rgba),
+		texture: gl2.CreateTexture(rgba),
 		size:    rgba.Bounds().Size(),
 	}
 }
