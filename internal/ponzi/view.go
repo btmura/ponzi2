@@ -8,6 +8,7 @@ import (
 	"math"
 	"unicode"
 
+	"github.com/btmura/ponzi2/internal/obj"
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/golang/glog"
@@ -143,7 +144,7 @@ func createView(model *model) (*view, error) {
 
 	// Load meshes and create vertex array objects.
 
-	objs, err := decodeObjs(bytes.NewReader(MustAsset("meshes.obj")))
+	objs, err := obj.Decode(bytes.NewReader(MustAsset("meshes.obj")))
 	if err != nil {
 		return nil, err
 	}

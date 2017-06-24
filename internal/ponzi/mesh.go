@@ -1,6 +1,7 @@
 package ponzi
 
 import (
+	"github.com/btmura/ponzi2/internal/obj"
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/golang/glog"
 )
@@ -18,50 +19,50 @@ type mesh struct {
 }
 
 // createMeshes creates a slice of meshes from a slice of objs.
-func createMeshes(objs []*obj) []*mesh {
-	var vertexTable []*objVertex
-	var normalTable []*objNormal
-	var texCoordTable []*objTexCoord
+func createMeshes(objs []*obj.Object) []*mesh {
+	var vertexTable []*obj.Vertex
+	var normalTable []*obj.Normal
+	var texCoordTable []*obj.TexCoord
 
 	var vertices []float32
 	var normals []float32
 	var texCoords []float32
 
-	elementIndexMap := map[objFaceElement]uint16{}
+	elementIndexMap := map[obj.FaceElement]uint16{}
 	var nextIndex uint16
 
 	var meshes []*mesh
 	var iboNames []uint32
 
 	for _, o := range objs {
-		for _, v := range o.vertices {
+		for _, v := range o.Vertices {
 			vertexTable = append(vertexTable, v)
 		}
-		for _, n := range o.normals {
+		for _, n := range o.Normals {
 			normalTable = append(normalTable, n)
 		}
-		for _, tc := range o.texCoords {
+		for _, tc := range o.TexCoords {
 			texCoordTable = append(texCoordTable, tc)
 		}
 
 		var indices []uint16
-		for _, f := range o.faces {
+		for _, f := range o.Faces {
 			for _, e := range f {
 				if _, exists := elementIndexMap[e]; !exists {
 					elementIndexMap[e] = nextIndex
 					nextIndex++
 
-					v := vertexTable[e.vertexIndex-1]
-					vertices = append(vertices, v.x, v.y, v.z)
+					v := vertexTable[e.VertexIndex-1]
+					vertices = append(vertices, v.X, v.Y, v.Z)
 
-					n := normalTable[e.normalIndex-1]
-					normals = append(normals, n.x, n.y, n.z)
+					n := normalTable[e.NormalIndex-1]
+					normals = append(normals, n.X, n.Y, n.Z)
 
 					// Flip the y-axis to convert from OBJ to OpenGL.
 					// OpenGL considers the origin to be lower left.
 					// OBJ considers the origin to be upper left.
-					tc := texCoordTable[e.texCoordIndex-1]
-					texCoords = append(texCoords, tc.s, 1.0-tc.t)
+					tc := texCoordTable[e.TexCoordIndex-1]
+					texCoords = append(texCoords, tc.S, 1.0-tc.T)
 				}
 
 				indices = append(indices, elementIndexMap[e])
@@ -69,7 +70,7 @@ func createMeshes(objs []*obj) []*mesh {
 		}
 
 		meshes = append(meshes, &mesh{
-			id:    o.id,
+			id:    o.ID,
 			count: int32(len(indices)),
 		})
 		iboNames = append(iboNames, createElementArrayBuffer(indices))

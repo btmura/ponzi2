@@ -5,6 +5,7 @@ import (
 	"errors"
 	"image"
 
+	"github.com/btmura/ponzi2/internal/obj"
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
@@ -23,7 +24,7 @@ type buttonRenderer struct {
 }
 
 func createButtonRenderer() (*buttonRenderer, error) {
-	objs, err := decodeObjs(bytes.NewReader(MustAsset("meshes.obj")))
+	objs, err := obj.Decode(bytes.NewReader(MustAsset("meshes.obj")))
 	if err != nil {
 		return nil, err
 	}

@@ -1,4 +1,4 @@
-package ponzi
+package obj
 
 import (
 	"errors"
@@ -10,11 +10,11 @@ import (
 	"github.com/kylelemons/godebug/pretty"
 )
 
-func TestDecodeObjs(t *testing.T) {
+func TestDecode(t *testing.T) {
 	for _, tt := range []struct {
 		desc    string
 		input   string
-		want    []*obj
+		want    []*Object
 		wantErr error
 	}{
 		{
@@ -68,10 +68,10 @@ func TestDecodeObjs(t *testing.T) {
 				f 4/3/5 3/4/5 8/2/5
 				f 5/4/6 1/1/6 8/3/6
 			`,
-			want: []*obj{
+			want: []*Object{
 				{
-					id: "Cube",
-					vertices: []*objVertex{
+					ID: "Cube",
+					Vertices: []*Vertex{
 						{1, -1, -1},
 						{1, -1, 1},
 						{-1, -1, 1},
@@ -81,13 +81,13 @@ func TestDecodeObjs(t *testing.T) {
 						{-1, 1, 1},
 						{-1, 1, -1},
 					},
-					texCoords: []*objTexCoord{
+					TexCoords: []*TexCoord{
 						{0, 0},
 						{1, 0},
 						{1, 1},
 						{0, 1},
 					},
-					normals: []*objNormal{
+					Normals: []*Normal{
 						{0, -1, 0},
 						{0, 1, 0},
 						{1, 0, 0},
@@ -95,7 +95,7 @@ func TestDecodeObjs(t *testing.T) {
 						{-1, 0, 0},
 						{0, 0, -1},
 					},
-					faces: []*objFace{
+					Faces: []*Face{
 						{{2, 1, 1}, {3, 2, 1}, {4, 3, 1}},
 						{{8, 1, 2}, {7, 2, 2}, {6, 3, 2}},
 						{{5, 1, 3}, {6, 2, 3}, {2, 3, 3}},
@@ -134,29 +134,29 @@ func TestDecodeObjs(t *testing.T) {
 				f 6 8 7
 				f 5 6 7
 			`,
-			want: []*obj{
+			want: []*Object{
 				{
-					id: "Plane.001",
-					vertices: []*objVertex{
+					ID: "Plane.001",
+					Vertices: []*Vertex{
 						{0.652447, 0.140019, -0.450452},
 						{2.652447, 0.140019, -0.450452},
 						{0.652447, 0.140019, -2.450452},
 						{2.652447, 0.140019, -2.450452},
 					},
-					faces: []*objFace{
+					Faces: []*Face{
 						{{2, 0, 0}, {4, 0, 0}, {3, 0, 0}},
 						{{1, 0, 0}, {2, 0, 0}, {3, 0, 0}},
 					},
 				},
 				{
-					id: "Plane",
-					vertices: []*objVertex{
+					ID: "Plane",
+					Vertices: []*Vertex{
 						{-1.079860, 0.672774, 2.814899},
 						{0.920140, 0.672774, 2.814899},
 						{-1.079860, 0.672774, 0.814900},
 						{0.920140, 0.672774, 0.814900},
 					},
-					faces: []*objFace{
+					Faces: []*Face{
 						{{6, 0, 0}, {8, 0, 0}, {7, 0, 0}},
 						{{5, 0, 0}, {6, 0, 0}, {7, 0, 0}},
 					},
@@ -164,7 +164,7 @@ func TestDecodeObjs(t *testing.T) {
 			},
 		},
 	} {
-		got, gotErr := decodeObjs(strings.NewReader(tt.input))
+		got, gotErr := Decode(strings.NewReader(tt.input))
 		if !reflect.DeepEqual(got, tt.want) || !errorContains(gotErr, tt.wantErr) {
 			t.Errorf("[%s] decodeObjs(%q) = (%v, %v), want (%v, %v)", tt.desc, tt.input, pp(got), gotErr, pp(tt.want), tt.wantErr)
 		}
