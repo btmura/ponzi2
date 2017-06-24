@@ -8,12 +8,14 @@ import (
 	"math"
 	"unicode"
 
-	"github.com/btmura/ponzi2/internal/gl2"
-	"github.com/btmura/ponzi2/internal/obj"
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/golang/glog"
 	"golang.org/x/image/font/gofont/goregular"
+
+	"github.com/btmura/ponzi2/internal/gl2"
+	"github.com/btmura/ponzi2/internal/math2"
+	"github.com/btmura/ponzi2/internal/obj"
 )
 
 // Locations for the vertex and fragment shaders.
@@ -37,9 +39,9 @@ const (
 )
 
 var (
-	cameraPosition = vector3{0, 5, 10}
-	targetPosition = vector3{}
-	up             = vector3{0, 1, 0}
+	cameraPosition = math2.Vector3{X: 0, Y: 5, Z: 10}
+	targetPosition = math2.Vector3{}
+	up             = math2.Vector3{X: 0, Y: 1, Z: 0}
 
 	ambientLightColor     = [3]float32{1, 1, 1}
 	directionalLightColor = [3]float32{1, 1, 1}
@@ -86,9 +88,9 @@ type view struct {
 
 	buttonRenderer *buttonRenderer
 
-	viewMatrix        matrix4
-	perspectiveMatrix matrix4
-	orthoMatrix       matrix4
+	viewMatrix        math2.Matrix4
+	perspectiveMatrix math2.Matrix4
+	orthoMatrix       math2.Matrix4
 
 	winSize image.Point
 }
@@ -123,11 +125,11 @@ func createView(model *model) (*view, error) {
 
 	// Setup the vertex shader uniforms.
 
-	mm := newScaleMatrix(1, 1, 1)
+	mm := math2.NewScaleMatrix(1, 1, 1)
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &mm[0])
 
-	vm := newViewMatrix(cameraPosition, targetPosition, up)
-	nm := vm.inverse().transpose()
+	vm := math2.NewViewMatrix(cameraPosition, targetPosition, up)
+	nm := vm.Inverse().Transpose()
 	gl.UniformMatrix4fv(normalMatrixLocation, 1, false, &nm[0])
 
 	gl.Uniform3fv(ambientLightColorLocation, 1, &ambientLightColor[0])
@@ -342,10 +344,10 @@ func (v *view) resize(newSize image.Point) {
 	fw, fh := float32(v.winSize.X), float32(v.winSize.Y)
 	aspect := fw / fh
 	fovRadians := float32(math.Pi) / 3
-	v.perspectiveMatrix = v.viewMatrix.mult(newPerspectiveMatrix(fovRadians, aspect, 1, 2000))
+	v.perspectiveMatrix = v.viewMatrix.Mult(math2.NewPerspectiveMatrix(fovRadians, aspect, 1, 2000))
 
 	// Calculate the new ortho projection view matrix.
-	v.orthoMatrix = newOrthoMatrix(fw, fh, fw /* use width as depth */)
+	v.orthoMatrix = math2.NewOrthoMatrix(fw, fh, fw /* use width as depth */)
 }
 
 func createImage(data []byte) (*image.RGBA, error) {
@@ -360,8 +362,8 @@ func createImage(data []byte) (*image.RGBA, error) {
 }
 
 func setModelMatrixRectangle(r image.Rectangle) {
-	m := newScaleMatrix(float32(r.Dx()/2), float32(r.Dy()/2), 1)
-	m = m.mult(newTranslationMatrix(float32(r.Min.X+r.Dx()/2), float32(r.Min.Y+r.Dy()/2), 0))
+	m := math2.NewScaleMatrix(float32(r.Dx()/2), float32(r.Dy()/2), 1)
+	m = m.Mult(math2.NewTranslationMatrix(float32(r.Min.X+r.Dx()/2), float32(r.Min.Y+r.Dy()/2), 0))
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 }
 

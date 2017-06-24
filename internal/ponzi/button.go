@@ -5,9 +5,11 @@ import (
 	"errors"
 	"image"
 
-	"github.com/btmura/ponzi2/internal/gl2"
-	"github.com/btmura/ponzi2/internal/obj"
 	"github.com/go-gl/gl/v4.5-core/gl"
+
+	"github.com/btmura/ponzi2/internal/gl2"
+	"github.com/btmura/ponzi2/internal/math2"
+	"github.com/btmura/ponzi2/internal/obj"
 )
 
 // buttonIcon is the icon to show on the button.
@@ -55,8 +57,8 @@ func createButtonRenderer() (*buttonRenderer, error) {
 }
 
 func (b *buttonRenderer) render(pt, sz image.Point, ic buttonIcon) {
-	m := newScaleMatrix(float32(sz.X), float32(sz.Y), 1)
-	m = m.mult(newTranslationMatrix(float32(pt.X), float32(pt.Y), 0))
+	m := math2.NewScaleMatrix(float32(sz.X), float32(sz.Y), 1)
+	m = m.Mult(math2.NewTranslationMatrix(float32(pt.X), float32(pt.Y), 0))
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 
 	gl.BindTexture(gl.TEXTURE_2D, b.texture)

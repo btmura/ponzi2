@@ -3,18 +3,19 @@ package ponzi
 import (
 	"bufio"
 	"image"
+	"image/color"
 	"image/draw"
 	"image/png"
 	"os"
 
-	"image/color"
-
-	"github.com/btmura/ponzi2/internal/gl2"
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/golang/freetype/truetype"
 	"github.com/golang/glog"
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
+
+	"github.com/btmura/ponzi2/internal/gl2"
+	"github.com/btmura/ponzi2/internal/math2"
 )
 
 // textFactory is a factory that creates either static or dynamic text
@@ -71,8 +72,8 @@ type staticText struct {
 }
 
 func (t *staticText) render(c image.Point, color [3]float32) image.Point {
-	m := newScaleMatrix(float32(t.size.X), float32(t.size.Y), 1)
-	m = m.mult(newTranslationMatrix(float32(c.X), float32(c.Y), 0))
+	m := math2.NewScaleMatrix(float32(t.size.X), float32(t.size.Y), 1)
+	m = m.Mult(math2.NewTranslationMatrix(float32(c.X), float32(c.Y), 0))
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 
 	gl.BindTexture(gl.TEXTURE_2D, t.texture)
