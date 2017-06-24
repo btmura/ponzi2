@@ -73,8 +73,6 @@ type view struct {
 	// which in convenient for positioning text.
 	orthoPlaneMesh *gfx.Mesh
 
-	texture uint32
-
 	dowText    *gfx.StaticText
 	sapText    *gfx.StaticText
 	nasdaqText *gfx.StaticText
@@ -137,15 +135,6 @@ func createView(model *model) (*view, error) {
 	gl.Uniform3fv(directionalLightColorLocation, 1, &directionalLightColor[0])
 	gl.Uniform3fv(directionalLightVectorLocation, 1, &directionalVector[0])
 
-	// Setup the fragment shader uniforms.
-
-	textureImage, err := createImage(MustAsset("texture.png"))
-	if err != nil {
-		return nil, err
-	}
-
-	texture := gl2.CreateTexture(textureImage)
-
 	// Load meshes and create vertex array objects.
 
 	objs, err := obj.Decode(bytes.NewReader(MustAsset("meshes.obj")))
@@ -187,7 +176,6 @@ func createView(model *model) (*view, error) {
 		model:           model,
 		program:         p,
 		orthoPlaneMesh:  orthoPlaneMesh,
-		texture:         texture,
 		dowText:         small.CreateStaticText("DOW"),
 		sapText:         small.CreateStaticText("S&P"),
 		nasdaqText:      small.CreateStaticText("NASDAQ"),
