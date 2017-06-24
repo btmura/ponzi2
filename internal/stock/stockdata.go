@@ -1,4 +1,4 @@
-package ponzi
+package stock
 
 import (
 	"encoding/csv"
@@ -17,48 +17,48 @@ import (
 	"github.com/golang/glog"
 )
 
-// tradingHistory is a list of trading sessions spanning some time.
-type tradingHistory struct {
-	symbol     string
-	startDate  time.Time
-	endDate    time.Time
-	dataSource dataSource
-	sessions   []*tradingSession
+// TradingHistory is a list of trading sessions spanning some time.
+type TradingHistory struct {
+	Symbol     string
+	StartDate  time.Time
+	EndDate    time.Time
+	DataSource DataSource
+	Sessions   []*TradingSession
 }
 
-// tradingSession contains stats from a single trading session.
+// TradingSession contains stats from a single trading session.
 // It often spans a day, but it could span any time period.
-type tradingSession struct {
-	date   time.Time
-	open   float32
-	high   float32
-	low    float32
-	close  float32
-	volume int
+type TradingSession struct {
+	Date   time.Time
+	Open   float32
+	High   float32
+	Low    float32
+	Close  float32
+	Volume int
 }
 
-// dataSource is the data source to query for tradingSession data.
-type dataSource int
+// DataSource is the data source to query for tradingSession data.
+type DataSource int
 
 // dataSource values.
 const (
-	defaultSource dataSource = iota
-	google
-	yahoo
+	DefaultSource DataSource = iota
+	Google
+	Yahoo
 )
 
-// getTradingHistoryRequest is the request for getTradingHistory.
-type getTradingHistoryRequest struct {
-	symbol     string
-	startDate  time.Time
-	endDate    time.Time
-	dataSource dataSource
+// GetTradingHistoryRequest is the request for getTradingHistory.
+type GetTradingHistoryRequest struct {
+	Symbol     string
+	StartDate  time.Time
+	EndDate    time.Time
+	DataSource DataSource
 }
 
-// getTradingHistory gets the trading history matching the request criteria.
-func getTradingHistory(req *getTradingHistoryRequest) (*tradingHistory, error) {
-	switch req.dataSource {
-	case yahoo:
+// GetTradingHistory gets the trading history matching the request criteria.
+func GetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, error) {
+	switch req.DataSource {
+	case Yahoo:
 		return yahooGetTradingHistory(req)
 
 	default:
@@ -66,15 +66,15 @@ func getTradingHistory(req *getTradingHistoryRequest) (*tradingHistory, error) {
 	}
 }
 
-func googleGetTradingHistory(req *getTradingHistoryRequest) (*tradingHistory, error) {
+func googleGetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, error) {
 	formatTime := func(date time.Time) string {
 		return date.Format("Jan 02, 2006")
 	}
 
 	v := url.Values{}
-	v.Set("q", req.symbol)
-	v.Set("startdate", formatTime(req.startDate))
-	v.Set("enddate", formatTime(req.endDate))
+	v.Set("q", req.Symbol)
+	v.Set("startdate", formatTime(req.StartDate))
+	v.Set("enddate", formatTime(req.EndDate))
 	v.Set("output", "csv")
 
 	u, err := url.Parse("http://www.google.com/finance/historical")
@@ -90,11 +90,11 @@ func googleGetTradingHistory(req *getTradingHistoryRequest) (*tradingHistory, er
 	}
 	defer resp.Body.Close()
 
-	history := &tradingHistory{
-		symbol:     req.symbol,
-		startDate:  req.startDate,
-		endDate:    req.endDate,
-		dataSource: req.dataSource,
+	history := &TradingHistory{
+		Symbol:     req.Symbol,
+		StartDate:  req.StartDate,
+		EndDate:    req.EndDate,
+		DataSource: req.DataSource,
 	}
 	r := csv.NewReader(resp.Body)
 	for i := 0; ; i++ {
@@ -155,32 +155,32 @@ func googleGetTradingHistory(req *getTradingHistoryRequest) (*tradingHistory, er
 				return nil, err
 			}
 
-			history.sessions = append(history.sessions, &tradingSession{
-				date:   date,
-				open:   open,
-				high:   high,
-				low:    low,
-				close:  close,
-				volume: volume,
+			history.Sessions = append(history.Sessions, &TradingSession{
+				Date:   date,
+				Open:   open,
+				High:   high,
+				Low:    low,
+				Close:  close,
+				Volume: volume,
 			})
 		}
 	}
 
 	// Most recent trading sessions at the back.
-	sort.Sort(byTradingSessionDate(history.sessions))
+	sort.Sort(byTradingSessionDate(history.Sessions))
 
 	return history, nil
 }
 
-func yahooGetTradingHistory(req *getTradingHistoryRequest) (*tradingHistory, error) {
+func yahooGetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, error) {
 	v := url.Values{}
-	v.Set("s", req.symbol)
-	v.Set("a", strconv.Itoa(int(req.startDate.Month())-1))
-	v.Set("b", strconv.Itoa(req.startDate.Day()))
-	v.Set("c", strconv.Itoa(req.startDate.Year()))
-	v.Set("d", strconv.Itoa(int(req.endDate.Month())-1))
-	v.Set("e", strconv.Itoa(req.endDate.Day()))
-	v.Set("f", strconv.Itoa(req.endDate.Year()))
+	v.Set("s", req.Symbol)
+	v.Set("a", strconv.Itoa(int(req.StartDate.Month())-1))
+	v.Set("b", strconv.Itoa(req.StartDate.Day()))
+	v.Set("c", strconv.Itoa(req.StartDate.Year()))
+	v.Set("d", strconv.Itoa(int(req.EndDate.Month())-1))
+	v.Set("e", strconv.Itoa(req.EndDate.Day()))
+	v.Set("f", strconv.Itoa(req.EndDate.Year()))
 	v.Set("g", "d")
 	v.Set("ignore", ".csv")
 
@@ -197,11 +197,11 @@ func yahooGetTradingHistory(req *getTradingHistoryRequest) (*tradingHistory, err
 	}
 	defer resp.Body.Close()
 
-	history := &tradingHistory{
-		symbol:     req.symbol,
-		startDate:  req.startDate,
-		endDate:    req.endDate,
-		dataSource: req.dataSource,
+	history := &TradingHistory{
+		Symbol:     req.Symbol,
+		StartDate:  req.StartDate,
+		EndDate:    req.EndDate,
+		DataSource: req.DataSource,
 	}
 	r := csv.NewReader(resp.Body)
 	for i := 0; ; i++ {
@@ -264,48 +264,48 @@ func yahooGetTradingHistory(req *getTradingHistoryRequest) (*tradingHistory, err
 
 			// Ignore adjusted close value to keep Google and Yahoo APIs the same.
 
-			history.sessions = append(history.sessions, &tradingSession{
-				date:   date,
-				open:   open,
-				high:   high,
-				low:    low,
-				close:  close,
-				volume: volume,
+			history.Sessions = append(history.Sessions, &TradingSession{
+				Date:   date,
+				Open:   open,
+				High:   high,
+				Low:    low,
+				Close:  close,
+				Volume: volume,
 			})
 		}
 	}
 
 	// Most recent trading sessions at the back.
-	sort.Sort(byTradingSessionDate(history.sessions))
+	sort.Sort(byTradingSessionDate(history.Sessions))
 
 	return history, nil
 }
 
-// quote is a live stock quote.
-type quote struct {
-	symbol        string
-	timestamp     time.Time
-	price         float32
-	change        float32
-	percentChange float32
+// Quote is a live stock Quote.
+type Quote struct {
+	Symbol        string
+	Timestamp     time.Time
+	Price         float32
+	Change        float32
+	PercentChange float32
 }
 
-// listQuotesRequest is the request of listQuotes.
-type listQuotesRequest struct {
-	symbols []string
+// ListQuotesRequest is the request of listQuotes.
+type ListQuotesRequest struct {
+	Symbols []string
 }
 
-// listQuotesResponse is the response of listQuotes.
-type listQuotesResponse struct {
-	// quotes is a map from symbol to quote.
-	quotes map[string]*quote
+// ListQuotesResponse is the response of listQuotes.
+type ListQuotesResponse struct {
+	// Quotes is a map from symbol to quote.
+	Quotes map[string]*Quote
 }
 
-// listQuotes lists the quotes matching the request criteria.
-func listQuotes(req *listQuotesRequest) (*listQuotesResponse, error) {
+// ListQuotes lists the quotes matching the request criteria.
+func ListQuotes(req *ListQuotesRequest) (*ListQuotesResponse, error) {
 	v := url.Values{}
 	v.Set("client", "ig")
-	v.Set("q", strings.Join(req.symbols, ","))
+	v.Set("q", strings.Join(req.Symbols, ","))
 
 	u, err := url.Parse("http://www.google.com/finance/info")
 	if err != nil {
@@ -347,8 +347,8 @@ func listQuotes(req *listQuotesRequest) (*listQuotesResponse, error) {
 		return nil, errors.New("expected at least one entry")
 	}
 
-	listResp := &listQuotesResponse{
-		quotes: map[string]*quote{},
+	listResp := &ListQuotesResponse{
+		Quotes: map[string]*Quote{},
 	}
 	for _, p := range parsed {
 		timestamp, err := time.Parse("2006-01-02T15:04:05Z", p.LtDts)
@@ -378,12 +378,12 @@ func listQuotes(req *listQuotesRequest) (*listQuotesResponse, error) {
 			percentChange /= 100.0
 		}
 
-		listResp.quotes[p.T] = &quote{
-			symbol:        p.T,
-			timestamp:     timestamp,
-			price:         price,
-			change:        change,
-			percentChange: percentChange,
+		listResp.Quotes[p.T] = &Quote{
+			Symbol:        p.T,
+			Timestamp:     timestamp,
+			Price:         price,
+			Change:        change,
+			PercentChange: percentChange,
 		}
 	}
 
@@ -403,7 +403,7 @@ func parseInt(value string) (int, error) {
 }
 
 // byTradingSessionDate is a sortable tradingSession slice.
-type byTradingSessionDate []*tradingSession
+type byTradingSessionDate []*TradingSession
 
 // Len implements sort.Interface.
 func (sessions byTradingSessionDate) Len() int {
@@ -412,7 +412,7 @@ func (sessions byTradingSessionDate) Len() int {
 
 // Less implements sort.Interface.
 func (sessions byTradingSessionDate) Less(i, j int) bool {
-	return sessions[i].date.Before(sessions[j].date)
+	return sessions[i].Date.Before(sessions[j].Date)
 }
 
 // Swap implements sort.Interface.

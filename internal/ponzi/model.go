@@ -4,6 +4,8 @@ import (
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/btmura/ponzi2/internal/stock"
 )
 
 // model is the state of the program separate from the view.
@@ -102,20 +104,20 @@ func (m *model) refresh() error {
 		symbols = append(symbols, s)
 	}
 
-	resp, err := listQuotes(&listQuotesRequest{symbols})
+	resp, err := stock.ListQuotes(&stock.ListQuotesRequest{Symbols: symbols})
 	if err != nil {
 		return err
 	}
 
 	// Get the trading history for the current stock.
-	var hist *tradingHistory
+	var hist *stock.TradingHistory
 	if s != "" {
 		end := midnight(time.Now().In(newYorkLoc))
 		start := end.Add(-6 * 30 * 24 * time.Hour)
-		hist, err = getTradingHistory(&getTradingHistoryRequest{
-			symbol:    s,
-			startDate: start,
-			endDate:   end,
+		hist, err = stock.GetTradingHistory(&stock.GetTradingHistoryRequest{
+			Symbol:    s,
+			StartDate: start,
+			EndDate:   end,
 		})
 		if err != nil {
 			return err
@@ -123,10 +125,10 @@ func (m *model) refresh() error {
 	}
 
 	updateQuote := func(mq *modelQuote) {
-		if q := resp.quotes[mq.symbol]; q != nil {
-			mq.price = q.price
-			mq.change = q.change
-			mq.percentChange = q.percentChange
+		if q := resp.Quotes[mq.symbol]; q != nil {
+			mq.price = q.Price
+			mq.change = q.Change
+			mq.percentChange = q.PercentChange
 		}
 	}
 
@@ -136,7 +138,7 @@ func (m *model) refresh() error {
 	updateQuote(m.nasdaq)
 	if s != "" && s == m.currentStock.symbol {
 		updateQuote(m.currentStock.quote)
-		m.currentStock.dailySessions, m.currentStock.weeklySessions = convertSessions(hist.sessions)
+		m.currentStock.dailySessions, m.currentStock.weeklySessions = convertSessions(hist.Sessions)
 		m.currentStock.lastUpdateTime = time.Now()
 	}
 	m.Unlock()
@@ -144,17 +146,17 @@ func (m *model) refresh() error {
 	return nil
 }
 
-func convertSessions(sessions []*tradingSession) (dailySessions, weeklySessions []*modelTradingSession) {
+func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySessions []*modelTradingSession) {
 	// Convert the trading sessions into daily sessions.
 	var ds []*modelTradingSession
 	for _, s := range sessions {
 		ds = append(ds, &modelTradingSession{
-			date:   s.date,
-			open:   s.open,
-			high:   s.high,
-			low:    s.low,
-			close:  s.close,
-			volume: s.volume,
+			date:   s.Date,
+			open:   s.Open,
+			high:   s.High,
+			low:    s.Low,
+			close:  s.Close,
+			volume: s.Volume,
 		})
 	}
 	sort.Sort(byModelTradingSessionDate(ds))
