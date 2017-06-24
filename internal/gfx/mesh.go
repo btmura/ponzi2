@@ -1,4 +1,4 @@
-package ponzi
+package gfx
 
 import (
 	"github.com/go-gl/gl/v4.5-core/gl"
@@ -8,10 +8,10 @@ import (
 	"github.com/btmura/ponzi2/internal/obj"
 )
 
-// mesh is an OBJ file object with a bunch of vertex buffer objects.
-type mesh struct {
-	// id is the object's ID in the OBJ file.
-	id string
+// Mesh is an OBJ file object with a bunch of vertex buffer objects.
+type Mesh struct {
+	// ID is the object's ID in the OBJ file.
+	ID string
 
 	// vao is the vertex array object name.
 	vao uint32
@@ -20,8 +20,8 @@ type mesh struct {
 	count int32
 }
 
-// createMeshes creates a slice of meshes from a slice of objs.
-func createMeshes(objs []*obj.Object) []*mesh {
+// CreateMeshes creates a slice of meshes from a slice of objs.
+func CreateMeshes(objs []*obj.Object) []*Mesh {
 	var vertexTable []*obj.Vertex
 	var normalTable []*obj.Normal
 	var texCoordTable []*obj.TexCoord
@@ -33,7 +33,7 @@ func createMeshes(objs []*obj.Object) []*mesh {
 	elementIndexMap := map[obj.FaceElement]uint16{}
 	var nextIndex uint16
 
-	var meshes []*mesh
+	var meshes []*Mesh
 	var iboNames []uint32
 
 	for _, o := range objs {
@@ -71,8 +71,8 @@ func createMeshes(objs []*obj.Object) []*mesh {
 			}
 		}
 
-		meshes = append(meshes, &mesh{
-			id:    o.ID,
+		meshes = append(meshes, &Mesh{
+			ID:    o.ID,
 			count: int32(len(indices)),
 		})
 		iboNames = append(iboNames, gl2.CreateElementArrayBuffer(indices))
@@ -109,8 +109,8 @@ func createMeshes(objs []*obj.Object) []*mesh {
 	return meshes
 }
 
-// drawElements draws the mesh's elements.
-func (m *mesh) drawElements() {
+// DrawElements draws the Mesh's elements.
+func (m *Mesh) DrawElements() {
 	gl.BindVertexArray(m.vao)
 	gl.DrawElements(gl.TRIANGLES, m.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	gl.BindVertexArray(0)

@@ -14,6 +14,7 @@ import (
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
 
+	"github.com/btmura/ponzi2/internal/gfx"
 	"github.com/btmura/ponzi2/internal/gl2"
 	"github.com/btmura/ponzi2/internal/math2"
 )
@@ -21,12 +22,12 @@ import (
 // textFactory is a factory that creates either static or dynamic text
 // that can be rendered on a given orthographic plane.
 type textFactory struct {
-	mesh *mesh
+	mesh *gfx.Mesh
 	face font.Face
 }
 
 // newTextFactory creates a factory from an orthographic plane mesh and TTF bytes.
-func newTextFactory(mesh *mesh, fontBytes []byte, size int) (*textFactory, error) {
+func newTextFactory(mesh *gfx.Mesh, fontBytes []byte, size int) (*textFactory, error) {
 	f, err := truetype.Parse(fontBytes)
 	if err != nil {
 		return nil, err
@@ -66,7 +67,7 @@ func (f *textFactory) createDynamicText() *dynamicText {
 }
 
 type staticText struct {
-	mesh    *mesh
+	mesh    *gfx.Mesh
 	texture uint32
 	size    image.Point
 }
@@ -80,7 +81,7 @@ func (t *staticText) render(c image.Point, color [3]float32) image.Point {
 	gl.Uniform3fv(textColorLocation, 1, &color[0])
 	gl.Uniform1f(colorMixAmountLocation, 0)
 
-	t.mesh.drawElements()
+	t.mesh.DrawElements()
 	return image.Pt(t.size.X, 0)
 }
 

@@ -13,6 +13,7 @@ import (
 	"github.com/golang/glog"
 	"golang.org/x/image/font/gofont/goregular"
 
+	"github.com/btmura/ponzi2/internal/gfx"
 	"github.com/btmura/ponzi2/internal/gl2"
 	"github.com/btmura/ponzi2/internal/math2"
 	"github.com/btmura/ponzi2/internal/obj"
@@ -70,7 +71,7 @@ type view struct {
 
 	// orthoPlaneMesh is a plane with bounds from (0, 0) to (1, 1)
 	// which in convenient for positioning text.
-	orthoPlaneMesh *mesh
+	orthoPlaneMesh *gfx.Mesh
 
 	texture uint32
 
@@ -152,9 +153,9 @@ func createView(model *model) (*view, error) {
 		return nil, err
 	}
 
-	var orthoPlaneMesh *mesh
-	for _, m := range createMeshes(objs) {
-		switch m.id {
+	var orthoPlaneMesh *gfx.Mesh
+	for _, m := range gfx.CreateMeshes(objs) {
+		switch m.ID {
 		case "orthoPlane":
 			orthoPlaneMesh = m
 		}

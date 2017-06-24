@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 
+	"github.com/btmura/ponzi2/internal/gfx"
 	"github.com/btmura/ponzi2/internal/gl2"
 	"github.com/btmura/ponzi2/internal/math2"
 	"github.com/btmura/ponzi2/internal/obj"
@@ -22,7 +23,7 @@ const (
 
 // buttonRenderer renders a button.
 type buttonRenderer struct {
-	mesh    *mesh
+	mesh    *gfx.Mesh
 	texture uint32
 }
 
@@ -32,9 +33,9 @@ func createButtonRenderer() (*buttonRenderer, error) {
 		return nil, err
 	}
 
-	var bm *mesh
-	for _, m := range createMeshes(objs) {
-		switch m.id {
+	var bm *gfx.Mesh
+	for _, m := range gfx.CreateMeshes(objs) {
+		switch m.ID {
 		case "orthoPlane": // TODO(btmura): use separate mesh
 			bm = m
 		}
@@ -64,5 +65,5 @@ func (b *buttonRenderer) render(pt, sz image.Point, ic buttonIcon) {
 	gl.BindTexture(gl.TEXTURE_2D, b.texture)
 	gl.Uniform1f(colorMixAmountLocation, 0)
 
-	b.mesh.drawElements()
+	b.mesh.DrawElements()
 }
