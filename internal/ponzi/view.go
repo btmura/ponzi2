@@ -82,6 +82,8 @@ type view struct {
 	priceText       *dynamicText
 	inputSymbolText *dynamicText
 
+	buttonRenderer *buttonRenderer
+
 	viewMatrix        matrix4
 	perspectiveMatrix matrix4
 	orthoMatrix       matrix4
@@ -171,6 +173,11 @@ func createView(model *model) (*view, error) {
 
 	smallDynamicText := small.createDynamicText()
 
+	ir, err := createButtonRenderer()
+	if err != nil {
+		return nil, err
+	}
+
 	return &view{
 		model:           model,
 		program:         p,
@@ -183,6 +190,7 @@ func createView(model *model) (*view, error) {
 		symbolQuoteText: medium.createDynamicText(),
 		priceText:       smallDynamicText,
 		inputSymbolText: large.createDynamicText(),
+		buttonRenderer:  ir,
 		viewMatrix:      vm,
 	}, nil
 }
@@ -247,7 +255,7 @@ func (v *view) render(fudge float32) {
 		if v.chart != nil {
 			v.chart.close()
 		}
-		v.chart = createChart(v.model.currentStock, v.symbolQuoteText, v.priceText)
+		v.chart = createChart(v.model.currentStock, v.symbolQuoteText, v.priceText, v.buttonRenderer)
 	}
 
 	if v.chartThumbnail == nil || v.chartThumbnail.stock != v.model.currentStock {

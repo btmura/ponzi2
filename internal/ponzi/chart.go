@@ -24,10 +24,12 @@ type chart struct {
 	weeklyStochastics *chartStochastics
 }
 
-func createChart(stock *modelStock, symbolQuoteText, labelText *dynamicText) *chart {
+// TODO(btmura): create chart factory that creates charts
+// TODO(btmura): create chart components and pass them in
+func createChart(stock *modelStock, symbolQuoteText, labelText *dynamicText, br *buttonRenderer) *chart {
 	return &chart{
 		stock:             stock,
-		frame:             createChartFrame(stock, symbolQuoteText),
+		frame:             createChartFrame(stock, symbolQuoteText, br),
 		lines:             createChartLines(stock),
 		prices:            createChartPrices(stock, labelText),
 		volume:            createChartVolume(stock, labelText),
