@@ -10,7 +10,7 @@ import (
 
 type chartThumbnail struct {
 	stock             *modelStock
-	stockQuoteText    *dynamicText
+	stockQuoteText    *gfx.DynamicText
 	lines             *chartLines
 	frameBorder       *gfx.VAO
 	frameDivider      *gfx.VAO
@@ -18,7 +18,7 @@ type chartThumbnail struct {
 	weeklyStochastics *chartStochastics
 }
 
-func createchartThumbnail(stock *modelStock, stockQuoteText *dynamicText) *chartThumbnail {
+func createchartThumbnail(stock *modelStock, stockQuoteText *gfx.DynamicText) *chartThumbnail {
 	return &chartThumbnail{
 		stock:             stock,
 		stockQuoteText:    stockQuoteText,
@@ -53,13 +53,13 @@ func (ct *chartThumbnail) render(r image.Rectangle) {
 	//
 
 	const pad = 5
-	s := ct.stockQuoteText.measure(ct.stock.symbol)
+	s := ct.stockQuoteText.Measure(ct.stock.symbol)
 	pt.Y -= pad + s.Y
 	{
 		pt := pt
 		pt.X += pad
-		pt = pt.Add(ct.stockQuoteText.render(ct.stock.symbol, pt, white))
-		pt = pt.Add(ct.stockQuoteText.render(shortFormatQuote(ct.stock.quote), pt, quoteColor(ct.stock.quote)))
+		pt = pt.Add(ct.stockQuoteText.Render(ct.stock.symbol, pt, white))
+		pt = pt.Add(ct.stockQuoteText.Render(shortFormatQuote(ct.stock.quote), pt, quoteColor(ct.stock.quote)))
 	}
 
 	//

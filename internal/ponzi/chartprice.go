@@ -15,7 +15,7 @@ type chartPrices struct {
 	stock               *modelStock
 	lastStockUpdateTime time.Time
 	renderable          bool
-	labelText           *dynamicText
+	labelText           *gfx.DynamicText
 	minPrice            float32
 	maxPrice            float32
 	labelHeight         int
@@ -24,7 +24,7 @@ type chartPrices struct {
 	labelLine           *gfx.VAO
 }
 
-func createChartPrices(stock *modelStock, labelText *dynamicText) *chartPrices {
+func createChartPrices(stock *modelStock, labelText *gfx.DynamicText) *chartPrices {
 	return &chartPrices{
 		stock:     stock,
 		labelText: labelText,
@@ -217,7 +217,7 @@ func (ch *chartPrices) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 			v := v - pricePerPixel*float32(dvy)
 			t, s := ch.priceLabelText(v)
 			c.X -= s.X
-			ch.labelText.render(t, c, white)
+			ch.labelText.Render(t, c, white)
 
 			if maxWidth < s.X {
 				maxWidth = s.X
@@ -233,7 +233,7 @@ func (ch *chartPrices) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 
 func (ch *chartPrices) priceLabelText(v float32) (text string, size image.Point) {
 	t := strconv.FormatFloat(float64(v), 'f', 2, 32)
-	return t, ch.labelText.measure(t)
+	return t, ch.labelText.Measure(t)
 }
 
 func (ch *chartPrices) close() {

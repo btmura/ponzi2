@@ -15,13 +15,13 @@ type chartVolume struct {
 	stock               *modelStock
 	lastStockUpdateTime time.Time
 	renderable          bool
-	labelText           *dynamicText
+	labelText           *gfx.DynamicText
 	maxVolume           int
 	volRects            *gfx.VAO
 	labelLine           *gfx.VAO
 }
 
-func createChartVolume(stock *modelStock, labelText *dynamicText) *chartVolume {
+func createChartVolume(stock *modelStock, labelText *gfx.DynamicText) *chartVolume {
 	return &chartVolume{
 		stock:     stock,
 		labelText: labelText,
@@ -148,7 +148,7 @@ func (ch *chartVolume) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 	render := func(t string, s image.Point, yLocPercent float32) {
 		x := r.Max.X - s.X
 		y := r.Min.Y + int(float32(r.Dy())*yLocPercent) - s.Y/2
-		ch.labelText.render(t, image.Pt(x, y), white)
+		ch.labelText.Render(t, image.Pt(x, y), white)
 	}
 
 	render(t1, s1, .7)
@@ -173,7 +173,7 @@ func (ch *chartVolume) volumeLabelText(v int) (text string, size image.Point) {
 	default:
 		t = strconv.Itoa(v)
 	}
-	return t, ch.labelText.measure(t)
+	return t, ch.labelText.Measure(t)
 }
 
 func (ch *chartVolume) close() {

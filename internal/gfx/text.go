@@ -1,4 +1,4 @@
-package ponzi
+package gfx
 
 import (
 	"bufio"
@@ -14,20 +14,19 @@ import (
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
 
-	"github.com/btmura/ponzi2/internal/gfx"
 	"github.com/btmura/ponzi2/internal/gl2"
 	"github.com/btmura/ponzi2/internal/math2"
 )
 
-// textFactory is a factory that creates either static or dynamic text
+// TextFactory is a factory that creates either static or dynamic text
 // that can be rendered on a given orthographic plane.
-type textFactory struct {
-	mesh *gfx.Mesh
+type TextFactory struct {
+	mesh *Mesh
 	face font.Face
 }
 
-// newTextFactory creates a factory from an orthographic plane mesh and TTF bytes.
-func newTextFactory(mesh *gfx.Mesh, fontBytes []byte, size int) (*textFactory, error) {
+// NewTextFactory creates a factory from an orthographic plane mesh and TTF bytes.
+func NewTextFactory(mesh *Mesh, fontBytes []byte, size int) (*TextFactory, error) {
 	f, err := truetype.Parse(fontBytes)
 	if err != nil {
 		return nil, err
@@ -39,41 +38,41 @@ func newTextFactory(mesh *gfx.Mesh, fontBytes []byte, size int) (*textFactory, e
 		Hinting: font.HintingFull,
 	})
 
-	return &textFactory{
+	return &TextFactory{
 		mesh: mesh,
 		face: face,
 	}, nil
 }
 
-// createStaticText creates static text which cannot be changed later.
-func (f *textFactory) createStaticText(text string) *staticText {
+// CreateStaticText creates static text which cannot be changed later.
+func (f *TextFactory) CreateStaticText(text string) *StaticText {
 	rgba := createTextImage(f.face, text)
-	return &staticText{
+	return &StaticText{
 		mesh:    f.mesh,
 		texture: gl2.CreateTexture(rgba),
-		size:    rgba.Bounds().Size(),
+		Size:    rgba.Bounds().Size(),
 	}
 }
 
-// createDynamicText creates dynamic text which is rendered at runtime.
-func (f *textFactory) createDynamicText() *dynamicText {
-	runeTextMap := make(map[rune]*staticText)
+// CreateDynamicText creates dynamic text which is rendered at runtime.
+func (f *TextFactory) CreateDynamicText() *DynamicText {
+	runeTextMap := make(map[rune]*StaticText)
 	for _, r := range "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.+-% " {
-		runeTextMap[r] = f.createStaticText(string(r))
+		runeTextMap[r] = f.CreateStaticText(string(r))
 	}
-	return &dynamicText{
+	return &DynamicText{
 		runeTextMap: runeTextMap,
 	}
 }
 
-type staticText struct {
-	mesh    *gfx.Mesh
+type StaticText struct {
+	mesh    *Mesh
 	texture uint32
-	size    image.Point
+	Size    image.Point
 }
 
-func (t *staticText) render(c image.Point, color [3]float32) image.Point {
-	m := math2.NewScaleMatrix(float32(t.size.X), float32(t.size.Y), 1)
+func (t *StaticText) Render(c image.Point, color [3]float32) image.Point {
+	m := math2.NewScaleMatrix(float32(t.Size.X), float32(t.Size.Y), 1)
 	m = m.Mult(math2.NewTranslationMatrix(float32(c.X), float32(c.Y), 0))
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 
@@ -82,33 +81,33 @@ func (t *staticText) render(c image.Point, color [3]float32) image.Point {
 	gl.Uniform1f(colorMixAmountLocation, 0)
 
 	t.mesh.DrawElements()
-	return image.Pt(t.size.X, 0)
+	return image.Pt(t.Size.X, 0)
 }
 
-type dynamicText struct {
-	runeTextMap map[rune]*staticText
+type DynamicText struct {
+	runeTextMap map[rune]*StaticText
 }
 
-func (t *dynamicText) measure(text string) image.Point {
+func (t *DynamicText) Measure(text string) image.Point {
 	s := image.ZP
 	for _, r := range text {
 		if st := t.runeTextMap[r]; st != nil {
-			s.X += st.size.X
-			if st.size.Y > s.Y {
-				s.Y = st.size.Y
+			s.X += st.Size.X
+			if st.Size.Y > s.Y {
+				s.Y = st.Size.Y
 			}
 		}
 	}
 	return s
 }
 
-func (t *dynamicText) render(text string, c image.Point, color [3]float32) image.Point {
+func (t *DynamicText) Render(text string, c image.Point, color [3]float32) image.Point {
 	w := 0
 	for _, r := range text {
 		if st := t.runeTextMap[r]; st != nil {
-			st.render(c, color)
-			c.X += st.size.X
-			w += st.size.X
+			st.Render(c, color)
+			c.X += st.Size.X
+			w += st.Size.X
 		}
 	}
 	return image.Pt(w, 0)

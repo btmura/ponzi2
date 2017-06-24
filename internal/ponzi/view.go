@@ -75,17 +75,17 @@ type view struct {
 
 	texture uint32
 
-	dowText    *staticText
-	sapText    *staticText
-	nasdaqText *staticText
+	dowText    *gfx.StaticText
+	sapText    *gfx.StaticText
+	nasdaqText *gfx.StaticText
 
 	chart          *chart
 	chartThumbnail *chartThumbnail
 
-	smallText       *dynamicText
-	symbolQuoteText *dynamicText
-	priceText       *dynamicText
-	inputSymbolText *dynamicText
+	smallText       *gfx.DynamicText
+	symbolQuoteText *gfx.DynamicText
+	priceText       *gfx.DynamicText
+	inputSymbolText *gfx.DynamicText
 
 	buttonRenderer *buttonRenderer
 
@@ -161,22 +161,22 @@ func createView(model *model) (*view, error) {
 		}
 	}
 
-	small, err := newTextFactory(orthoPlaneMesh, goregular.TTF, 12)
+	small, err := gfx.NewTextFactory(orthoPlaneMesh, goregular.TTF, 12)
 	if err != nil {
 		return nil, err
 	}
 
-	medium, err := newTextFactory(orthoPlaneMesh, goregular.TTF, 24)
+	medium, err := gfx.NewTextFactory(orthoPlaneMesh, goregular.TTF, 24)
 	if err != nil {
 		return nil, err
 	}
 
-	large, err := newTextFactory(orthoPlaneMesh, goregular.TTF, 48)
+	large, err := gfx.NewTextFactory(orthoPlaneMesh, goregular.TTF, 48)
 	if err != nil {
 		return nil, err
 	}
 
-	smallDynamicText := small.createDynamicText()
+	smallDynamicText := small.CreateDynamicText()
 
 	ir, err := createButtonRenderer()
 	if err != nil {
@@ -188,13 +188,13 @@ func createView(model *model) (*view, error) {
 		program:         p,
 		orthoPlaneMesh:  orthoPlaneMesh,
 		texture:         texture,
-		dowText:         small.createStaticText("DOW"),
-		sapText:         small.createStaticText("S&P"),
-		nasdaqText:      small.createStaticText("NASDAQ"),
+		dowText:         small.CreateStaticText("DOW"),
+		sapText:         small.CreateStaticText("S&P"),
+		nasdaqText:      small.CreateStaticText("NASDAQ"),
 		smallText:       smallDynamicText,
-		symbolQuoteText: medium.createDynamicText(),
+		symbolQuoteText: medium.CreateDynamicText(),
 		priceText:       smallDynamicText,
-		inputSymbolText: large.createDynamicText(),
+		inputSymbolText: large.CreateDynamicText(),
 		buttonRenderer:  ir,
 		viewMatrix:      vm,
 	}, nil
@@ -221,33 +221,33 @@ func (v *view) render(fudge float32) {
 
 	// Render input symbol being typed in the center.
 	if v.model.inputSymbol != "" {
-		s := v.inputSymbolText.measure(v.model.inputSymbol)
+		s := v.inputSymbolText.Measure(v.model.inputSymbol)
 		c := v.winSize.Sub(s).Div(2)
-		v.inputSymbolText.render(v.model.inputSymbol, c, white)
+		v.inputSymbolText.Render(v.model.inputSymbol, c, white)
 	}
 
 	const p = 10 // padding
 
 	// Start in theistforner. (0, 0) is lower left.
 	// Move down below the major indices line.
-	c := image.Pt(p, v.winSize.Y-p-v.dowText.size.Y)
+	c := image.Pt(p, v.winSize.Y-p-v.dowText.Size.Y)
 
 	// Render major indices on one line.
 	{
 		render := func(c image.Point, q *modelQuote) image.Point {
-			return v.smallText.render(formatQuote(q), c, quoteColor(q))
+			return v.smallText.Render(formatQuote(q), c, quoteColor(q))
 		}
 
 		c := c
-		c = c.Add(v.dowText.render(c, white))
+		c = c.Add(v.dowText.Render(c, white))
 		c = c.Add(render(c, v.model.dow))
 		c.X += p
 
-		c = c.Add(v.sapText.render(c, white))
+		c = c.Add(v.sapText.Render(c, white))
 		c = c.Add(render(c, v.model.sap))
 		c.X += p
 
-		c = c.Add(v.nasdaqText.render(c, white))
+		c = c.Add(v.nasdaqText.Render(c, white))
 		c = c.Add(render(c, v.model.nasdaq))
 		c.X += p
 	}

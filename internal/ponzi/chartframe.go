@@ -3,19 +3,20 @@ package ponzi
 import (
 	"image"
 
-	"github.com/btmura/ponzi2/internal/gfx"
 	"github.com/go-gl/gl/v4.5-core/gl"
+
+	"github.com/btmura/ponzi2/internal/gfx"
 )
 
 type chartFrame struct {
 	stock           *modelStock
-	symbolQuoteText *dynamicText
+	symbolQuoteText *gfx.DynamicText
 	buttonRenderer  *buttonRenderer
 	frameBorder     *gfx.VAO
 	frameDivider    *gfx.VAO
 }
 
-func createChartFrame(stock *modelStock, symbolQuoteText *dynamicText, br *buttonRenderer) *chartFrame {
+func createChartFrame(stock *modelStock, symbolQuoteText *gfx.DynamicText, br *buttonRenderer) *chartFrame {
 	return &chartFrame{
 		stock:           stock,
 		symbolQuoteText: symbolQuoteText,
@@ -42,13 +43,13 @@ func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
 	//
 
 	const pad = 10
-	sz := ch.symbolQuoteText.measure(ch.stock.symbol)
+	sz := ch.symbolQuoteText.Measure(ch.stock.symbol)
 	pt.Y -= pad + sz.Y
 	{
 		pt := pt
 		pt.X += pad
-		pt = pt.Add(ch.symbolQuoteText.render(ch.stock.symbol, pt, white))
-		pt = pt.Add(ch.symbolQuoteText.render(formatQuote(ch.stock.quote), pt, quoteColor(ch.stock.quote)))
+		pt = pt.Add(ch.symbolQuoteText.Render(ch.stock.symbol, pt, white))
+		pt = pt.Add(ch.symbolQuoteText.Render(formatQuote(ch.stock.quote), pt, quoteColor(ch.stock.quote)))
 	}
 
 	{
