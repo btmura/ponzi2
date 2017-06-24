@@ -4,14 +4,16 @@ import (
 	"image"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
+
+	"github.com/btmura/ponzi2/internal/gfx"
 )
 
 type chartThumbnail struct {
 	stock             *modelStock
 	stockQuoteText    *dynamicText
 	lines             *chartLines
-	frameBorder       *vao
-	frameDivider      *vao
+	frameBorder       *gfx.VAO
+	frameDivider      *gfx.VAO
 	dailyStochastics  *chartStochastics
 	weeklyStochastics *chartStochastics
 }
@@ -21,8 +23,8 @@ func createchartThumbnail(stock *modelStock, stockQuoteText *dynamicText) *chart
 		stock:             stock,
 		stockQuoteText:    stockQuoteText,
 		lines:             createChartLines(stock),
-		frameBorder:       createStrokedRectVAO(white, white, white, white),
-		frameDivider:      createLineVAO(white, white),
+		frameBorder:       gfx.CreateStrokedRectVAO(white, white, white, white),
+		frameDivider:      gfx.CreateLineVAO(white, white),
 		dailyStochastics:  createChartStochastics(stock, stockQuoteText, daily),
 		weeklyStochastics: createChartStochastics(stock, stockQuoteText, weekly),
 	}
@@ -44,7 +46,7 @@ func (ct *chartThumbnail) render(r image.Rectangle) {
 
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
-	ct.frameBorder.render()
+	ct.frameBorder.Render()
 
 	//
 	// Render the symbol and its quote.
@@ -70,7 +72,7 @@ func (ct *chartThumbnail) render(r image.Rectangle) {
 	rects := sliceRectangle(r, 0.5, 0.5)
 	for _, r := range rects {
 		setModelMatrixRectangle(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
-		ct.frameDivider.render()
+		ct.frameDivider.Render()
 	}
 
 	//
@@ -86,9 +88,9 @@ func (ct *chartThumbnail) render(r image.Rectangle) {
 func (ct *chartThumbnail) close() {
 	ct.lines.close()
 	ct.lines = nil
-	ct.frameBorder.close()
+	ct.frameBorder.Close()
 	ct.frameBorder = nil
-	ct.frameDivider.close()
+	ct.frameDivider.Close()
 	ct.frameDivider = nil
 	ct.dailyStochastics.close()
 	ct.dailyStochastics = nil

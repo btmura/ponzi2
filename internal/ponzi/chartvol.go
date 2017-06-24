@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
+
+	"github.com/btmura/ponzi2/internal/gfx"
 )
 
 type chartVolume struct {
@@ -15,8 +17,8 @@ type chartVolume struct {
 	renderable          bool
 	labelText           *dynamicText
 	maxVolume           int
-	volRects            *vao
-	labelLine           *vao
+	volRects            *gfx.VAO
+	labelLine           *gfx.VAO
 }
 
 func createChartVolume(stock *modelStock, labelText *dynamicText) *chartVolume {
@@ -39,16 +41,16 @@ func (ch *chartVolume) update() {
 		}
 	}
 
-	ch.volRects.close()
+	ch.volRects.Close()
 	ch.volRects = createChartVolumeBarsVAO(ch.stock.dailySessions, ch.maxVolume)
 
-	ch.labelLine.close()
-	ch.labelLine = createLineVAO(gray, gray)
+	ch.labelLine.Close()
+	ch.labelLine = gfx.CreateLineVAO(gray, gray)
 
 	ch.renderable = true
 }
 
-func createChartVolumeBarsVAO(ds []*modelTradingSession, maxVolume int) *vao {
+func createChartVolumeBarsVAO(ds []*modelTradingSession, maxVolume int) *gfx.VAO {
 	var vertices []float32
 	var colors []float32
 	var indices []uint16
@@ -116,7 +118,7 @@ func createChartVolumeBarsVAO(ds []*modelTradingSession, maxVolume int) *vao {
 		rightX += barWidth
 	}
 
-	return createVAO(gl.TRIANGLES, vertices, colors, indices)
+	return gfx.CreateVAO(gl.TRIANGLES, vertices, colors, indices)
 }
 
 func (ch *chartVolume) render(r image.Rectangle) {
@@ -126,12 +128,12 @@ func (ch *chartVolume) render(r image.Rectangle) {
 
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
-	ch.volRects.render()
+	ch.volRects.Render()
 
 	for _, yLocPercent := range []float32{0.3, 0.7} {
 		y := r.Min.Y + int(float32(r.Dy())*yLocPercent)
 		setModelMatrixRectangle(image.Rect(r.Min.X, y, r.Max.X, y))
-		ch.labelLine.render()
+		ch.labelLine.Render()
 	}
 }
 
@@ -176,8 +178,8 @@ func (ch *chartVolume) volumeLabelText(v int) (text string, size image.Point) {
 
 func (ch *chartVolume) close() {
 	ch.renderable = false
-	ch.volRects.close()
+	ch.volRects.Close()
 	ch.volRects = nil
-	ch.labelLine.close()
+	ch.labelLine.Close()
 	ch.labelLine = nil
 }

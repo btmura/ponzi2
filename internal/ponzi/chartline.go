@@ -5,13 +5,15 @@ import (
 	"time"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
+
+	"github.com/btmura/ponzi2/internal/gfx"
 )
 
 type chartLines struct {
 	stock               *modelStock
 	lastStockUpdateTime time.Time
 	renderable          bool
-	weekLines           *vao
+	weekLines           *gfx.VAO
 }
 
 func createChartLines(stock *modelStock) *chartLines {
@@ -25,12 +27,12 @@ func (ch *chartLines) update() {
 		return
 	}
 	ch.lastStockUpdateTime = ch.stock.lastUpdateTime
-	ch.weekLines.close()
+	ch.weekLines.Close()
 	ch.weekLines = createChartWeekLinesVAO(ch.stock.dailySessions)
 	ch.renderable = true
 }
 
-func createChartWeekLinesVAO(ds []*modelTradingSession) *vao {
+func createChartWeekLinesVAO(ds []*modelTradingSession) *gfx.VAO {
 	var vertices []float32
 	var colors []float32
 	var indices []uint16
@@ -65,7 +67,7 @@ func createChartWeekLinesVAO(ds []*modelTradingSession) *vao {
 		)
 	}
 
-	return createVAO(gl.LINES, vertices, colors, indices)
+	return gfx.CreateVAO(gl.LINES, vertices, colors, indices)
 }
 
 func (ch *chartLines) render(r image.Rectangle) {
@@ -74,11 +76,11 @@ func (ch *chartLines) render(r image.Rectangle) {
 	}
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
-	ch.weekLines.render()
+	ch.weekLines.Render()
 }
 
 func (ch *chartLines) close() {
 	ch.renderable = false
-	ch.weekLines.close()
+	ch.weekLines.Close()
 	ch.weekLines = nil
 }

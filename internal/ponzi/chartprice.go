@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
+
+	"github.com/btmura/ponzi2/internal/gfx"
 )
 
 type chartPrices struct {
@@ -17,9 +19,9 @@ type chartPrices struct {
 	minPrice            float32
 	maxPrice            float32
 	labelHeight         int
-	stickLines          *vao
-	stickRects          *vao
-	labelLine           *vao
+	stickLines          *gfx.VAO
+	stickRects          *gfx.VAO
+	labelLine           *gfx.VAO
 }
 
 func createChartPrices(stock *modelStock, labelText *dynamicText) *chartPrices {
@@ -45,12 +47,12 @@ func (ch *chartPrices) update() {
 		}
 	}
 
-	ch.stickLines.close()
-	ch.stickRects.close()
+	ch.stickLines.Close()
+	ch.stickRects.Close()
 	ch.stickLines, ch.stickRects = createChartCandlestickVAOs(ch.stock.dailySessions, ch.minPrice, ch.maxPrice)
 
-	ch.labelLine.close()
-	ch.labelLine = createLineVAO(gray, gray)
+	ch.labelLine.Close()
+	ch.labelLine = gfx.CreateLineVAO(gray, gray)
 
 	_, labelSize := ch.priceLabelText(ch.maxPrice)
 	ch.labelHeight = labelSize.Y
@@ -58,7 +60,7 @@ func (ch *chartPrices) update() {
 	ch.renderable = true
 }
 
-func createChartCandlestickVAOs(ds []*modelTradingSession, minPrice, maxPrice float32) (stickLines, stickRects *vao) {
+func createChartCandlestickVAOs(ds []*modelTradingSession, minPrice, maxPrice float32) (stickLines, stickRects *gfx.VAO) {
 	// Calculate vertices and indices for the candlesticks.
 	var vertices []float32
 	var colors []float32
@@ -152,8 +154,8 @@ func createChartCandlestickVAOs(ds []*modelTradingSession, minPrice, maxPrice fl
 		rightX += stickWidth
 	}
 
-	return createVAO(gl.LINES, vertices, colors, lineIndices),
-		createVAO(gl.TRIANGLES, vertices, colors, triangleIndices)
+	return gfx.CreateVAO(gl.LINES, vertices, colors, lineIndices),
+		gfx.CreateVAO(gl.TRIANGLES, vertices, colors, triangleIndices)
 }
 
 func (ch *chartPrices) render(r image.Rectangle) {
@@ -163,8 +165,8 @@ func (ch *chartPrices) render(r image.Rectangle) {
 
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
-	ch.stickLines.render()
-	ch.stickRects.render()
+	ch.stickLines.Render()
+	ch.stickRects.Render()
 
 	labelPaddingY := ch.labelHeight / 2
 	y := r.Max.Y - labelPaddingY - ch.labelHeight/2
@@ -177,7 +179,7 @@ func (ch *chartPrices) render(r image.Rectangle) {
 			}
 
 			setModelMatrixRectangle(image.Rect(r.Min.X, y, r.Max.X, y))
-			ch.labelLine.render()
+			ch.labelLine.Render()
 		}
 		y -= dy
 	}
@@ -236,10 +238,10 @@ func (ch *chartPrices) priceLabelText(v float32) (text string, size image.Point)
 
 func (ch *chartPrices) close() {
 	ch.renderable = false
-	ch.stickLines.close()
+	ch.stickLines.Close()
 	ch.stickLines = nil
-	ch.stickRects.close()
+	ch.stickRects.Close()
 	ch.stickRects = nil
-	ch.labelLine.close()
+	ch.labelLine.Close()
 	ch.labelLine = nil
 }

@@ -5,6 +5,7 @@ import (
 	"image"
 	"time"
 
+	"github.com/btmura/ponzi2/internal/gfx"
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
@@ -21,8 +22,8 @@ type chartStochastics struct {
 	renderable          bool
 	labelText           *dynamicText
 	stoType             chartStochasticType
-	stoLines            *vao
-	labelLine           *vao
+	stoLines            *gfx.VAO
+	labelLine           *gfx.VAO
 }
 
 func createChartStochastics(stock *modelStock, labelText *dynamicText, stoType chartStochasticType) *chartStochastics {
@@ -44,16 +45,16 @@ func (ch *chartStochastics) update() {
 		ss, dColor = ch.stock.weeklySessions, purple
 	}
 
-	ch.stoLines.close()
+	ch.stoLines.Close()
 	ch.stoLines = createStochasticVAOs(ss, dColor)
 
-	ch.labelLine.close()
-	ch.labelLine = createLineVAO(gray, gray)
+	ch.labelLine.Close()
+	ch.labelLine = gfx.CreateLineVAO(gray, gray)
 
 	ch.renderable = true
 }
 
-func createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLines *vao) {
+func createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLines *gfx.VAO) {
 	var vertices []float32
 	var colors []float32
 	var indices []uint16
@@ -100,7 +101,7 @@ func createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLine
 		first = false
 	}
 
-	return createVAO(gl.LINES, vertices, colors, indices)
+	return gfx.CreateVAO(gl.LINES, vertices, colors, indices)
 }
 
 func (ch *chartStochastics) render(r image.Rectangle) {
@@ -110,12 +111,12 @@ func (ch *chartStochastics) render(r image.Rectangle) {
 
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
-	ch.stoLines.render()
+	ch.stoLines.Render()
 
 	for _, yLocPercent := range []float32{0.3, 0.7} {
 		y := r.Min.Y + int(float32(r.Dy())*yLocPercent)
 		setModelMatrixRectangle(image.Rect(r.Min.X, y, r.Max.X, y))
-		ch.labelLine.render()
+		ch.labelLine.Render()
 	}
 }
 
@@ -150,6 +151,6 @@ func (ch *chartStochastics) stochasticLabelText(percent float32) (text string, s
 
 func (ch *chartStochastics) close() {
 	ch.renderable = false
-	ch.stoLines.close()
+	ch.stoLines.Close()
 	ch.stoLines = nil
 }

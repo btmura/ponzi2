@@ -1,4 +1,4 @@
-package ponzi
+package gfx
 
 import (
 	"github.com/go-gl/gl/v4.5-core/gl"
@@ -6,15 +6,15 @@ import (
 	"github.com/btmura/ponzi2/internal/gl2"
 )
 
-// vao is a Vertex Array Object (VAO) for one element type (lines, triangles, etc).
-type vao struct {
+// VAO is a Vertex Array Object (VAO) for one element type (lines, triangles, etc).
+type VAO struct {
 	array uint32 // array is the VAO name for gl.BindVertexArray.
 	mode  uint32 // mode is like gl.LINES or gl.TRIANGLES passed to gl.DrawElements.
 	count int32  // count is the number of elements for gl.DrawElements.
 }
 
-func createLineVAO(lColor, rColor [3]float32) *vao {
-	return createVAO(
+func CreateLineVAO(lColor, rColor [3]float32) *VAO {
+	return CreateVAO(
 		gl.LINES,
 		[]float32{
 			-1, 0, // L
@@ -30,8 +30,8 @@ func createLineVAO(lColor, rColor [3]float32) *vao {
 	)
 }
 
-func createStrokedRectVAO(ulColor, urColor, blColor, brColor [3]float32) *vao {
-	return createVAO(
+func CreateStrokedRectVAO(ulColor, urColor, blColor, brColor [3]float32) *VAO {
+	return CreateVAO(
 		gl.LINES,
 		[]float32{
 			-1, +1, // UL - 0
@@ -54,7 +54,7 @@ func createStrokedRectVAO(ulColor, urColor, blColor, brColor [3]float32) *vao {
 	)
 }
 
-func createVAO(mode uint32, vertices, colors []float32, indices []uint16) *vao {
+func CreateVAO(mode uint32, vertices, colors []float32, indices []uint16) *VAO {
 	if len(vertices) == 0 || len(colors) == 0 || len(indices) == 0 {
 		return nil // Can't create empty buffer objects. Bail out if nothing to render.
 	}
@@ -79,14 +79,14 @@ func createVAO(mode uint32, vertices, colors []float32, indices []uint16) *vao {
 	}
 	gl.BindVertexArray(0)
 
-	return &vao{
+	return &VAO{
 		array: array,
 		mode:  mode,
 		count: int32(len(indices)),
 	}
 }
 
-func (v *vao) render() {
+func (v *VAO) Render() {
 	if v == nil {
 		return
 	}
@@ -95,7 +95,7 @@ func (v *vao) render() {
 	gl.BindVertexArray(0)
 }
 
-func (v *vao) close() {
+func (v *VAO) Close() {
 	if v == nil {
 		return
 	}

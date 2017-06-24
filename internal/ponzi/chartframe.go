@@ -3,6 +3,7 @@ package ponzi
 import (
 	"image"
 
+	"github.com/btmura/ponzi2/internal/gfx"
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
@@ -10,8 +11,8 @@ type chartFrame struct {
 	stock           *modelStock
 	symbolQuoteText *dynamicText
 	buttonRenderer  *buttonRenderer
-	frameBorder     *vao
-	frameDivider    *vao
+	frameBorder     *gfx.VAO
+	frameDivider    *gfx.VAO
 }
 
 func createChartFrame(stock *modelStock, symbolQuoteText *dynamicText, br *buttonRenderer) *chartFrame {
@@ -19,8 +20,8 @@ func createChartFrame(stock *modelStock, symbolQuoteText *dynamicText, br *butto
 		stock:           stock,
 		symbolQuoteText: symbolQuoteText,
 		buttonRenderer:  br,
-		frameBorder:     createStrokedRectVAO(white, white, white, white),
-		frameDivider:    createLineVAO(white, white),
+		frameBorder:     gfx.CreateStrokedRectVAO(white, white, white, white),
+		frameDivider:    gfx.CreateLineVAO(white, white),
 	}
 }
 
@@ -34,7 +35,7 @@ func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
 
 	gl.Uniform1f(colorMixAmountLocation, 1)
 	setModelMatrixRectangle(r)
-	ch.frameBorder.render()
+	ch.frameBorder.Render()
 
 	//
 	// Render the symbol, quote, and add button.
@@ -69,14 +70,14 @@ func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
 	rects := sliceRectangle(r, 0.13, 0.13, 0.13, 0.6)
 	for _, r := range rects {
 		setModelMatrixRectangle(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
-		ch.frameDivider.render()
+		ch.frameDivider.Render()
 	}
 	return rects
 }
 
 func (ch *chartFrame) close() {
-	ch.frameDivider.close()
+	ch.frameDivider.Close()
 	ch.frameDivider = nil
-	ch.frameBorder.close()
+	ch.frameBorder.Close()
 	ch.frameBorder = nil
 }
