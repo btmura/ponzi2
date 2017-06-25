@@ -72,8 +72,8 @@ type StaticText struct {
 }
 
 func (t *StaticText) Render(c image.Point, color [3]float32) image.Point {
-	m := math2.NewScaleMatrix(float32(t.Size.X), float32(t.Size.Y), 1)
-	m = m.Mult(math2.NewTranslationMatrix(float32(c.X), float32(c.Y), 0))
+	m := math2.ScaleMatrix(float32(t.Size.X), float32(t.Size.Y), 1)
+	m = m.Mult(math2.TranslationMatrix(float32(c.X), float32(c.Y), 0))
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 
 	gl.BindTexture(gl.TEXTURE_2D, t.texture)

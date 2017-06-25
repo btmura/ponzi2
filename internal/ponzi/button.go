@@ -58,8 +58,8 @@ func createButtonRenderer() (*buttonRenderer, error) {
 }
 
 func (b *buttonRenderer) render(pt, sz image.Point, ic buttonIcon) {
-	m := math2.NewScaleMatrix(float32(sz.X), float32(sz.Y), 1)
-	m = m.Mult(math2.NewTranslationMatrix(float32(pt.X), float32(pt.Y), 0))
+	m := math2.ScaleMatrix(float32(sz.X), float32(sz.Y), 1)
+	m = m.Mult(math2.TranslationMatrix(float32(pt.X), float32(pt.Y), 0))
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 
 	gl.BindTexture(gl.TEXTURE_2D, b.texture)

@@ -124,10 +124,10 @@ func createView(model *model) (*view, error) {
 
 	// Setup the vertex shader uniforms.
 
-	mm := math2.NewScaleMatrix(1, 1, 1)
+	mm := math2.ScaleMatrix(1, 1, 1)
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &mm[0])
 
-	vm := math2.NewViewMatrix(cameraPosition, targetPosition, up)
+	vm := math2.ViewMatrix(cameraPosition, targetPosition, up)
 	nm := vm.Inverse().Transpose()
 	gl.UniformMatrix4fv(normalMatrixLocation, 1, false, &nm[0])
 
@@ -333,10 +333,10 @@ func (v *view) resize(newSize image.Point) {
 	fw, fh := float32(v.winSize.X), float32(v.winSize.Y)
 	aspect := fw / fh
 	fovRadians := float32(math.Pi) / 3
-	v.perspectiveMatrix = v.viewMatrix.Mult(math2.NewPerspectiveMatrix(fovRadians, aspect, 1, 2000))
+	v.perspectiveMatrix = v.viewMatrix.Mult(math2.PerspectiveMatrix(fovRadians, aspect, 1, 2000))
 
 	// Calculate the new ortho projection view matrix.
-	v.orthoMatrix = math2.NewOrthoMatrix(fw, fh, fw /* use width as depth */)
+	v.orthoMatrix = math2.OrthoMatrix(fw, fh, fw /* use width as depth */)
 }
 
 func createImage(data []byte) (*image.RGBA, error) {
