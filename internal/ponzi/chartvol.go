@@ -126,7 +126,7 @@ func (ch *chartVolume) render(r image.Rectangle) {
 		return
 	}
 
-	gl.Uniform1f(colorMixAmountLocation, 1)
+	gfx.SetColorMixAmount(1)
 	gfx.SetModelMatrixRect(r)
 	ch.volRects.Render()
 

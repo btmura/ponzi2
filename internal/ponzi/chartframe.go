@@ -3,8 +3,6 @@ package ponzi
 import (
 	"image"
 
-	"github.com/go-gl/gl/v4.5-core/gl"
-
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
@@ -34,7 +32,7 @@ func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
 	// Render the frame around the chart.
 	//
 
-	gl.Uniform1f(colorMixAmountLocation, 1)
+	gfx.SetColorMixAmount(1)
 	gfx.SetModelMatrixRect(r)
 	ch.frameBorder.Render()
 
@@ -66,7 +64,7 @@ func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
 	//
 
 	r.Max.Y = pt.Y
-	gl.Uniform1f(colorMixAmountLocation, 1)
+	gfx.SetColorMixAmount(1)
 
 	rects := sliceRectangle(r, 0.13, 0.13, 0.13, 0.6)
 	for _, r := range rects {

@@ -36,3 +36,8 @@ func SetModelMatrixRect(r image.Rectangle) {
 	m = m.Mult(math2.TranslationMatrix(float32(r.Min.X+r.Dx()/2), float32(r.Min.Y+r.Dy()/2), 0))
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 }
+
+// TODO(btmura): rename to SetTextureColorAmount
+func SetColorMixAmount(amount float32) {
+	gl.Uniform1f(colorMixAmountLocation, amount)
+}
