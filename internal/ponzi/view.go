@@ -19,26 +19,6 @@ import (
 	"github.com/btmura/ponzi2/internal/obj"
 )
 
-// Locations for the vertex and fragment shaders.
-const (
-	projectionViewMatrixLocation = iota
-	modelMatrixLocation
-	normalMatrixLocation
-
-	ambientLightColorLocation
-	directionalLightColorLocation
-	directionalLightVectorLocation
-
-	positionLocation
-	normalLocation
-	texCoordLocation
-	colorLocation
-
-	textureLocation
-	colorMixAmountLocation
-	textColorLocation
-)
-
 var (
 	cameraPosition = math2.Vector3{X: 0, Y: 5, Z: 10}
 	targetPosition = math2.Vector3{}
@@ -124,16 +104,14 @@ func createView(model *model) (*view, error) {
 
 	// Setup the vertex shader uniforms.
 
-	mm := math2.ScaleMatrix(1, 1, 1)
-	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &mm[0])
+	gfx.SetModelMatrix(math2.ScaleMatrix(1, 1, 1))
 
 	vm := math2.ViewMatrix(cameraPosition, targetPosition, up)
-	nm := vm.Inverse().Transpose()
-	gl.UniformMatrix4fv(normalMatrixLocation, 1, false, &nm[0])
+	gfx.SetNormalMatrix(vm.Inverse().Transpose())
 
-	gl.Uniform3fv(ambientLightColorLocation, 1, &ambientLightColor[0])
-	gl.Uniform3fv(directionalLightColorLocation, 1, &directionalLightColor[0])
-	gl.Uniform3fv(directionalLightVectorLocation, 1, &directionalVector[0])
+	gfx.SetAmbientLightColor(ambientLightColor)
+	gfx.SetDirectionalLightColor(directionalLightColor)
+	gfx.SetDirectionalLightVector(directionalVector)
 
 	// Load meshes and create vertex array objects.
 
@@ -205,7 +183,7 @@ func (v *view) render(fudge float32) {
 	defer v.model.Unlock()
 
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	gl.UniformMatrix4fv(projectionViewMatrixLocation, 1, false, &v.orthoMatrix[0])
+	gfx.SetProjectionViewMatrix(v.orthoMatrix)
 
 	// Render input symbol being typed in the center.
 	if v.model.inputSymbol != "" {

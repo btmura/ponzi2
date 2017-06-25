@@ -5,8 +5,9 @@ import (
 	"image"
 	"time"
 
-	"github.com/btmura/ponzi2/internal/gfx"
 	"github.com/go-gl/gl/v4.5-core/gl"
+
+	"github.com/btmura/ponzi2/internal/gfx"
 )
 
 type chartStochasticType int32
