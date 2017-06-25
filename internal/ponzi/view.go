@@ -14,7 +14,6 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 
 	"github.com/btmura/ponzi2/internal/gfx"
-	"github.com/btmura/ponzi2/internal/gl2"
 	"github.com/btmura/ponzi2/internal/math2"
 	"github.com/btmura/ponzi2/internal/obj"
 )
@@ -45,9 +44,6 @@ var acceptedChars = map[rune]bool{
 type view struct {
 	// model is the model that will be rendered.
 	model *model
-
-	// program is the OpenGL program created by createProgram.
-	program uint32
 
 	// orthoPlaneMesh is a plane with bounds from (0, 0) to (1, 1)
 	// which in convenient for positioning text.
@@ -93,14 +89,9 @@ func createView(model *model) (*view, error) {
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 	gl.ClearColor(0, 0, 0, 0)
 
-	// Create shaders and link them into a program.
-
-	p, err := gl2.CreateProgram(string(MustAsset("shader.vert")), string(MustAsset("shader.frag")))
-	if err != nil {
+	if err := gfx.Init(); err != nil {
 		return nil, err
 	}
-
-	gl.UseProgram(p)
 
 	// Setup the vertex shader uniforms.
 
@@ -152,7 +143,6 @@ func createView(model *model) (*view, error) {
 
 	return &view{
 		model:           model,
-		program:         p,
 		orthoPlaneMesh:  orthoPlaneMesh,
 		dowText:         small.CreateStaticText("DOW"),
 		sapText:         small.CreateStaticText("S&P"),

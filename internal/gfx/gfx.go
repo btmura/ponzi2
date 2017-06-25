@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 
+	"github.com/btmura/ponzi2/internal/gl2"
 	"github.com/btmura/ponzi2/internal/math2"
 )
 
@@ -30,6 +31,15 @@ const (
 	colorMixAmountLocation
 	textColorLocation
 )
+
+func Init() error {
+	p, err := gl2.CreateProgram(string(MustAsset("shader.vert")), string(MustAsset("shader.frag")))
+	if err != nil {
+		return err
+	}
+	gl.UseProgram(p)
+	return nil
+}
 
 func SetProjectionViewMatrix(m math2.Matrix4) {
 	gl.UniformMatrix4fv(projectionViewMatrixLocation, 1, false, &m[0])
