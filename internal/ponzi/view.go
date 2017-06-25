@@ -350,12 +350,6 @@ func createImage(data []byte) (*image.RGBA, error) {
 	return rgba, nil
 }
 
-func setModelMatrixRectangle(r image.Rectangle) {
-	m := math2.NewScaleMatrix(float32(r.Dx()/2), float32(r.Dy()/2), 1)
-	m = m.Mult(math2.NewTranslationMatrix(float32(r.Min.X+r.Dx()/2), float32(r.Min.Y+r.Dy()/2), 0))
-	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
-}
-
 func sliceRectangle(r image.Rectangle, percentages ...float32) []image.Rectangle {
 	var rects []image.Rectangle
 	y := r.Min.Y

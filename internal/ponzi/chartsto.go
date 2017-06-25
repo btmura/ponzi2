@@ -110,12 +110,12 @@ func (ch *chartStochastics) render(r image.Rectangle) {
 	}
 
 	gl.Uniform1f(colorMixAmountLocation, 1)
-	setModelMatrixRectangle(r)
+	gfx.SetModelMatrixRect(r)
 	ch.stoLines.Render()
 
 	for _, yLocPercent := range []float32{0.3, 0.7} {
 		y := r.Min.Y + int(float32(r.Dy())*yLocPercent)
-		setModelMatrixRectangle(image.Rect(r.Min.X, y, r.Max.X, y))
+		gfx.SetModelMatrixRect(image.Rect(r.Min.X, y, r.Max.X, y))
 		ch.labelLine.Render()
 	}
 }

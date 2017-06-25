@@ -75,7 +75,7 @@ func (ch *chartLines) render(r image.Rectangle) {
 		return
 	}
 	gl.Uniform1f(colorMixAmountLocation, 1)
-	setModelMatrixRectangle(r)
+	gfx.SetModelMatrixRect(r)
 	ch.weekLines.Render()
 }
 

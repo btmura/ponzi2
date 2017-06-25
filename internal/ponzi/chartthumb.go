@@ -45,7 +45,7 @@ func (ct *chartThumbnail) render(r image.Rectangle) {
 	//
 
 	gl.Uniform1f(colorMixAmountLocation, 1)
-	setModelMatrixRectangle(r)
+	gfx.SetModelMatrixRect(r)
 	ct.frameBorder.Render()
 
 	//
@@ -71,7 +71,7 @@ func (ct *chartThumbnail) render(r image.Rectangle) {
 
 	rects := sliceRectangle(r, 0.5, 0.5)
 	for _, r := range rects {
-		setModelMatrixRectangle(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
+		gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
 		ct.frameDivider.Render()
 	}
 

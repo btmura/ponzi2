@@ -164,7 +164,7 @@ func (ch *chartPrices) render(r image.Rectangle) {
 	}
 
 	gl.Uniform1f(colorMixAmountLocation, 1)
-	setModelMatrixRectangle(r)
+	gfx.SetModelMatrixRect(r)
 	ch.stickLines.Render()
 	ch.stickRects.Render()
 
@@ -178,7 +178,7 @@ func (ch *chartPrices) render(r image.Rectangle) {
 				break
 			}
 
-			setModelMatrixRectangle(image.Rect(r.Min.X, y, r.Max.X, y))
+			gfx.SetModelMatrixRect(image.Rect(r.Min.X, y, r.Max.X, y))
 			ch.labelLine.Render()
 		}
 		y -= dy
