@@ -116,70 +116,72 @@ func googleGetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, er
 			return nil, fmt.Errorf("record length should be 6, got %d", len(record))
 		}
 
-		// skip header row
-		if i != 0 {
-			parseRecordTime := func(i int) (time.Time, error) {
-				return time.Parse("2-Jan-06", record[i])
-			}
-
-			parseRecordFloat := func(i int) (float32, error) {
-				return parseFloat(record[i])
-			}
-
-			parseRecordInt := func(i int) (int, error) {
-				return parseInt(record[i])
-			}
-
-			date, err := parseRecordTime(0)
-			if err != nil {
-				return nil, wrapErr(err)
-			}
-
-			close, err := parseRecordFloat(4)
-			if err != nil {
-				return nil, wrapErr(err)
-			}
-
-			// Open, high, and low can be reported as "-" causing parse errors,
-			// so set them to the close by default to fix graph rendering.
-
-			open, high, low := close, close, close
-
-			if record[1] != "-" {
-				open, err = parseRecordFloat(1)
-				if err != nil {
-					return nil, wrapErr(err)
-				}
-			}
-
-			if record[2] != "-" {
-				high, err = parseRecordFloat(2)
-				if err != nil {
-					return nil, wrapErr(err)
-				}
-			}
-
-			if record[3] != "-" {
-				low, err = parseRecordFloat(3)
-				if err != nil {
-					return nil, wrapErr(err)
-				}
-			}
-
-			volume, err := parseRecordInt(5)
-			if err != nil {
-				return nil, wrapErr(err)
-			}
-
-			history.Sessions = append(history.Sessions, &TradingSession{
-				Date:   date,
-				Open:   open,
-				High:   high,
-				Low:    low,
-				Close:  close,
-				Volume: volume,
-			})
+		// Skip the header row.
+		if i == 0 {
+			continue
 		}
+
+		parseRecordTime := func(i int) (time.Time, error) {
+			return time.Parse("2-Jan-06", record[i])
+		}
+
+		parseRecordFloat := func(i int) (float32, error) {
+			return parseFloat(record[i])
+		}
+
+		parseRecordInt := func(i int) (int, error) {
+			return parseInt(record[i])
+		}
+
+		date, err := parseRecordTime(0)
+		if err != nil {
+			return nil, wrapErr(err)
+		}
+
+		close, err := parseRecordFloat(4)
+		if err != nil {
+			return nil, wrapErr(err)
+		}
+
+		// Open, high, and low can be reported as "-" causing parse errors,
+		// so set them to the close by default to fix graph rendering.
+
+		open, high, low := close, close, close
+
+		if record[1] != "-" {
+			open, err = parseRecordFloat(1)
+			if err != nil {
+				return nil, wrapErr(err)
+			}
+		}
+
+		if record[2] != "-" {
+			high, err = parseRecordFloat(2)
+			if err != nil {
+				return nil, wrapErr(err)
+			}
+		}
+
+		if record[3] != "-" {
+			low, err = parseRecordFloat(3)
+			if err != nil {
+				return nil, wrapErr(err)
+			}
+		}
+
+		volume, err := parseRecordInt(5)
+		if err != nil {
+			return nil, wrapErr(err)
+		}
+
+		history.Sessions = append(history.Sessions, &TradingSession{
+			Date:   date,
+			Open:   open,
+			High:   high,
+			Low:    low,
+			Close:  close,
+			Volume: volume,
+		})
 	}
 
 	// Most recent trading sessions at the back.
@@ -239,61 +241,63 @@ func yahooGetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, err
 			return nil, fmt.Errorf("record length should be 7, got %d", len(record))
 		}
 
-		// skip header row
-		if i != 0 {
-			parseRecordTime := func(i int) (time.Time, error) {
-				return time.Parse("2006-01-02", record[i])
-			}
-
-			parseRecordFloat := func(i int) (float32, error) {
-				return parseFloat(record[i])
-			}
-
-			parseRecordInt := func(i int) (int, error) {
-				return parseInt(record[i])
-			}
-
-			date, err := parseRecordTime(0)
-			if err != nil {
-				return nil, wrapErr(err)
-			}
-
-			open, err := parseRecordFloat(1)
-			if err != nil {
-				return nil, wrapErr(err)
-			}
-
-			high, err := parseRecordFloat(2)
-			if err != nil {
-				return nil, wrapErr(err)
-			}
-
-			low, err := parseRecordFloat(3)
-			if err != nil {
-				return nil, wrapErr(err)
-			}
-
-			close, err := parseRecordFloat(4)
-			if err != nil {
-				return nil, wrapErr(err)
-			}
-
-			volume, err := parseRecordInt(5)
-			if err != nil {
-				return nil, wrapErr(err)
-			}
-
-			// Ignore adjusted close value to keep Google and Yahoo APIs the same.
-
-			history.Sessions = append(history.Sessions, &TradingSession{
-				Date:   date,
-				Open:   open,
-				High:   high,
-				Low:    low,
-				Close:  close,
-				Volume: volume,
-			})
+		// Skip the header row.
+		if i == 0 {
+			continue
 		}
+
+		parseRecordTime := func(i int) (time.Time, error) {
+			return time.Parse("2006-01-02", record[i])
+		}
+
+		parseRecordFloat := func(i int) (float32, error) {
+			return parseFloat(record[i])
+		}
+
+		parseRecordInt := func(i int) (int, error) {
+			return parseInt(record[i])
+		}
+
+		date, err := parseRecordTime(0)
+		if err != nil {
+			return nil, wrapErr(err)
+		}
+
+		open, err := parseRecordFloat(1)
+		if err != nil {
+			return nil, wrapErr(err)
+		}
+
+		high, err := parseRecordFloat(2)
+		if err != nil {
+			return nil, wrapErr(err)
+		}
+
+		low, err := parseRecordFloat(3)
+		if err != nil {
+			return nil, wrapErr(err)
+		}
+
+		close, err := parseRecordFloat(4)
+		if err != nil {
+			return nil, wrapErr(err)
+		}
+
+		volume, err := parseRecordInt(5)
+		if err != nil {
+			return nil, wrapErr(err)
+		}
+
+		// Ignore adjusted close value to keep Google and Yahoo APIs the same.
+
+		history.Sessions = append(history.Sessions, &TradingSession{
+			Date:   date,
+			Open:   open,
+			High:   high,
+			Low:    low,
+			Close:  close,
+			Volume: volume,
+		})
 	}
 
 	// Most recent trading sessions at the back.
