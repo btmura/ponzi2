@@ -271,7 +271,9 @@ func (v *view) handleKey(key glfw.Key, action glfw.Action) {
 	case glfw.KeyEnter:
 		v.model.submitSymbol()
 		go func() {
-			v.model.refresh()
+			if err := v.model.refresh(); err != nil {
+				glog.Errorf("refresh failed: %v", err)
+			}
 		}()
 
 	case glfw.KeyBackspace:

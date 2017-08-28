@@ -5,6 +5,7 @@ import (
 	"runtime"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/golang/glog"
 )
 
 // Get go-bindata from github.com/jteeuwen/go-bindata. It's used to embed resources into the binary.
@@ -46,7 +47,9 @@ func Run() {
 
 	// GLFW, GL, and shaders OK! Go fetch data for the model.
 	go func() {
-		m.refresh()
+		if err := m.refresh(); err != nil {
+			glog.Errorf("refresh failed: %v", err)
+		}
 	}()
 
 	// Call the size callback to set the initial viewport.
