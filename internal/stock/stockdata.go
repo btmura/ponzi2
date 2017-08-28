@@ -106,6 +106,11 @@ func googleGetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, er
 			return nil, err
 		}
 
+		// wrapErr adds the error to the record for debugging.
+		wrapErr := func(err error) error {
+			return fmt.Errorf("parsing %q: %v", strings.Join(record, ","), err)
+		}
+
 		// format: Date, Open, High, Low, Close, Volume
 		if len(record) != 6 {
 			return nil, fmt.Errorf("record length should be 6, got %d", len(record))
@@ -127,32 +132,32 @@ func googleGetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, er
 
 			date, err := parseRecordTime(0)
 			if err != nil {
-				return nil, err
+				return nil, wrapErr(err)
 			}
 
 			open, err := parseRecordFloat(1)
 			if err != nil {
-				return nil, err
+				return nil, wrapErr(err)
 			}
 
 			high, err := parseRecordFloat(2)
 			if err != nil {
-				return nil, err
+				return nil, wrapErr(err)
 			}
 
 			low, err := parseRecordFloat(3)
 			if err != nil {
-				return nil, err
+				return nil, wrapErr(err)
 			}
 
 			close, err := parseRecordFloat(4)
 			if err != nil {
-				return nil, err
+				return nil, wrapErr(err)
 			}
 
 			volume, err := parseRecordInt(5)
 			if err != nil {
-				return nil, err
+				return nil, wrapErr(err)
 			}
 
 			history.Sessions = append(history.Sessions, &TradingSession{
@@ -213,6 +218,11 @@ func yahooGetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, err
 			return nil, err
 		}
 
+		// wrapErr adds the error to the record for debugging.
+		wrapErr := func(err error) error {
+			return fmt.Errorf("parsing %q: %v", strings.Join(record, ","), err)
+		}
+
 		// format: Date, Open, High, Low, Close, Volume, Adj. Close
 		if len(record) != 7 {
 			return nil, fmt.Errorf("record length should be 7, got %d", len(record))
@@ -234,32 +244,32 @@ func yahooGetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, err
 
 			date, err := parseRecordTime(0)
 			if err != nil {
-				return nil, err
+				return nil, wrapErr(err)
 			}
 
 			open, err := parseRecordFloat(1)
 			if err != nil {
-				return nil, err
+				return nil, wrapErr(err)
 			}
 
 			high, err := parseRecordFloat(2)
 			if err != nil {
-				return nil, err
+				return nil, wrapErr(err)
 			}
 
 			low, err := parseRecordFloat(3)
 			if err != nil {
-				return nil, err
+				return nil, wrapErr(err)
 			}
 
 			close, err := parseRecordFloat(4)
 			if err != nil {
-				return nil, err
+				return nil, wrapErr(err)
 			}
 
 			volume, err := parseRecordInt(5)
 			if err != nil {
-				return nil, err
+				return nil, wrapErr(err)
 			}
 
 			// Ignore adjusted close value to keep Google and Yahoo APIs the same.
