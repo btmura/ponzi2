@@ -3,22 +3,23 @@
     "tasks": [
         {
             "taskName": "build and run",
-            "isBuildCommand": true,
-            "isBackground": true,
+            "type": "shell",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
 
-            "command": "go build -v -x; if ($?) { ./ponzi2.exe }",
-            "isShellCommand": true,
+            "command": "go build -v -x; if ($?) { ./ponzi2.exe -logtostderr }",
             "options": {
                 "cwd": "${workspaceRoot}"
             },
-            
+
             "linux": {
-                "command": "go build -v -x && ./ponzi2",
-                "isShellCommand": true,
+                "command": "go build -v -x && ./ponzi2 -logtostderr",
                 "options": {
                     "cwd": "${workspaceRoot}"
                 }
-            }
+            },
         }
     ]
 }
