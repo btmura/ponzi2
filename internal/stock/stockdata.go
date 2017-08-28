@@ -135,24 +135,35 @@ func googleGetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, er
 				return nil, wrapErr(err)
 			}
 
-			open, err := parseRecordFloat(1)
-			if err != nil {
-				return nil, wrapErr(err)
-			}
-
-			high, err := parseRecordFloat(2)
-			if err != nil {
-				return nil, wrapErr(err)
-			}
-
-			low, err := parseRecordFloat(3)
-			if err != nil {
-				return nil, wrapErr(err)
-			}
-
 			close, err := parseRecordFloat(4)
 			if err != nil {
 				return nil, wrapErr(err)
+			}
+
+			// Open, high, and low can be reported as "-" causing parse errors,
+			// so set them to the close by default to fix graph rendering.
+
+			open, high, low := close, close, close
+
+			if record[1] != "-" {
+				open, err = parseRecordFloat(1)
+				if err != nil {
+					return nil, wrapErr(err)
+				}
+			}
+
+			if record[2] != "-" {
+				high, err = parseRecordFloat(2)
+				if err != nil {
+					return nil, wrapErr(err)
+				}
+			}
+
+			if record[3] != "-" {
+				low, err = parseRecordFloat(3)
+				if err != nil {
+					return nil, wrapErr(err)
+				}
 			}
 
 			volume, err := parseRecordInt(5)
