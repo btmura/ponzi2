@@ -75,16 +75,16 @@ func CreateMeshes(objs []*obj.Object) []*Mesh {
 			ID:    o.ID,
 			count: int32(len(indices)),
 		})
-		iboNames = append(iboNames, gl2.CreateElementArrayBuffer(indices))
+		iboNames = append(iboNames, gl2.ElementArrayBuffer(indices))
 	}
 
 	glog.Infof("vertices: %d", len(vertexTable))
 	glog.Infof("normals: %d", len(normalTable))
 	glog.Infof("texCoords: %d", len(texCoordTable))
 
-	vbo := gl2.CreateArrayBuffer(vertices)
-	nbo := gl2.CreateArrayBuffer(normals)
-	tbo := gl2.CreateArrayBuffer(texCoords)
+	vbo := gl2.ArrayBuffer(vertices)
+	nbo := gl2.ArrayBuffer(normals)
+	tbo := gl2.ArrayBuffer(texCoords)
 
 	for i, m := range meshes {
 		gl.GenVertexArrays(1, &m.vao)

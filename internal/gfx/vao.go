@@ -59,9 +59,9 @@ func CreateVAO(mode uint32, vertices, colors []float32, indices []uint16) *VAO {
 		return nil // Can't create empty buffer objects. Bail out if nothing to render.
 	}
 
-	vbo := gl2.CreateArrayBuffer(vertices)
-	cbo := gl2.CreateArrayBuffer(colors)
-	ibo := gl2.CreateElementArrayBuffer(indices)
+	vbo := gl2.ArrayBuffer(vertices)
+	cbo := gl2.ArrayBuffer(colors)
+	ibo := gl2.ElementArrayBuffer(indices)
 
 	var array uint32
 	gl.GenVertexArrays(1, &array)

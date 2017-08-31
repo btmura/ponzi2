@@ -33,7 +33,7 @@ const (
 )
 
 func Init() error {
-	p, err := gl2.CreateProgram(string(MustAsset("shader.vert")), string(MustAsset("shader.frag")))
+	p, err := gl2.Program(string(MustAsset("shader.vert")), string(MustAsset("shader.frag")))
 	if err != nil {
 		return err
 	}

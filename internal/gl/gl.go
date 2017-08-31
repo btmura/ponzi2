@@ -10,14 +10,14 @@ import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
-// CreateProgram creates a program from vertex and fragment shader source code.
-func CreateProgram(vertexShaderSrc, fragmentShaderSrc string) (uint32, error) {
-	vs, err := createShader(vertexShaderSrc, gl.VERTEX_SHADER)
+// Program creates a program from vertex and fragment shader source code.
+func Program(vertexShaderSrc, fragmentShaderSrc string) (uint32, error) {
+	vs, err := shader(vertexShaderSrc, gl.VERTEX_SHADER)
 	if err != nil {
 		return 0, err
 	}
 
-	fs, err := createShader(fragmentShaderSrc, gl.FRAGMENT_SHADER)
+	fs, err := shader(fragmentShaderSrc, gl.FRAGMENT_SHADER)
 	if err != nil {
 		return 0, err
 	}
@@ -45,7 +45,7 @@ func CreateProgram(vertexShaderSrc, fragmentShaderSrc string) (uint32, error) {
 	return p, nil
 }
 
-func createShader(shaderSource string, shaderType uint32) (uint32, error) {
+func shader(shaderSource string, shaderType uint32) (uint32, error) {
 	sh := gl.CreateShader(shaderType)
 	src, free := gl.Strs(shaderSource + "\x00")
 	defer free()
@@ -67,8 +67,8 @@ func createShader(shaderSource string, shaderType uint32) (uint32, error) {
 	return sh, nil
 }
 
-// CreateTexture creates a texture from an image.
-func CreateTexture(rgba *image.RGBA) uint32 {
+// Texture creates a texture from an image.
+func Texture(rgba *image.RGBA) uint32 {
 	var tex uint32
 	gl.GenTextures(1, &tex)
 	gl.BindTexture(gl.TEXTURE_2D, tex)
@@ -85,8 +85,8 @@ func CreateTexture(rgba *image.RGBA) uint32 {
 	return tex
 }
 
-// CreateArrayBuffer creates an array buffer from a slice of floats.
-func CreateArrayBuffer(data []float32) uint32 {
+// ArrayBuffer creates an array buffer from a slice of floats.
+func ArrayBuffer(data []float32) uint32 {
 	var name uint32
 	gl.GenBuffers(1, &name)
 	gl.BindBuffer(gl.ARRAY_BUFFER, name)
@@ -95,8 +95,8 @@ func CreateArrayBuffer(data []float32) uint32 {
 	return name
 }
 
-// CreateElementArrayBuffer creates an element array buffer from a slice of floats.
-func CreateElementArrayBuffer(data []uint16) uint32 {
+// ElementArrayBuffer creates an element array buffer from a slice of floats.
+func ElementArrayBuffer(data []uint16) uint32 {
 	var name uint32
 	gl.GenBuffers(1, &name)
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, name)

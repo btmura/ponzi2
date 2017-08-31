@@ -48,7 +48,7 @@ func createButtonRenderer() (*buttonRenderer, error) {
 		return nil, err
 	}
 
-	tex := gl2.CreateTexture(img)
+	tex := gl2.Texture(img)
 
 	return &buttonRenderer{
 		mesh:    bm,
