@@ -54,6 +54,7 @@ func (ct *chartThumbnail) render(r image.Rectangle) {
 		pt := pt
 		pt.X += pad
 		pt.X += thumbSymbolQuoteTextRenderer.Render(ct.stock.symbol, pt, white)
+		pt.X += pad
 		pt.X += thumbSymbolQuoteTextRenderer.Render(shortFormatQuote(ct.stock.quote), pt, quoteColor(ct.stock.quote))
 	}
 	pt.Y -= pad
