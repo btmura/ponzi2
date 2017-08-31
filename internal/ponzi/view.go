@@ -132,20 +132,20 @@ func (v *view) render(fudge float32) {
 		inputSymbolTextRenderer.Render(v.model.inputSymbol, c, white)
 	}
 
-	const p = 5 // padding
+	const pad = 5 // padding
 
 	// Start in upper left. (0, 0) is lower left.
 	// Move down below the major indices line.
-	c := image.Pt(p, v.winSize.Y-p-majorIndexTextRenderer.LineHeight())
+	pt := image.Pt(pad, v.winSize.Y-pad-majorIndexTextRenderer.LineHeight())
 
 	// Render major indices on one line.
 	{
-		c := c
+		pt := pt
 		render := func(index string, q *modelQuote) {
-			c.X += majorIndexTextRenderer.Render(index, c, white)
-			c.X += p
-			c.X += majorIndexTextRenderer.Render(formatQuote(q), c, quoteColor(q))
-			c.X += p
+			pt.X += majorIndexTextRenderer.Render(index, pt, white)
+			pt.X += pad
+			pt.X += majorIndexTextRenderer.Render(formatQuote(q), pt, quoteColor(q))
+			pt.X += pad
 		}
 
 		render("DOW", v.model.dow)
@@ -153,7 +153,7 @@ func (v *view) render(fudge float32) {
 		render("NASDAQ", v.model.nasdaq)
 	}
 
-	c.Y -= p
+	pt.Y -= pad
 
 	// Render the current symbol below the indices.
 	if v.chart == nil || v.chart.stock != v.model.currentStock {
@@ -173,11 +173,11 @@ func (v *view) render(fudge float32) {
 	ms := image.Pt(150, 100)
 
 	if v.chart != nil {
-		v.chart.render(image.Rect(c.X+ms.X+p, p, v.winSize.X-p, c.Y))
+		v.chart.render(image.Rect(pt.X+ms.X+pad, pad, v.winSize.X-pad, pt.Y))
 	}
 
 	if v.chartThumbnail != nil {
-		v.chartThumbnail.render(image.Rect(c.X, c.Y-ms.Y, c.X+ms.X, c.Y))
+		v.chartThumbnail.render(image.Rect(pt.X, pt.Y-ms.Y, pt.X+ms.X, pt.Y))
 	}
 }
 
