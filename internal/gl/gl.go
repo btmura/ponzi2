@@ -1,4 +1,5 @@
-package gl2
+// Package gl has OpenGL utility functions.
+package gl
 
 import (
 	"fmt"

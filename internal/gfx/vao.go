@@ -3,7 +3,7 @@ package gfx
 import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 
-	"github.com/btmura/ponzi2/internal/gl2"
+	gl2 "github.com/btmura/ponzi2/internal/gl"
 )
 
 // VAO is a Vertex Array Object (VAO) for one element type (lines, triangles, etc).

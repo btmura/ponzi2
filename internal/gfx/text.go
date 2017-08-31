@@ -12,7 +12,7 @@ import (
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
 
-	"github.com/btmura/ponzi2/internal/gl2"
+	gl2 "github.com/btmura/ponzi2/internal/gl"
 	"github.com/btmura/ponzi2/internal/math2"
 	"github.com/btmura/ponzi2/internal/obj"
 )
