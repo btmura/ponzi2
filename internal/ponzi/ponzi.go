@@ -20,7 +20,7 @@ func init() {
 func Run() {
 	checkErr := func(err error) {
 		if err != nil {
-			panic(err)
+			glog.Fatalf("ponzi: Run failed: %v", err)
 		}
 	}
 
