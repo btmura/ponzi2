@@ -1,8 +1,10 @@
-package time2
+// Package time has time utility functions.
+package time
 
 import (
-	"fmt"
 	"time"
+
+	"github.com/golang/glog"
 )
 
 // NewYorkLoc is the New York timezone.
@@ -12,7 +14,7 @@ var NewYorkLoc = mustLoadLocation("America/New_York")
 func mustLoadLocation(name string) *time.Location {
 	loc, err := time.LoadLocation("America/New_York")
 	if err != nil {
-		panic(fmt.Sprintf("time.LoadLocation: %v", err))
+		glog.Fatalf("time.mustLoadLocation: time.LoadLocation failed: %v", err)
 	}
 	return loc
 }
