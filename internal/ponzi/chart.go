@@ -26,10 +26,10 @@ type chart struct {
 
 // TODO(btmura): create chart factory that creates charts
 // TODO(btmura): create chart components and pass them in
-func createChart(stock *modelStock, br *buttonRenderer) *chart {
+func createChart(stock *modelStock) *chart {
 	return &chart{
 		stock:             stock,
-		frame:             createChartFrame(stock, br),
+		frame:             createChartFrame(stock),
 		lines:             createChartLines(stock),
 		prices:            createChartPrices(stock),
 		volume:            createChartVolume(stock),

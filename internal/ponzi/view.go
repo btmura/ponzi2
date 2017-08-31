@@ -52,7 +52,6 @@ type view struct {
 	model             *model // model is the model that will be rendered.
 	chart             *chart
 	chartThumbnail    *chartThumbnail
-	buttonRenderer    *buttonRenderer
 	viewMatrix        math2.Matrix4
 	perspectiveMatrix math2.Matrix4
 	orthoMatrix       math2.Matrix4
@@ -93,15 +92,9 @@ func createView(model *model) (*view, error) {
 	gfx.SetDirectionalLightColor(directionalLightColor)
 	gfx.SetDirectionalLightVector(directionalVector)
 
-	ir, err := createButtonRenderer()
-	if err != nil {
-		return nil, err
-	}
-
 	return &view{
-		model:          model,
-		buttonRenderer: ir,
-		viewMatrix:     vm,
+		model:      model,
+		viewMatrix: vm,
 	}, nil
 }
 
@@ -159,7 +152,7 @@ func (v *view) render(fudge float32) {
 		if v.chart != nil {
 			v.chart.close()
 		}
-		v.chart = createChart(v.model.currentStock, v.buttonRenderer)
+		v.chart = createChart(v.model.currentStock)
 	}
 
 	if v.chartThumbnail == nil || v.chartThumbnail.stock != v.model.currentStock {
