@@ -14,7 +14,7 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 
 	"github.com/btmura/ponzi2/internal/gfx"
-	"github.com/btmura/ponzi2/internal/math2"
+	math2 "github.com/btmura/ponzi2/internal/math"
 )
 
 var (

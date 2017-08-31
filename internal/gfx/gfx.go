@@ -6,7 +6,7 @@ import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 
 	gl2 "github.com/btmura/ponzi2/internal/gl"
-	"github.com/btmura/ponzi2/internal/math2"
+	math2 "github.com/btmura/ponzi2/internal/math"
 )
 
 // Get go-bindata from github.com/jteeuwen/go-bindata. It's used to embed resources into the binary.

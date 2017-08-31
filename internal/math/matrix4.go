@@ -1,4 +1,5 @@
-package math2
+// Package math has functions to work with matrices, quaternions, and vectors.
+package math
 
 import (
 	"fmt"

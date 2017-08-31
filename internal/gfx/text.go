@@ -13,7 +13,7 @@ import (
 	"golang.org/x/image/math/fixed"
 
 	gl2 "github.com/btmura/ponzi2/internal/gl"
-	"github.com/btmura/ponzi2/internal/math2"
+	math2 "github.com/btmura/ponzi2/internal/math"
 	"github.com/btmura/ponzi2/internal/obj"
 )
 
