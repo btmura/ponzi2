@@ -1,10 +1,8 @@
 package ponzi
 
 import (
-	"bytes"
 	"fmt"
 	"image"
-	"image/draw"
 	"math"
 	"unicode"
 
@@ -253,17 +251,6 @@ func (v *view) resize(newSize image.Point) {
 
 	// Calculate the new ortho projection view matrix.
 	v.orthoMatrix = math2.OrthoMatrix(fw, fh, fw /* use width as depth */)
-}
-
-func createImage(data []byte) (*image.RGBA, error) {
-	img, _, err := image.Decode(bytes.NewReader(data))
-	if err != nil {
-		return nil, fmt.Errorf("createImage: %v", err)
-	}
-
-	rgba := image.NewRGBA(img.Bounds())
-	draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
-	return rgba, nil
 }
 
 // sliceRectangle horizontally cuts a rectangle from the bottom at the given percentages.
