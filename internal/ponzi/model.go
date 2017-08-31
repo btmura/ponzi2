@@ -160,7 +160,7 @@ func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySes
 			volume: s.Volume,
 		})
 	}
-	sort.Sort(byModelTradingSessionDate(ds))
+	sortByModelTradingSessionDate(ds)
 
 	// Convert the daily sessions into weekly sessions.
 	var ws []*modelTradingSession
@@ -248,20 +248,8 @@ func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySes
 	return ds, ws
 }
 
-// byModelTradingSessionDate is a sortable modelTradingSession slice.
-type byModelTradingSessionDate []*modelTradingSession
-
-// Len implements sort.Interface.
-func (ss byModelTradingSessionDate) Len() int {
-	return len(ss)
-}
-
-// Less implements sort.Interface.
-func (ss byModelTradingSessionDate) Less(i, j int) bool {
-	return ss[i].date.Before(ss[j].date)
-}
-
-// Swap implements sort.Interface.
-func (ss byModelTradingSessionDate) Swap(i, j int) {
-	ss[i], ss[j] = ss[j], ss[i]
+func sortByModelTradingSessionDate(ss []*modelTradingSession) {
+	sort.Slice(ss, func(i, j int) bool {
+		return ss[i].date.Before(ss[j].date)
+	})
 }
