@@ -4,16 +4,6 @@ import (
 	"image"
 )
 
-// Colors used by the chart.
-var (
-	green  = [3]float32{0.25, 1, 0}
-	red    = [3]float32{1, 0.3, 0}
-	yellow = [3]float32{1, 1, 0}
-	purple = [3]float32{0.5, 0, 1}
-	white  = [3]float32{1, 1, 1}
-	gray   = [3]float32{0.15, 0.15, 0.15}
-)
-
 type chart struct {
 	stock             *modelStock
 	frame             *chartFrame

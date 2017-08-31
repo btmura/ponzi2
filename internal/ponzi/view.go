@@ -17,6 +17,16 @@ import (
 	math2 "github.com/btmura/ponzi2/internal/math"
 )
 
+// Colors used throughout the UI.
+var (
+	green  = [3]float32{0.25, 1, 0}
+	red    = [3]float32{1, 0.3, 0}
+	yellow = [3]float32{1, 1, 0}
+	purple = [3]float32{0.5, 0, 1}
+	white  = [3]float32{1, 1, 1}
+	gray   = [3]float32{0.15, 0.15, 0.15}
+)
+
 var (
 	cameraPosition = math2.Vector3{X: 0, Y: 5, Z: 10}
 	targetPosition = math2.Vector3{}
