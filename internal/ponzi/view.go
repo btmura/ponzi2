@@ -15,7 +15,6 @@ import (
 
 	"github.com/btmura/ponzi2/internal/gfx"
 	"github.com/btmura/ponzi2/internal/math2"
-	"github.com/btmura/ponzi2/internal/obj"
 )
 
 var (
@@ -41,33 +40,23 @@ var acceptedChars = map[rune]bool{
 	'Y': true, 'Z': true,
 }
 
+var (
+	inputSymbolTextRenderer      = gfx.NewTextRenderer(goregular.TTF, 48)
+	majorIndexTextRenderer       = gfx.NewTextRenderer(goregular.TTF, 12)
+	symbolQuoteTextRenderer      = gfx.NewTextRenderer(goregular.TTF, 24)
+	axisLabelTextRenderer        = majorIndexTextRenderer
+	thumbSymbolQuoteTextRenderer = majorIndexTextRenderer
+)
+
 type view struct {
-	// model is the model that will be rendered.
-	model *model
-
-	// orthoPlaneMesh is a plane with bounds from (0, 0) to (1, 1)
-	// which in convenient for positioning text.
-	orthoPlaneMesh *gfx.Mesh
-
-	dowText    *gfx.StaticText
-	sapText    *gfx.StaticText
-	nasdaqText *gfx.StaticText
-
-	chart          *chart
-	chartThumbnail *chartThumbnail
-
-	smallText       *gfx.DynamicText
-	symbolQuoteText *gfx.DynamicText
-	priceText       *gfx.DynamicText
-	inputSymbolText *gfx.DynamicText
-
-	buttonRenderer *buttonRenderer
-
+	model             *model // model is the model that will be rendered.
+	chart             *chart
+	chartThumbnail    *chartThumbnail
+	buttonRenderer    *buttonRenderer
 	viewMatrix        math2.Matrix4
 	perspectiveMatrix math2.Matrix4
 	orthoMatrix       math2.Matrix4
-
-	winSize image.Point
+	winSize           image.Point
 }
 
 func createView(model *model) (*view, error) {
@@ -104,55 +93,15 @@ func createView(model *model) (*view, error) {
 	gfx.SetDirectionalLightColor(directionalLightColor)
 	gfx.SetDirectionalLightVector(directionalVector)
 
-	// Load meshes and create vertex array objects.
-
-	objs, err := obj.Decode(bytes.NewReader(MustAsset("meshes.obj")))
-	if err != nil {
-		return nil, err
-	}
-
-	var orthoPlaneMesh *gfx.Mesh
-	for _, m := range gfx.CreateMeshes(objs) {
-		switch m.ID {
-		case "orthoPlane":
-			orthoPlaneMesh = m
-		}
-	}
-
-	small, err := gfx.NewTextFactory(orthoPlaneMesh, goregular.TTF, 12)
-	if err != nil {
-		return nil, err
-	}
-
-	medium, err := gfx.NewTextFactory(orthoPlaneMesh, goregular.TTF, 24)
-	if err != nil {
-		return nil, err
-	}
-
-	large, err := gfx.NewTextFactory(orthoPlaneMesh, goregular.TTF, 48)
-	if err != nil {
-		return nil, err
-	}
-
-	smallDynamicText := small.CreateDynamicText()
-
 	ir, err := createButtonRenderer()
 	if err != nil {
 		return nil, err
 	}
 
 	return &view{
-		model:           model,
-		orthoPlaneMesh:  orthoPlaneMesh,
-		dowText:         small.CreateStaticText("DOW"),
-		sapText:         small.CreateStaticText("S&P"),
-		nasdaqText:      small.CreateStaticText("NASDAQ"),
-		smallText:       smallDynamicText,
-		symbolQuoteText: medium.CreateDynamicText(),
-		priceText:       smallDynamicText,
-		inputSymbolText: large.CreateDynamicText(),
-		buttonRenderer:  ir,
-		viewMatrix:      vm,
+		model:          model,
+		buttonRenderer: ir,
+		viewMatrix:     vm,
 	}, nil
 }
 
@@ -177,38 +126,32 @@ func (v *view) render(fudge float32) {
 
 	// Render input symbol being typed in the center.
 	if v.model.inputSymbol != "" {
-		s := v.inputSymbolText.Measure(v.model.inputSymbol)
+		s := inputSymbolTextRenderer.Measure(v.model.inputSymbol)
 		c := v.winSize.Sub(s).Div(2)
-		v.inputSymbolText.Render(v.model.inputSymbol, c, white)
+		inputSymbolTextRenderer.Render(v.model.inputSymbol, c, white)
 	}
 
-	const p = 10 // padding
+	const p = 5 // padding
 
-	// Start in theistforner. (0, 0) is lower left.
+	// Start in upper left. (0, 0) is lower left.
 	// Move down below the major indices line.
-	c := image.Pt(p, v.winSize.Y-p-v.dowText.Size.Y)
+	c := image.Pt(p, v.winSize.Y-p-majorIndexTextRenderer.LineHeight())
 
 	// Render major indices on one line.
 	{
-		render := func(c image.Point, q *modelQuote) image.Point {
-			return v.smallText.Render(formatQuote(q), c, quoteColor(q))
+		c := c
+		render := func(index string, q *modelQuote) {
+			c.X += majorIndexTextRenderer.Render(index, c, white)
+			c.X += p
+			c.X += majorIndexTextRenderer.Render(formatQuote(q), c, quoteColor(q))
+			c.X += p
 		}
 
-		c := c
-		c = c.Add(v.dowText.Render(c, white))
-		c = c.Add(render(c, v.model.dow))
-		c.X += p
-
-		c = c.Add(v.sapText.Render(c, white))
-		c = c.Add(render(c, v.model.sap))
-		c.X += p
-
-		c = c.Add(v.nasdaqText.Render(c, white))
-		c = c.Add(render(c, v.model.nasdaq))
-		c.X += p
+		render("DOW", v.model.dow)
+		render("S&P", v.model.sap)
+		render("NASDAQ", v.model.nasdaq)
 	}
 
-	// Move down a bit after the major indices.
 	c.Y -= p
 
 	// Render the current symbol below the indices.
@@ -216,14 +159,14 @@ func (v *view) render(fudge float32) {
 		if v.chart != nil {
 			v.chart.close()
 		}
-		v.chart = createChart(v.model.currentStock, v.symbolQuoteText, v.priceText, v.buttonRenderer)
+		v.chart = createChart(v.model.currentStock, v.buttonRenderer)
 	}
 
 	if v.chartThumbnail == nil || v.chartThumbnail.stock != v.model.currentStock {
 		if v.chartThumbnail != nil {
 			v.chartThumbnail.close()
 		}
-		v.chartThumbnail = createchartThumbnail(v.model.currentStock, v.priceText)
+		v.chartThumbnail = createChartThumbnail(v.model.currentStock)
 	}
 
 	ms := image.Pt(150, 100)
@@ -239,7 +182,7 @@ func (v *view) render(fudge float32) {
 
 func formatQuote(q *modelQuote) string {
 	if q.price != 0 {
-		return fmt.Sprintf(" %.2f %+5.2f %+5.2f%% ", q.price, q.change, q.percentChange*100.0)
+		return fmt.Sprintf("%.2f %+5.2f %+5.2f%%", q.price, q.change, q.percentChange*100.0)
 	}
 	return ""
 }
@@ -320,13 +263,23 @@ func createImage(data []byte) (*image.RGBA, error) {
 	return rgba, nil
 }
 
+// sliceRectangle horizontally cuts a rectangle from the bottom at the given percentages.
+// It returns n+1 rectangles given n percentages.
 func sliceRectangle(r image.Rectangle, percentages ...float32) []image.Rectangle {
-	var rects []image.Rectangle
-	y := r.Min.Y
+	var rs []image.Rectangle
+	addRect := func(minY, maxY int) {
+		rs = append(rs, image.Rect(r.Min.X, minY, r.Max.X, maxY))
+	}
+
+	ry := r.Dy()  // Remaining Y to distribute.
+	cy := r.Min.Y // Start at the bottom and cut horizontally up.
 	for _, p := range percentages {
 		dy := int(float32(r.Dy()) * p)
-		rects = append(rects, image.Rect(r.Min.X, y, r.Max.X, y+dy))
-		y += dy
+		addRect(cy, cy+dy)
+		cy += dy // Bump upwards.
+		ry -= dy // Subtract from remaining.
 	}
-	return rects
+	addRect(cy, cy+ry) // Use remaining Y for last rect.
+
+	return rs
 }

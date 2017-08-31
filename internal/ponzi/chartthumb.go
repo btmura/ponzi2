@@ -8,7 +8,6 @@ import (
 
 type chartThumbnail struct {
 	stock             *modelStock
-	stockQuoteText    *gfx.DynamicText
 	lines             *chartLines
 	frameBorder       *gfx.VAO
 	frameDivider      *gfx.VAO
@@ -16,15 +15,14 @@ type chartThumbnail struct {
 	weeklyStochastics *chartStochastics
 }
 
-func createchartThumbnail(stock *modelStock, stockQuoteText *gfx.DynamicText) *chartThumbnail {
+func createChartThumbnail(stock *modelStock) *chartThumbnail {
 	return &chartThumbnail{
 		stock:             stock,
-		stockQuoteText:    stockQuoteText,
 		lines:             createChartLines(stock),
 		frameBorder:       gfx.CreateStrokedRectVAO(white, white, white, white),
 		frameDivider:      gfx.CreateLineVAO(white, white),
-		dailyStochastics:  createChartStochastics(stock, stockQuoteText, daily),
-		weeklyStochastics: createChartStochastics(stock, stockQuoteText, weekly),
+		dailyStochastics:  createChartStochastics(stock, daily),
+		weeklyStochastics: createChartStochastics(stock, weekly),
 	}
 }
 
@@ -50,15 +48,15 @@ func (ct *chartThumbnail) render(r image.Rectangle) {
 	// Render the symbol and its quote.
 	//
 
-	const pad = 5
-	s := ct.stockQuoteText.Measure(ct.stock.symbol)
-	pt.Y -= pad + s.Y
+	const pad = 3
+	pt.Y -= pad + thumbSymbolQuoteTextRenderer.LineHeight()
 	{
 		pt := pt
 		pt.X += pad
-		pt = pt.Add(ct.stockQuoteText.Render(ct.stock.symbol, pt, white))
-		pt = pt.Add(ct.stockQuoteText.Render(shortFormatQuote(ct.stock.quote), pt, quoteColor(ct.stock.quote)))
+		pt.X += thumbSymbolQuoteTextRenderer.Render(ct.stock.symbol, pt, white)
+		pt.X += thumbSymbolQuoteTextRenderer.Render(shortFormatQuote(ct.stock.quote), pt, quoteColor(ct.stock.quote))
 	}
+	pt.Y -= pad
 
 	//
 	// Render the dividers between the sections.
@@ -67,7 +65,7 @@ func (ct *chartThumbnail) render(r image.Rectangle) {
 	r.Max.Y = pt.Y
 	gfx.SetColorMixAmount(1)
 
-	rects := sliceRectangle(r, 0.5, 0.5)
+	rects := sliceRectangle(r, 0.5)
 	for _, r := range rects {
 		gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
 		ct.frameDivider.Render()

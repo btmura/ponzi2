@@ -7,20 +7,18 @@ import (
 )
 
 type chartFrame struct {
-	stock           *modelStock
-	symbolQuoteText *gfx.DynamicText
-	buttonRenderer  *buttonRenderer
-	frameBorder     *gfx.VAO
-	frameDivider    *gfx.VAO
+	stock          *modelStock
+	buttonRenderer *buttonRenderer
+	frameBorder    *gfx.VAO
+	frameDivider   *gfx.VAO
 }
 
-func createChartFrame(stock *modelStock, symbolQuoteText *gfx.DynamicText, br *buttonRenderer) *chartFrame {
+func createChartFrame(stock *modelStock, br *buttonRenderer) *chartFrame {
 	return &chartFrame{
-		stock:           stock,
-		symbolQuoteText: symbolQuoteText,
-		buttonRenderer:  br,
-		frameBorder:     gfx.CreateStrokedRectVAO(white, white, white, white),
-		frameDivider:    gfx.CreateLineVAO(white, white),
+		stock:          stock,
+		buttonRenderer: br,
+		frameBorder:    gfx.CreateStrokedRectVAO(white, white, white, white),
+		frameDivider:   gfx.CreateLineVAO(white, white),
 	}
 }
 
@@ -40,24 +38,25 @@ func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
 	// Render the symbol, quote, and add button.
 	//
 
-	const pad = 10
-	sz := ch.symbolQuoteText.Measure(ch.stock.symbol)
-	pt.Y -= pad + sz.Y
+	const pad = 5
+	pt.Y -= pad
+	pt.Y -= symbolQuoteTextRenderer.LineHeight()
 	{
 		pt := pt
 		pt.X += pad
-		pt = pt.Add(ch.symbolQuoteText.Render(ch.stock.symbol, pt, white))
-		pt = pt.Add(ch.symbolQuoteText.Render(formatQuote(ch.stock.quote), pt, quoteColor(ch.stock.quote)))
+		pt.X += symbolQuoteTextRenderer.Render(ch.stock.symbol, pt, white)
+		pt.X += pad
+		pt.X += symbolQuoteTextRenderer.Render(formatQuote(ch.stock.quote), pt, quoteColor(ch.stock.quote))
 	}
-
 	{
-		barHeight := pad*2 + sz.Y
+		barHeight := pad*2 + symbolQuoteTextRenderer.LineHeight()
 		sz := image.Pt(barHeight-pad*2, barHeight-pad*2)
 		pt := pt
 		pt.X = r.Max.X - pad - sz.X
 		pt.Y = r.Max.Y - pad - sz.Y
 		ch.buttonRenderer.render(pt, sz, addButtonIcon)
 	}
+	pt.Y -= pad
 
 	//
 	// Render the dividers between the sections.
@@ -66,7 +65,7 @@ func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
 	r.Max.Y = pt.Y
 	gfx.SetColorMixAmount(1)
 
-	rects := sliceRectangle(r, 0.13, 0.13, 0.13, 0.6)
+	rects := sliceRectangle(r, 0.13, 0.13, 0.13)
 	for _, r := range rects {
 		gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
 		ch.frameDivider.Render()

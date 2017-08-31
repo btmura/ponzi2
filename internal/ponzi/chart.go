@@ -2,8 +2,6 @@ package ponzi
 
 import (
 	"image"
-
-	"github.com/btmura/ponzi2/internal/gfx"
 )
 
 // Colors used by the chart.
@@ -28,15 +26,15 @@ type chart struct {
 
 // TODO(btmura): create chart factory that creates charts
 // TODO(btmura): create chart components and pass them in
-func createChart(stock *modelStock, symbolQuoteText, labelText *gfx.DynamicText, br *buttonRenderer) *chart {
+func createChart(stock *modelStock, br *buttonRenderer) *chart {
 	return &chart{
 		stock:             stock,
-		frame:             createChartFrame(stock, symbolQuoteText, br),
+		frame:             createChartFrame(stock, br),
 		lines:             createChartLines(stock),
-		prices:            createChartPrices(stock, labelText),
-		volume:            createChartVolume(stock, labelText),
-		dailyStochastics:  createChartStochastics(stock, labelText, daily),
-		weeklyStochastics: createChartStochastics(stock, labelText, weekly),
+		prices:            createChartPrices(stock),
+		volume:            createChartVolume(stock),
+		dailyStochastics:  createChartStochastics(stock, daily),
+		weeklyStochastics: createChartStochastics(stock, weekly),
 	}
 }
 

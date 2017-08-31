@@ -1,12 +1,10 @@
 package gfx
 
 import (
-	"bufio"
+	"bytes"
 	"image"
 	"image/color"
 	"image/draw"
-	"image/png"
-	"os"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/golang/freetype/truetype"
@@ -16,110 +14,105 @@ import (
 
 	"github.com/btmura/ponzi2/internal/gl2"
 	"github.com/btmura/ponzi2/internal/math2"
+	"github.com/btmura/ponzi2/internal/obj"
 )
 
-// TextFactory is a factory that creates either static or dynamic text
-// that can be rendered on a given orthographic plane.
-type TextFactory struct {
-	mesh *Mesh
-	face font.Face
+// A TextRenderer measures and renders text.
+// It is designed to render single lines of [A-Z0-9] characters.
+type TextRenderer struct {
+	face            font.Face              // Face to render text with.
+	metrics         font.Metrics           // Custom metrics to ease vertical alignment.
+	runeRendererMap map[rune]*runeRenderer // Map from rune to runeRenderer.
 }
 
-// NewTextFactory creates a factory from an orthographic plane mesh and TTF bytes.
-func NewTextFactory(mesh *Mesh, fontBytes []byte, size int) (*TextFactory, error) {
-	f, err := truetype.Parse(fontBytes)
-	if err != nil {
-		return nil, err
-	}
+// TextColor is a RGB color of 3 floats from 0.0 to 1.0.
+type TextColor [3]float32
 
-	face := truetype.NewFace(f, &truetype.Options{
+// NewTextRenderer creates a new TextRenderer from a TTF font file and a size.
+func NewTextRenderer(ttfBytes []byte, size int) *TextRenderer {
+	// Callers should be able to initialize TextRenderers as globals,
+	// so do not do any intialization here that requires OpenGL.
+
+	// Parse the TTF font bytes and create a face out of it.
+	ttFont, err := truetype.Parse(ttfBytes)
+	if err != nil {
+		glog.Fatalf("gfx.NewTextRenderer: parsing TTF bytes failed: %v", err)
+	}
+	face := truetype.NewFace(ttFont, &truetype.Options{
 		Size:    float64(size),
 		DPI:     72,
 		Hinting: font.HintingFull,
 	})
 
-	return &TextFactory{
-		mesh: mesh,
-		face: face,
-	}, nil
-}
+	// Generate custom metrics to suit single line positioning and rendering.
+	// https://developer.apple.com/library/content/documentation/TextFonts/Conceptual/CocoaTextArchitecture/Art/glyph_metrics_2x.png
+	bnds, _, ok := face.GlyphBounds('M') // Bounds for a square that mimics most cap letters.
+	if !ok {
+		glog.Fatal("gfx.NewTextRenderer: getting bounds for M failed")
+	}
+	a := bnds.Max.Y - bnds.Min.Y // Height of M is the ascent.
+	d := face.Metrics().Descent  // Some descent for Q and J.
+	m := font.Metrics{
+		Ascent:  a,
+		Descent: d,
+		Height:  d + a + d, // Pad ascent on top and bottom to vertically center.
+	}
 
-// CreateStaticText creates static text which cannot be changed later.
-func (f *TextFactory) CreateStaticText(text string) *StaticText {
-	rgba := createTextImage(f.face, text)
-	return &StaticText{
-		mesh:    f.mesh,
-		texture: gl2.CreateTexture(rgba),
-		Size:    rgba.Bounds().Size(),
+	return &TextRenderer{
+		face:            face,
+		metrics:         m,
+		runeRendererMap: map[rune]*runeRenderer{},
 	}
 }
 
-// CreateDynamicText creates dynamic text which is rendered at runtime.
-func (f *TextFactory) CreateDynamicText() *DynamicText {
-	runeTextMap := make(map[rune]*StaticText)
-	for _, r := range "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.+-% " {
-		runeTextMap[r] = f.CreateStaticText(string(r))
-	}
-	return &DynamicText{
-		runeTextMap: runeTextMap,
-	}
+// LineHeight returns the line height. Useful for measurements.
+func (t *TextRenderer) LineHeight() int {
+	return t.metrics.Height.Round()
 }
 
-type StaticText struct {
-	mesh    *Mesh
-	texture uint32
-	Size    image.Point
-}
-
-func (t *StaticText) Render(c image.Point, color [3]float32) image.Point {
-	m := math2.ScaleMatrix(float32(t.Size.X), float32(t.Size.Y), 1)
-	m = m.Mult(math2.TranslationMatrix(float32(c.X), float32(c.Y), 0))
-	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
-
-	gl.BindTexture(gl.TEXTURE_2D, t.texture)
-	gl.Uniform3fv(textColorLocation, 1, &color[0])
-	gl.Uniform1f(colorMixAmountLocation, 0)
-
-	t.mesh.DrawElements()
-	return image.Pt(t.Size.X, 0)
-}
-
-type DynamicText struct {
-	runeTextMap map[rune]*StaticText
-}
-
-func (t *DynamicText) Measure(text string) image.Point {
-	s := image.ZP
+// Measure returns an image.Point with the width and height of the given text.
+func (t *TextRenderer) Measure(text string) image.Point {
+	s := image.Pt(0, t.LineHeight())
 	for _, r := range text {
-		if st := t.runeTextMap[r]; st != nil {
-			s.X += st.Size.X
-			if st.Size.Y > s.Y {
-				s.Y = st.Size.Y
-			}
-		}
+		rr := t.runeRenderer(r)
+		s.X += rr.size.X
 	}
 	return s
 }
 
-func (t *DynamicText) Render(text string, c image.Point, color [3]float32) image.Point {
-	w := 0
+// Render renders color text at the given point that points at the origin (baseline).
+func (t *TextRenderer) Render(text string, pt image.Point, color TextColor) int {
+	dx := 0
 	for _, r := range text {
-		if st := t.runeTextMap[r]; st != nil {
-			st.Render(c, color)
-			c.X += st.Size.X
-			w += st.Size.X
-		}
+		rr := t.runeRenderer(r)
+		rr.render(pt, color)
+		pt.X += rr.size.X
+		dx += rr.size.X
 	}
-	return image.Pt(w, 0)
+	return dx
 }
 
-func createTextImage(face font.Face, text string) *image.RGBA {
-	w := font.MeasureString(face, text)
-	m := face.Metrics() // Used for height and descent.
+func (t *TextRenderer) runeRenderer(r rune) *runeRenderer {
+	if rr := t.runeRendererMap[r]; rr != nil {
+		return rr
+	}
+	rr := newRuneRenderer(t.face, t.metrics, r)
+	t.runeRendererMap[r] = rr
+	return rr
+}
 
-	fg, bg := image.NewUniform(color.RGBA{255, 0, 0, 255}), image.Transparent
+type runeRenderer struct {
+	texture uint32
+	size    image.Point
+}
 
-	rgba := image.NewRGBA(image.Rect(0, 0, w.Round(), m.Height.Round())) // (MinX, MinY), (MaxX, MaxY)
+func newRuneRenderer(face font.Face, m font.Metrics, r rune) *runeRenderer {
+	fg := image.NewUniform(color.RGBA{255, 0, 0, 255})
+	bg := image.Transparent
+	// bg = fg // Uncomment to render rectangles.
+
+	w := font.MeasureString(face, string(r))
+	rgba := image.NewRGBA(image.Rect(0, 0, w.Round(), m.Height.Round()))
 	draw.Draw(rgba, rgba.Bounds(), bg, image.ZP, draw.Src)
 
 	d := &font.Drawer{
@@ -127,29 +120,50 @@ func createTextImage(face font.Face, text string) *image.RGBA {
 		Src:  fg,
 		Face: face,
 		Dot: fixed.Point26_6{
-			Y: m.Height - m.Descent,
+			Y: m.Ascent + m.Descent, // Move down from top.
 		},
 	}
-	d.DrawString(text)
+	d.DrawString(string(r))
 
-	return rgba
+	return &runeRenderer{
+		texture: gl2.CreateTexture(rgba),
+		size:    rgba.Bounds().Size(),
+	}
 }
 
-func writePNGFile(rgba *image.RGBA) error {
-	out, err := os.Create("text.png")
+// runePlaneMesh is a shared Vertex Array Object that all runeRenderers use.
+var runePlaneMesh *Mesh
+
+func (r *runeRenderer) render(pt image.Point, color TextColor) image.Point {
+	m := math2.ScaleMatrix(float32(r.size.X), float32(r.size.Y), 1)
+	m = m.Mult(math2.TranslationMatrix(float32(pt.X), float32(pt.Y), 0))
+	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
+
+	gl.BindTexture(gl.TEXTURE_2D, r.texture)
+	gl.Uniform3fv(textColorLocation, 1, &color[0])
+	gl.Uniform1f(colorMixAmountLocation, 0)
+
+	if runePlaneMesh == nil {
+		runePlaneMesh = newRunePlaneMesh()
+	}
+	runePlaneMesh.DrawElements()
+
+	return image.Pt(r.size.X, 0)
+}
+
+func newRunePlaneMesh() *Mesh {
+	objs, err := obj.Decode(bytes.NewReader(MustAsset("meshes.obj")))
 	if err != nil {
-		return err
+		glog.Fatalf("failed to decode meshes.obj: %v", err)
 	}
-	defer out.Close()
 
-	b := bufio.NewWriter(out)
-	if err := png.Encode(b, rgba); err != nil {
-		return err
+	for _, m := range CreateMeshes(objs) {
+		switch m.ID {
+		case "orthoPlane":
+			return m
+		}
 	}
-	if err := b.Flush(); err != nil {
-		return err
-	}
-	glog.Infof("Wrote PNG file: %s", out.Name())
 
-	return nil
+	glog.Fatal("failed to find orthoPlane mesh")
+	return nil // Never gets here.
 }

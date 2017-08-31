@@ -21,17 +21,15 @@ type chartStochastics struct {
 	stock               *modelStock
 	lastStockUpdateTime time.Time
 	renderable          bool
-	labelText           *gfx.DynamicText
 	stoType             chartStochasticType
 	stoLines            *gfx.VAO
 	labelLine           *gfx.VAO
 }
 
-func createChartStochastics(stock *modelStock, labelText *gfx.DynamicText, stoType chartStochasticType) *chartStochastics {
+func createChartStochastics(stock *modelStock, stoType chartStochasticType) *chartStochastics {
 	return &chartStochastics{
-		stock:     stock,
-		labelText: labelText,
-		stoType:   stoType,
+		stock:   stock,
+		stoType: stoType,
 	}
 }
 
@@ -132,7 +130,7 @@ func (ch *chartStochastics) renderLabels(r image.Rectangle) (maxLabelWidth int) 
 	render := func(t string, s image.Point, yLocPercent float32) {
 		x := r.Max.X - s.X
 		y := r.Min.Y + int(float32(r.Dy())*yLocPercent) - s.Y/2
-		ch.labelText.Render(t, image.Pt(x, y), white)
+		axisLabelTextRenderer.Render(t, image.Pt(x, y), white)
 	}
 
 	render(t1, s1, .7)
@@ -147,7 +145,7 @@ func (ch *chartStochastics) renderLabels(r image.Rectangle) (maxLabelWidth int) 
 
 func (ch *chartStochastics) stochasticLabelText(percent float32) (text string, size image.Point) {
 	t := fmt.Sprintf("%.f%%", percent*100)
-	return t, ch.labelText.Measure(t)
+	return t, axisLabelTextRenderer.Measure(t)
 }
 
 func (ch *chartStochastics) close() {
