@@ -132,7 +132,7 @@ func newRuneRenderer(face font.Face, m font.Metrics, r rune) *runeRenderer {
 }
 
 // runePlaneMesh is a shared Vertex Array Object that all runeRenderers use.
-var runePlaneMesh *Mesh
+var runePlaneMesh *mesh
 
 func (r *runeRenderer) render(pt image.Point, color TextColor) image.Point {
 	m := math2.ScaleMatrix(float32(r.size.X), float32(r.size.Y), 1)
@@ -146,18 +146,18 @@ func (r *runeRenderer) render(pt image.Point, color TextColor) image.Point {
 	if runePlaneMesh == nil {
 		runePlaneMesh = newRunePlaneMesh()
 	}
-	runePlaneMesh.DrawElements()
+	runePlaneMesh.drawElements()
 
 	return image.Pt(r.size.X, 0)
 }
 
-func newRunePlaneMesh() *Mesh {
+func newRunePlaneMesh() *mesh {
 	objs, err := obj.Decode(bytes.NewReader(MustAsset("meshes.obj")))
 	if err != nil {
 		glog.Fatalf("failed to decode meshes.obj: %v", err)
 	}
 
-	for _, m := range CreateMeshes(objs) {
+	for _, m := range createMeshes(objs) {
 		switch m.ID {
 		case "orthoPlane":
 			return m

@@ -8,8 +8,8 @@ import (
 	"github.com/btmura/ponzi2/internal/obj"
 )
 
-// Mesh is an OBJ file object with a bunch of vertex buffer objects.
-type Mesh struct {
+// mesh is an OBJ file object with a bunch of vertex buffer objects.
+type mesh struct {
 	// ID is the object's ID in the OBJ file.
 	ID string
 
@@ -20,8 +20,8 @@ type Mesh struct {
 	count int32
 }
 
-// CreateMeshes creates a slice of meshes from a slice of objs.
-func CreateMeshes(objs []*obj.Object) []*Mesh {
+// createMeshes creates a slice of meshes from a slice of objs.
+func createMeshes(objs []*obj.Object) []*mesh {
 	var vertexTable []*obj.Vertex
 	var normalTable []*obj.Normal
 	var texCoordTable []*obj.TexCoord
@@ -33,7 +33,7 @@ func CreateMeshes(objs []*obj.Object) []*Mesh {
 	elementIndexMap := map[obj.FaceElement]uint16{}
 	var nextIndex uint16
 
-	var meshes []*Mesh
+	var meshes []*mesh
 	var iboNames []uint32
 
 	for _, o := range objs {
@@ -71,7 +71,7 @@ func CreateMeshes(objs []*obj.Object) []*Mesh {
 			}
 		}
 
-		meshes = append(meshes, &Mesh{
+		meshes = append(meshes, &mesh{
 			ID:    o.ID,
 			count: int32(len(indices)),
 		})
@@ -109,8 +109,8 @@ func CreateMeshes(objs []*obj.Object) []*Mesh {
 	return meshes
 }
 
-// DrawElements draws the Mesh's elements.
-func (m *Mesh) DrawElements() {
+// drawElements draws the Mesh's elements.
+func (m *mesh) drawElements() {
 	gl.BindVertexArray(m.vao)
 	gl.DrawElements(gl.TRIANGLES, m.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	gl.BindVertexArray(0)
