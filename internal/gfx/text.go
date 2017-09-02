@@ -14,7 +14,6 @@ import (
 
 	gl2 "github.com/btmura/ponzi2/internal/gl"
 	math2 "github.com/btmura/ponzi2/internal/math"
-	"github.com/btmura/ponzi2/internal/obj"
 )
 
 // A TextRenderer measures and renders text.
@@ -131,8 +130,8 @@ func newRuneRenderer(face font.Face, m font.Metrics, r rune) *runeRenderer {
 	}
 }
 
-// runePlaneMesh is a shared Vertex Array Object that all runeRenderers use.
-var runePlaneMesh *mesh
+// runePlaneObject is a shared Vertex Array Object that all runeRenderers use.
+var runePlaneObject *plyVAO
 
 func (r *runeRenderer) render(pt image.Point, color TextColor) image.Point {
 	m := math2.ScaleMatrix(float32(r.size.X), float32(r.size.Y), 1)
@@ -143,27 +142,10 @@ func (r *runeRenderer) render(pt image.Point, color TextColor) image.Point {
 	gl.Uniform3fv(textColorLocation, 1, &color[0])
 	gl.Uniform1f(colorMixAmountLocation, 0)
 
-	if runePlaneMesh == nil {
-		runePlaneMesh = newRunePlaneMesh()
+	if runePlaneObject == nil {
+		runePlaneObject = newPLYVAO(bytes.NewReader(MustAsset("orthoPlane.ply")))
 	}
-	runePlaneMesh.drawElements()
+	runePlaneObject.Render()
 
 	return image.Pt(r.size.X, 0)
-}
-
-func newRunePlaneMesh() *mesh {
-	objs, err := obj.Decode(bytes.NewReader(MustAsset("meshes.obj")))
-	if err != nil {
-		glog.Fatalf("failed to decode meshes.obj: %v", err)
-	}
-
-	for _, m := range createMeshes(objs) {
-		switch m.ID {
-		case "orthoPlane":
-			return m
-		}
-	}
-
-	glog.Fatal("failed to find orthoPlane mesh")
-	return nil // Never gets here.
 }
