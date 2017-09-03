@@ -11,8 +11,8 @@ import (
 )
 
 type plyVAO struct {
-	vao   uint32
-	count int32
+	vao   uint32 // array is the VAO name for gl.BindVertexArray.
+	count int32  // count is the number of elements for gl.DrawElements.
 }
 
 func newPLYVAO(r io.Reader) *plyVAO {
@@ -83,4 +83,8 @@ func (p *plyVAO) Render() {
 	gl.BindVertexArray(p.vao)
 	gl.DrawElements(gl.TRIANGLES, p.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
 	gl.BindVertexArray(0)
+}
+
+func (p *plyVAO) Delete() {
+	gl.DeleteVertexArrays(1, &p.vao)
 }
