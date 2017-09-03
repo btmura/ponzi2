@@ -5,8 +5,6 @@ import (
 	"image"
 	"time"
 
-	"github.com/go-gl/gl/v4.5-core/gl"
-
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
@@ -22,7 +20,7 @@ type chartStochastics struct {
 	lastStockUpdateTime time.Time
 	renderable          bool
 	stoType             chartStochasticType
-	stoLines            *gfx.VAO
+	stoLines            *gfx.VAO2
 	labelLine           *gfx.VAO
 }
 
@@ -44,7 +42,9 @@ func (ch *chartStochastics) update() {
 		ss, dColor = ch.stock.weeklySessions, purple
 	}
 
-	ch.stoLines.Close()
+	if ch.stoLines != nil {
+		ch.stoLines.Delete()
+	}
 	ch.stoLines = createStochasticVAOs(ss, dColor)
 
 	ch.labelLine.Close()
@@ -53,10 +53,8 @@ func (ch *chartStochastics) update() {
 	ch.renderable = true
 }
 
-func createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLines *gfx.VAO) {
-	var vertices []float32
-	var colors []float32
-	var indices []uint16
+func createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLines *gfx.VAO2) {
+	data := &gfx.VAOBufferData{}
 
 	width := 2.0 / float32(len(ss)) // (-1 to 1) on X-axis
 	calcX := func(i int) float32 {
@@ -75,10 +73,10 @@ func createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLine
 			continue
 		}
 
-		vertices = append(vertices, calcX(i), calcY(s.d))
-		colors = append(colors, dColor[0], dColor[1], dColor[2])
+		data.Vertices = append(data.Vertices, calcX(i), calcY(s.d), 0)
+		data.Colors = append(data.Colors, dColor[0], dColor[1], dColor[2])
 		if !first {
-			indices = append(indices, v, v-1)
+			data.Indices = append(data.Indices, v, v-1)
 		}
 		v++
 		first = false
@@ -91,16 +89,16 @@ func createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLine
 			continue
 		}
 
-		vertices = append(vertices, calcX(i), calcY(s.k))
-		colors = append(colors, red[0], red[1], red[2])
+		data.Vertices = append(data.Vertices, calcX(i), calcY(s.k), 0)
+		data.Colors = append(data.Colors, red[0], red[1], red[2])
 		if !first {
-			indices = append(indices, v, v-1)
+			data.Indices = append(data.Indices, v, v-1)
 		}
 		v++
 		first = false
 	}
 
-	return gfx.CreateVAO(gl.LINES, vertices, colors, indices)
+	return gfx.NewVAO(data, gfx.Lines)
 }
 
 func (ch *chartStochastics) render(r image.Rectangle) {
@@ -150,6 +148,6 @@ func (ch *chartStochastics) stochasticLabelText(percent float32) (text string, s
 
 func (ch *chartStochastics) close() {
 	ch.renderable = false
-	ch.stoLines.Close()
+	ch.stoLines.Delete()
 	ch.stoLines = nil
 }
