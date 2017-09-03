@@ -10,7 +10,7 @@ type chartThumbnail struct {
 	stock             *modelStock
 	lines             *chartLines
 	frameBorder       *gfx.VAO
-	frameDivider      *gfx.VAO
+	frameDivider      *gfx.VAO2
 	dailyStochastics  *chartStochastics
 	weeklyStochastics *chartStochastics
 }
@@ -20,7 +20,7 @@ func createChartThumbnail(stock *modelStock) *chartThumbnail {
 		stock:             stock,
 		lines:             createChartLines(stock),
 		frameBorder:       gfx.CreateStrokedRectVAO(white, white, white, white),
-		frameDivider:      gfx.CreateLineVAO(white, white),
+		frameDivider:      gfx.HorizColoredLineVAO(white, white),
 		dailyStochastics:  createChartStochastics(stock, daily),
 		weeklyStochastics: createChartStochastics(stock, weekly),
 	}
@@ -87,7 +87,7 @@ func (ct *chartThumbnail) close() {
 	ct.lines = nil
 	ct.frameBorder.Close()
 	ct.frameBorder = nil
-	ct.frameDivider.Close()
+	ct.frameDivider.Delete()
 	ct.frameDivider = nil
 	ct.dailyStochastics.close()
 	ct.dailyStochastics = nil

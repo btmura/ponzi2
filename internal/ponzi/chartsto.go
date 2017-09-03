@@ -21,7 +21,7 @@ type chartStochastics struct {
 	renderable          bool
 	stoType             chartStochasticType
 	stoLines            *gfx.VAO2
-	labelLine           *gfx.VAO
+	labelLine           *gfx.VAO2
 }
 
 func createChartStochastics(stock *modelStock, stoType chartStochasticType) *chartStochastics {
@@ -47,8 +47,10 @@ func (ch *chartStochastics) update() {
 	}
 	ch.stoLines = createStochasticVAOs(ss, dColor)
 
-	ch.labelLine.Close()
-	ch.labelLine = gfx.CreateLineVAO(gray, gray)
+	if ch.labelLine != nil {
+		ch.labelLine.Delete()
+	}
+	ch.labelLine = gfx.HorizColoredLineVAO(gray, gray)
 
 	ch.renderable = true
 }

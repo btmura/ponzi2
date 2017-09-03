@@ -8,6 +8,29 @@ import (
 	"github.com/btmura/ponzi2/internal/ply"
 )
 
+// VAOColor is an RGB color with values from 0.0 to 1.0.
+type VAOColor [3]float32
+
+// HorizColoredLineVAO returns a horizontal colored line segment from (-1, 0) to (1, 0).
+func HorizColoredLineVAO(leftColor, rightColor VAOColor) *VAO2 {
+	return NewVAO(
+		Lines,
+		&VAOBufferData{
+			Vertices: []float32{
+				-1, 0, 0,
+				+1, 0, 0,
+			},
+			Colors: []float32{
+				leftColor[0], leftColor[1], leftColor[2],
+				rightColor[0], rightColor[1], rightColor[2],
+			},
+			Indices: []uint16{
+				0, 1,
+			},
+		},
+	)
+}
+
 func newPLYVAO(r io.Reader) *VAO2 {
 	p, err := ply.Decode(r)
 	if err != nil {

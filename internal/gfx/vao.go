@@ -13,23 +13,6 @@ type VAO struct {
 	count int32  // count is the number of elements for gl.DrawElements.
 }
 
-func createLineVAO(lColor, rColor [3]float32) *VAO {
-	return CreateVAO(
-		gl.LINES,
-		[]float32{
-			-1, 0, // L
-			+1, 0, // R
-		},
-		[]float32{
-			lColor[0], lColor[1], lColor[2],
-			rColor[0], rColor[1], rColor[2],
-		},
-		[]uint16{
-			0, 1,
-		},
-	)
-}
-
 func CreateStrokedRectVAO(ulColor, urColor, blColor, brColor [3]float32) *VAO {
 	return CreateVAO(
 		gl.LINES,
