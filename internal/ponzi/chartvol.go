@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-gl/gl/v4.5-core/gl"
-
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
@@ -16,7 +14,7 @@ type chartVolume struct {
 	lastStockUpdateTime time.Time
 	renderable          bool
 	maxVolume           int
-	volRects            *gfx.VAO
+	volRects            *gfx.VAO2
 	labelLine           *gfx.VAO2
 }
 
@@ -39,7 +37,9 @@ func (ch *chartVolume) update() {
 		}
 	}
 
-	ch.volRects.Close()
+	if ch.volRects != nil {
+		ch.volRects.Delete()
+	}
 	ch.volRects = createChartVolumeBarsVAO(ch.stock.dailySessions, ch.maxVolume)
 
 	if ch.labelLine != nil {
@@ -50,7 +50,7 @@ func (ch *chartVolume) update() {
 	ch.renderable = true
 }
 
-func createChartVolumeBarsVAO(ds []*modelTradingSession, maxVolume int) *gfx.VAO {
+func createChartVolumeBarsVAO(ds []*modelTradingSession, maxVolume int) *gfx.VAO2 {
 	var vertices []float32
 	var colors []float32
 	var indices []uint16
@@ -69,10 +69,10 @@ func createChartVolumeBarsVAO(ds []*modelTradingSession, maxVolume int) *gfx.VAO
 
 		// Add the vertices needed to create the volume bar.
 		vertices = append(vertices,
-			leftX, topY, // UL
-			rightX, topY, // UR
-			leftX, botY, // BL
-			rightX, botY, // BR
+			leftX, topY, 0, // UL
+			rightX, topY, 0, // UR
+			leftX, botY, 0, // BL
+			rightX, botY, 0, // BR
 		)
 
 		// Add the colors corresponding to the volume bar.
@@ -118,7 +118,14 @@ func createChartVolumeBarsVAO(ds []*modelTradingSession, maxVolume int) *gfx.VAO
 		rightX += barWidth
 	}
 
-	return gfx.CreateVAO(gl.TRIANGLES, vertices, colors, indices)
+	return gfx.NewVAO(
+		gfx.Triangles,
+		&gfx.VAOBufferData{
+			Vertices: vertices,
+			Colors:   colors,
+			Indices:  indices,
+		},
+	)
 }
 
 func (ch *chartVolume) render(r image.Rectangle) {
@@ -178,7 +185,7 @@ func (ch *chartVolume) volumeLabelText(v int) (text string, size image.Point) {
 
 func (ch *chartVolume) close() {
 	ch.renderable = false
-	ch.volRects.Close()
+	ch.volRects.Delete()
 	ch.volRects = nil
 	ch.labelLine.Delete()
 	ch.labelLine = nil

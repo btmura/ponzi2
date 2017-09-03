@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-gl/gl/v4.5-core/gl"
-
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
@@ -18,8 +16,8 @@ type chartPrices struct {
 	minPrice            float32
 	maxPrice            float32
 	labelHeight         int
-	stickLines          *gfx.VAO
-	stickRects          *gfx.VAO
+	stickLines          *gfx.VAO2
+	stickRects          *gfx.VAO2
 	labelLine           *gfx.VAO2
 }
 
@@ -45,8 +43,12 @@ func (ch *chartPrices) update() {
 		}
 	}
 
-	ch.stickLines.Close()
-	ch.stickRects.Close()
+	if ch.stickLines != nil {
+		ch.stickLines.Delete()
+	}
+	if ch.stickRects != nil {
+		ch.stickRects.Delete()
+	}
 	ch.stickLines, ch.stickRects = createChartCandlestickVAOs(ch.stock.dailySessions, ch.minPrice, ch.maxPrice)
 
 	if ch.labelLine != nil {
@@ -60,7 +62,7 @@ func (ch *chartPrices) update() {
 	ch.renderable = true
 }
 
-func createChartCandlestickVAOs(ds []*modelTradingSession, minPrice, maxPrice float32) (stickLines, stickRects *gfx.VAO) {
+func createChartCandlestickVAOs(ds []*modelTradingSession, minPrice, maxPrice float32) (stickLines, stickRects *gfx.VAO2) {
 	// Calculate vertices and indices for the candlesticks.
 	var vertices []float32
 	var colors []float32
@@ -88,14 +90,14 @@ func createChartCandlestickVAOs(ds []*modelTradingSession, minPrice, maxPrice fl
 
 		// Add the vertices needed to create the candlestick.
 		vertices = append(vertices,
-			midX, highY, // 0
-			midX, topY, // 1
-			midX, lowY, // 2
-			midX, botY, // 3
-			leftX, topY, // 4 - Upper left of box
-			rightX, topY, // 5 - Upper right of box
-			leftX, botY, // 6 - Bottom left of box
-			rightX, botY, // 7 - Bottom right of box
+			midX, highY, 0, // 0
+			midX, topY, 0, // 1
+			midX, lowY, 0, // 2
+			midX, botY, 0, // 3
+			leftX, topY, 0, // 4 - Upper left of box
+			rightX, topY, 0, // 5 - Upper right of box
+			leftX, botY, 0, // 6 - Bottom left of box
+			rightX, botY, 0, // 7 - Bottom right of box
 		)
 
 		// Add the colors corresponding to the vertices.
@@ -154,8 +156,25 @@ func createChartCandlestickVAOs(ds []*modelTradingSession, minPrice, maxPrice fl
 		rightX += stickWidth
 	}
 
-	return gfx.CreateVAO(gl.LINES, vertices, colors, lineIndices),
-		gfx.CreateVAO(gl.TRIANGLES, vertices, colors, triangleIndices)
+	lineVAO := gfx.NewVAO(
+		gfx.Lines,
+		&gfx.VAOBufferData{
+			Vertices: vertices,
+			Colors:   colors,
+			Indices:  lineIndices,
+		},
+	)
+
+	triangleVAO := gfx.NewVAO(
+		gfx.Triangles,
+		&gfx.VAOBufferData{
+			Vertices: vertices,
+			Colors:   colors,
+			Indices:  triangleIndices,
+		},
+	)
+
+	return lineVAO, triangleVAO
 }
 
 func (ch *chartPrices) render(r image.Rectangle) {
@@ -238,9 +257,9 @@ func (ch *chartPrices) priceLabelText(v float32) (text string, size image.Point)
 
 func (ch *chartPrices) close() {
 	ch.renderable = false
-	ch.stickLines.Close()
+	ch.stickLines.Delete()
 	ch.stickLines = nil
-	ch.stickRects.Close()
+	ch.stickRects.Delete()
 	ch.stickRects = nil
 	ch.labelLine.Delete()
 	ch.labelLine = nil
