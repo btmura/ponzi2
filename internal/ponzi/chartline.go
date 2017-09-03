@@ -4,8 +4,6 @@ import (
 	"image"
 	"time"
 
-	"github.com/go-gl/gl/v4.5-core/gl"
-
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
@@ -13,7 +11,7 @@ type chartLines struct {
 	stock               *modelStock
 	lastStockUpdateTime time.Time
 	renderable          bool
-	weekLines           *gfx.VAO
+	weekLines           *gfx.VAO2
 }
 
 func createChartLines(stock *modelStock) *chartLines {
@@ -27,15 +25,15 @@ func (ch *chartLines) update() {
 		return
 	}
 	ch.lastStockUpdateTime = ch.stock.lastUpdateTime
-	ch.weekLines.Close()
+	if ch.weekLines != nil {
+		ch.weekLines.Delete()
+	}
 	ch.weekLines = createChartWeekLinesVAO(ch.stock.dailySessions)
 	ch.renderable = true
 }
 
-func createChartWeekLinesVAO(ds []*modelTradingSession) *gfx.VAO {
-	var vertices []float32
-	var colors []float32
-	var indices []uint16
+func createChartWeekLinesVAO(ds []*modelTradingSession) *gfx.VAO2 {
+	data := &gfx.VAOBufferData{}
 
 	// Amount to move on X-axis for one session.
 	dx := 2.0 / float32(len(ds))
@@ -53,21 +51,21 @@ func createChartWeekLinesVAO(ds []*modelTradingSession) *gfx.VAO {
 		}
 
 		x := -1 + dx*float32(i)
-		vertices = append(vertices,
-			x, -1,
-			x, +1,
+		data.Vertices = append(data.Vertices,
+			x, -1, 0,
+			x, +1, 0,
 		)
-		colors = append(colors,
+		data.Colors = append(data.Colors,
 			gray[0], gray[1], gray[2],
 			gray[0], gray[1], gray[2],
 		)
-		indices = append(indices,
-			uint16(len(vertices)-1),
-			uint16(len(vertices)-2),
+		data.Indices = append(data.Indices,
+			uint16(len(data.Vertices)-1),
+			uint16(len(data.Vertices)-2),
 		)
 	}
 
-	return gfx.CreateVAO(gl.LINES, vertices, colors, indices)
+	return gfx.NewVAO(data, gfx.Lines)
 }
 
 func (ch *chartLines) render(r image.Rectangle) {
@@ -81,6 +79,5 @@ func (ch *chartLines) render(r image.Rectangle) {
 
 func (ch *chartLines) close() {
 	ch.renderable = false
-	ch.weekLines.Close()
-	ch.weekLines = nil
+	ch.weekLines.Delete()
 }
