@@ -98,7 +98,7 @@ func createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLine
 		first = false
 	}
 
-	return gfx.NewVAO(data, gfx.Lines)
+	return gfx.NewVAO(gfx.Lines, data)
 }
 
 func (ch *chartStochastics) render(r image.Rectangle) {

@@ -65,7 +65,7 @@ func createChartWeekLinesVAO(ds []*modelTradingSession) *gfx.VAO2 {
 		)
 	}
 
-	return gfx.NewVAO(data, gfx.Lines)
+	return gfx.NewVAO(gfx.Lines, data)
 }
 
 func (ch *chartLines) render(r image.Rectangle) {

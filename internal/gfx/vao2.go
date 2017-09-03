@@ -13,15 +13,6 @@ type VAO2 struct {
 	count int32  // count is the number of elements for gl.DrawElements.
 }
 
-// VAOBufferData is a bunch of slices filled with vertex data to create a VAO.
-type VAOBufferData struct {
-	Vertices  []float32 // Vertices is a required slice of flattened (x, y, z) vertices.
-	Normals   []float32 // Normals is an optional slice of flattened (nx, ny, nz) normals.
-	TexCoords []float32 // TexCoords is an optional slice of flattened (s, t) coords.
-	Colors    []float32 // Colors is an optional slice of flattened (r, g, b) values.
-	Indices   []uint16  // Indices is a required slice of indices into all the buffers.
-}
-
 // VAOMode is analogous to the mode argument to gl.DrawElements like gl.LINES or gl.TRIANGLES.
 type VAOMode int
 
@@ -31,8 +22,17 @@ const (
 	Lines
 )
 
+// VAOBufferData is a bunch of slices filled with vertex data to create a VAO.
+type VAOBufferData struct {
+	Vertices  []float32 // Vertices is a required slice of flattened (x, y, z) vertices.
+	Normals   []float32 // Normals is an optional slice of flattened (nx, ny, nz) normals.
+	TexCoords []float32 // TexCoords is an optional slice of flattened (s, t) coords.
+	Colors    []float32 // Colors is an optional slice of flattened (r, g, b) values.
+	Indices   []uint16  // Indices is a required slice of indices into all the buffers.
+}
+
 // NewVAO creates a VAO out of the given data buffers and drawing mode.
-func NewVAO(data *VAOBufferData, mode VAOMode) *VAO2 {
+func NewVAO(mode VAOMode, data *VAOBufferData) *VAO2 {
 	if len(data.Vertices) == 0 || len(data.Indices) == 0 {
 		return &VAO2{} // OpenGL doesn't allow empty buffer objects. Return VAO with zero count.
 	}

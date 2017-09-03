@@ -42,12 +42,12 @@ func newPLYVAO(r io.Reader) *VAO2 {
 	}
 
 	return NewVAO(
+		Triangles,
 		&VAOBufferData{
 			Vertices:  vertices,
 			Normals:   normals,
 			TexCoords: texCoords,
 			Indices:   indices,
 		},
-		Triangles,
 	)
 }
