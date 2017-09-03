@@ -8,14 +8,12 @@ import (
 
 type chartFrame struct {
 	stock        *modelStock
-	frameBorder  *gfx.VAO
 	frameDivider *gfx.VAO2
 }
 
 func createChartFrame(stock *modelStock) *chartFrame {
 	return &chartFrame{
 		stock:        stock,
-		frameBorder:  gfx.CreateStrokedRectVAO(white, white, white, white),
 		frameDivider: gfx.HorizColoredLineVAO(white, white),
 	}
 }
@@ -30,7 +28,6 @@ func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
 
 	gfx.SetColorMixAmount(1)
 	gfx.SetModelMatrixRect(r)
-	ch.frameBorder.Render()
 
 	//
 	// Render the symbol, quote, and add button.
@@ -65,6 +62,4 @@ func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
 func (ch *chartFrame) close() {
 	ch.frameDivider.Delete()
 	ch.frameDivider = nil
-	ch.frameBorder.Close()
-	ch.frameBorder = nil
 }

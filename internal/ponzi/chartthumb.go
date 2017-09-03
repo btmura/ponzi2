@@ -9,7 +9,6 @@ import (
 type chartThumbnail struct {
 	stock             *modelStock
 	lines             *chartLines
-	frameBorder       *gfx.VAO
 	frameDivider      *gfx.VAO2
 	dailyStochastics  *chartStochastics
 	weeklyStochastics *chartStochastics
@@ -19,7 +18,6 @@ func createChartThumbnail(stock *modelStock) *chartThumbnail {
 	return &chartThumbnail{
 		stock:             stock,
 		lines:             createChartLines(stock),
-		frameBorder:       gfx.CreateStrokedRectVAO(white, white, white, white),
 		frameDivider:      gfx.HorizColoredLineVAO(white, white),
 		dailyStochastics:  createChartStochastics(stock, daily),
 		weeklyStochastics: createChartStochastics(stock, weekly),
@@ -42,7 +40,7 @@ func (ct *chartThumbnail) render(r image.Rectangle) {
 
 	gfx.SetColorMixAmount(1)
 	gfx.SetModelMatrixRect(r)
-	ct.frameBorder.Render()
+	//ct.frameBorder.Render()
 
 	//
 	// Render the symbol and its quote.
@@ -85,8 +83,6 @@ func (ct *chartThumbnail) render(r image.Rectangle) {
 func (ct *chartThumbnail) close() {
 	ct.lines.close()
 	ct.lines = nil
-	ct.frameBorder.Close()
-	ct.frameBorder = nil
 	ct.frameDivider.Delete()
 	ct.frameDivider = nil
 	ct.dailyStochastics.close()
