@@ -131,7 +131,7 @@ func newRuneRenderer(face font.Face, m font.Metrics, r rune) *runeRenderer {
 }
 
 // runePlaneObject is a shared Vertex Array Object that all runeRenderers use.
-var runePlaneObject *plyVAO
+var runePlaneObject *VAO2
 
 func (r *runeRenderer) render(pt image.Point, color TextColor) image.Point {
 	m := math2.ScaleMatrix(float32(r.size.X), float32(r.size.Y), 1)
