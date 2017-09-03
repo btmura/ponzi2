@@ -13,13 +13,11 @@
             "options": {
                 "cwd": "${workspaceRoot}"
             },
+            "problemMatcher":["$go"],             
 
             "linux": {
-                "command": "go build -v -x && ./ponzi2 -logtostderr",
-                "options": {
-                    "cwd": "${workspaceRoot}"
-                }
-            },
+                "command": "go build -v -x && ./ponzi2 -logtostderr" 
+            }
         }
     ]
 }

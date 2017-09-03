@@ -13,7 +13,7 @@ type VAO struct {
 	count int32  // count is the number of elements for gl.DrawElements.
 }
 
-func CreateLineVAO(lColor, rColor [3]float32) *VAO {
+func createLineVAO(lColor, rColor [3]float32) *VAO {
 	return CreateVAO(
 		gl.LINES,
 		[]float32{
