@@ -57,20 +57,21 @@ func newPLYVAO(r io.Reader) *plyVAO {
 
 	gl.GenVertexArrays(1, &vao)
 	gl.BindVertexArray(vao)
+	{
+		gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+		gl.EnableVertexAttribArray(positionLocation)
+		gl.VertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
 
-	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.EnableVertexAttribArray(positionLocation)
-	gl.VertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
+		gl.BindBuffer(gl.ARRAY_BUFFER, nbo)
+		gl.EnableVertexAttribArray(normalLocation)
+		gl.VertexAttribPointer(normalLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
 
-	gl.BindBuffer(gl.ARRAY_BUFFER, nbo)
-	gl.EnableVertexAttribArray(normalLocation)
-	gl.VertexAttribPointer(normalLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
+		gl.BindBuffer(gl.ARRAY_BUFFER, tbo)
+		gl.EnableVertexAttribArray(texCoordLocation)
+		gl.VertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
 
-	gl.BindBuffer(gl.ARRAY_BUFFER, tbo)
-	gl.EnableVertexAttribArray(texCoordLocation)
-	gl.VertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, gl.PtrOffset(0))
-
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo)
+		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo)
+	}
 	gl.BindVertexArray(0)
 
 	return &plyVAO{
