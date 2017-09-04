@@ -1,5 +1,4 @@
-// Package gl has OpenGL utility functions.
-package gl
+package gfx
 
 import (
 	"fmt"
@@ -10,8 +9,8 @@ import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
-// Program creates a program from vertex and fragment shader source code.
-func Program(vertexShaderSrc, fragmentShaderSrc string) (uint32, error) {
+// program creates a program from vertex and fragment shader source code.
+func program(vertexShaderSrc, fragmentShaderSrc string) (uint32, error) {
 	vs, err := shader(vertexShaderSrc, gl.VERTEX_SHADER)
 	if err != nil {
 		return 0, err
@@ -67,8 +66,8 @@ func shader(shaderSource string, shaderType uint32) (uint32, error) {
 	return sh, nil
 }
 
-// Texture creates a texture from an image.
-func Texture(rgba *image.RGBA) uint32 {
+// texture creates a texture from an image.
+func texture(rgba *image.RGBA) uint32 {
 	var tex uint32
 	gl.GenTextures(1, &tex)
 	gl.BindTexture(gl.TEXTURE_2D, tex)
@@ -85,8 +84,8 @@ func Texture(rgba *image.RGBA) uint32 {
 	return tex
 }
 
-// ArrayBuffer creates an array buffer from a slice of floats.
-func ArrayBuffer(data []float32) uint32 {
+// arrayBuffer creates an array buffer from a slice of floats.
+func arrayBuffer(data []float32) uint32 {
 	var name uint32
 	gl.GenBuffers(1, &name)
 	gl.BindBuffer(gl.ARRAY_BUFFER, name)
@@ -95,8 +94,8 @@ func ArrayBuffer(data []float32) uint32 {
 	return name
 }
 
-// ElementArrayBuffer creates an element array buffer from a slice of floats.
-func ElementArrayBuffer(data []uint16) uint32 {
+// elementArrayBuffer creates an element array buffer from a slice of floats.
+func elementArrayBuffer(data []uint16) uint32 {
 	var name uint32
 	gl.GenBuffers(1, &name)
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, name)

@@ -1,7 +1,6 @@
 package gfx
 
 import (
-	gl2 "github.com/btmura/ponzi2/internal/gl"
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/golang/glog"
 )
@@ -37,24 +36,24 @@ func NewVAO(mode VAOMode, data *VAOBufferData) *VAO2 {
 		return &VAO2{} // OpenGL doesn't allow empty buffer objects. Return VAO with zero count.
 	}
 
-	vbo := gl2.ArrayBuffer(data.Vertices)
+	vbo := arrayBuffer(data.Vertices)
 
 	var nbo uint32
 	if len(data.Normals) != 0 {
-		nbo = gl2.ArrayBuffer(data.Normals)
+		nbo = arrayBuffer(data.Normals)
 	}
 
 	var tbo uint32
 	if len(data.TexCoords) != 0 {
-		tbo = gl2.ArrayBuffer(data.TexCoords)
+		tbo = arrayBuffer(data.TexCoords)
 	}
 
 	var cbo uint32
 	if len(data.Colors) != 0 {
-		cbo = gl2.ArrayBuffer(data.Colors)
+		cbo = arrayBuffer(data.Colors)
 	}
 
-	ibo := gl2.ElementArrayBuffer(data.Indices)
+	ibo := elementArrayBuffer(data.Indices)
 
 	var array uint32
 

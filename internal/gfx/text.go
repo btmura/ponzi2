@@ -12,7 +12,6 @@ import (
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
 
-	gl2 "github.com/btmura/ponzi2/internal/gl"
 	math2 "github.com/btmura/ponzi2/internal/math"
 )
 
@@ -125,7 +124,7 @@ func newRuneRenderer(face font.Face, m font.Metrics, r rune) *runeRenderer {
 	d.DrawString(string(r))
 
 	return &runeRenderer{
-		texture: gl2.Texture(rgba),
+		texture: texture(rgba),
 		size:    rgba.Bounds().Size(),
 	}
 }

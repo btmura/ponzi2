@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 
-	gl2 "github.com/btmura/ponzi2/internal/gl"
 	math2 "github.com/btmura/ponzi2/internal/math"
 )
 
@@ -33,7 +32,7 @@ const (
 )
 
 func Init() error {
-	p, err := gl2.Program(string(MustAsset("shader.vert")), string(MustAsset("shader.frag")))
+	p, err := program(string(MustAsset("shader.vert")), string(MustAsset("shader.frag")))
 	if err != nil {
 		return err
 	}
