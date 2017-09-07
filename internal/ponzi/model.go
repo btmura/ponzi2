@@ -16,15 +16,6 @@ type model struct {
 	// Mutex guards the model.
 	sync.Mutex
 
-	// dow is a quote for the Dow Jones index.
-	dow *modelQuote
-
-	// sap is a quote for the S&P 500 index.
-	sap *modelQuote
-
-	// nasdaq is a quote for the NASDAQ index.
-	nasdaq *modelQuote
-
 	// inputSymbol is the symbol being entered by the user.
 	inputSymbol string
 
@@ -62,9 +53,6 @@ type modelTradingSession struct {
 
 func newModel(symbol string) *model {
 	return &model{
-		dow:          &modelQuote{symbol: ".DJI"},
-		sap:          &modelQuote{symbol: ".INX"},
-		nasdaq:       &modelQuote{symbol: ".IXIC"},
 		currentStock: newModelStock("SPY"),
 	}
 }
@@ -102,9 +90,12 @@ func (m *model) refresh() error {
 	s := m.currentStock.symbol
 	m.Unlock()
 
-	symbols := []string{m.dow.symbol, m.sap.symbol, m.nasdaq.symbol}
+	var symbols []string
 	if s != "" {
 		symbols = append(symbols, s)
+	}
+	if len(symbols) == 0 {
+		return nil
 	}
 
 	quoteResp, quoteErr := stock.ListQuotes(&stock.ListQuotesRequest{Symbols: symbols})
@@ -140,9 +131,6 @@ func (m *model) refresh() error {
 	}
 
 	m.Lock()
-	updateQuote(m.dow)
-	updateQuote(m.sap)
-	updateQuote(m.nasdaq)
 	if s != "" && s == m.currentStock.symbol {
 		updateQuote(m.currentStock.quote)
 		m.currentStock.dailySessions, m.currentStock.weeklySessions = convertSessions(hist.Sessions)
