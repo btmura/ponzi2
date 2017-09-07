@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/golang/glog"
+
 	"github.com/btmura/ponzi2/internal/stock"
 	t2 "github.com/btmura/ponzi2/internal/time"
 )
@@ -105,13 +107,14 @@ func (m *model) refresh() error {
 		symbols = append(symbols, s)
 	}
 
-	resp, err := stock.ListQuotes(&stock.ListQuotesRequest{Symbols: symbols})
-	if err != nil {
-		return err
+	quoteResp, quoteErr := stock.ListQuotes(&stock.ListQuotesRequest{Symbols: symbols})
+	if quoteErr != nil {
+		glog.Errorf("stock: list quotes failed: %v", quoteErr)
 	}
 
 	// Get the trading history for the current stock.
 	var hist *stock.TradingHistory
+	var err error
 	if s != "" {
 		end := t2.Midnight(time.Now().In(t2.NewYorkLoc))
 		start := end.Add(-6 * 30 * 24 * time.Hour)
@@ -126,7 +129,10 @@ func (m *model) refresh() error {
 	}
 
 	updateQuote := func(mq *modelQuote) {
-		if q := resp.Quotes[mq.symbol]; q != nil {
+		if quoteErr != nil {
+			return
+		}
+		if q := quoteResp.Quotes[mq.symbol]; q != nil {
 			mq.price = q.Price
 			mq.change = q.Change
 			mq.percentChange = q.PercentChange
