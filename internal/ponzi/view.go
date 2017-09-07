@@ -233,24 +233,3 @@ func (v *view) resize(newSize image.Point) {
 	// Calculate the new ortho projection view matrix.
 	v.orthoMatrix = math2.OrthoMatrix(fw, fh, fw /* use width as depth */)
 }
-
-// sliceRectangle horizontally cuts a rectangle from the bottom at the given percentages.
-// It returns n+1 rectangles given n percentages.
-func sliceRectangle(r image.Rectangle, percentages ...float32) []image.Rectangle {
-	var rs []image.Rectangle
-	addRect := func(minY, maxY int) {
-		rs = append(rs, image.Rect(r.Min.X, minY, r.Max.X, maxY))
-	}
-
-	ry := r.Dy()  // Remaining Y to distribute.
-	cy := r.Min.Y // Start at the bottom and cut horizontally up.
-	for _, p := range percentages {
-		dy := int(float32(r.Dy()) * p)
-		addRect(cy, cy+dy)
-		cy += dy // Bump upwards.
-		ry -= dy // Subtract from remaining.
-	}
-	addRect(cy, cy+ry) // Use remaining Y for last rect.
-
-	return rs
-}
