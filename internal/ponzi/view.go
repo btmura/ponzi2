@@ -56,8 +56,10 @@ var (
 )
 
 const (
-	mainChartRounding  = 10
-	mainChartPadding   = 5
+	mainChartRounding = 10
+	mainChartPadding  = 5
+	mainOuterPadding  = 5
+
 	thumbChartRounding = 6
 	thumbChartPadding  = 2
 )
@@ -138,10 +140,8 @@ func (v *view) render(fudge float32) {
 		inputSymbolTextRenderer.Render(v.model.inputSymbol, c, white)
 	}
 
-	const pad = 5 // padding
-
 	// Start in upper left. (0, 0) is lower left.
-	pt := image.Pt(pad, v.winSize.Y-pad)
+	pt := image.Pt(mainOuterPadding, v.winSize.Y-mainOuterPadding)
 
 	// Render the current symbol.
 	if v.chart == nil || v.chart.stock != v.model.currentStock {
@@ -161,7 +161,7 @@ func (v *view) render(fudge float32) {
 	ms := image.Pt(150, 100)
 
 	if v.chart != nil {
-		v.chart.render(image.Rect(pt.X+ms.X+pad, pad, v.winSize.X-pad, pt.Y))
+		v.chart.render(image.Rect(pt.X+ms.X+mainOuterPadding, mainOuterPadding, v.winSize.X-mainOuterPadding, pt.Y))
 	}
 
 	if v.chartThumbnail != nil {
