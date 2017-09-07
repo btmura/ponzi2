@@ -31,10 +31,11 @@ func HorizColoredLineVAO(leftColor, rightColor VAOColor) *VAO {
 	)
 }
 
-func newPLYVAO(r io.Reader) *VAO {
+// NewPLYVAO returns a VAO decoded from PLY reader.
+func NewPLYVAO(r io.Reader) *VAO {
 	p, err := ply.Decode(r)
 	if err != nil {
-		glog.Fatalf("gfx.newPLYVAO: decoding PLY failed: %v", err)
+		glog.Fatalf("gfx.NewPLYVAO: decoding PLY failed: %v", err)
 	}
 
 	var vertices []float32

@@ -142,7 +142,7 @@ func (r *runeRenderer) render(pt image.Point, color TextColor) image.Point {
 	gl.Uniform1f(colorMixAmountLocation, 0)
 
 	if runePlaneObject == nil {
-		runePlaneObject = newPLYVAO(bytes.NewReader(MustAsset("textPlane.ply")))
+		runePlaneObject = NewPLYVAO(bytes.NewReader(MustAsset("textPlane.ply")))
 	}
 	runePlaneObject.Render()
 
