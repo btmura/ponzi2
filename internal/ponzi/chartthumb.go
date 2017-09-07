@@ -29,36 +29,9 @@ func (ct *chartThumbnail) update() {
 }
 
 func (ct *chartThumbnail) render(r image.Rectangle) {
-	// Start rendering from the top left. Track position with point.
-	pt := image.Pt(r.Min.X, r.Max.Y)
-
-	// Render the border around the chart.
-	renderRoundedRect(r, thumbChartRounding)
-
-	//
-	// Render the symbol and its quote.
-	//
+	r = renderChartFrame(r, ct.stock, thumbSymbolQuoteTextRenderer, thumbChartRounding, thumbChartPadding)
 
 	gfx.SetColorMixAmount(1)
-	gfx.SetModelMatrixRect(r)
-
-	pt.Y -= thumbChartPadding + thumbSymbolQuoteTextRenderer.LineHeight()
-	{
-		pt := pt
-		pt.X += thumbChartRounding
-		pt.X += thumbSymbolQuoteTextRenderer.Render(ct.stock.symbol, pt, white)
-		pt.X += thumbChartPadding
-		pt.X += thumbSymbolQuoteTextRenderer.Render(shortFormatQuote(ct.stock.quote), pt, quoteColor(ct.stock.quote))
-	}
-	pt.Y -= thumbChartPadding
-
-	//
-	// Render the dividers between the sections.
-	//
-
-	r.Max.Y = pt.Y
-	gfx.SetColorMixAmount(1)
-
 	rects := sliceRect(r, 0.5)
 	for _, r := range rects {
 		gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))

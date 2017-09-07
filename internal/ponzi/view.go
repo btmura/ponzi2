@@ -1,7 +1,6 @@
 package ponzi
 
 import (
-	"fmt"
 	"image"
 	"math"
 	"unicode"
@@ -167,31 +166,6 @@ func (v *view) render(fudge float32) {
 	if v.chartThumbnail != nil {
 		v.chartThumbnail.render(image.Rect(pt.X, pt.Y-ms.Y, pt.X+ms.X, pt.Y))
 	}
-}
-
-func formatQuote(q *modelQuote) string {
-	if q.price != 0 {
-		return fmt.Sprintf("%.2f %+5.2f %+5.2f%%", q.price, q.change, q.percentChange*100.0)
-	}
-	return ""
-}
-
-func shortFormatQuote(q *modelQuote) string {
-	if q.price != 0 {
-		return fmt.Sprintf(" %.2f %+5.2f%% ", q.price, q.percentChange*100.0)
-	}
-	return ""
-}
-
-func quoteColor(q *modelQuote) [3]float32 {
-	switch {
-	case q.percentChange > 0:
-		return green
-
-	case q.percentChange < 0:
-		return red
-	}
-	return white
 }
 
 func (v *view) handleKey(key glfw.Key, action glfw.Action) {
