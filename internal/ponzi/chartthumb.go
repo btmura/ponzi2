@@ -32,8 +32,9 @@ func (ct *chartThumbnail) render(r image.Rectangle) {
 	// Start rendering from the top left. Track position with point.
 	pt := image.Pt(r.Min.X, r.Max.Y)
 
-	// Render the frame around the chart.
-	renderRoundedRect(r)
+	// Render the border around the chart.
+	const roundAmount = 6
+	renderRoundedRect(r, roundAmount)
 
 	//
 	// Render the symbol and its quote.

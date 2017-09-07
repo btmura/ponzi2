@@ -21,13 +21,11 @@ var (
 	roundedCornerSW = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerSW.ply")))
 )
 
-const (
-	roundAmount = 10 // roundAmount is the size of the square that the rounded corner is rendered in.
-	roundFudge  = 2  // roundFudge is how much to extend the borders to close gaps in OpenGL rendering.
-)
+// roundFudge is how much to extend the borders to close gaps in OpenGL rendering.
+const roundFudge = 2
 
 // renderRoundedRect renders a rounded rectangle using the given rectangular bounds.
-func renderRoundedRect(r image.Rectangle) {
+func renderRoundedRect(r image.Rectangle, roundAmount int) {
 	gfx.SetColorMixAmount(1)
 
 	// NORTHWEST Corner
