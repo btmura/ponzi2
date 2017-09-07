@@ -21,8 +21,8 @@ const (
 	Lines
 )
 
-// VAOBufferData is a bunch of slices filled with vertex data to create a VAO.
-type VAOBufferData struct {
+// VAOVertexData is a bunch of slices filled with vertex data to create a VAO.
+type VAOVertexData struct {
 	Vertices  []float32 // Vertices is a required slice of flattened (x, y, z) vertices.
 	Normals   []float32 // Normals is an optional slice of flattened (nx, ny, nz) normals.
 	TexCoords []float32 // TexCoords is an optional slice of flattened (s, t) coords.
@@ -31,7 +31,7 @@ type VAOBufferData struct {
 }
 
 // NewVAO creates a VAO out of the given data buffers and drawing mode.
-func NewVAO(mode VAOMode, data *VAOBufferData) *VAO2 {
+func NewVAO(mode VAOMode, data *VAOVertexData) *VAO2 {
 	if len(data.Vertices) == 0 || len(data.Indices) == 0 {
 		return &VAO2{} // OpenGL doesn't allow empty buffer objects. Return VAO with zero count.
 	}

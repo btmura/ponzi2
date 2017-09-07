@@ -158,7 +158,7 @@ func createChartCandlestickVAOs(ds []*modelTradingSession, minPrice, maxPrice fl
 
 	lineVAO := gfx.NewVAO(
 		gfx.Lines,
-		&gfx.VAOBufferData{
+		&gfx.VAOVertexData{
 			Vertices: vertices,
 			Colors:   colors,
 			Indices:  lineIndices,
@@ -167,7 +167,7 @@ func createChartCandlestickVAOs(ds []*modelTradingSession, minPrice, maxPrice fl
 
 	triangleVAO := gfx.NewVAO(
 		gfx.Triangles,
-		&gfx.VAOBufferData{
+		&gfx.VAOVertexData{
 			Vertices: vertices,
 			Colors:   colors,
 			Indices:  triangleIndices,

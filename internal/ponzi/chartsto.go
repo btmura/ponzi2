@@ -56,7 +56,7 @@ func (ch *chartStochastics) update() {
 }
 
 func createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLines *gfx.VAO2) {
-	data := &gfx.VAOBufferData{}
+	data := &gfx.VAOVertexData{}
 
 	width := 2.0 / float32(len(ss)) // (-1 to 1) on X-axis
 	calcX := func(i int) float32 {

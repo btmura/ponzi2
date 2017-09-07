@@ -15,7 +15,7 @@ type VAOColor [3]float32
 func HorizColoredLineVAO(leftColor, rightColor VAOColor) *VAO2 {
 	return NewVAO(
 		Lines,
-		&VAOBufferData{
+		&VAOVertexData{
 			Vertices: []float32{
 				-1, 0, 0,
 				+1, 0, 0,
@@ -66,7 +66,7 @@ func newPLYVAO(r io.Reader) *VAO2 {
 
 	return NewVAO(
 		Triangles,
-		&VAOBufferData{
+		&VAOVertexData{
 			Vertices:  vertices,
 			Normals:   normals,
 			TexCoords: texCoords,

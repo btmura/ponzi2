@@ -33,7 +33,7 @@ func (ch *chartLines) update() {
 }
 
 func createChartWeekLinesVAO(ds []*modelTradingSession) *gfx.VAO2 {
-	data := &gfx.VAOBufferData{}
+	data := &gfx.VAOVertexData{}
 
 	// Amount to move on X-axis for one session.
 	dx := 2.0 / float32(len(ds))

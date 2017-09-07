@@ -120,7 +120,7 @@ func createChartVolumeBarsVAO(ds []*modelTradingSession, maxVolume int) *gfx.VAO
 
 	return gfx.NewVAO(
 		gfx.Triangles,
-		&gfx.VAOBufferData{
+		&gfx.VAOVertexData{
 			Vertices: vertices,
 			Colors:   colors,
 			Indices:  indices,
