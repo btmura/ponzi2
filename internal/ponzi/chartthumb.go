@@ -33,8 +33,7 @@ func (ct *chartThumbnail) render(r image.Rectangle) {
 	pt := image.Pt(r.Min.X, r.Max.Y)
 
 	// Render the border around the chart.
-	const roundAmount = 6
-	renderRoundedRect(r, roundAmount)
+	renderRoundedRect(r, thumbChartRounding)
 
 	//
 	// Render the symbol and its quote.
@@ -43,16 +42,15 @@ func (ct *chartThumbnail) render(r image.Rectangle) {
 	gfx.SetColorMixAmount(1)
 	gfx.SetModelMatrixRect(r)
 
-	const pad = 3
-	pt.Y -= pad + thumbSymbolQuoteTextRenderer.LineHeight()
+	pt.Y -= thumbChartPadding + thumbSymbolQuoteTextRenderer.LineHeight()
 	{
 		pt := pt
-		pt.X += roundAmount
+		pt.X += thumbChartRounding
 		pt.X += thumbSymbolQuoteTextRenderer.Render(ct.stock.symbol, pt, white)
-		pt.X += pad
+		pt.X += thumbChartPadding
 		pt.X += thumbSymbolQuoteTextRenderer.Render(shortFormatQuote(ct.stock.quote), pt, quoteColor(ct.stock.quote))
 	}
-	pt.Y -= pad
+	pt.Y -= thumbChartPadding
 
 	//
 	// Render the dividers between the sections.
@@ -71,10 +69,10 @@ func (ct *chartThumbnail) render(r image.Rectangle) {
 	// Render the graphs.
 	//
 
-	ct.dailyStochastics.render(rects[1].Inset(pad))
-	ct.weeklyStochastics.render(rects[0].Inset(pad))
-	ct.lines.render(rects[1].Inset(pad))
-	ct.lines.render(rects[0].Inset(pad))
+	ct.dailyStochastics.render(rects[1].Inset(thumbChartPadding))
+	ct.weeklyStochastics.render(rects[0].Inset(thumbChartPadding))
+	ct.lines.render(rects[1].Inset(thumbChartPadding))
+	ct.lines.render(rects[0].Inset(thumbChartPadding))
 }
 
 func (ct *chartThumbnail) close() {

@@ -55,6 +55,13 @@ var (
 	thumbSymbolQuoteTextRenderer = axisLabelTextRenderer
 )
 
+const (
+	mainChartRounding  = 10
+	mainChartPadding   = 5
+	thumbChartRounding = 6
+	thumbChartPadding  = 2
+)
+
 type view struct {
 	model             *model // model is the model that will be rendered.
 	chart             *chart

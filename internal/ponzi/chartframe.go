@@ -21,8 +21,7 @@ func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
 	pt := image.Pt(r.Min.X, r.Max.Y)
 
 	// Render the border around the chart.
-	const roundAmount = 10
-	renderRoundedRect(r, roundAmount)
+	renderRoundedRect(r, mainChartRounding)
 
 	//
 	// Render the symbol and quote.
@@ -31,16 +30,15 @@ func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
 	gfx.SetColorMixAmount(1)
 	gfx.SetModelMatrixRect(r)
 
-	const pad = 5
-	pt.Y -= pad + symbolQuoteTextRenderer.LineHeight()
+	pt.Y -= mainChartPadding + symbolQuoteTextRenderer.LineHeight()
 	{
 		pt := pt
-		pt.X += roundAmount
+		pt.X += mainChartRounding
 		pt.X += symbolQuoteTextRenderer.Render(ch.stock.symbol, pt, white)
-		pt.X += pad
+		pt.X += mainChartPadding
 		pt.X += symbolQuoteTextRenderer.Render(formatQuote(ch.stock.quote), pt, quoteColor(ch.stock.quote))
 	}
-	pt.Y -= pad
+	pt.Y -= mainChartPadding
 
 	//
 	// Render the dividers between the sections.
