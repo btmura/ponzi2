@@ -21,9 +21,6 @@ var (
 	roundedCornerSW = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerSW.ply")))
 )
 
-// roundFudge is how much to extend the borders to close gaps in OpenGL rendering.
-const roundFudge = 2
-
 // renderRoundedRect renders a rounded rectangle using the given rectangular bounds.
 func renderRoundedRect(r image.Rectangle, roundAmount int) {
 	gfx.SetColorMixAmount(1)
@@ -43,8 +40,11 @@ func renderRoundedRect(r image.Rectangle, roundAmount int) {
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Min.Y, r.Min.X+roundAmount, r.Min.Y+roundAmount))
 	roundedCornerSW.Render()
 
+	// fudge is how much to extend the borders to close gaps in OpenGL rendering.
+	const fudge = 2
+
 	// TOP border
-	hMinX, hMaxX := r.Min.X+roundAmount-roundFudge, r.Max.X-roundAmount+roundFudge
+	hMinX, hMaxX := r.Min.X+roundAmount-fudge, r.Max.X-roundAmount+fudge
 	gfx.SetModelMatrixRect(image.Rect(hMinX, r.Max.Y, hMaxX, r.Max.Y))
 	horizLine.Render()
 
@@ -53,7 +53,7 @@ func renderRoundedRect(r image.Rectangle, roundAmount int) {
 	horizLine.Render()
 
 	// LEFT border
-	vMinX, vMaxX := r.Min.Y+roundAmount-roundFudge, r.Max.Y-roundAmount+roundFudge
+	vMinX, vMaxX := r.Min.Y+roundAmount-fudge, r.Max.Y-roundAmount+fudge
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, vMinX, r.Min.X, vMaxX))
 	vertLine.Render()
 
