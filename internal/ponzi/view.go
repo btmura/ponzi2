@@ -50,10 +50,9 @@ var acceptedChars = map[rune]bool{
 
 var (
 	inputSymbolTextRenderer      = gfx.NewTextRenderer(goregular.TTF, 48)
-	majorIndexTextRenderer       = gfx.NewTextRenderer(goregular.TTF, 12)
 	symbolQuoteTextRenderer      = gfx.NewTextRenderer(goregular.TTF, 24)
-	axisLabelTextRenderer        = majorIndexTextRenderer
-	thumbSymbolQuoteTextRenderer = majorIndexTextRenderer
+	axisLabelTextRenderer        = gfx.NewTextRenderer(goregular.TTF, 12)
+	thumbSymbolQuoteTextRenderer = axisLabelTextRenderer
 )
 
 type view struct {
@@ -135,27 +134,9 @@ func (v *view) render(fudge float32) {
 	const pad = 5 // padding
 
 	// Start in upper left. (0, 0) is lower left.
-	// Move down below the major indices line.
-	pt := image.Pt(pad, v.winSize.Y-pad-majorIndexTextRenderer.LineHeight())
+	pt := image.Pt(pad, v.winSize.Y-pad)
 
-	// Render major indices on one line.
-	{
-		pt := pt
-		render := func(index string, q *modelQuote) {
-			pt.X += majorIndexTextRenderer.Render(index, pt, white)
-			pt.X += pad
-			pt.X += majorIndexTextRenderer.Render(formatQuote(q), pt, quoteColor(q))
-			pt.X += pad
-		}
-
-		render("DOW", v.model.dow)
-		render("S&P", v.model.sap)
-		render("NASDAQ", v.model.nasdaq)
-	}
-
-	pt.Y -= pad
-
-	// Render the current symbol below the indices.
+	// Render the current symbol.
 	if v.chart == nil || v.chart.stock != v.model.currentStock {
 		if v.chart != nil {
 			v.chart.close()
