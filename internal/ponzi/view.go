@@ -52,7 +52,7 @@ var (
 	inputSymbolTextRenderer      = gfx.NewTextRenderer(goregular.TTF, 48)
 	symbolQuoteTextRenderer      = gfx.NewTextRenderer(goregular.TTF, 24)
 	axisLabelTextRenderer        = gfx.NewTextRenderer(goregular.TTF, 12)
-	thumbSymbolQuoteTextRenderer = axisLabelTextRenderer
+	thumbSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 14)
 )
 
 const (
