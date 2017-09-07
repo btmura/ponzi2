@@ -49,7 +49,7 @@ func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
 	r.Max.Y = pt.Y
 	gfx.SetColorMixAmount(1)
 
-	rects := sliceRectangle(r, 0.13, 0.13, 0.13)
+	rects := sliceRect(r, 0.13, 0.13, 0.13)
 	for _, r := range rects {
 		gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
 		horizLine.Render()

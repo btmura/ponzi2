@@ -62,9 +62,9 @@ func renderRoundedRect(r image.Rectangle, roundAmount int) {
 	vertLine.Render()
 }
 
-// sliceRectangle horizontally cuts a rectangle from the bottom at the given percentages.
+// sliceRect horizontally cuts a rectangle from the bottom at the given percentages.
 // It returns n+1 rectangles given n percentages.
-func sliceRectangle(r image.Rectangle, percentages ...float32) []image.Rectangle {
+func sliceRect(r image.Rectangle, percentages ...float32) []image.Rectangle {
 	var rs []image.Rectangle
 	addRect := func(minY, maxY int) {
 		rs = append(rs, image.Rect(r.Min.X, minY, r.Max.X, maxY))
