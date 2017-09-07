@@ -14,8 +14,8 @@ type chartVolume struct {
 	lastStockUpdateTime time.Time
 	renderable          bool
 	maxVolume           int
-	volRects            *gfx.VAO2
-	labelLine           *gfx.VAO2
+	volRects            *gfx.VAO
+	labelLine           *gfx.VAO
 }
 
 func createChartVolume(stock *modelStock) *chartVolume {
@@ -50,7 +50,7 @@ func (ch *chartVolume) update() {
 	ch.renderable = true
 }
 
-func createChartVolumeBarsVAO(ds []*modelTradingSession, maxVolume int) *gfx.VAO2 {
+func createChartVolumeBarsVAO(ds []*modelTradingSession, maxVolume int) *gfx.VAO {
 	var vertices []float32
 	var colors []float32
 	var indices []uint16

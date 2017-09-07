@@ -8,7 +8,7 @@ import (
 
 type chartFrame struct {
 	stock        *modelStock
-	frameDivider *gfx.VAO2
+	frameDivider *gfx.VAO
 }
 
 func createChartFrame(stock *modelStock) *chartFrame {

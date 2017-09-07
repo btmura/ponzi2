@@ -12,7 +12,7 @@ import (
 type VAOColor [3]float32
 
 // HorizColoredLineVAO returns a horizontal colored line segment from (-1, 0) to (1, 0).
-func HorizColoredLineVAO(leftColor, rightColor VAOColor) *VAO2 {
+func HorizColoredLineVAO(leftColor, rightColor VAOColor) *VAO {
 	return NewVAO(
 		Lines,
 		&VAOVertexData{
@@ -31,7 +31,7 @@ func HorizColoredLineVAO(leftColor, rightColor VAOColor) *VAO2 {
 	)
 }
 
-func newPLYVAO(r io.Reader) *VAO2 {
+func newPLYVAO(r io.Reader) *VAO {
 	p, err := ply.Decode(r)
 	if err != nil {
 		glog.Fatalf("gfx.newPLYVAO: decoding PLY failed: %v", err)

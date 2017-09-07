@@ -11,7 +11,7 @@ type chartLines struct {
 	stock               *modelStock
 	lastStockUpdateTime time.Time
 	renderable          bool
-	weekLines           *gfx.VAO2
+	weekLines           *gfx.VAO
 }
 
 func createChartLines(stock *modelStock) *chartLines {
@@ -32,7 +32,7 @@ func (ch *chartLines) update() {
 	ch.renderable = true
 }
 
-func createChartWeekLinesVAO(ds []*modelTradingSession) *gfx.VAO2 {
+func createChartWeekLinesVAO(ds []*modelTradingSession) *gfx.VAO {
 	data := &gfx.VAOVertexData{}
 
 	// Amount to move on X-axis for one session.

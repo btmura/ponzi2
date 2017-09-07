@@ -20,8 +20,8 @@ type chartStochastics struct {
 	lastStockUpdateTime time.Time
 	renderable          bool
 	stoType             chartStochasticType
-	stoLines            *gfx.VAO2
-	labelLine           *gfx.VAO2
+	stoLines            *gfx.VAO
+	labelLine           *gfx.VAO
 }
 
 func createChartStochastics(stock *modelStock, stoType chartStochasticType) *chartStochastics {
@@ -55,7 +55,7 @@ func (ch *chartStochastics) update() {
 	ch.renderable = true
 }
 
-func createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLines *gfx.VAO2) {
+func createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLines *gfx.VAO) {
 	data := &gfx.VAOVertexData{}
 
 	width := 2.0 / float32(len(ss)) // (-1 to 1) on X-axis

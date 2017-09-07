@@ -16,9 +16,9 @@ type chartPrices struct {
 	minPrice            float32
 	maxPrice            float32
 	labelHeight         int
-	stickLines          *gfx.VAO2
-	stickRects          *gfx.VAO2
-	labelLine           *gfx.VAO2
+	stickLines          *gfx.VAO
+	stickRects          *gfx.VAO
+	labelLine           *gfx.VAO
 }
 
 func createChartPrices(stock *modelStock) *chartPrices {
@@ -62,7 +62,7 @@ func (ch *chartPrices) update() {
 	ch.renderable = true
 }
 
-func createChartCandlestickVAOs(ds []*modelTradingSession, minPrice, maxPrice float32) (stickLines, stickRects *gfx.VAO2) {
+func createChartCandlestickVAOs(ds []*modelTradingSession, minPrice, maxPrice float32) (stickLines, stickRects *gfx.VAO) {
 	// Calculate vertices and indices for the candlesticks.
 	var vertices []float32
 	var colors []float32

@@ -9,7 +9,7 @@ import (
 type chartThumbnail struct {
 	stock             *modelStock
 	lines             *chartLines
-	frameDivider      *gfx.VAO2
+	frameDivider      *gfx.VAO
 	dailyStochastics  *chartStochastics
 	weeklyStochastics *chartStochastics
 }

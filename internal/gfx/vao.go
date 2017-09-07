@@ -5,8 +5,8 @@ import (
 	"github.com/golang/glog"
 )
 
-// VAO2 is a Vertex Array Object (VAO) for one element type (lines, triangles, etc).
-type VAO2 struct {
+// VAO is a Vertex Array Object (VAO) for one element type (lines, triangles, etc).
+type VAO struct {
 	array uint32 // array is the VAO name for gl.BindVertexArray.
 	mode  uint32 // mode is like gl.LINES or gl.TRIANGLES passed to gl.DrawElements.
 	count int32  // count is the number of elements for gl.DrawElements.
@@ -31,9 +31,9 @@ type VAOVertexData struct {
 }
 
 // NewVAO creates a VAO out of the given data buffers and drawing mode.
-func NewVAO(mode VAOMode, data *VAOVertexData) *VAO2 {
+func NewVAO(mode VAOMode, data *VAOVertexData) *VAO {
 	if len(data.Vertices) == 0 || len(data.Indices) == 0 {
-		return &VAO2{} // OpenGL doesn't allow empty buffer objects. Return VAO with zero count.
+		return &VAO{} // OpenGL doesn't allow empty buffer objects. Return VAO with zero count.
 	}
 
 	vbo := arrayBuffer(data.Vertices)
@@ -96,7 +96,7 @@ func NewVAO(mode VAOMode, data *VAOVertexData) *VAO2 {
 		glog.Fatalf("gfx.NewVAO: unsupported mode: %v", mode)
 	}
 
-	return &VAO2{
+	return &VAO{
 		array: array,
 		mode:  glMode,
 		count: int32(len(data.Indices)),
@@ -104,7 +104,7 @@ func NewVAO(mode VAOMode, data *VAOVertexData) *VAO2 {
 }
 
 // Render renders the VAO.
-func (v *VAO2) Render() {
+func (v *VAO) Render() {
 	if v.count == 0 {
 		return // No buffer data. Nothing to render.
 	}
@@ -114,7 +114,7 @@ func (v *VAO2) Render() {
 }
 
 // Delete deletes the VAO. Don't call Render after calling this.
-func (v *VAO2) Delete() {
+func (v *VAO) Delete() {
 	if v.count == 0 {
 		return // No buffer data. Nothing to delete.
 	}
