@@ -9,7 +9,6 @@ import (
 type chartThumbnail struct {
 	stock             *modelStock
 	lines             *chartLines
-	frameDivider      *gfx.VAO
 	dailyStochastics  *chartStochastics
 	weeklyStochastics *chartStochastics
 }
@@ -18,7 +17,6 @@ func createChartThumbnail(stock *modelStock) *chartThumbnail {
 	return &chartThumbnail{
 		stock:             stock,
 		lines:             createChartLines(stock),
-		frameDivider:      gfx.HorizColoredLineVAO(white, white),
 		dailyStochastics:  createChartStochastics(stock, daily),
 		weeklyStochastics: createChartStochastics(stock, weekly),
 	}
@@ -34,23 +32,21 @@ func (ct *chartThumbnail) render(r image.Rectangle) {
 	// Start rendering from the top left. Track position with point.
 	pt := image.Pt(r.Min.X, r.Max.Y)
 
-	//
 	// Render the frame around the chart.
-	//
-
-	gfx.SetColorMixAmount(1)
-	gfx.SetModelMatrixRect(r)
-	//ct.frameBorder.Render()
+	renderRoundedRect(r)
 
 	//
 	// Render the symbol and its quote.
 	//
 
+	gfx.SetColorMixAmount(1)
+	gfx.SetModelMatrixRect(r)
+
 	const pad = 3
 	pt.Y -= pad + thumbSymbolQuoteTextRenderer.LineHeight()
 	{
 		pt := pt
-		pt.X += pad
+		pt.X += roundAmount
 		pt.X += thumbSymbolQuoteTextRenderer.Render(ct.stock.symbol, pt, white)
 		pt.X += pad
 		pt.X += thumbSymbolQuoteTextRenderer.Render(shortFormatQuote(ct.stock.quote), pt, quoteColor(ct.stock.quote))
@@ -67,7 +63,7 @@ func (ct *chartThumbnail) render(r image.Rectangle) {
 	rects := sliceRectangle(r, 0.5)
 	for _, r := range rects {
 		gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
-		ct.frameDivider.Render()
+		horizLine.Render()
 	}
 
 	//
@@ -83,8 +79,6 @@ func (ct *chartThumbnail) render(r image.Rectangle) {
 func (ct *chartThumbnail) close() {
 	ct.lines.close()
 	ct.lines = nil
-	ct.frameDivider.Delete()
-	ct.frameDivider = nil
 	ct.dailyStochastics.close()
 	ct.dailyStochastics = nil
 	ct.weeklyStochastics.close()

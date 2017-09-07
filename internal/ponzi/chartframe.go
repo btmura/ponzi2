@@ -20,18 +20,16 @@ func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
 	// Start rendering from the top left. Track position with point.
 	pt := image.Pt(r.Min.X, r.Max.Y)
 
-	//
 	// Render the frame around the chart.
-	//
-
-	gfx.SetColorMixAmount(1)
 	renderRoundedRect(r)
 
 	//
 	// Render the symbol and quote.
 	//
 
+	gfx.SetColorMixAmount(1)
 	gfx.SetModelMatrixRect(r)
+
 	const pad = 5
 	pt.Y -= pad + symbolQuoteTextRenderer.LineHeight()
 	{

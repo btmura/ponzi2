@@ -13,7 +13,6 @@ var (
 	vertLine  = gfx.VertColoredLineVAO(white, white)
 )
 
-
 // VAOs for each corner. Rotation could possibly be used to simplify this...
 var (
 	roundedCornerNW = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNW.ply")))
@@ -29,6 +28,8 @@ const (
 
 // renderRoundedRect renders a rounded rectangle using the given rectangular bounds.
 func renderRoundedRect(r image.Rectangle) {
+	gfx.SetColorMixAmount(1)
+
 	// NORTHWEST Corner
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y-roundAmount, r.Min.X+roundAmount, r.Max.Y))
 	roundedCornerNW.Render()
