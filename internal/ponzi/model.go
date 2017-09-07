@@ -5,8 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/glog"
-
 	"github.com/btmura/ponzi2/internal/stock"
 	t2 "github.com/btmura/ponzi2/internal/time"
 )
@@ -90,50 +88,31 @@ func (m *model) refresh() error {
 	s := m.currentStock.symbol
 	m.Unlock()
 
-	var symbols []string
-	if s != "" {
-		symbols = append(symbols, s)
-	}
-	if len(symbols) == 0 {
-		return nil
-	}
-
-	quoteResp, quoteErr := stock.ListQuotes(&stock.ListQuotesRequest{Symbols: symbols})
-	if quoteErr != nil {
-		glog.Errorf("stock: list quotes failed: %v", quoteErr)
+	if s == "" {
+		return nil // Nothing to look up.
 	}
 
 	// Get the trading history for the current stock.
-	var hist *stock.TradingHistory
-	var err error
-	if s != "" {
-		end := t2.Midnight(time.Now().In(t2.NewYorkLoc))
-		start := end.Add(-6 * 30 * 24 * time.Hour)
-		hist, err = stock.GetTradingHistory(&stock.GetTradingHistoryRequest{
-			Symbol:    s,
-			StartDate: start,
-			EndDate:   end,
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	updateQuote := func(mq *modelQuote) {
-		if quoteErr != nil {
-			return
-		}
-		if q := quoteResp.Quotes[mq.symbol]; q != nil {
-			mq.price = q.Price
-			mq.change = q.Change
-			mq.percentChange = q.PercentChange
-		}
+	end := t2.Midnight(time.Now().In(t2.NewYorkLoc))
+	start := end.Add(-6 * 30 * 24 * time.Hour)
+	hist, err := stock.GetTradingHistory(&stock.GetTradingHistoryRequest{
+		Symbol:    s,
+		StartDate: start,
+		EndDate:   end,
+	})
+	if err != nil {
+		return err
 	}
 
 	m.Lock()
-	if s != "" && s == m.currentStock.symbol {
-		updateQuote(m.currentStock.quote)
+	if s == m.currentStock.symbol { // Maybe the current symbol changed.
 		m.currentStock.dailySessions, m.currentStock.weeklySessions = convertSessions(hist.Sessions)
+		if len(m.currentStock.dailySessions) > 0 {
+			last := m.currentStock.dailySessions[len(m.currentStock.dailySessions)-1]
+			m.currentStock.quote.price = last.close
+			m.currentStock.quote.change = last.change
+			m.currentStock.quote.percentChange = last.percentChange
+		}
 		m.currentStock.lastUpdateTime = time.Now()
 	}
 	m.Unlock()
