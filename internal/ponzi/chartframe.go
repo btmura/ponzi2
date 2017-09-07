@@ -16,7 +16,7 @@ type chartFrame struct {
 func createChartFrame(stock *modelStock) *chartFrame {
 	return &chartFrame{
 		stock:           stock,
-		roundedCornerNW: gfx.NewPLYVAO(bytes.NewReader(MustAsset("roundedCornerNW.ply"))),
+		roundedCornerNW: gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNW.ply"))),
 		frameDivider:    gfx.HorizColoredLineVAO(white, white),
 	}
 }
