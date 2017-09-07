@@ -44,23 +44,23 @@ func NewPLYVAO(r io.Reader) *VAO {
 	var indices []uint16
 
 	for _, e := range p.Elements["vertex"] {
-		x := e.Floats["x"]
-		y := e.Floats["y"]
-		z := e.Floats["z"]
+		x := e.Float32s["x"]
+		y := e.Float32s["y"]
+		z := e.Float32s["z"]
 		vertices = append(vertices, x, y, z)
 
-		nx := e.Floats["nx"]
-		ny := e.Floats["ny"]
-		nz := e.Floats["nz"]
+		nx := e.Float32s["nx"]
+		ny := e.Float32s["ny"]
+		nz := e.Float32s["nz"]
 		normals = append(normals, nx, ny, nz)
 
-		s := e.Floats["s"]
-		t := e.Floats["t"]
+		s := e.Float32s["s"]
+		t := e.Float32s["t"]
 		texCoords = append(texCoords, s, 1-t)
 	}
 
 	for _, e := range p.Elements["face"] {
-		for _, idx := range e.UintLists["vertex_indices"] {
+		for _, idx := range e.Uint32Lists["vertex_indices"] {
 			indices = append(indices, uint16(idx))
 		}
 	}

@@ -20,11 +20,17 @@ type PLY struct {
 
 // Element is an element with property values.
 type Element struct {
-	// Floats maps property name like "x" to a float32.
-	Floats map[string]float32
+	// Float32s maps property name like "x" to a float32.
+	Float32s map[string]float32
 
-	// UintLists maps property name like "vertex_indices" to a uint list.
-	UintLists map[string][]uint
+	// Int32s maps property name like "vertex1" to an int.
+	Int32s map[string]int32
+
+	// Uint8s maps property name like "red" to a uint8.
+	Uint8s map[string]uint8
+
+	// Uint32Lists maps property name like "vertex_indices" to a uint list.
+	Uint32Lists map[string][]uint32
 }
 
 // header is used by Decode to parse the "element" and "property" lines.
@@ -114,19 +120,19 @@ processHeader:
 
 					switch pd.valueType {
 					case "uint":
-						var us []uint
+						var us []uint32
 						for _, s := range ss {
-							i, err := strconv.Atoi(s)
+							u, err := strconv.ParseUint(s, 10, 32)
 							if err != nil {
 								return nil, err
 							}
-							us = append(us, uint(i))
+							us = append(us, uint32(u))
 						}
 
-						if e.UintLists == nil {
-							e.UintLists = map[string][]uint{}
+						if e.Uint32Lists == nil {
+							e.Uint32Lists = map[string][]uint32{}
 						}
-						e.UintLists[pd.name] = us
+						e.Uint32Lists[pd.name] = us
 
 					default:
 						return nil, fmt.Errorf("ply: unsupported list value type: %s", pd.valueType)
@@ -139,10 +145,32 @@ processHeader:
 							return nil, err
 						}
 
-						if e.Floats == nil {
-							e.Floats = map[string]float32{}
+						if e.Float32s == nil {
+							e.Float32s = map[string]float32{}
 						}
-						e.Floats[pd.name] = float32(f)
+						e.Float32s[pd.name] = float32(f)
+
+					case "int":
+						i, err := strconv.ParseInt(values[i], 10, 32)
+						if err != nil {
+							return nil, err
+						}
+
+						if e.Int32s == nil {
+							e.Int32s = map[string]int32{}
+						}
+						e.Int32s[pd.name] = int32(i)
+
+					case "uchar":
+						u, err := strconv.ParseUint(values[i], 10, 8)
+						if err != nil {
+							return nil, err
+						}
+
+						if e.Uint8s == nil {
+							e.Uint8s = map[string]uint8{}
+						}
+						e.Uint8s[pd.name] = uint8(u)
 
 					default:
 						return nil, fmt.Errorf("ply: unsupported scalar value type: %s", pd.valueType)
