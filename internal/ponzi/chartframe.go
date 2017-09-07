@@ -1,20 +1,23 @@
 package ponzi
 
 import (
+	"bytes"
 	"image"
 
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
 type chartFrame struct {
-	stock        *modelStock
-	frameDivider *gfx.VAO
+	stock           *modelStock
+	roundedCornerNW *gfx.VAO
+	frameDivider    *gfx.VAO
 }
 
 func createChartFrame(stock *modelStock) *chartFrame {
 	return &chartFrame{
-		stock:        stock,
-		frameDivider: gfx.HorizColoredLineVAO(white, white),
+		stock:           stock,
+		roundedCornerNW: gfx.NewPLYVAO(bytes.NewReader(MustAsset("roundedCornerNW.ply"))),
+		frameDivider:    gfx.HorizColoredLineVAO(white, white),
 	}
 }
 
@@ -62,4 +65,6 @@ func (ch *chartFrame) render(r image.Rectangle) []image.Rectangle {
 func (ch *chartFrame) close() {
 	ch.frameDivider.Delete()
 	ch.frameDivider = nil
+	ch.roundedCornerNW.Delete()
+	ch.roundedCornerNW = nil
 }
