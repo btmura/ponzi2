@@ -12,12 +12,12 @@ type VAO struct {
 	count int32  // count is the number of elements for gl.DrawElements.
 }
 
-// VAOMode is analogous to the mode argument to gl.DrawElements like gl.LINES or gl.TRIANGLES.
-type VAOMode int
+// VAODrawMode is analogous to the mode argument to gl.DrawElements like gl.LINES or gl.TRIANGLES.
+type VAODrawMode int
 
-// VAOMode enums.
+// VAODrawMode enums.
 const (
-	Triangles VAOMode = iota
+	Triangles VAODrawMode = iota
 	Lines
 )
 
@@ -31,7 +31,7 @@ type VAOVertexData struct {
 }
 
 // NewVAO creates a VAO out of the given data buffers and drawing mode.
-func NewVAO(mode VAOMode, data *VAOVertexData) *VAO {
+func NewVAO(mode VAODrawMode, data *VAOVertexData) *VAO {
 	if len(data.Vertices) == 0 || len(data.Indices) == 0 {
 		return &VAO{} // OpenGL doesn't allow empty buffer objects. Return VAO with zero count.
 	}
