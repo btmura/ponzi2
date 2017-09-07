@@ -44,7 +44,6 @@ type DataSource int
 const (
 	DefaultSource DataSource = iota
 	Google
-	Yahoo
 )
 
 // GetTradingHistoryRequest is the request for getTradingHistory.
@@ -57,13 +56,7 @@ type GetTradingHistoryRequest struct {
 
 // GetTradingHistory gets the trading history matching the request criteria.
 func GetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, error) {
-	switch req.DataSource {
-	case Yahoo:
-		return yahooGetTradingHistory(req)
-
-	default:
-		return googleGetTradingHistory(req)
-	}
+	return googleGetTradingHistory(req)
 }
 
 func googleGetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, error) {
@@ -173,122 +166,6 @@ func googleGetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, er
 		if err != nil {
 			return nil, wrapErr(err)
 		}
-
-		history.Sessions = append(history.Sessions, &TradingSession{
-			Date:   date,
-			Open:   open,
-			High:   high,
-			Low:    low,
-			Close:  close,
-			Volume: volume,
-		})
-	}
-
-	// Most recent trading sessions at the back.
-	sortByTradingSessionDate(history.Sessions)
-
-	return history, nil
-}
-
-func yahooGetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, error) {
-	v := url.Values{}
-	v.Set("s", req.Symbol)
-	v.Set("a", strconv.Itoa(int(req.StartDate.Month())-1))
-	v.Set("b", strconv.Itoa(req.StartDate.Day()))
-	v.Set("c", strconv.Itoa(req.StartDate.Year()))
-	v.Set("d", strconv.Itoa(int(req.EndDate.Month())-1))
-	v.Set("e", strconv.Itoa(req.EndDate.Day()))
-	v.Set("f", strconv.Itoa(req.EndDate.Year()))
-	v.Set("g", "d")
-	v.Set("ignore", ".csv")
-
-	u, err := url.Parse("http://ichart.yahoo.com/table.csv")
-	if err != nil {
-		return nil, err
-	}
-	u.RawQuery = v.Encode()
-	glog.Infof("GET %s", u)
-
-	resp, err := http.Get(u.String())
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	history := &TradingHistory{
-		Symbol:     req.Symbol,
-		StartDate:  req.StartDate,
-		EndDate:    req.EndDate,
-		DataSource: req.DataSource,
-	}
-	r := csv.NewReader(resp.Body)
-	for i := 0; ; i++ {
-		record, err := r.Read()
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return nil, err
-		}
-
-		// wrapErr adds the error to the record for debugging.
-		wrapErr := func(err error) error {
-			return fmt.Errorf("parsing %q: %v", strings.Join(record, ","), err)
-		}
-
-		// format: Date, Open, High, Low, Close, Volume, Adj. Close
-		if len(record) != 7 {
-			return nil, fmt.Errorf("record length should be 7, got %d", len(record))
-		}
-
-		// Skip the header row.
-		if i == 0 {
-			continue
-		}
-
-		parseRecordTime := func(i int) (time.Time, error) {
-			return time.Parse("2006-01-02", record[i])
-		}
-
-		parseRecordFloat := func(i int) (float32, error) {
-			return parseFloat(record[i])
-		}
-
-		parseRecordInt := func(i int) (int, error) {
-			return parseInt(record[i])
-		}
-
-		date, err := parseRecordTime(0)
-		if err != nil {
-			return nil, wrapErr(err)
-		}
-
-		open, err := parseRecordFloat(1)
-		if err != nil {
-			return nil, wrapErr(err)
-		}
-
-		high, err := parseRecordFloat(2)
-		if err != nil {
-			return nil, wrapErr(err)
-		}
-
-		low, err := parseRecordFloat(3)
-		if err != nil {
-			return nil, wrapErr(err)
-		}
-
-		close, err := parseRecordFloat(4)
-		if err != nil {
-			return nil, wrapErr(err)
-		}
-
-		volume, err := parseRecordInt(5)
-		if err != nil {
-			return nil, wrapErr(err)
-		}
-
-		// Ignore adjusted close value to keep Google and Yahoo APIs the same.
 
 		history.Sessions = append(history.Sessions, &TradingSession{
 			Date:   date,
