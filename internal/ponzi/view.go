@@ -157,6 +157,28 @@ func (v *view) render(fudge float32) {
 	}
 }
 
+// resize responds to window size changes by updating internal matrices.
+func (v *view) resize(newSize image.Point) {
+	// Return if the window has not changed size.
+	if v.winSize == newSize {
+		return
+	}
+
+	gl.Viewport(0, 0, int32(newSize.X), int32(newSize.Y))
+
+	v.winSize = newSize
+
+	// Calculate the new perspective projection view matrix.
+	fw, fh := float32(v.winSize.X), float32(v.winSize.Y)
+	aspect := fw / fh
+	fovRadians := float32(math.Pi) / 3
+	v.perspectiveMatrix = v.viewMatrix.Mult(math2.PerspectiveMatrix(fovRadians, aspect, 1, 2000))
+
+	// Calculate the new ortho projection view matrix.
+	v.orthoMatrix = math2.OrthoMatrix(fw, fh, fw /* use width as depth */)
+}
+
+
 func (v *view) handleKey(key glfw.Key, action glfw.Action) {
 	if action != glfw.Release {
 		return
@@ -183,35 +205,6 @@ func (v *view) handleChar(ch rune) {
 	}
 }
 
-func (v *view) handleCursorPos(x, y float64) {
-	glog.Infof("view.handleCursorPos: x: %f y: %f", x, y)
-}
-
-func (v *view) handleMouseButton(button glfw.MouseButton, action glfw.Action) {
-	glog.Infof("view.handleMouseButton: button: %v action: %v", button, action)
-}
-
-// resize responds to window size changes by updating internal matrices.
-func (v *view) resize(newSize image.Point) {
-	// Return if the window has not changed size.
-	if v.winSize == newSize {
-		return
-	}
-
-	gl.Viewport(0, 0, int32(newSize.X), int32(newSize.Y))
-
-	v.winSize = newSize
-
-	// Calculate the new perspective projection view matrix.
-	fw, fh := float32(v.winSize.X), float32(v.winSize.Y)
-	aspect := fw / fh
-	fovRadians := float32(math.Pi) / 3
-	v.perspectiveMatrix = v.viewMatrix.Mult(math2.PerspectiveMatrix(fovRadians, aspect, 1, 2000))
-
-	// Calculate the new ortho projection view matrix.
-	v.orthoMatrix = math2.OrthoMatrix(fw, fh, fw /* use width as depth */)
-}
-
 func (v *view) pushSymbolChar(ch rune) {
 	v.inputSymbol += string(ch)
 }
@@ -228,3 +221,13 @@ func (v *view) submitSymbol() {
 	v.model.currentStock = newModelStock(v.inputSymbol)
 	v.inputSymbol = ""
 }
+
+func (v *view) handleCursorPos(x, y float64) {
+	glog.Infof("view.handleCursorPos: x: %f y: %f", x, y)
+}
+
+func (v *view) handleMouseButton(button glfw.MouseButton, action glfw.Action) {
+	glog.Infof("view.handleMouseButton: button: %v action: %v", button, action)
+}
+
+
