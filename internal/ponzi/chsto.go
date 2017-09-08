@@ -11,8 +11,8 @@ import (
 type chartStochasticType int32
 
 const (
-	daily chartStochasticType = iota
-	weekly
+	dailySTO chartStochasticType = iota
+	weeklySTO
 )
 
 type chartStochastics struct {
@@ -38,7 +38,7 @@ func (ch *chartStochastics) update() {
 	ch.lastStockUpdateTime = ch.stock.lastUpdateTime
 
 	ss, dColor := ch.stock.dailySessions, yellow
-	if ch.stoType == weekly {
+	if ch.stoType == weeklySTO {
 		ss, dColor = ch.stock.weeklySessions, purple
 	}
 

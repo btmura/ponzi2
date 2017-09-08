@@ -41,8 +41,8 @@ func createChart(stock *modelStock) *chart {
 		lines:             createChartLines(stock),
 		prices:            createChartPrices(stock),
 		volume:            createChartVolume(stock),
-		dailyStochastics:  createChartStochastics(stock, daily),
-		weeklyStochastics: createChartStochastics(stock, weekly),
+		dailyStochastics:  createChartStochastics(stock, dailySTO),
+		weeklyStochastics: createChartStochastics(stock, weeklySTO),
 	}
 }
 

@@ -36,8 +36,8 @@ func createChartThumbnail(stock *modelStock) *chartThumbnail {
 		stock:             stock,
 		header:            newChartHeader(stock, thumbSymbolQuoteTextRenderer, thumbFormatQuote, thumbChartRounding, thumbChartPadding),
 		lines:             createChartLines(stock),
-		dailyStochastics:  createChartStochastics(stock, daily),
-		weeklyStochastics: createChartStochastics(stock, weekly),
+		dailyStochastics:  createChartStochastics(stock, dailySTO),
+		weeklyStochastics: createChartStochastics(stock, weeklySTO),
 	}
 }
 
