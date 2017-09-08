@@ -26,25 +26,25 @@ func newChartHeader(stock *modelStock, symbolQuoteTextRenderer *gfx.TextRenderer
 	}
 }
 
-func (c *chartHeader) render(r image.Rectangle) (body image.Rectangle) {
+func (ch *chartHeader) render(r image.Rectangle) (body image.Rectangle) {
 	// Render the border around the chart.
-	renderRoundedRect(r, c.roundAmount)
+	renderRoundedRect(r, ch.roundAmount)
 
 	// Start rendering from the top left. Track position with point.
 	pt := image.Pt(r.Min.X, r.Max.Y)
-	pt.Y -= c.padding + c.symbolQuoteTextRenderer.LineHeight()
+	pt.Y -= ch.padding + ch.symbolQuoteTextRenderer.LineHeight()
 	{
 		pt := pt
-		pt.X += c.roundAmount
-		pt.X += c.symbolQuoteTextRenderer.Render(c.stock.symbol, pt, white)
-		pt.X += c.padding
-		pt.X += c.symbolQuoteTextRenderer.Render(c.quoteFormatter(c.stock.quote), pt, quoteColor(c.stock.quote))
+		pt.X += ch.roundAmount
+		pt.X += ch.symbolQuoteTextRenderer.Render(ch.stock.symbol, pt, white)
+		pt.X += ch.padding
+		pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteFormatter(ch.stock.quote), pt, quoteColor(ch.stock.quote))
 	}
-	pt.Y -= c.padding
+	pt.Y -= ch.padding
 
 	// Render button in the upper right corner.
 	buttonSize := image.Pt(r.Max.Y-pt.Y, r.Max.Y-pt.Y)
-	c.button.render(image.Rectangle{Min: r.Max.Sub(buttonSize), Max: r.Max})
+	ch.button.render(image.Rectangle{Min: r.Max.Sub(buttonSize), Max: r.Max})
 
 	r.Max.Y = pt.Y
 	return r

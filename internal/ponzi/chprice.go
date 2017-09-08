@@ -20,7 +20,7 @@ type chartPrices struct {
 	stickRects          *gfx.VAO
 }
 
-func createChartPrices(stock *modelStock) *chartPrices {
+func newChartPrices(stock *modelStock) *chartPrices {
 	return &chartPrices{
 		stock: stock,
 	}

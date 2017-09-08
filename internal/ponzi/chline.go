@@ -14,7 +14,7 @@ type chartLines struct {
 	weekLines           *gfx.VAO
 }
 
-func createChartLines(stock *modelStock) *chartLines {
+func newChartLines(stock *modelStock) *chartLines {
 	return &chartLines{
 		stock: stock,
 	}

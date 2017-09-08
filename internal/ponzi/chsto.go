@@ -23,7 +23,7 @@ type chartStochastics struct {
 	stoLines            *gfx.VAO
 }
 
-func createChartStochastics(stock *modelStock, stoType chartStochasticType) *chartStochastics {
+func newChartStochastics(stock *modelStock, stoType chartStochasticType) *chartStochastics {
 	return &chartStochastics{
 		stock:   stock,
 		stoType: stoType,

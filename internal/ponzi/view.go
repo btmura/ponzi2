@@ -135,14 +135,14 @@ func (v *view) render(fudge float32) {
 		if v.chart != nil {
 			v.chart.close()
 		}
-		v.chart = createChart(v.model.currentStock)
+		v.chart = newChart(v.model.currentStock)
 	}
 
 	if v.chartThumbnail == nil || v.chartThumbnail.stock != v.model.currentStock {
 		if v.chartThumbnail != nil {
 			v.chartThumbnail.close()
 		}
-		v.chartThumbnail = createChartThumbnail(v.model.currentStock)
+		v.chartThumbnail = newChartThumbnail(v.model.currentStock)
 	}
 
 	ms := image.Pt(140, 90)

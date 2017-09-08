@@ -34,38 +34,38 @@ type chartThumbnail struct {
 	weeklyStochastics *chartStochastics
 }
 
-func createChartThumbnail(stock *modelStock) *chartThumbnail {
+func newChartThumbnail(stock *modelStock) *chartThumbnail {
 	return &chartThumbnail{
 		stock:             stock,
 		header:            newChartHeader(stock, thumbSymbolQuoteTextRenderer, thumbFormatQuote, newButton(thumbRemoveButtonVAO), thumbChartRounding, thumbChartPadding),
-		lines:             createChartLines(stock),
-		dailyStochastics:  createChartStochastics(stock, dailySTO),
-		weeklyStochastics: createChartStochastics(stock, weeklySTO),
+		lines:             newChartLines(stock),
+		dailyStochastics:  newChartStochastics(stock, dailySTO),
+		weeklyStochastics: newChartStochastics(stock, weeklySTO),
 	}
 }
 
-func (ct *chartThumbnail) update() {
-	ct.lines.update()
-	ct.dailyStochastics.update()
-	ct.weeklyStochastics.update()
+func (ch *chartThumbnail) update() {
+	ch.lines.update()
+	ch.dailyStochastics.update()
+	ch.weeklyStochastics.update()
 }
 
-func (ct *chartThumbnail) render(r image.Rectangle) {
-	r = ct.header.render(r)
+func (ch *chartThumbnail) render(r image.Rectangle) {
+	r = ch.header.render(r)
 
 	rects := renderHorizDividers(r, horizLine, 0.5, 0.5)
 
-	ct.dailyStochastics.render(rects[1].Inset(thumbChartPadding))
-	ct.weeklyStochastics.render(rects[0].Inset(thumbChartPadding))
-	ct.lines.render(rects[1].Inset(thumbChartPadding))
-	ct.lines.render(rects[0].Inset(thumbChartPadding))
+	ch.dailyStochastics.render(rects[1].Inset(thumbChartPadding))
+	ch.weeklyStochastics.render(rects[0].Inset(thumbChartPadding))
+	ch.lines.render(rects[1].Inset(thumbChartPadding))
+	ch.lines.render(rects[0].Inset(thumbChartPadding))
 }
 
-func (ct *chartThumbnail) close() {
-	ct.lines.close()
-	ct.lines = nil
-	ct.dailyStochastics.close()
-	ct.dailyStochastics = nil
-	ct.weeklyStochastics.close()
-	ct.weeklyStochastics = nil
+func (ch *chartThumbnail) close() {
+	ch.lines.close()
+	ch.lines = nil
+	ch.dailyStochastics.close()
+	ch.dailyStochastics = nil
+	ch.weeklyStochastics.close()
+	ch.weeklyStochastics = nil
 }

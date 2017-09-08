@@ -17,7 +17,7 @@ type chartVolume struct {
 	volRects            *gfx.VAO
 }
 
-func createChartVolume(stock *modelStock) *chartVolume {
+func newChartVolume(stock *modelStock) *chartVolume {
 	return &chartVolume{
 		stock: stock,
 	}

@@ -42,15 +42,15 @@ type chart struct {
 	weeklyStochastics *chartStochastics
 }
 
-func createChart(stock *modelStock) *chart {
+func newChart(stock *modelStock) *chart {
 	return &chart{
 		stock:             stock,
 		header:            newChartHeader(stock, chartSymbolQuoteTextRenderer, chartFormatQuote, newButton(chartAddButtonVAO), chartRounding, chartPadding),
-		lines:             createChartLines(stock),
-		prices:            createChartPrices(stock),
-		volume:            createChartVolume(stock),
-		dailyStochastics:  createChartStochastics(stock, dailySTO),
-		weeklyStochastics: createChartStochastics(stock, weeklySTO),
+		lines:             newChartLines(stock),
+		prices:            newChartPrices(stock),
+		volume:            newChartVolume(stock),
+		dailyStochastics:  newChartStochastics(stock, dailySTO),
+		weeklyStochastics: newChartStochastics(stock, weeklySTO),
 	}
 }
 
