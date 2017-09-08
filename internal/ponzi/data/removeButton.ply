@@ -1,6 +1,6 @@
 ply
 format ascii 1.0
-comment Created by Blender 2.78 (sub 0) - www.blender.org, source file: 'addButton.blend'
+comment Created by Blender 2.78 (sub 0) - www.blender.org, source file: 'removeButton.blend'
 element vertex 12
 property float x
 property float y
