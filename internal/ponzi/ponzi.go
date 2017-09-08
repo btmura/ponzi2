@@ -41,8 +41,7 @@ func Run() {
 	win.MakeContextCurrent()
 
 	m := newModel("SPY")
-	v, err := createView(m)
-	checkErr(err)
+	v := newView(m) 
 
 	// GLFW, GL, and shaders OK! Go fetch data for the model.
 	go func() {

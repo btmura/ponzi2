@@ -61,12 +61,12 @@ type view struct {
 	winSize           image.Point
 }
 
-func createView(model *model) (*view, error) {
+func newView(model *model) *view {
 
 	// Initialize OpenGL and enable features.
 
 	if err := gl.Init(); err != nil {
-		return nil, err
+		glog.Fatalf("ponzi.newView: failed to init OpenGL: %v", err)
 	}
 	glog.Infof("OpenGL version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
 
@@ -81,7 +81,7 @@ func createView(model *model) (*view, error) {
 	gl.ClearColor(0, 0, 0, 0)
 
 	if err := gfx.Init(); err != nil {
-		return nil, err
+		glog.Fatalf("ponzi.newView: failed to init gfx: %v", err)
 	}
 
 	// Setup the vertex shader uniforms.
@@ -98,7 +98,7 @@ func createView(model *model) (*view, error) {
 	return &view{
 		model:      model,
 		viewMatrix: vm,
-	}, nil
+	}
 }
 
 func (v *view) update() {
