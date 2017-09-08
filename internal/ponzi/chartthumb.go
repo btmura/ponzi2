@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"image"
 
-	"github.com/btmura/ponzi2/internal/gfx"
 	"golang.org/x/image/font/gofont/goregular"
+
+	"github.com/btmura/ponzi2/internal/gfx"
 )
 
 const (
