@@ -56,16 +56,20 @@ func Run() {
 	// Call the size callback to set the initial viewport.
 	w, h := win.GetSize()
 	v.resize(image.Pt(w, h))
-	win.SetSizeCallback(func(w *glfw.Window, width, height int) {
+	win.SetSizeCallback(func(_ *glfw.Window, width, height int) {
 		v.resize(image.Pt(width, height))
 	})
 
-	win.SetKeyCallback(func(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+	win.SetKeyCallback(func(_ *glfw.Window, key glfw.Key, scancode int, action glfw.Action, _ glfw.ModifierKey) {
 		v.handleKey(key, action)
 	})
 
-	win.SetCharCallback(func(w *glfw.Window, char rune) {
+	win.SetCharCallback(func(_ *glfw.Window, char rune) {
 		v.handleChar(char)
+	})
+
+	win.SetMouseButtonCallback(func(_ *glfw.Window, button glfw.MouseButton, action glfw.Action, _ glfw.ModifierKey) {
+		v.handleMouseButton(button, action)
 	})
 
 	const secPerUpdate = 1.0 / 60

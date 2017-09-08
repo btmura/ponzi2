@@ -182,6 +182,10 @@ func (v *view) handleChar(ch rune) {
 	}
 }
 
+func (v *view) handleMouseButton(button glfw.MouseButton, action glfw.Action) {
+	glog.Infof("view.handleMouseButton: button: %v action: %v", button, action)
+}
+
 // resize responds to window size changes by updating internal matrices.
 func (v *view) resize(newSize image.Point) {
 	// Return if the window has not changed size.
