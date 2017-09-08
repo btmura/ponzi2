@@ -43,7 +43,7 @@ type chart struct {
 func createChart(stock *modelStock) *chart {
 	return &chart{
 		stock:             stock,
-		header:            newChartHeader(stock, chartSymbolQuoteTextRenderer, chartFormatQuote, chartRounding, chartPadding),
+		header:            newChartHeader(stock, chartSymbolQuoteTextRenderer, chartFormatQuote, &button{}, chartRounding, chartPadding),
 		lines:             createChartLines(stock),
 		prices:            createChartPrices(stock),
 		volume:            createChartVolume(stock),

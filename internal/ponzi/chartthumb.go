@@ -35,7 +35,7 @@ type chartThumbnail struct {
 func createChartThumbnail(stock *modelStock) *chartThumbnail {
 	return &chartThumbnail{
 		stock:             stock,
-		header:            newChartHeader(stock, thumbSymbolQuoteTextRenderer, thumbFormatQuote, thumbChartRounding, thumbChartPadding),
+		header:            newChartHeader(stock, thumbSymbolQuoteTextRenderer, thumbFormatQuote, &button{}, thumbChartRounding, thumbChartPadding),
 		lines:             createChartLines(stock),
 		dailyStochastics:  createChartStochastics(stock, dailySTO),
 		weeklyStochastics: createChartStochastics(stock, weeklySTO),
