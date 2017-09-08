@@ -84,23 +84,37 @@ func ReadPLYVAO(r io.Reader) *VAO {
 		}
 	}
 
-	// TODO(btmura): fail if its not a triangle
+	var triangleIndices []uint16
 	for _, e := range p.Elements["face"] {
-		for _, idx := range e.Uint32Lists["vertex_indices"] {
-			data.Indices = append(data.Indices, uint16(idx))
+		list := e.Uint32Lists["vertex_indices"]
+		if len(list) != 3 {
+			glog.Fatalf("gfx.ReadPLYVAO: index list has %d elements, want 3", len(list))
+		}
+		for _, idx := range list {
+			triangleIndices = append(triangleIndices, uint16(idx))
 		}
 	}
 
-	// TODO(btmura): support multiple drawings
-	if len(data.Indices) > 0 {
-		return NewVAO(Triangles, data)
-	}
-
+	var lineIndices []uint16
 	for _, e := range p.Elements["edge"] {
 		v1 := e.Int32s["vertex1"]
 		v2 := e.Int32s["vertex2"]
-		data.Indices = append(data.Indices, uint16(v1), uint16(v2))
+		lineIndices = append(lineIndices, uint16(v1), uint16(v2))
 	}
 
-	return NewVAO(Lines, data)
+	switch {
+	case len(triangleIndices) > 0 && len(lineIndices) > 0:
+		glog.Fatalf("gfx.ReadPLYVAO: both triangles and lines is unsupported")
+
+	case len(triangleIndices) > 0:
+		data.Indices = triangleIndices
+		return NewVAO(Triangles, data)
+
+	case len(lineIndices) > 0:
+		data.Indices = lineIndices
+		return NewVAO(Lines, data)
+	}
+
+	glog.Fatal("gfx.ReadPLYVAO: missing indices")
+	return nil
 }
