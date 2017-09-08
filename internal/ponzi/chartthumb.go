@@ -1,6 +1,7 @@
 package ponzi
 
 import (
+	"fmt"
 	"image"
 )
 
@@ -15,7 +16,7 @@ type chartThumbnail struct {
 func createChartThumbnail(stock *modelStock) *chartThumbnail {
 	return &chartThumbnail{
 		stock:             stock,
-		header:            newChartHeader(stock, thumbSymbolQuoteTextRenderer, thumbChartRounding, thumbChartPadding),
+		header:            newChartHeader(stock, thumbSymbolQuoteTextRenderer, thumbFormatQuote, thumbChartRounding, thumbChartPadding),
 		lines:             createChartLines(stock),
 		dailyStochastics:  createChartStochastics(stock, daily),
 		weeklyStochastics: createChartStochastics(stock, weekly),
@@ -46,4 +47,11 @@ func (ct *chartThumbnail) close() {
 	ct.dailyStochastics = nil
 	ct.weeklyStochastics.close()
 	ct.weeklyStochastics = nil
+}
+
+func thumbFormatQuote(q *modelQuote) string {
+	if q.price != 0 {
+		return fmt.Sprintf(" %.2f %+5.2f%% ", q.price, q.percentChange*100.0)
+	}
+	return ""
 }

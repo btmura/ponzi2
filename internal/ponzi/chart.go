@@ -1,6 +1,7 @@
 package ponzi
 
 import (
+	"fmt"
 	"image"
 )
 
@@ -19,7 +20,7 @@ type chart struct {
 func createChart(stock *modelStock) *chart {
 	return &chart{
 		stock:             stock,
-		header:            newChartHeader(stock, symbolQuoteTextRenderer, mainChartRounding, mainChartPadding),
+		header:            newChartHeader(stock, symbolQuoteTextRenderer, mainFormatQuote, mainChartRounding, mainChartPadding),
 		lines:             createChartLines(stock),
 		prices:            createChartPrices(stock),
 		volume:            createChartVolume(stock),
@@ -84,4 +85,11 @@ func (ch *chart) close() {
 	ch.dailyStochastics = nil
 	ch.weeklyStochastics.close()
 	ch.weeklyStochastics = nil
+}
+
+func mainFormatQuote(q *modelQuote) string {
+	if q.price != 0 {
+		return fmt.Sprintf("%.2f %+5.2f %+5.2f%%", q.price, q.change, q.percentChange*100.0)
+	}
+	return ""
 }

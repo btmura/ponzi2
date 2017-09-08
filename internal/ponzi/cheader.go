@@ -1,7 +1,6 @@
 package ponzi
 
 import (
-	"fmt"
 	"image"
 
 	"github.com/btmura/ponzi2/internal/gfx"
@@ -10,14 +9,16 @@ import (
 type chartHeader struct {
 	stock                   *modelStock
 	symbolQuoteTextRenderer *gfx.TextRenderer
+	quoteFormatter          func(*modelQuote) string
 	roundAmount             int
 	padding                 int
 }
 
-func newChartHeader(stock *modelStock, symbolQuoteTextRenderer *gfx.TextRenderer, roundAmount, padding int) *chartHeader {
+func newChartHeader(stock *modelStock, symbolQuoteTextRenderer *gfx.TextRenderer, quoteFormatter func(*modelQuote) string, roundAmount, padding int) *chartHeader {
 	return &chartHeader{
 		stock: stock,
 		symbolQuoteTextRenderer: symbolQuoteTextRenderer,
+		quoteFormatter:          quoteFormatter,
 		roundAmount:             roundAmount,
 		padding:                 padding,
 	}
@@ -35,26 +36,12 @@ func (c *chartHeader) render(r image.Rectangle) (body image.Rectangle) {
 		pt.X += c.roundAmount
 		pt.X += c.symbolQuoteTextRenderer.Render(c.stock.symbol, pt, white)
 		pt.X += c.padding
-		pt.X += c.symbolQuoteTextRenderer.Render(formatQuote(c.stock.quote), pt, quoteColor(c.stock.quote))
+		pt.X += c.symbolQuoteTextRenderer.Render(c.quoteFormatter(c.stock.quote), pt, quoteColor(c.stock.quote))
 	}
 	pt.Y -= c.padding
 
 	r.Max.Y = pt.Y
 	return r
-}
-
-func formatQuote(q *modelQuote) string {
-	if q.price != 0 {
-		return fmt.Sprintf("%.2f %+5.2f %+5.2f%%", q.price, q.change, q.percentChange*100.0)
-	}
-	return ""
-}
-
-func shortFormatQuote(q *modelQuote) string {
-	if q.price != 0 {
-		return fmt.Sprintf(" %.2f %+5.2f%% ", q.price, q.percentChange*100.0)
-	}
-	return ""
 }
 
 func quoteColor(q *modelQuote) [3]float32 {
