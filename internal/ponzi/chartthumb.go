@@ -3,6 +3,24 @@ package ponzi
 import (
 	"fmt"
 	"image"
+
+	"github.com/btmura/ponzi2/internal/gfx"
+	"golang.org/x/image/font/gofont/goregular"
+)
+
+const (
+	thumbChartRounding = 6
+	thumbChartPadding  = 2
+)
+
+var (
+	thumbSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
+	thumbFormatQuote             = func(q *modelQuote) string {
+		if q.price != 0 {
+			return fmt.Sprintf(" %.2f %+5.2f%% ", q.price, q.percentChange*100.0)
+		}
+		return ""
+	}
 )
 
 type chartThumbnail struct {
@@ -47,11 +65,4 @@ func (ct *chartThumbnail) close() {
 	ct.dailyStochastics = nil
 	ct.weeklyStochastics.close()
 	ct.weeklyStochastics = nil
-}
-
-func thumbFormatQuote(q *modelQuote) string {
-	if q.price != 0 {
-		return fmt.Sprintf(" %.2f %+5.2f%% ", q.price, q.percentChange*100.0)
-	}
-	return ""
 }

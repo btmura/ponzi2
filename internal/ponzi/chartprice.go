@@ -236,7 +236,7 @@ func (ch *chartPrices) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 			v := v - pricePerPixel*float32(dvy)
 			t, s := ch.priceLabelText(v)
 			c.X -= s.X
-			axisLabelTextRenderer.Render(t, c, white)
+			chartAxisLabelTextRenderer.Render(t, c, white)
 
 			if maxWidth < s.X {
 				maxWidth = s.X
@@ -252,7 +252,7 @@ func (ch *chartPrices) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 
 func (ch *chartPrices) priceLabelText(v float32) (text string, size image.Point) {
 	t := strconv.FormatFloat(float64(v), 'f', 2, 32)
-	return t, axisLabelTextRenderer.Measure(t)
+	return t, chartAxisLabelTextRenderer.Measure(t)
 }
 
 func (ch *chartPrices) close() {

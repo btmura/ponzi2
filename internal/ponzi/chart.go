@@ -3,6 +3,25 @@ package ponzi
 import (
 	"fmt"
 	"image"
+
+	"github.com/btmura/ponzi2/internal/gfx"
+	"golang.org/x/image/font/gofont/goregular"
+)
+
+const (
+	chartRounding = 10
+	chartPadding  = 5
+)
+
+var (
+	chartSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 24)
+	chartAxisLabelTextRenderer   = gfx.NewTextRenderer(goregular.TTF, 12)
+	chartFormatQuote             = func(q *modelQuote) string {
+		if q.price != 0 {
+			return fmt.Sprintf("%.2f %+5.2f %+5.2f%%", q.price, q.change, q.percentChange*100.0)
+		}
+		return ""
+	}
 )
 
 type chart struct {
@@ -15,12 +34,10 @@ type chart struct {
 	weeklyStochastics *chartStochastics
 }
 
-// TODO(btmura): create chart factory that creates charts
-// TODO(btmura): create chart components and pass them in
 func createChart(stock *modelStock) *chart {
 	return &chart{
 		stock:             stock,
-		header:            newChartHeader(stock, symbolQuoteTextRenderer, mainFormatQuote, mainChartRounding, mainChartPadding),
+		header:            newChartHeader(stock, chartSymbolQuoteTextRenderer, chartFormatQuote, chartRounding, chartPadding),
 		lines:             createChartLines(stock),
 		prices:            createChartPrices(stock),
 		volume:            createChartVolume(stock),
@@ -43,11 +60,10 @@ func (ch *chart) render(r image.Rectangle) {
 	rects := renderHorizDividers(r, 0.13, 0.13, 0.13)
 	pr, vr, dr, wr := rects[3], rects[2], rects[1], rects[0]
 
-	const pad = 5
-	pr = pr.Inset(pad)
-	vr = vr.Inset(pad)
-	dr = dr.Inset(pad)
-	wr = wr.Inset(pad)
+	pr = pr.Inset(chartPadding)
+	vr = vr.Inset(chartPadding)
+	dr = dr.Inset(chartPadding)
+	wr = wr.Inset(chartPadding)
 
 	maxWidth := ch.prices.renderLabels(pr)
 	if w := ch.volume.renderLabels(vr); w > maxWidth {
@@ -60,10 +76,10 @@ func (ch *chart) render(r image.Rectangle) {
 		maxWidth = w
 	}
 
-	pr.Max.X -= maxWidth + pad
-	vr.Max.X -= maxWidth + pad
-	dr.Max.X -= maxWidth + pad
-	wr.Max.X -= maxWidth + pad
+	pr.Max.X -= maxWidth + chartPadding
+	vr.Max.X -= maxWidth + chartPadding
+	dr.Max.X -= maxWidth + chartPadding
+	wr.Max.X -= maxWidth + chartPadding
 
 	ch.prices.render(pr)
 	ch.volume.render(vr)
@@ -85,11 +101,4 @@ func (ch *chart) close() {
 	ch.dailyStochastics = nil
 	ch.weeklyStochastics.close()
 	ch.weeklyStochastics = nil
-}
-
-func mainFormatQuote(q *modelQuote) string {
-	if q.price != 0 {
-		return fmt.Sprintf("%.2f %+5.2f %+5.2f%%", q.price, q.change, q.percentChange*100.0)
-	}
-	return ""
 }

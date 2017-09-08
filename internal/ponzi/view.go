@@ -47,21 +47,9 @@ var acceptedChars = map[rune]bool{
 	'Y': true, 'Z': true,
 }
 
-var (
-	inputSymbolTextRenderer      = gfx.NewTextRenderer(goregular.TTF, 48)
-	symbolQuoteTextRenderer      = gfx.NewTextRenderer(goregular.TTF, 24)
-	axisLabelTextRenderer        = gfx.NewTextRenderer(goregular.TTF, 12)
-	thumbSymbolQuoteTextRenderer = axisLabelTextRenderer
-)
+var inputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
 
-const (
-	mainChartRounding = 10
-	mainChartPadding  = 5
-	mainOuterPadding  = 5
-
-	thumbChartRounding = 6
-	thumbChartPadding  = 2
-)
+const outerPadding = 5
 
 type view struct {
 	model             *model // model is the model that will be rendered.
@@ -140,7 +128,7 @@ func (v *view) render(fudge float32) {
 	}
 
 	// Start in upper left. (0, 0) is lower left.
-	pt := image.Pt(mainOuterPadding, v.winSize.Y-mainOuterPadding)
+	pt := image.Pt(outerPadding, v.winSize.Y-outerPadding)
 
 	// Render the current symbol.
 	if v.chart == nil || v.chart.stock != v.model.currentStock {
@@ -157,10 +145,10 @@ func (v *view) render(fudge float32) {
 		v.chartThumbnail = createChartThumbnail(v.model.currentStock)
 	}
 
-	ms := image.Pt(150, 100)
+	ms := image.Pt(140, 90)
 
 	if v.chart != nil {
-		v.chart.render(image.Rect(pt.X+ms.X+mainOuterPadding, mainOuterPadding, v.winSize.X-mainOuterPadding, pt.Y))
+		v.chart.render(image.Rect(pt.X+ms.X+outerPadding, outerPadding, v.winSize.X-outerPadding, pt.Y))
 	}
 
 	if v.chartThumbnail != nil {

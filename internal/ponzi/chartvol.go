@@ -155,7 +155,7 @@ func (ch *chartVolume) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 	render := func(t string, s image.Point, yLocPercent float32) {
 		x := r.Max.X - s.X
 		y := r.Min.Y + int(float32(r.Dy())*yLocPercent) - s.Y/2
-		axisLabelTextRenderer.Render(t, image.Pt(x, y), white)
+		chartAxisLabelTextRenderer.Render(t, image.Pt(x, y), white)
 	}
 
 	render(t1, s1, .7)
@@ -180,7 +180,7 @@ func (ch *chartVolume) volumeLabelText(v int) (text string, size image.Point) {
 	default:
 		t = strconv.Itoa(v)
 	}
-	return t, axisLabelTextRenderer.Measure(t)
+	return t, chartAxisLabelTextRenderer.Measure(t)
 }
 
 func (ch *chartVolume) close() {
