@@ -15,7 +15,6 @@ type chartVolume struct {
 	renderable          bool
 	maxVolume           int
 	volRects            *gfx.VAO
-	labelLine           *gfx.VAO
 }
 
 func createChartVolume(stock *modelStock) *chartVolume {
@@ -41,11 +40,6 @@ func (ch *chartVolume) update() {
 		ch.volRects.Delete()
 	}
 	ch.volRects = createChartVolumeBarsVAO(ch.stock.dailySessions, ch.maxVolume)
-
-	if ch.labelLine != nil {
-		ch.labelLine.Delete()
-	}
-	ch.labelLine = gfx.HorizColoredLineVAO(gray, gray)
 
 	ch.renderable = true
 }
@@ -140,7 +134,7 @@ func (ch *chartVolume) render(r image.Rectangle) {
 	for _, yLocPercent := range []float32{0.3, 0.7} {
 		y := r.Min.Y + int(float32(r.Dy())*yLocPercent)
 		gfx.SetModelMatrixRect(image.Rect(r.Min.X, y, r.Max.X, y))
-		ch.labelLine.Render()
+		chartGridHorizLine.Render()
 	}
 }
 
@@ -187,6 +181,4 @@ func (ch *chartVolume) close() {
 	ch.renderable = false
 	ch.volRects.Delete()
 	ch.volRects = nil
-	ch.labelLine.Delete()
-	ch.labelLine = nil
 }

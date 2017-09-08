@@ -18,7 +18,6 @@ type chartPrices struct {
 	labelHeight         int
 	stickLines          *gfx.VAO
 	stickRects          *gfx.VAO
-	labelLine           *gfx.VAO
 }
 
 func createChartPrices(stock *modelStock) *chartPrices {
@@ -50,11 +49,6 @@ func (ch *chartPrices) update() {
 		ch.stickRects.Delete()
 	}
 	ch.stickLines, ch.stickRects = createChartCandlestickVAOs(ch.stock.dailySessions, ch.minPrice, ch.maxPrice)
-
-	if ch.labelLine != nil {
-		ch.labelLine.Delete()
-	}
-	ch.labelLine = gfx.HorizColoredLineVAO(gray, gray)
 
 	_, labelSize := ch.priceLabelText(ch.maxPrice)
 	ch.labelHeight = labelSize.Y
@@ -198,7 +192,7 @@ func (ch *chartPrices) render(r image.Rectangle) {
 			}
 
 			gfx.SetModelMatrixRect(image.Rect(r.Min.X, y, r.Max.X, y))
-			ch.labelLine.Render()
+			chartGridHorizLine.Render()
 		}
 		y -= dy
 	}
@@ -261,6 +255,4 @@ func (ch *chartPrices) close() {
 	ch.stickLines = nil
 	ch.stickRects.Delete()
 	ch.stickRects = nil
-	ch.labelLine.Delete()
-	ch.labelLine = nil
 }

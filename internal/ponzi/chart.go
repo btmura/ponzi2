@@ -15,13 +15,18 @@ const (
 
 var (
 	chartSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 24)
-	chartAxisLabelTextRenderer   = gfx.NewTextRenderer(goregular.TTF, 12)
 	chartFormatQuote             = func(q *modelQuote) string {
 		if q.price != 0 {
 			return fmt.Sprintf("%.2f %+5.2f %+5.2f%%", q.price, q.change, q.percentChange*100.0)
 		}
 		return ""
 	}
+)
+
+// Shared variables used by multiple chart components.
+var (
+	chartAxisLabelTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
+	chartGridHorizLine         = gfx.HorizColoredLineVAO(gray, gray)
 )
 
 type chart struct {

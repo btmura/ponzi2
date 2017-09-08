@@ -21,7 +21,6 @@ type chartStochastics struct {
 	renderable          bool
 	stoType             chartStochasticType
 	stoLines            *gfx.VAO
-	labelLine           *gfx.VAO
 }
 
 func createChartStochastics(stock *modelStock, stoType chartStochasticType) *chartStochastics {
@@ -46,11 +45,6 @@ func (ch *chartStochastics) update() {
 		ch.stoLines.Delete()
 	}
 	ch.stoLines = createStochasticVAOs(ss, dColor)
-
-	if ch.labelLine != nil {
-		ch.labelLine.Delete()
-	}
-	ch.labelLine = gfx.HorizColoredLineVAO(gray, gray)
 
 	ch.renderable = true
 }
@@ -115,7 +109,7 @@ func (ch *chartStochastics) render(r image.Rectangle) {
 	for _, yLocPercent := range []float32{0.3, 0.7} {
 		y := r.Min.Y + int(float32(r.Dy())*yLocPercent)
 		gfx.SetModelMatrixRect(image.Rect(r.Min.X, y, r.Max.X, y))
-		ch.labelLine.Render()
+		chartGridHorizLine.Render()
 	}
 }
 
