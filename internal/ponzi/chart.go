@@ -2,8 +2,6 @@ package ponzi
 
 import (
 	"image"
-
-	"github.com/btmura/ponzi2/internal/gfx"
 )
 
 type chart struct {
@@ -39,13 +37,7 @@ func (ch *chart) update() {
 func (ch *chart) render(r image.Rectangle) {
 	r = renderChartFrame(r, ch.stock, symbolQuoteTextRenderer, mainChartRounding, mainChartPadding)
 
-	gfx.SetColorMixAmount(1)
-	rects := sliceRect(r, 0.13, 0.13, 0.13)
-	for _, r := range rects {
-		gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
-		horizLine.Render()
-	}
-
+	rects := renderHorizDividers(r, 0.13, 0.13, 0.13)
 	pr, vr, dr, wr := rects[3], rects[2], rects[1], rects[0]
 
 	const pad = 5

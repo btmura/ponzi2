@@ -2,8 +2,6 @@ package ponzi
 
 import (
 	"image"
-
-	"github.com/btmura/ponzi2/internal/gfx"
 )
 
 type chartThumbnail struct {
@@ -31,16 +29,7 @@ func (ct *chartThumbnail) update() {
 func (ct *chartThumbnail) render(r image.Rectangle) {
 	r = renderChartFrame(r, ct.stock, thumbSymbolQuoteTextRenderer, thumbChartRounding, thumbChartPadding)
 
-	gfx.SetColorMixAmount(1)
-	rects := sliceRect(r, 0.5)
-	for _, r := range rects {
-		gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
-		horizLine.Render()
-	}
-
-	//
-	// Render the graphs.
-	//
+	rects := renderHorizDividers(r, 0.5)
 
 	ct.dailyStochastics.render(rects[1].Inset(thumbChartPadding))
 	ct.weeklyStochastics.render(rects[0].Inset(thumbChartPadding))

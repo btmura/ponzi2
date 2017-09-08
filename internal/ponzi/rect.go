@@ -62,6 +62,19 @@ func renderRoundedRect(r image.Rectangle, roundAmount int) {
 	vertLine.Render()
 }
 
+// renderHorizDividers horizontally cuts a rectangle from the bottom at the given percentages,
+// renders dividers at those percentages, and returns the n+1 rectangles given n percentages.
+func renderHorizDividers(r image.Rectangle, percentages ...float32) []image.Rectangle {
+	gfx.SetColorMixAmount(1)
+
+	rects := sliceRect(r, percentages...)
+	for _, r := range rects {
+		gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
+		horizLine.Render()
+	}
+	return rects
+}
+
 // sliceRect horizontally cuts a rectangle from the bottom at the given percentages.
 // It returns n+1 rectangles given n percentages.
 func sliceRect(r image.Rectangle, percentages ...float32) []image.Rectangle {
