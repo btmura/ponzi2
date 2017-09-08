@@ -2,10 +2,15 @@
 package time
 
 import (
+	"flag"
 	"time"
 
 	"github.com/golang/glog"
 )
+
+func init() {
+	flag.Parse() // Avoid glog errors about logging before flag.Parse.
+}
 
 // NewYorkLoc is the New York timezone.
 var NewYorkLoc = mustLoadLocation("America/New_York")

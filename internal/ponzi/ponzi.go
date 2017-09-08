@@ -1,6 +1,7 @@
 package ponzi
 
 import (
+	"flag"
 	"image"
 	"runtime"
 
@@ -13,6 +14,8 @@ import (
 //go:generate go generate github.com/btmura/ponzi2/internal/gfx
 
 func init() {
+	flag.Parse() // Avoid glog errors about logging before flag.Parse.
+
 	// This is needed to arrange that main() runs on main thread.
 	// See documentation for functions that are only allowed to be called from the main thread.
 	runtime.LockOSThread()
@@ -41,7 +44,7 @@ func Run() {
 	win.MakeContextCurrent()
 
 	m := newModel("SPY")
-	v := newView(m) 
+	v := newView(m)
 
 	// GLFW, GL, and shaders OK! Go fetch data for the model.
 	go func() {

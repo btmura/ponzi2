@@ -3,6 +3,7 @@ package ply
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io"
 	"strconv"
@@ -10,6 +11,10 @@ import (
 
 	"github.com/golang/glog"
 )
+
+func init() {
+	flag.Parse() // Avoid glog errors about logging before flag.Parse.
+}
 
 // PLY has the elements parsed from a file in the Polygon File Format (PLY).
 // More details: http://paulbourke.net/dataformats/ply/

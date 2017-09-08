@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -16,6 +17,10 @@ import (
 
 	"github.com/golang/glog"
 )
+
+func init() {
+	flag.Parse() // Avoid glog errors about logging before flag.Parse.
+}
 
 // TradingHistory is a list of trading sessions spanning some time.
 type TradingHistory struct {
