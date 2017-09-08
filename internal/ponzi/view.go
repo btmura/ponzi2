@@ -53,6 +53,7 @@ const outerPadding = 5
 
 type view struct {
 	model             *model // model is the model that will be rendered.
+	inputSymbol       string // inputSymbol is the symbol being entered by the user.
 	chart             *chart
 	chartThumbnail    *chartThumbnail
 	viewMatrix        math2.Matrix4
@@ -121,10 +122,10 @@ func (v *view) render(fudge float32) {
 	gfx.SetProjectionViewMatrix(v.orthoMatrix)
 
 	// Render input symbol being typed in the center.
-	if v.model.inputSymbol != "" {
-		s := inputSymbolTextRenderer.Measure(v.model.inputSymbol)
+	if v.inputSymbol != "" {
+		s := inputSymbolTextRenderer.Measure(v.inputSymbol)
 		c := v.winSize.Sub(s).Div(2)
-		inputSymbolTextRenderer.Render(v.model.inputSymbol, c, white)
+		inputSymbolTextRenderer.Render(v.inputSymbol, c, white)
 	}
 
 	// Start in upper left. (0, 0) is lower left.
@@ -163,7 +164,7 @@ func (v *view) handleKey(key glfw.Key, action glfw.Action) {
 
 	switch key {
 	case glfw.KeyEnter:
-		v.model.submitSymbol()
+		v.submitSymbol()
 		go func() {
 			if err := v.model.refresh(); err != nil {
 				glog.Errorf("refresh failed: %v", err)
@@ -171,14 +172,14 @@ func (v *view) handleKey(key glfw.Key, action glfw.Action) {
 		}()
 
 	case glfw.KeyBackspace:
-		v.model.popSymbolChar()
+		v.popSymbolChar()
 	}
 }
 
 func (v *view) handleChar(ch rune) {
 	ch = unicode.ToUpper(ch)
 	if _, ok := acceptedChars[ch]; ok {
-		v.model.pushSymbolChar(ch)
+		v.pushSymbolChar(ch)
 	}
 }
 
@@ -205,4 +206,21 @@ func (v *view) resize(newSize image.Point) {
 
 	// Calculate the new ortho projection view matrix.
 	v.orthoMatrix = math2.OrthoMatrix(fw, fh, fw /* use width as depth */)
+}
+
+func (v *view) pushSymbolChar(ch rune) {
+	v.inputSymbol += string(ch)
+}
+
+func (v *view) popSymbolChar() {
+	if l := len(v.inputSymbol); l > 0 {
+		v.inputSymbol = v.inputSymbol[:l-1]
+	}
+}
+
+func (v *view) submitSymbol() {
+	v.model.Lock()
+	defer v.model.Unlock()
+	v.model.currentStock = newModelStock(v.inputSymbol)
+	v.inputSymbol = ""
 }

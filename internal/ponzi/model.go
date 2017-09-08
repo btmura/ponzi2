@@ -14,9 +14,6 @@ type model struct {
 	// Mutex guards the model.
 	sync.Mutex
 
-	// inputSymbol is the symbol being entered by the user.
-	inputSymbol string
-
 	// currentStock is the stock data currently being viewed.
 	currentStock *modelStock
 }
@@ -60,27 +57,6 @@ func newModelStock(symbol string) *modelStock {
 		symbol: symbol,
 		quote:  &modelQuote{symbol: symbol},
 	}
-}
-
-func (m *model) pushSymbolChar(ch rune) {
-	m.Lock()
-	m.inputSymbol += string(ch)
-	m.Unlock()
-}
-
-func (m *model) popSymbolChar() {
-	m.Lock()
-	if l := len(m.inputSymbol); l > 0 {
-		m.inputSymbol = m.inputSymbol[:l-1]
-	}
-	m.Unlock()
-}
-
-func (m *model) submitSymbol() {
-	m.Lock()
-	m.currentStock = newModelStock(m.inputSymbol)
-	m.inputSymbol = ""
-	m.Unlock()
 }
 
 func (m *model) refresh() error {
