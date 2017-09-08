@@ -1,10 +1,13 @@
 package ponzi
 
 import (
+	"bytes"
 	"image"
 
 	"github.com/btmura/ponzi2/internal/gfx"
 )
+
+var addButtonVAO = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("addButton.ply")))
 
 type chartHeader struct {
 	stock                   *modelStock
@@ -39,6 +42,14 @@ func (c *chartHeader) render(r image.Rectangle) (body image.Rectangle) {
 		pt.X += c.symbolQuoteTextRenderer.Render(c.quoteFormatter(c.stock.quote), pt, quoteColor(c.stock.quote))
 	}
 	pt.Y -= c.padding
+
+	// Render button in the upper right corner.
+	buttonSize := image.Pt(r.Max.Y-pt.Y, r.Max.Y-pt.Y)
+	buttonRect := image.Rectangle{Min: r.Max.Sub(buttonSize), Max: r.Max}
+
+	gfx.SetColorMixAmount(1)
+	gfx.SetModelMatrixRect(buttonRect)
+	addButtonVAO.Render()
 
 	r.Max.Y = pt.Y
 	return r
