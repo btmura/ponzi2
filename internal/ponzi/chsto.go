@@ -106,11 +106,7 @@ func (ch *chartStochastics) render(r image.Rectangle) {
 	gfx.SetModelMatrixRect(r)
 	ch.stoLines.Render()
 
-	for _, yLocPercent := range []float32{0.3, 0.7} {
-		y := r.Min.Y + int(float32(r.Dy())*yLocPercent)
-		gfx.SetModelMatrixRect(image.Rect(r.Min.X, y, r.Max.X, y))
-		chartGridHorizLine.Render()
-	}
+	renderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
 }
 
 func (ch *chartStochastics) renderLabels(r image.Rectangle) (maxLabelWidth int) {

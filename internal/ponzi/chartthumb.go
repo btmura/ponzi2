@@ -50,7 +50,7 @@ func (ct *chartThumbnail) update() {
 func (ct *chartThumbnail) render(r image.Rectangle) {
 	r = ct.header.render(r)
 
-	rects := renderHorizDividers(r, 0.5)
+	rects := renderHorizDividers(r, horizLine, 0.5, 0.5)
 
 	ct.dailyStochastics.render(rects[1].Inset(thumbChartPadding))
 	ct.weeklyStochastics.render(rects[0].Inset(thumbChartPadding))

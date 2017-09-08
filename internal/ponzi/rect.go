@@ -63,35 +63,32 @@ func renderRoundedRect(r image.Rectangle, roundAmount int) {
 }
 
 // renderHorizDividers horizontally cuts a rectangle from the bottom at the given percentages,
-// renders dividers at those percentages, and returns the n+1 rectangles given n percentages.
-func renderHorizDividers(r image.Rectangle, percentages ...float32) []image.Rectangle {
+// renders dividers at those percentages, and returns the n rectangles given n percentages.
+func renderHorizDividers(r image.Rectangle, divider *gfx.VAO, percentages ...float32) []image.Rectangle {
 	gfx.SetColorMixAmount(1)
 
 	rects := sliceRect(r, percentages...)
 	for _, r := range rects {
 		gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
-		horizLine.Render()
+		divider.Render()
 	}
 	return rects
 }
 
 // sliceRect horizontally cuts a rectangle from the bottom at the given percentages.
-// It returns n+1 rectangles given n percentages.
+// It returns n rectangles given n percentages.
 func sliceRect(r image.Rectangle, percentages ...float32) []image.Rectangle {
 	var rs []image.Rectangle
 	addRect := func(minY, maxY int) {
 		rs = append(rs, image.Rect(r.Min.X, minY, r.Max.X, maxY))
 	}
 
-	ry := r.Dy()  // Remaining Y to distribute.
 	cy := r.Min.Y // Start at the bottom and cut horizontally up.
 	for _, p := range percentages {
 		dy := int(float32(r.Dy()) * p)
 		addRect(cy, cy+dy)
 		cy += dy // Bump upwards.
-		ry -= dy // Subtract from remaining.
 	}
-	addRect(cy, cy+ry) // Use remaining Y for last rect.
 
 	return rs
 }

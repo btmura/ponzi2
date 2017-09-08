@@ -62,7 +62,7 @@ func (ch *chart) update() {
 func (ch *chart) render(r image.Rectangle) {
 	r = ch.header.render(r)
 
-	rects := renderHorizDividers(r, 0.13, 0.13, 0.13)
+	rects := renderHorizDividers(r, horizLine, 0.13, 0.13, 0.13, 0.61)
 	pr, vr, dr, wr := rects[3], rects[2], rects[1], rects[0]
 
 	pr = pr.Inset(chartPadding)
