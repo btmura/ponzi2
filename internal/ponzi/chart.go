@@ -2,11 +2,12 @@ package ponzi
 
 import (
 	"image"
+
+	"github.com/btmura/ponzi2/internal/gfx"
 )
 
 type chart struct {
 	stock             *modelStock
-	frame             *chartFrame
 	lines             *chartLines
 	prices            *chartPrices
 	volume            *chartVolume
@@ -19,7 +20,6 @@ type chart struct {
 func createChart(stock *modelStock) *chart {
 	return &chart{
 		stock:             stock,
-		frame:             createChartFrame(stock),
 		lines:             createChartLines(stock),
 		prices:            createChartPrices(stock),
 		volume:            createChartVolume(stock),
@@ -37,8 +37,16 @@ func (ch *chart) update() {
 }
 
 func (ch *chart) render(r image.Rectangle) {
-	subRects := ch.frame.render(r)
-	pr, vr, dr, wr := subRects[3], subRects[2], subRects[1], subRects[0]
+	r = renderChartFrame(r, ch.stock, symbolQuoteTextRenderer, mainChartRounding, mainChartPadding)
+
+	gfx.SetColorMixAmount(1)
+	rects := sliceRect(r, 0.13, 0.13, 0.13)
+	for _, r := range rects {
+		gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
+		horizLine.Render()
+	}
+
+	pr, vr, dr, wr := rects[3], rects[2], rects[1], rects[0]
 
 	const pad = 5
 	pr = pr.Inset(pad)
@@ -74,8 +82,6 @@ func (ch *chart) render(r image.Rectangle) {
 }
 
 func (ch *chart) close() {
-	ch.frame.close()
-	ch.frame = nil
 	ch.prices.close()
 	ch.prices = nil
 	ch.volume.close()
