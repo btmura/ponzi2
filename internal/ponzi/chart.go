@@ -6,6 +6,7 @@ import (
 
 type chart struct {
 	stock             *modelStock
+	header            *chartHeader
 	lines             *chartLines
 	prices            *chartPrices
 	volume            *chartVolume
@@ -18,6 +19,7 @@ type chart struct {
 func createChart(stock *modelStock) *chart {
 	return &chart{
 		stock:             stock,
+		header:            newChartHeader(stock, symbolQuoteTextRenderer, mainChartRounding, mainChartPadding),
 		lines:             createChartLines(stock),
 		prices:            createChartPrices(stock),
 		volume:            createChartVolume(stock),
@@ -35,7 +37,7 @@ func (ch *chart) update() {
 }
 
 func (ch *chart) render(r image.Rectangle) {
-	r = renderChartFrame(r, ch.stock, symbolQuoteTextRenderer, mainChartRounding, mainChartPadding)
+	r = ch.header.render(r)
 
 	rects := renderHorizDividers(r, 0.13, 0.13, 0.13)
 	pr, vr, dr, wr := rects[3], rects[2], rects[1], rects[0]

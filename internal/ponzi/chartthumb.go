@@ -6,6 +6,7 @@ import (
 
 type chartThumbnail struct {
 	stock             *modelStock
+	header            *chartHeader
 	lines             *chartLines
 	dailyStochastics  *chartStochastics
 	weeklyStochastics *chartStochastics
@@ -14,6 +15,7 @@ type chartThumbnail struct {
 func createChartThumbnail(stock *modelStock) *chartThumbnail {
 	return &chartThumbnail{
 		stock:             stock,
+		header:            newChartHeader(stock, thumbSymbolQuoteTextRenderer, thumbChartRounding, thumbChartPadding),
 		lines:             createChartLines(stock),
 		dailyStochastics:  createChartStochastics(stock, daily),
 		weeklyStochastics: createChartStochastics(stock, weekly),
@@ -27,7 +29,7 @@ func (ct *chartThumbnail) update() {
 }
 
 func (ct *chartThumbnail) render(r image.Rectangle) {
-	r = renderChartFrame(r, ct.stock, thumbSymbolQuoteTextRenderer, thumbChartRounding, thumbChartPadding)
+	r = ct.header.render(r)
 
 	rects := renderHorizDividers(r, 0.5)
 
