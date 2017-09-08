@@ -1,5 +1,6 @@
 ply
 format ascii 1.0
+comment roundedCornerSE.ply
 element vertex 5
 property float x
 property float y

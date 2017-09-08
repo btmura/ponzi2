@@ -67,7 +67,10 @@ func Decode(r io.Reader) (*PLY, error) {
 processHeader:
 	for sc.Scan() {
 		line := sc.Text()
-		switch { // Don't care about checking for ply, format, or comment lines.
+		switch { // Don't care about checking for ply and format lines.
+		case strings.HasPrefix(line, "comment "):
+			glog.Infof("ply.Decode: %s", line)
+
 		case strings.HasPrefix(line, "element "):
 			ed = &elementDescriptor{}
 			h.elementDescriptors = append(h.elementDescriptors, ed)
@@ -91,9 +94,6 @@ processHeader:
 
 		case line == "end_header":
 			break processHeader
-
-		default:
-			glog.Infof("skipping: %q", line)
 		}
 	}
 
