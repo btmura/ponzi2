@@ -2,12 +2,9 @@ package stock
 
 import (
 	"encoding/csv"
-	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"sort"
@@ -186,115 +183,6 @@ func googleGetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, er
 	sortByTradingSessionDate(history.Sessions)
 
 	return history, nil
-}
-
-// Quote is a live stock Quote.
-type Quote struct {
-	Symbol        string
-	Timestamp     time.Time
-	Price         float32
-	Change        float32
-	PercentChange float32
-}
-
-// ListQuotesRequest is the request of listQuotes.
-type ListQuotesRequest struct {
-	Symbols []string
-}
-
-// ListQuotesResponse is the response of listQuotes.
-type ListQuotesResponse struct {
-	// Quotes is a map from symbol to quote.
-	Quotes map[string]*Quote
-}
-
-// ListQuotes lists the quotes matching the request criteria.
-func ListQuotes(req *ListQuotesRequest) (*ListQuotesResponse, error) {
-	v := url.Values{}
-	v.Set("client", "ig")
-	v.Set("q", strings.Join(req.Symbols, ","))
-
-	u, err := url.Parse("http://www.google.com/finance/info")
-	if err != nil {
-		return nil, err
-	}
-	u.RawQuery = v.Encode()
-	glog.Infof("GET %s", u)
-
-	resp, err := http.Get(u.String())
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	parsed := []struct {
-		T     string // ticker symbol
-		L     string // price
-		C     string // change
-		Cp    string // percent change
-		LtDts string `json:"Lt_dts"` // time
-	}{}
-
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	// Check that data has the expected "//" comment string to trim off.
-	if len(data) < 3 {
-		return nil, fmt.Errorf("expected data should be larger")
-	}
-
-	// Unmarshal the data after the "//" comment string.
-	if err := json.Unmarshal(data[3:], &parsed); err != nil {
-		return nil, err
-	}
-
-	if len(parsed) == 0 {
-		return nil, errors.New("expected at least one entry")
-	}
-
-	listResp := &ListQuotesResponse{
-		Quotes: map[string]*Quote{},
-	}
-	for _, p := range parsed {
-		timestamp, err := time.Parse("2006-01-02T15:04:05Z", p.LtDts)
-		if err != nil {
-			return nil, fmt.Errorf("p: %+v timestamp: %v", p, err)
-		}
-
-		price, err := parseFloat(p.L)
-		if err != nil {
-			return nil, fmt.Errorf("p: %+v price: %v", p, err)
-		}
-
-		var change float32
-		if p.C != "" { // C is empty after market close.
-			change, err = parseFloat(p.C)
-			if err != nil {
-				return nil, fmt.Errorf("p: %+v change: %v", p, err)
-			}
-		}
-
-		var percentChange float32
-		if p.Cp != "" { // Cp is empty after market close.
-			percentChange, err = parseFloat(p.Cp)
-			if err != nil {
-				return nil, fmt.Errorf("p: %+v percentChange: %v", p, err)
-			}
-			percentChange /= 100.0
-		}
-
-		listResp.Quotes[p.T] = &Quote{
-			Symbol:        p.T,
-			Timestamp:     timestamp,
-			Price:         price,
-			Change:        change,
-			PercentChange: percentChange,
-		}
-	}
-
-	return listResp, nil
 }
 
 // parseFloat removes commas and then calls parseFloat.
