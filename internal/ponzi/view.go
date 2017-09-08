@@ -183,6 +183,10 @@ func (v *view) handleChar(ch rune) {
 	}
 }
 
+func (v *view) handleCursorPos(x, y float64) {
+	glog.Infof("view.handleCursorPos: x: %f y: %f", x, y)
+}
+
 func (v *view) handleMouseButton(button glfw.MouseButton, action glfw.Action) {
 	glog.Infof("view.handleMouseButton: button: %v action: %v", button, action)
 }

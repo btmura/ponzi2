@@ -68,6 +68,10 @@ func Run() {
 		v.handleChar(char)
 	})
 
+	win.SetCursorPosCallback(func(_ *glfw.Window, x, y float64) {
+		v.handleCursorPos(x, y)
+	})
+
 	win.SetMouseButtonCallback(func(_ *glfw.Window, button glfw.MouseButton, action glfw.Action, _ glfw.ModifierKey) {
 		v.handleMouseButton(button, action)
 	})
