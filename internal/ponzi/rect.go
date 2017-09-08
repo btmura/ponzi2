@@ -64,13 +64,13 @@ func renderRoundedRect(r image.Rectangle, roundAmount int) {
 
 // renderHorizDividers horizontally cuts a rectangle from the bottom with the given percentage amounts
 // and draws the given VAO at those percentages.
-func renderHorizDividers(r image.Rectangle, divider *gfx.VAO, percentages ...float32) []image.Rectangle {
+func renderHorizDividers(r image.Rectangle, dividerVAO *gfx.VAO, percentages ...float32) []image.Rectangle {
 	gfx.SetColorMixAmount(1)
 
 	rects := sliceRect(r, percentages...)
 	for _, r := range rects {
 		gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
-		divider.Render()
+		dividerVAO.Render()
 	}
 	return rects
 }

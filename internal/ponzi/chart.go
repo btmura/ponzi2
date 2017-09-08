@@ -1,6 +1,7 @@
 package ponzi
 
 import (
+	"bytes"
 	"fmt"
 	"image"
 
@@ -22,6 +23,7 @@ var (
 		}
 		return ""
 	}
+	chartAddButtonVAO = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("addButton.ply")))
 )
 
 // Shared variables used by multiple chart components.
@@ -43,7 +45,7 @@ type chart struct {
 func createChart(stock *modelStock) *chart {
 	return &chart{
 		stock:             stock,
-		header:            newChartHeader(stock, chartSymbolQuoteTextRenderer, chartFormatQuote, &button{}, chartRounding, chartPadding),
+		header:            newChartHeader(stock, chartSymbolQuoteTextRenderer, chartFormatQuote, newButton(chartAddButtonVAO), chartRounding, chartPadding),
 		lines:             createChartLines(stock),
 		prices:            createChartPrices(stock),
 		volume:            createChartVolume(stock),

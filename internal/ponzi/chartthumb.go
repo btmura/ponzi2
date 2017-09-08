@@ -1,6 +1,7 @@
 package ponzi
 
 import (
+	"bytes"
 	"fmt"
 	"image"
 
@@ -22,6 +23,7 @@ var (
 		}
 		return ""
 	}
+	thumbRemoveButtonVAO = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("removeButton.ply")))
 )
 
 type chartThumbnail struct {
@@ -35,7 +37,7 @@ type chartThumbnail struct {
 func createChartThumbnail(stock *modelStock) *chartThumbnail {
 	return &chartThumbnail{
 		stock:             stock,
-		header:            newChartHeader(stock, thumbSymbolQuoteTextRenderer, thumbFormatQuote, &button{}, thumbChartRounding, thumbChartPadding),
+		header:            newChartHeader(stock, thumbSymbolQuoteTextRenderer, thumbFormatQuote, newButton(thumbRemoveButtonVAO), thumbChartRounding, thumbChartPadding),
 		lines:             createChartLines(stock),
 		dailyStochastics:  createChartStochastics(stock, dailySTO),
 		weeklyStochastics: createChartStochastics(stock, weeklySTO),

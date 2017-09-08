@@ -1,18 +1,23 @@
 package ponzi
 
 import (
-	"bytes"
 	"image"
 
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
-var addButtonVAO = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("addButton.ply")))
+type button struct {
+	iconVAO *gfx.VAO
+}
 
-type button struct{}
+func newButton(iconVAO *gfx.VAO) *button {
+	return &button{
+		iconVAO: iconVAO,
+	}
+}
 
 func (b *button) render(r image.Rectangle) {
 	gfx.SetColorMixAmount(1)
 	gfx.SetModelMatrixRect(r)
-	addButtonVAO.Render()
+	b.iconVAO.Render()
 }
