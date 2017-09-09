@@ -150,6 +150,9 @@ func (v *view) render(fudge float32) {
 			v.chart.close()
 		}
 		v.chart = newChart(v.model.currentStock)
+		v.chart.addAddButtonClickCallback(func() {
+			glog.Infof("clicked add button for %s", v.chart.stock.symbol)
+		})
 	}
 
 	if v.chartThumbnail == nil || v.chartThumbnail.stock != v.model.currentStock {
@@ -157,6 +160,9 @@ func (v *view) render(fudge float32) {
 			v.chartThumbnail.close()
 		}
 		v.chartThumbnail = newChartThumbnail(v.model.currentStock)
+		v.chartThumbnail.addRemoveButtonClickCallback(func() {
+			glog.Infof("clicked remove button for %s", v.chartThumbnail.stock.symbol)
+		})
 	}
 
 	vc := v.nextViewContext

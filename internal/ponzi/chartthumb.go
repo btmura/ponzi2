@@ -26,21 +26,24 @@ var (
 )
 
 type chartThumbnail struct {
-	stock             *modelStock
-	header            *chartHeader
-	lines             *chartLines
-	dailyStochastics  *chartStochastics
-	weeklyStochastics *chartStochastics
+	stock                      *modelStock
+	header                     *chartHeader
+	lines                      *chartLines
+	dailyStochastics           *chartStochastics
+	weeklyStochastics          *chartStochastics
+	removeButtonClickCallbacks []func()
 }
 
 func newChartThumbnail(stock *modelStock) *chartThumbnail {
-	return &chartThumbnail{
+	ch := &chartThumbnail{
 		stock:             stock,
 		header:            newChartHeader(stock, thumbSymbolQuoteTextRenderer, thumbFormatQuote, newButton(thumbRemoveButtonVAO), thumbChartRounding, thumbChartPadding),
 		lines:             newChartLines(stock),
 		dailyStochastics:  newChartStochastics(stock, dailySTO),
 		weeklyStochastics: newChartStochastics(stock, weeklySTO),
 	}
+	ch.header.addButtonClickCallback(ch.fireRemoveButtonClickCallbacks)
+	return ch
 }
 
 func (ch *chartThumbnail) update() {
@@ -58,6 +61,16 @@ func (ch *chartThumbnail) render(vc viewContext) {
 	ch.weeklyStochastics.render(rects[0].Inset(thumbChartPadding))
 	ch.lines.render(rects[1].Inset(thumbChartPadding))
 	ch.lines.render(rects[0].Inset(thumbChartPadding))
+}
+
+func (ch *chartThumbnail) addRemoveButtonClickCallback(cb func()) {
+	ch.removeButtonClickCallbacks = append(ch.removeButtonClickCallbacks, cb)
+}
+
+func (ch *chartThumbnail) fireRemoveButtonClickCallbacks() {
+	for _, cb := range ch.removeButtonClickCallbacks {
+		cb()
+	}
 }
 
 func (ch *chartThumbnail) close() {

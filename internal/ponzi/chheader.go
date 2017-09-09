@@ -13,10 +13,11 @@ type chartHeader struct {
 	button                  *button
 	roundAmount             int
 	padding                 int
+	buttonClickCallbacks    []func()
 }
 
 func newChartHeader(stock *modelStock, symbolQuoteTextRenderer *gfx.TextRenderer, quoteFormatter func(*modelQuote) string, button *button, roundAmount, padding int) *chartHeader {
-	return &chartHeader{
+	ch := &chartHeader{
 		stock: stock,
 		symbolQuoteTextRenderer: symbolQuoteTextRenderer,
 		quoteFormatter:          quoteFormatter,
@@ -24,6 +25,8 @@ func newChartHeader(stock *modelStock, symbolQuoteTextRenderer *gfx.TextRenderer
 		roundAmount:             roundAmount,
 		padding:                 padding,
 	}
+	ch.button.addClickCallback(ch.fireButtonClickCallbacks)
+	return ch
 }
 
 func (ch *chartHeader) render(vc viewContext) (body image.Rectangle) {
@@ -50,6 +53,16 @@ func (ch *chartHeader) render(vc viewContext) (body image.Rectangle) {
 
 	r.Max.Y = pt.Y
 	return r
+}
+
+func (ch *chartHeader) addButtonClickCallback(cb func()) {
+	ch.buttonClickCallbacks = append(ch.buttonClickCallbacks, cb)
+}
+
+func (ch *chartHeader) fireButtonClickCallbacks() {
+	for _, cb := range ch.buttonClickCallbacks {
+		cb()
+	}
 }
 
 func quoteColor(q *modelQuote) [3]float32 {

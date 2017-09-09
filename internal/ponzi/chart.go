@@ -32,17 +32,18 @@ var (
 )
 
 type chart struct {
-	stock             *modelStock
-	header            *chartHeader
-	lines             *chartLines
-	prices            *chartPrices
-	volume            *chartVolume
-	dailyStochastics  *chartStochastics
-	weeklyStochastics *chartStochastics
+	stock                   *modelStock
+	header                  *chartHeader
+	lines                   *chartLines
+	prices                  *chartPrices
+	volume                  *chartVolume
+	dailyStochastics        *chartStochastics
+	weeklyStochastics       *chartStochastics
+	addButtonClickCallbacks []func()
 }
 
 func newChart(stock *modelStock) *chart {
-	return &chart{
+	ch := &chart{
 		stock:             stock,
 		header:            newChartHeader(stock, chartSymbolQuoteTextRenderer, chartFormatQuote, newButton(chartAddButtonVAO), chartRounding, chartPadding),
 		lines:             newChartLines(stock),
@@ -51,6 +52,8 @@ func newChart(stock *modelStock) *chart {
 		dailyStochastics:  newChartStochastics(stock, dailySTO),
 		weeklyStochastics: newChartStochastics(stock, weeklySTO),
 	}
+	ch.header.addButtonClickCallback(ch.fireAddButtonClickCallbacks)
+	return ch
 }
 
 func (ch *chart) update() {
@@ -97,6 +100,16 @@ func (ch *chart) render(vc viewContext) {
 	ch.lines.render(vr)
 	ch.lines.render(dr)
 	ch.lines.render(wr)
+}
+
+func (ch *chart) addAddButtonClickCallback(cb func()) {
+	ch.addButtonClickCallbacks = append(ch.addButtonClickCallbacks, cb)
+}
+
+func (ch *chart) fireAddButtonClickCallbacks() {
+	for _, cb := range ch.addButtonClickCallbacks {
+		cb()
+	}
 }
 
 func (ch *chart) close() {
