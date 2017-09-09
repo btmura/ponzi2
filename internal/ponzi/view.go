@@ -152,19 +152,26 @@ func (v *view) render(fudge float32) {
 		}
 		v.chart = newChart(v.model.currentStock)
 		v.chart.addAddButtonClickCallback(func() {
-			s := v.chart.stock.symbol
-			if v.model.sideBarSymbols[s] {
+			symbol := v.chart.stock.symbol
+			st := v.model.addSideBarStock(symbol)
+			if st == nil {
 				return
 			}
-			st := newModelStock(s)
 			go func() {
 				if err := st.refresh(); err != nil {
 					glog.Errorf("render: failed to refresh stock: %v", err)
 				}
 			}()
-			v.model.sideBarStocks = append(v.model.sideBarStocks, st)
-			v.model.sideBarSymbols[s] = true
-			v.sideBarChartThumbs[s] = newChartThumbnail(st)
+
+			th := newChartThumbnail(st)
+			th.addRemoveButtonClickCallback(func() {
+				symbol := th.stock.symbol
+				v.model.removeSideBarStock(symbol)
+				// TODO(btmura): can't close here because callback runs during render
+				// v.sideBarChartThumbs[symbol].close()
+				delete(v.sideBarChartThumbs, symbol)
+			})
+			v.sideBarChartThumbs[symbol] = th
 		})
 	}
 
@@ -189,6 +196,7 @@ func (v *view) render(fudge float32) {
 		th.render(vc)
 	}
 
+	// TODO(btmura): run all fired callbacks here
 	v.nextViewContext.mouseLeftButtonClicked = false
 }
 

@@ -52,6 +52,31 @@ func newModel(symbol string) *model {
 	}
 }
 
+func (m *model) addSideBarStock(symbol string) *modelStock {
+	if m.sideBarSymbols[symbol] {
+		return nil
+	}
+	st := newModelStock(symbol)
+	m.sideBarStocks = append(m.sideBarStocks, st)
+	m.sideBarSymbols[symbol] = true
+	return st
+}
+
+func (m *model) removeSideBarStock(symbol string) {
+	if !m.sideBarSymbols[symbol] {
+		return
+	}
+	var newStocks []*modelStock
+	for _, st := range m.sideBarStocks {
+		if st.symbol == symbol {
+			continue // Don't keep it.
+		}
+		newStocks = append(newStocks, st)
+	}
+	m.sideBarStocks = newStocks
+	delete(m.sideBarSymbols, symbol)
+}
+
 func (m *model) refresh() error {
 	if err := m.currentStock.refresh(); err != nil {
 		return err

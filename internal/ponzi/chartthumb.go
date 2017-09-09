@@ -7,6 +7,7 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 
 	"github.com/btmura/ponzi2/internal/gfx"
+	"github.com/golang/glog"
 )
 
 const (
@@ -74,6 +75,7 @@ func (ch *chartThumbnail) fireRemoveButtonClickCallbacks() {
 }
 
 func (ch *chartThumbnail) close() {
+	glog.Infof("close")
 	ch.lines.close()
 	ch.lines = nil
 	ch.dailyStochastics.close()
