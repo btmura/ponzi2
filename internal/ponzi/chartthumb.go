@@ -3,7 +3,6 @@ package ponzi
 import (
 	"bytes"
 	"fmt"
-	"image"
 
 	"golang.org/x/image/font/gofont/goregular"
 
@@ -50,8 +49,8 @@ func (ch *chartThumbnail) update() {
 	ch.weeklyStochastics.update()
 }
 
-func (ch *chartThumbnail) render(r image.Rectangle) {
-	r = ch.header.render(r)
+func (ch *chartThumbnail) render(vc viewContext) {
+	r := ch.header.render(vc)
 
 	rects := renderHorizDividers(r, horizLine, 0.5, 0.5)
 

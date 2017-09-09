@@ -60,6 +60,19 @@ type view struct {
 	perspectiveMatrix math2.Matrix4
 	orthoMatrix       math2.Matrix4
 	winSize           image.Point
+	nextViewContext   viewContext // nextViewContext is the next viewContext to pass down the view hierarchy.
+}
+
+// viewContext is passed down the view hierarchy providing drawing hints and event information.
+// Meant to be passed around like a Rectangle or Point rather than a pointer to avoid mistakes.
+type viewContext struct {
+	bounds                 image.Rectangle // bounds is a rectangle that should be drawn within.
+	mousePos               image.Point     // mousePos is the current mouse position.
+	mouseLeftButtonClicked bool            // mouseLeftButtonClicked is whether the left mouse button was clicked.
+}
+
+func (vc viewContext) leftClickedInBounds() bool {
+	return vc.mouseLeftButtonClicked && vc.mousePos.In(vc.bounds)
 }
 
 func newView(model *model) *view {
@@ -146,15 +159,21 @@ func (v *view) render(fudge float32) {
 		v.chartThumbnail = newChartThumbnail(v.model.currentStock)
 	}
 
+	vc := v.nextViewContext
+
 	ms := image.Pt(140, 90)
 
 	if v.chart != nil {
-		v.chart.render(image.Rect(pt.X+ms.X+outerPadding, outerPadding, v.winSize.X-outerPadding, pt.Y))
+		vc.bounds = image.Rect(pt.X+ms.X+outerPadding, outerPadding, v.winSize.X-outerPadding, pt.Y)
+		v.chart.render(vc)
 	}
 
 	if v.chartThumbnail != nil {
-		v.chartThumbnail.render(image.Rect(pt.X, pt.Y-ms.Y, pt.X+ms.X, pt.Y))
+		vc.bounds = image.Rect(pt.X, pt.Y-ms.Y, pt.X+ms.X, pt.Y)
+		v.chartThumbnail.render(vc)
 	}
+
+	v.nextViewContext.mouseLeftButtonClicked = false
 }
 
 // resize responds to window size changes by updating internal matrices.
@@ -177,7 +196,6 @@ func (v *view) resize(newSize image.Point) {
 	// Calculate the new ortho projection view matrix.
 	v.orthoMatrix = math2.OrthoMatrix(fw, fh, fw /* use width as depth */)
 }
-
 
 func (v *view) handleKey(key glfw.Key, action glfw.Action) {
 	if action != glfw.Release {
@@ -223,11 +241,14 @@ func (v *view) submitSymbol() {
 }
 
 func (v *view) handleCursorPos(x, y float64) {
-	glog.Infof("view.handleCursorPos: x: %f y: %f", x, y)
+	// Flip Y-axis since the OpenGL coordinate system makes lower left the origin.
+	v.nextViewContext.mousePos = image.Pt(int(x), v.winSize.Y-int(y))
 }
 
 func (v *view) handleMouseButton(button glfw.MouseButton, action glfw.Action) {
-	glog.Infof("view.handleMouseButton: button: %v action: %v", button, action)
+	if button != glfw.MouseButtonLeft {
+		glog.Infof("handleMouseButton: ignoring mouse button(%v) and action(%v)", button, action)
+		return // Only interested in left clicks right now.
+	}
+	v.nextViewContext.mouseLeftButtonClicked = action == glfw.Release
 }
-
-

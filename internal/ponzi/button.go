@@ -1,7 +1,7 @@
 package ponzi
 
 import (
-	"image"
+	"github.com/golang/glog"
 
 	"github.com/btmura/ponzi2/internal/gfx"
 )
@@ -16,8 +16,12 @@ func newButton(iconVAO *gfx.VAO) *button {
 	}
 }
 
-func (b *button) render(r image.Rectangle) {
+func (b *button) render(vc viewContext) {
+	if vc.leftClickedInBounds() {
+		glog.Infof("bounds: %v pos: %v", vc.bounds, vc.mousePos)
+	}
+
 	gfx.SetColorMixAmount(1)
-	gfx.SetModelMatrixRect(r)
+	gfx.SetModelMatrixRect(vc.bounds)
 	b.iconVAO.Render()
 }
