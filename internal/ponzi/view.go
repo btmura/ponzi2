@@ -139,14 +139,6 @@ func (v *view) render(fudge float32) {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gfx.SetProjectionViewMatrix(v.orthoMatrix)
 
-	// Render input symbol being typed in the center.
-	if v.inputSymbol != "" {
-		s := inputSymbolTextRenderer.Measure(v.inputSymbol)
-		c := v.winSize.Sub(s).Div(2)
-		inputSymbolTextRenderer.Render(v.inputSymbol, c, white)
-	}
-
-	// Render the current symbol.
 	if v.chart == nil || v.chart.stock != v.model.currentStock {
 		if v.chart != nil {
 			v.chart.close()
@@ -182,6 +174,17 @@ func (v *view) render(fudge float32) {
 		callbacks = append(callbacks, cbs...)
 	}
 
+	// Render input symbol being typed in the center.
+	if v.inputSymbol != "" {
+		s := inputSymbolTextRenderer.Measure(v.inputSymbol)
+		pt := v.winSize.Sub(s).Div(2)
+		if len(v.model.sideBarStocks) > 0 {
+			pt.X += viewChartThumbSize.X / 2
+		}
+		inputSymbolTextRenderer.Render(v.inputSymbol, pt, white)
+	}
+
+	// Render the main chart.
 	if v.chart != nil {
 		vc.bounds = image.Rectangle{image.ZP, v.winSize}.Inset(viewOuterPadding)
 		if len(v.model.sideBarStocks) > 0 {
@@ -190,6 +193,7 @@ func (v *view) render(fudge float32) {
 		v.chart.render(vc)
 	}
 
+	// Render the sidebar thumbnails.
 	for i, st := range v.model.sideBarStocks {
 		min := image.Pt(viewOuterPadding, 0)
 		max := image.Pt(min.X+viewChartThumbSize.X, 0)
@@ -201,10 +205,12 @@ func (v *view) render(fudge float32) {
 		th.render(vc)
 	}
 
+	// Call any callbacks scheduled by views.
 	for _, cb := range callbacks {
 		cb()
 	}
 
+	// Reset any flags for the next viewContext.
 	v.nextViewContext.mouseLeftButtonClicked = false
 }
 
