@@ -43,7 +43,7 @@ type chart struct {
 }
 
 func newChart(stock *modelStock) *chart {
-	ch := &chart{
+	return &chart{
 		stock:             stock,
 		header:            newChartHeader(stock, chartSymbolQuoteTextRenderer, chartFormatQuote, newButton(chartAddButtonVAO), chartRounding, chartPadding),
 		lines:             newChartLines(stock),
@@ -52,8 +52,6 @@ func newChart(stock *modelStock) *chart {
 		dailyStochastics:  newChartStochastics(stock, dailySTO),
 		weeklyStochastics: newChartStochastics(stock, weeklySTO),
 	}
-	ch.header.addButtonClickCallback(ch.fireAddButtonClickCallbacks)
-	return ch
 }
 
 func (ch *chart) update() {
@@ -103,13 +101,7 @@ func (ch *chart) render(vc viewContext) {
 }
 
 func (ch *chart) addAddButtonClickCallback(cb func()) {
-	ch.addButtonClickCallbacks = append(ch.addButtonClickCallbacks, cb)
-}
-
-func (ch *chart) fireAddButtonClickCallbacks() {
-	for _, cb := range ch.addButtonClickCallbacks {
-		cb()
-	}
+	ch.header.addButtonClickCallback(cb)
 }
 
 func (ch *chart) close() {

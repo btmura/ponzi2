@@ -7,7 +7,6 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 
 	"github.com/btmura/ponzi2/internal/gfx"
-	"github.com/golang/glog"
 )
 
 const (
@@ -36,15 +35,13 @@ type chartThumbnail struct {
 }
 
 func newChartThumbnail(stock *modelStock) *chartThumbnail {
-	ch := &chartThumbnail{
+	return &chartThumbnail{
 		stock:             stock,
 		header:            newChartHeader(stock, thumbSymbolQuoteTextRenderer, thumbFormatQuote, newButton(thumbRemoveButtonVAO), thumbChartRounding, thumbChartPadding),
 		lines:             newChartLines(stock),
 		dailyStochastics:  newChartStochastics(stock, dailySTO),
 		weeklyStochastics: newChartStochastics(stock, weeklySTO),
 	}
-	ch.header.addButtonClickCallback(ch.fireRemoveButtonClickCallbacks)
-	return ch
 }
 
 func (ch *chartThumbnail) update() {
@@ -65,17 +62,10 @@ func (ch *chartThumbnail) render(vc viewContext) {
 }
 
 func (ch *chartThumbnail) addRemoveButtonClickCallback(cb func()) {
-	ch.removeButtonClickCallbacks = append(ch.removeButtonClickCallbacks, cb)
-}
-
-func (ch *chartThumbnail) fireRemoveButtonClickCallbacks() {
-	for _, cb := range ch.removeButtonClickCallbacks {
-		cb()
-	}
+	ch.header.addButtonClickCallback(cb)
 }
 
 func (ch *chartThumbnail) close() {
-	glog.Infof("close")
 	ch.lines.close()
 	ch.lines = nil
 	ch.dailyStochastics.close()

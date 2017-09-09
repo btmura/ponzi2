@@ -68,9 +68,10 @@ type view struct {
 // viewContext is passed down the view hierarchy providing drawing hints and event information.
 // Meant to be passed around like a Rectangle or Point rather than a pointer to avoid mistakes.
 type viewContext struct {
-	bounds                 image.Rectangle // bounds is a rectangle that should be drawn within.
-	mousePos               image.Point     // mousePos is the current mouse position.
-	mouseLeftButtonClicked bool            // mouseLeftButtonClicked is whether the left mouse button was clicked.
+	bounds                 image.Rectangle    // bounds is a rectangle that should be drawn within.
+	mousePos               image.Point        // mousePos is the current mouse position.
+	mouseLeftButtonClicked bool               // mouseLeftButtonClicked is whether the left mouse button was clicked.
+	scheduleCallbacks      func(cbs []func()) // scheduleCallback is a function to gather callbacks to be executed.
 }
 
 func (vc viewContext) leftClickedInBounds() bool {
@@ -167,8 +168,7 @@ func (v *view) render(fudge float32) {
 			th.addRemoveButtonClickCallback(func() {
 				symbol := th.stock.symbol
 				v.model.removeSideBarStock(symbol)
-				// TODO(btmura): can't close here because callback runs during render
-				// v.sideBarChartThumbs[symbol].close()
+				v.sideBarChartThumbs[symbol].close()
 				delete(v.sideBarChartThumbs, symbol)
 			})
 			v.sideBarChartThumbs[symbol] = th
@@ -176,6 +176,11 @@ func (v *view) render(fudge float32) {
 	}
 
 	vc := v.nextViewContext
+
+	var callbacks []func()
+	vc.scheduleCallbacks = func(cbs []func()) {
+		callbacks = append(callbacks, cbs...)
+	}
 
 	if v.chart != nil {
 		vc.bounds = image.Rectangle{image.ZP, v.winSize}.Inset(viewOuterPadding)
@@ -196,7 +201,10 @@ func (v *view) render(fudge float32) {
 		th.render(vc)
 	}
 
-	// TODO(btmura): run all fired callbacks here
+	for _, cb := range callbacks {
+		cb()
+	}
+
 	v.nextViewContext.mouseLeftButtonClicked = false
 }
 

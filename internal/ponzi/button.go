@@ -17,7 +17,7 @@ func newButton(iconVAO *gfx.VAO) *button {
 
 func (b *button) render(vc viewContext) {
 	if vc.leftClickedInBounds() {
-		b.fireClickCallbacks()
+		vc.scheduleCallbacks(b.clickCallbacks)
 	}
 
 	gfx.SetColorMixAmount(1)
@@ -27,10 +27,4 @@ func (b *button) render(vc viewContext) {
 
 func (b *button) addClickCallback(cb func()) {
 	b.clickCallbacks = append(b.clickCallbacks, cb)
-}
-
-func (b *button) fireClickCallbacks() {
-	for _, cb := range b.clickCallbacks {
-		cb()
-	}
 }
