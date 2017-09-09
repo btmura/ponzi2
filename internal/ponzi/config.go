@@ -1,11 +1,8 @@
 package ponzi
 
-package ponzi
-
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"os"
 	"os/user"
 	"path"
