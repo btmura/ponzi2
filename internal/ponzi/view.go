@@ -49,18 +49,20 @@ var acceptedChars = map[rune]bool{
 
 var inputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
 
-const outerPadding = 5
+const viewOuterPadding = 10
+
+var viewChartThumbSize = image.Pt(140, 90)
 
 type view struct {
-	model             *model // model is the model that will be rendered.
-	inputSymbol       string // inputSymbol is the symbol being entered by the user.
-	chart             *chart
-	chartThumbnail    *chartThumbnail
-	viewMatrix        math2.Matrix4
-	perspectiveMatrix math2.Matrix4
-	orthoMatrix       math2.Matrix4
-	winSize           image.Point
-	nextViewContext   viewContext // nextViewContext is the next viewContext to pass down the view hierarchy.
+	model              *model                     // model is the model that will be rendered.
+	chart              *chart                     // chart renders the model's current stock.
+	sideBarChartThumbs map[string]*chartThumbnail // sideBarChartThumbs maps symbol to chartThumbnail.
+	inputSymbol        string                     // inputSymbol is the symbol being entered by the user.
+	viewMatrix         math2.Matrix4
+	perspectiveMatrix  math2.Matrix4
+	orthoMatrix        math2.Matrix4
+	winSize            image.Point
+	nextViewContext    viewContext // nextViewContext is the next viewContext to pass down the view hierarchy.
 }
 
 // viewContext is passed down the view hierarchy providing drawing hints and event information.
@@ -110,8 +112,9 @@ func newView(model *model) *view {
 	gfx.SetDirectionalLightVector(directionalVector)
 
 	return &view{
-		model:      model,
-		viewMatrix: vm,
+		model:              model,
+		sideBarChartThumbs: map[string]*chartThumbnail{},
+		viewMatrix:         vm,
 	}
 }
 
@@ -122,8 +125,9 @@ func (v *view) update() {
 	if v.chart != nil {
 		v.chart.update()
 	}
-	if v.chartThumbnail != nil {
-		v.chartThumbnail.update()
+
+	for _, th := range v.sideBarChartThumbs {
+		th.update()
 	}
 }
 
@@ -141,9 +145,6 @@ func (v *view) render(fudge float32) {
 		inputSymbolTextRenderer.Render(v.inputSymbol, c, white)
 	}
 
-	// Start in upper left. (0, 0) is lower left.
-	pt := image.Pt(outerPadding, v.winSize.Y-outerPadding)
-
 	// Render the current symbol.
 	if v.chart == nil || v.chart.stock != v.model.currentStock {
 		if v.chart != nil {
@@ -151,32 +152,41 @@ func (v *view) render(fudge float32) {
 		}
 		v.chart = newChart(v.model.currentStock)
 		v.chart.addAddButtonClickCallback(func() {
-			glog.Infof("clicked add button for %s", v.chart.stock.symbol)
-		})
-	}
-
-	if v.chartThumbnail == nil || v.chartThumbnail.stock != v.model.currentStock {
-		if v.chartThumbnail != nil {
-			v.chartThumbnail.close()
-		}
-		v.chartThumbnail = newChartThumbnail(v.model.currentStock)
-		v.chartThumbnail.addRemoveButtonClickCallback(func() {
-			glog.Infof("clicked remove button for %s", v.chartThumbnail.stock.symbol)
+			s := v.chart.stock.symbol
+			if v.model.sideBarSymbols[s] {
+				return
+			}
+			st := newModelStock(s)
+			go func() {
+				if err := st.refresh(); err != nil {
+					glog.Errorf("render: failed to refresh stock: %v", err)
+				}
+			}()
+			v.model.sideBarStocks = append(v.model.sideBarStocks, st)
+			v.model.sideBarSymbols[s] = true
+			v.sideBarChartThumbs[s] = newChartThumbnail(st)
 		})
 	}
 
 	vc := v.nextViewContext
 
-	ms := image.Pt(140, 90)
-
 	if v.chart != nil {
-		vc.bounds = image.Rect(pt.X+ms.X+outerPadding, outerPadding, v.winSize.X-outerPadding, pt.Y)
+		vc.bounds = image.Rectangle{image.ZP, v.winSize}.Inset(viewOuterPadding)
+		if len(v.model.sideBarStocks) > 0 {
+			vc.bounds.Min.X += viewOuterPadding + viewChartThumbSize.X
+		}
 		v.chart.render(vc)
 	}
 
-	if v.chartThumbnail != nil {
-		vc.bounds = image.Rect(pt.X, pt.Y-ms.Y, pt.X+ms.X, pt.Y)
-		v.chartThumbnail.render(vc)
+	for i, st := range v.model.sideBarStocks {
+		min := image.Pt(viewOuterPadding, 0)
+		max := image.Pt(min.X+viewChartThumbSize.X, 0)
+		max.Y = v.winSize.Y - (viewOuterPadding+viewChartThumbSize.Y)*i - viewOuterPadding
+		min.Y = max.Y - viewChartThumbSize.Y
+		vc.bounds = image.Rectangle{min, max}
+
+		th := v.sideBarChartThumbs[st.symbol]
+		th.render(vc)
 	}
 
 	v.nextViewContext.mouseLeftButtonClicked = false

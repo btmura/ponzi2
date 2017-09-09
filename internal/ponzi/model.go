@@ -11,11 +11,10 @@ import (
 
 // model is the state of the program separate from the view.
 type model struct {
-	// Mutex guards the model.
-	sync.Mutex
-
-	// currentStock is the stock data currently being viewed.
-	currentStock *modelStock
+	sync.Mutex                     // Mutex guards the model.
+	currentStock   *modelStock     // currentStock is the stock currently being viewed.
+	sideBarStocks  []*modelStock   // sideBarStocks are the ordered stocks in the sidebar.
+	sideBarSymbols map[string]bool // sideBarSymbols is a set of the sidebar's symbols.
 }
 
 type modelQuote struct {
@@ -48,8 +47,21 @@ type modelTradingSession struct {
 
 func newModel(symbol string) *model {
 	return &model{
-		currentStock: newModelStock("SPY"),
+		currentStock:   newModelStock("SPY"),
+		sideBarSymbols: map[string]bool{},
 	}
+}
+
+func (m *model) refresh() error {
+	if err := m.currentStock.refresh(); err != nil {
+		return err
+	}
+	for _, st := range m.sideBarStocks {
+		if err := st.refresh(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func newModelStock(symbol string) *modelStock {
@@ -59,20 +71,12 @@ func newModelStock(symbol string) *modelStock {
 	}
 }
 
-func (m *model) refresh() error {
-	m.Lock()
-	s := m.currentStock.symbol
-	m.Unlock()
-
-	if s == "" {
-		return nil // Nothing to look up.
-	}
-
+func (m *modelStock) refresh() error {
 	// Get the trading history for the current stock.
 	end := t2.Midnight(time.Now().In(t2.NewYorkLoc))
 	start := end.Add(-6 * 30 * 24 * time.Hour)
 	hist, err := stock.GetTradingHistory(&stock.GetTradingHistoryRequest{
-		Symbol:    s,
+		Symbol:    m.symbol,
 		StartDate: start,
 		EndDate:   end,
 	})
@@ -80,18 +84,14 @@ func (m *model) refresh() error {
 		return err
 	}
 
-	m.Lock()
-	if s == m.currentStock.symbol { // Maybe the current symbol changed.
-		m.currentStock.dailySessions, m.currentStock.weeklySessions = convertSessions(hist.Sessions)
-		if len(m.currentStock.dailySessions) > 0 {
-			last := m.currentStock.dailySessions[len(m.currentStock.dailySessions)-1]
-			m.currentStock.quote.price = last.close
-			m.currentStock.quote.change = last.change
-			m.currentStock.quote.percentChange = last.percentChange
-		}
-		m.currentStock.lastUpdateTime = time.Now()
+	m.dailySessions, m.weeklySessions = convertSessions(hist.Sessions)
+	if len(m.dailySessions) > 0 {
+		last := m.dailySessions[len(m.dailySessions)-1]
+		m.quote.price = last.close
+		m.quote.change = last.change
+		m.quote.percentChange = last.percentChange
 	}
-	m.Unlock()
+	m.lastUpdateTime = time.Now()
 
 	return nil
 }
