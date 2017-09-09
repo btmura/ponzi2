@@ -25,29 +25,29 @@ type ConfigStock struct {
 var configMutex sync.RWMutex
 
 // LoadConfig loads the user's config from disk.
-func LoadConfig() (Config, error) {
+func LoadConfig() (*Config, error) {
 	configMutex.RLock()
 	defer configMutex.RUnlock()
 
 	cfgPath, err := getUserConfigPath()
 	if err != nil {
-		return Config{}, err
+		return nil, err
 	}
 
 	file, err := os.Open(cfgPath)
 	if err != nil && !os.IsNotExist(err) {
-		return Config{}, err
+		return nil, err
 	}
 	defer file.Close()
 
 	if os.IsNotExist(err) {
-		return Config{}, nil
+		return &Config{}, nil
 	}
 
-	cfg := Config{}
+	cfg := &Config{}
 	d := json.NewDecoder(file)
 	if err := d.Decode(&cfg); err != nil && err != io.EOF {
-		return Config{}, err
+		return nil, err
 	}
 	return cfg, nil
 }
