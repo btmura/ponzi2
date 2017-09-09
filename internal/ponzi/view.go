@@ -74,7 +74,7 @@ type ViewContext struct {
 	scheduleCallbacks      func(cbs []func()) // scheduleCallback is a function to gather callbacks to be executed.
 }
 
-func (vc ViewContext) LeftClickedInBounds() bool {
+func (vc ViewContext) LeftClickInBounds() bool {
 	return vc.mouseLeftButtonClicked && vc.mousePos.In(vc.bounds)
 }
 

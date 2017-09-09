@@ -16,7 +16,7 @@ func NewButton(iconVAO *gfx.VAO) *Button {
 }
 
 func (b *Button) Render(vc ViewContext) {
-	if vc.LeftClickedInBounds() {
+	if vc.LeftClickInBounds() {
 		vc.scheduleCallbacks(b.clickCallbacks)
 	}
 
