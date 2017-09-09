@@ -23,13 +23,9 @@ func init() {
 
 // Run runs the stock chart viewer in a window.
 func Run() {
-	checkErr := func(err error) {
-		if err != nil {
-			glog.Fatalf("ponzi: Run failed: %v", err)
-		}
+	if err := glfw.Init(); err != nil {
+		glog.Fatalf("Run: failed to init glfw: %v", err)
 	}
-
-	checkErr(glfw.Init())
 	defer glfw.Terminate()
 
 	// Set the following hints for Linux compatibility.
@@ -39,7 +35,9 @@ func Run() {
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
 	win, err := glfw.CreateWindow(800, 600, "ponzi", nil, nil)
-	checkErr(err)
+	if err != nil {
+		glog.Fatalf("Run: failed to create window: %v", err)
+	}
 
 	win.MakeContextCurrent()
 
@@ -49,7 +47,7 @@ func Run() {
 	// GLFW, GL, and shaders OK! Go fetch data for the model.
 	go func() {
 		if err := m.refresh(); err != nil {
-			glog.Errorf("refresh failed: %v", err)
+			glog.Errorf("Run: refresh failed: %v", err)
 		}
 	}()
 

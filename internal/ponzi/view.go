@@ -80,7 +80,7 @@ func newView(model *model) *view {
 	// Initialize OpenGL and enable features.
 
 	if err := gl.Init(); err != nil {
-		glog.Fatalf("ponzi.newView: failed to init OpenGL: %v", err)
+		glog.Fatalf("newView: failed to init OpenGL: %v", err)
 	}
 	glog.Infof("OpenGL version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
 
@@ -95,7 +95,7 @@ func newView(model *model) *view {
 	gl.ClearColor(0, 0, 0, 0)
 
 	if err := gfx.Init(); err != nil {
-		glog.Fatalf("ponzi.newView: failed to init gfx: %v", err)
+		glog.Fatalf("newView: failed to init gfx: %v", err)
 	}
 
 	// Setup the vertex shader uniforms.

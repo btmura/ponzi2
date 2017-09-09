@@ -69,7 +69,7 @@ processHeader:
 		line := sc.Text()
 		switch { // Don't care about checking for ply and format lines.
 		case strings.HasPrefix(line, "comment "):
-			glog.Infof("ply.Decode: %s", line)
+			glog.Infof("Decode: %s", line)
 
 		case strings.HasPrefix(line, "element "):
 			ed = &elementDescriptor{}

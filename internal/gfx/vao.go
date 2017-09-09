@@ -37,7 +37,7 @@ type VAOVertexData struct {
 // Since NewVAO defers the creation of the actual OpenGL VAO till the first rendering,
 // callers may call NewVAO at the package scope to simplify their code.
 func NewVAO(mode VAODrawMode, data *VAOVertexData) *VAO {
-	glog.Infof("gfx.NewVAO: v(%d) n(%d) tc(%d) c(%d) i(%d)", len(data.Vertices), len(data.Normals), len(data.TexCoords), len(data.Colors), len(data.Indices))
+	glog.Infof("NewVAO: v(%d) n(%d) tc(%d) c(%d) i(%d)", len(data.Vertices), len(data.Normals), len(data.TexCoords), len(data.Colors), len(data.Indices))
 	if len(data.Indices) == 0 {
 		return &VAO{} // OpenGL doesn't allow empty buffer objects. Return VAO with zero count.
 	}
@@ -50,7 +50,7 @@ func NewVAO(mode VAODrawMode, data *VAOVertexData) *VAO {
 	case Lines:
 		glMode = gl.LINES
 	default:
-		glog.Fatalf("gfx.NewVAO: unsupported mode: %v", mode)
+		glog.Fatalf("NewVAO: unsupported mode: %v", mode)
 	}
 
 	return &VAO{

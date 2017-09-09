@@ -55,7 +55,7 @@ func VertColoredLineVAO(topColor, botColor VAOColor) *VAO {
 func ReadPLYVAO(r io.Reader) *VAO {
 	p, err := ply.Decode(r)
 	if err != nil {
-		glog.Fatalf("gfx.ReadPLYVAO: decoding PLY failed: %v", err)
+		glog.Fatalf("ReadPLYVAO: decoding PLY failed: %v", err)
 	}
 
 	data := &VAOVertexData{}
@@ -88,7 +88,7 @@ func ReadPLYVAO(r io.Reader) *VAO {
 	for _, e := range p.Elements["face"] {
 		list := e.Uint32Lists["vertex_indices"]
 		if len(list) != 3 {
-			glog.Fatalf("gfx.ReadPLYVAO: index list has %d elements, want 3", len(list))
+			glog.Fatalf("ReadPLYVAO: index list has %d elements, want 3", len(list))
 		}
 		for _, idx := range list {
 			triangleIndices = append(triangleIndices, uint16(idx))
@@ -104,7 +104,7 @@ func ReadPLYVAO(r io.Reader) *VAO {
 
 	switch {
 	case len(triangleIndices) > 0 && len(lineIndices) > 0:
-		glog.Fatalf("gfx.ReadPLYVAO: both triangles and lines is unsupported")
+		glog.Fatalf("ReadPLYVAO: both triangles and lines is unsupported")
 
 	case len(triangleIndices) > 0:
 		data.Indices = triangleIndices
@@ -115,6 +115,6 @@ func ReadPLYVAO(r io.Reader) *VAO {
 		return NewVAO(Lines, data)
 	}
 
-	glog.Fatal("gfx.ReadPLYVAO: missing indices")
+	glog.Fatal("ReadPLYVAO: missing indices")
 	return nil
 }

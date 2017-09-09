@@ -19,7 +19,7 @@ var NewYorkLoc = mustLoadLocation("America/New_York")
 func mustLoadLocation(name string) *time.Location {
 	loc, err := time.LoadLocation("America/New_York")
 	if err != nil {
-		glog.Fatalf("time.mustLoadLocation: time.LoadLocation failed: %v", err)
+		glog.Fatalf("mustLoadLocation: failed to load location: %v", err)
 	}
 	return loc
 }
