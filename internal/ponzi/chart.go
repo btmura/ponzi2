@@ -16,7 +16,7 @@ const (
 
 var (
 	chartSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 24)
-	chartFormatQuote             = func(q *modelQuote) string {
+	chartFormatQuote             = func(q *ModelQuote) string {
 		if q.price != 0 {
 			return fmt.Sprintf("%.2f %+5.2f %+5.2f%%", q.price, q.change, q.percentChange*100.0)
 		}
@@ -31,39 +31,39 @@ var (
 	chartGridHorizLine         = gfx.HorizColoredLineVAO(gray, gray)
 )
 
-type chart struct {
-	stock                   *modelStock
-	header                  *chartHeader
-	lines                   *chartLines
-	prices                  *chartPrices
-	volume                  *chartVolume
-	dailyStochastics        *chartStochastics
-	weeklyStochastics       *chartStochastics
+type Chart struct {
+	stock                   *ModelStock
+	header                  *ChartHeader
+	lines                   *ChartLines
+	prices                  *ChartPrices
+	volume                  *ChartVolume
+	dailyStochastics        *ChartStochastics
+	weeklyStochastics       *ChartStochastics
 	addButtonClickCallbacks []func()
 }
 
-func newChart(stock *modelStock) *chart {
-	return &chart{
+func NewChart(stock *ModelStock) *Chart {
+	return &Chart{
 		stock:             stock,
-		header:            newChartHeader(stock, chartSymbolQuoteTextRenderer, chartFormatQuote, newButton(chartAddButtonVAO), chartRounding, chartPadding),
-		lines:             newChartLines(stock),
-		prices:            newChartPrices(stock),
-		volume:            newChartVolume(stock),
-		dailyStochastics:  newChartStochastics(stock, dailySTO),
-		weeklyStochastics: newChartStochastics(stock, weeklySTO),
+		header:            NewChartHeader(stock, chartSymbolQuoteTextRenderer, chartFormatQuote, NewButton(chartAddButtonVAO), chartRounding, chartPadding),
+		lines:             NewChartLines(stock),
+		prices:            NewChartPrices(stock),
+		volume:            NewChartVolume(stock),
+		dailyStochastics:  NewChartStochastics(stock, DailySTO),
+		weeklyStochastics: NewChartStochastics(stock, WeeklySTO),
 	}
 }
 
-func (ch *chart) update() {
-	ch.lines.update()
-	ch.prices.update()
-	ch.volume.update()
-	ch.dailyStochastics.update()
-	ch.weeklyStochastics.update()
+func (ch *Chart) Update() {
+	ch.lines.Update()
+	ch.prices.Update()
+	ch.volume.Update()
+	ch.dailyStochastics.Update()
+	ch.weeklyStochastics.Update()
 }
 
-func (ch *chart) render(vc viewContext) {
-	r := ch.header.render(vc)
+func (ch *Chart) Render(vc ViewContext) {
+	r := ch.header.Render(vc)
 
 	rects := renderHorizDividers(r, horizLine, 0.13, 0.13, 0.13, 0.61)
 	pr, vr, dr, wr := rects[3], rects[2], rects[1], rects[0]
@@ -73,14 +73,14 @@ func (ch *chart) render(vc viewContext) {
 	dr = dr.Inset(chartPadding)
 	wr = wr.Inset(chartPadding)
 
-	maxWidth := ch.prices.renderLabels(pr)
-	if w := ch.volume.renderLabels(vr); w > maxWidth {
+	maxWidth := ch.prices.RenderLabels(pr)
+	if w := ch.volume.RenderLabels(vr); w > maxWidth {
 		maxWidth = w
 	}
-	if w := ch.dailyStochastics.renderLabels(dr); w > maxWidth {
+	if w := ch.dailyStochastics.RenderLabels(dr); w > maxWidth {
 		maxWidth = w
 	}
-	if w := ch.weeklyStochastics.renderLabels(wr); w > maxWidth {
+	if w := ch.weeklyStochastics.RenderLabels(wr); w > maxWidth {
 		maxWidth = w
 	}
 
@@ -89,28 +89,28 @@ func (ch *chart) render(vc viewContext) {
 	dr.Max.X -= maxWidth + chartPadding
 	wr.Max.X -= maxWidth + chartPadding
 
-	ch.prices.render(pr)
-	ch.volume.render(vr)
-	ch.dailyStochastics.render(dr)
-	ch.weeklyStochastics.render(wr)
+	ch.prices.Render(pr)
+	ch.volume.Render(vr)
+	ch.dailyStochastics.Render(dr)
+	ch.weeklyStochastics.Render(wr)
 
-	ch.lines.render(pr)
-	ch.lines.render(vr)
-	ch.lines.render(dr)
-	ch.lines.render(wr)
+	ch.lines.Render(pr)
+	ch.lines.Render(vr)
+	ch.lines.Render(dr)
+	ch.lines.Render(wr)
 }
 
-func (ch *chart) addAddButtonClickCallback(cb func()) {
-	ch.header.addButtonClickCallback(cb)
+func (ch *Chart) AddAddButtonClickCallback(cb func()) {
+	ch.header.AddButtonClickCallback(cb)
 }
 
-func (ch *chart) close() {
-	ch.prices.close()
+func (ch *Chart) Close() {
+	ch.prices.Close()
 	ch.prices = nil
-	ch.volume.close()
+	ch.volume.Close()
 	ch.volume = nil
-	ch.dailyStochastics.close()
+	ch.dailyStochastics.Close()
 	ch.dailyStochastics = nil
-	ch.weeklyStochastics.close()
+	ch.weeklyStochastics.Close()
 	ch.weeklyStochastics = nil
 }

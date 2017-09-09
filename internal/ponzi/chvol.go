@@ -9,21 +9,21 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
-type chartVolume struct {
-	stock               *modelStock
+type ChartVolume struct {
+	stock               *ModelStock
 	lastStockUpdateTime time.Time
 	renderable          bool
 	maxVolume           int
 	volRects            *gfx.VAO
 }
 
-func newChartVolume(stock *modelStock) *chartVolume {
-	return &chartVolume{
+func NewChartVolume(stock *ModelStock) *ChartVolume {
+	return &ChartVolume{
 		stock: stock,
 	}
 }
 
-func (ch *chartVolume) update() {
+func (ch *ChartVolume) Update() {
 	if ch.lastStockUpdateTime == ch.stock.lastUpdateTime {
 		return
 	}
@@ -44,7 +44,7 @@ func (ch *chartVolume) update() {
 	ch.renderable = true
 }
 
-func createChartVolumeBarsVAO(ds []*modelTradingSession, maxVolume int) *gfx.VAO {
+func createChartVolumeBarsVAO(ds []*ModelTradingSession, maxVolume int) *gfx.VAO {
 	var vertices []float32
 	var colors []float32
 	var indices []uint16
@@ -122,7 +122,7 @@ func createChartVolumeBarsVAO(ds []*modelTradingSession, maxVolume int) *gfx.VAO
 	)
 }
 
-func (ch *chartVolume) render(r image.Rectangle) {
+func (ch *ChartVolume) Render(r image.Rectangle) {
 	if !ch.renderable {
 		return
 	}
@@ -134,7 +134,7 @@ func (ch *chartVolume) render(r image.Rectangle) {
 	renderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
 }
 
-func (ch *chartVolume) renderLabels(r image.Rectangle) (maxLabelWidth int) {
+func (ch *ChartVolume) RenderLabels(r image.Rectangle) (maxLabelWidth int) {
 	if !ch.renderable {
 		return
 	}
@@ -158,7 +158,7 @@ func (ch *chartVolume) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 	return s.X
 }
 
-func (ch *chartVolume) volumeLabelText(v int) (text string, size image.Point) {
+func (ch *ChartVolume) volumeLabelText(v int) (text string, size image.Point) {
 	var t string
 	switch {
 	case v > 1000000000:
@@ -173,7 +173,7 @@ func (ch *chartVolume) volumeLabelText(v int) (text string, size image.Point) {
 	return t, chartAxisLabelTextRenderer.Measure(t)
 }
 
-func (ch *chartVolume) close() {
+func (ch *ChartVolume) Close() {
 	ch.renderable = false
 	ch.volRects.Delete()
 	ch.volRects = nil

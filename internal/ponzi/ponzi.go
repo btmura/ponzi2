@@ -41,37 +41,37 @@ func Run() {
 
 	win.MakeContextCurrent()
 
-	m := newModel("SPY")
-	v := newView(m)
+	m := NewModel("SPY")
+	v := NewView(m)
 
 	// GLFW, GL, and shaders OK! Go fetch data for the model.
 	go func() {
-		if err := m.refresh(); err != nil {
+		if err := m.Refresh(); err != nil {
 			glog.Errorf("Run: refresh failed: %v", err)
 		}
 	}()
 
 	// Call the size callback to set the initial viewport.
 	w, h := win.GetSize()
-	v.resize(image.Pt(w, h))
+	v.Resize(image.Pt(w, h))
 	win.SetSizeCallback(func(_ *glfw.Window, width, height int) {
-		v.resize(image.Pt(width, height))
+		v.Resize(image.Pt(width, height))
 	})
 
 	win.SetKeyCallback(func(_ *glfw.Window, key glfw.Key, scancode int, action glfw.Action, _ glfw.ModifierKey) {
-		v.handleKey(key, action)
+		v.HandleKey(key, action)
 	})
 
 	win.SetCharCallback(func(_ *glfw.Window, char rune) {
-		v.handleChar(char)
+		v.HandleChar(char)
 	})
 
 	win.SetCursorPosCallback(func(_ *glfw.Window, x, y float64) {
-		v.handleCursorPos(x, y)
+		v.HandleCursorPos(x, y)
 	})
 
 	win.SetMouseButtonCallback(func(_ *glfw.Window, button glfw.MouseButton, action glfw.Action, _ glfw.ModifierKey) {
-		v.handleMouseButton(button, action)
+		v.HandleMouseButton(button, action)
 	})
 
 	const secPerUpdate = 1.0 / 60
@@ -85,12 +85,12 @@ func Run() {
 		lag += elapsed
 
 		for lag >= secPerUpdate {
-			v.update()
+			v.Update()
 			lag -= secPerUpdate
 		}
 
 		fudge := float32(lag / secPerUpdate)
-		v.render(fudge)
+		v.Render(fudge)
 
 		win.SwapBuffers()
 		glfw.PollEvents()

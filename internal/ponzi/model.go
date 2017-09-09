@@ -9,30 +9,30 @@ import (
 	t2 "github.com/btmura/ponzi2/internal/time"
 )
 
-// model is the state of the program separate from the view.
-type model struct {
+// Model is the state of the program separate from the view.
+type Model struct {
 	sync.Mutex                     // Mutex guards the model.
-	currentStock   *modelStock     // currentStock is the stock currently being viewed.
-	sideBarStocks  []*modelStock   // sideBarStocks are the ordered stocks in the sidebar.
+	currentStock   *ModelStock     // currentStock is the stock currently being viewed.
+	sideBarStocks  []*ModelStock   // sideBarStocks are the ordered stocks in the sidebar.
 	sideBarSymbols map[string]bool // sideBarSymbols is a set of the sidebar's symbols.
 }
 
-type modelQuote struct {
+type ModelQuote struct {
 	symbol        string
 	price         float32
 	change        float32
 	percentChange float32
 }
 
-type modelStock struct {
+type ModelStock struct {
 	symbol         string
-	quote          *modelQuote
-	dailySessions  []*modelTradingSession
-	weeklySessions []*modelTradingSession
+	quote          *ModelQuote
+	dailySessions  []*ModelTradingSession
+	weeklySessions []*ModelTradingSession
 	lastUpdateTime time.Time
 }
 
-type modelTradingSession struct {
+type ModelTradingSession struct {
 	date          time.Time
 	open          float32
 	high          float32
@@ -45,28 +45,28 @@ type modelTradingSession struct {
 	d             float32
 }
 
-func newModel(symbol string) *model {
-	return &model{
-		currentStock:   newModelStock("SPY"),
+func NewModel(symbol string) *Model {
+	return &Model{
+		currentStock:   NewModelStock("SPY"),
 		sideBarSymbols: map[string]bool{},
 	}
 }
 
-func (m *model) addSideBarStock(symbol string) *modelStock {
+func (m *Model) AddSideBarStock(symbol string) *ModelStock {
 	if m.sideBarSymbols[symbol] {
 		return nil
 	}
-	st := newModelStock(symbol)
+	st := NewModelStock(symbol)
 	m.sideBarStocks = append(m.sideBarStocks, st)
 	m.sideBarSymbols[symbol] = true
 	return st
 }
 
-func (m *model) removeSideBarStock(symbol string) {
+func (m *Model) RemoveSideBarStock(symbol string) {
 	if !m.sideBarSymbols[symbol] {
 		return
 	}
-	var newStocks []*modelStock
+	var newStocks []*ModelStock
 	for _, st := range m.sideBarStocks {
 		if st.symbol == symbol {
 			continue // Don't keep it.
@@ -77,26 +77,26 @@ func (m *model) removeSideBarStock(symbol string) {
 	delete(m.sideBarSymbols, symbol)
 }
 
-func (m *model) refresh() error {
-	if err := m.currentStock.refresh(); err != nil {
+func (m *Model) Refresh() error {
+	if err := m.currentStock.Refresh(); err != nil {
 		return err
 	}
 	for _, st := range m.sideBarStocks {
-		if err := st.refresh(); err != nil {
+		if err := st.Refresh(); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func newModelStock(symbol string) *modelStock {
-	return &modelStock{
+func NewModelStock(symbol string) *ModelStock {
+	return &ModelStock{
 		symbol: symbol,
-		quote:  &modelQuote{symbol: symbol},
+		quote:  &ModelQuote{symbol: symbol},
 	}
 }
 
-func (m *modelStock) refresh() error {
+func (m *ModelStock) Refresh() error {
 	// Get the trading history for the current stock.
 	end := t2.Midnight(time.Now().In(t2.NewYorkLoc))
 	start := end.Add(-6 * 30 * 24 * time.Hour)
@@ -121,11 +121,11 @@ func (m *modelStock) refresh() error {
 	return nil
 }
 
-func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySessions []*modelTradingSession) {
+func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySessions []*ModelTradingSession) {
 	// Convert the trading sessions into daily sessions.
-	var ds []*modelTradingSession
+	var ds []*ModelTradingSession
 	for _, s := range sessions {
-		ds = append(ds, &modelTradingSession{
+		ds = append(ds, &ModelTradingSession{
 			date:   s.Date,
 			open:   s.Open,
 			high:   s.High,
@@ -137,7 +137,7 @@ func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySes
 	sortByModelTradingSessionDate(ds)
 
 	// Convert the daily sessions into weekly sessions.
-	var ws []*modelTradingSession
+	var ws []*ModelTradingSession
 	for _, s := range ds {
 		diffWeek := ws == nil
 		if !diffWeek {
@@ -163,7 +163,7 @@ func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySes
 	}
 
 	// Fill in the change and percent change fields.
-	addChanges := func(ss []*modelTradingSession) {
+	addChanges := func(ss []*ModelTradingSession) {
 		for i := range ss {
 			if i > 0 {
 				ss[i].change = ss[i].close - ss[i-1].close
@@ -175,7 +175,7 @@ func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySes
 	addChanges(ws)
 
 	// Fill in the stochastics.
-	addStochastics := func(ss []*modelTradingSession) {
+	addStochastics := func(ss []*ModelTradingSession) {
 		const (
 			k = 10
 			d = 3
@@ -222,7 +222,7 @@ func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySes
 	return ds, ws
 }
 
-func sortByModelTradingSessionDate(ss []*modelTradingSession) {
+func sortByModelTradingSessionDate(ss []*ModelTradingSession) {
 	sort.Slice(ss, func(i, j int) bool {
 		return ss[i].date.Before(ss[j].date)
 	})

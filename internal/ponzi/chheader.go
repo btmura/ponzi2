@@ -6,18 +6,18 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
-type chartHeader struct {
-	stock                   *modelStock
+type ChartHeader struct {
+	stock                   *ModelStock
 	symbolQuoteTextRenderer *gfx.TextRenderer
-	quoteFormatter          func(*modelQuote) string
-	button                  *button
+	quoteFormatter          func(*ModelQuote) string
+	button                  *Button
 	roundAmount             int
 	padding                 int
 	buttonClickCallbacks    []func()
 }
 
-func newChartHeader(stock *modelStock, symbolQuoteTextRenderer *gfx.TextRenderer, quoteFormatter func(*modelQuote) string, button *button, roundAmount, padding int) *chartHeader {
-	return &chartHeader{
+func NewChartHeader(stock *ModelStock, symbolQuoteTextRenderer *gfx.TextRenderer, quoteFormatter func(*ModelQuote) string, button *Button, roundAmount, padding int) *ChartHeader {
+	return &ChartHeader{
 		stock: stock,
 		symbolQuoteTextRenderer: symbolQuoteTextRenderer,
 		quoteFormatter:          quoteFormatter,
@@ -27,7 +27,7 @@ func newChartHeader(stock *modelStock, symbolQuoteTextRenderer *gfx.TextRenderer
 	}
 }
 
-func (ch *chartHeader) render(vc viewContext) (body image.Rectangle) {
+func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle) {
 	// Render the border around the chart.
 	r := vc.bounds
 	renderRoundedRect(r, ch.roundAmount)
@@ -47,17 +47,17 @@ func (ch *chartHeader) render(vc viewContext) (body image.Rectangle) {
 	// Render button in the upper right corner.
 	buttonSize := image.Pt(r.Max.Y-pt.Y, r.Max.Y-pt.Y)
 	vc.bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
-	ch.button.render(vc)
+	ch.button.Render(vc)
 
 	r.Max.Y = pt.Y
 	return r
 }
 
-func (ch *chartHeader) addButtonClickCallback(cb func()) {
-	ch.button.addClickCallback(cb)
+func (ch *ChartHeader) AddButtonClickCallback(cb func()) {
+	ch.button.AddClickCallback(cb)
 }
 
-func quoteColor(q *modelQuote) [3]float32 {
+func quoteColor(q *ModelQuote) [3]float32 {
 	switch {
 	case q.percentChange > 0:
 		return green

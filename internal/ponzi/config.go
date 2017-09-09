@@ -9,14 +9,14 @@ import (
 	"sync"
 )
 
-// config has the user's saved stocks.
-type config struct {
+// Config has the user's saved stocks.
+type Config struct {
 	// Stocks are the config's stocks. Capitalized for JSON decoding.
-	Stocks []configStock
+	Stocks []ConfigStock
 }
 
-// configStock represents a single user's stock.
-type configStock struct {
+// ConfigStock represents a single user's stock.
+type ConfigStock struct {
 	// Symbol is the stock's symbol. Capitalized for JSON decoding.
 	Symbol string
 }
@@ -24,36 +24,36 @@ type configStock struct {
 // configMutex prevents config file reads and writes from conflicting.
 var configMutex sync.RWMutex
 
-// loadConfig loads the user's config from disk.
-func loadConfig() (config, error) {
+// LoadConfig loads the user's config from disk.
+func LoadConfig() (Config, error) {
 	configMutex.RLock()
 	defer configMutex.RUnlock()
 
 	cfgPath, err := getUserConfigPath()
 	if err != nil {
-		return config{}, err
+		return Config{}, err
 	}
 
 	file, err := os.Open(cfgPath)
 	if err != nil && !os.IsNotExist(err) {
-		return config{}, err
+		return Config{}, err
 	}
 	defer file.Close()
 
 	if os.IsNotExist(err) {
-		return config{}, nil
+		return Config{}, nil
 	}
 
-	cfg := config{}
+	cfg := Config{}
 	d := json.NewDecoder(file)
 	if err := d.Decode(&cfg); err != nil && err != io.EOF {
-		return config{}, err
+		return Config{}, err
 	}
 	return cfg, nil
 }
 
-// saveConfig saves the user's config to disk.
-func saveConfig(cfg config) error {
+// SaveConfig saves the user's config to disk.
+func SaveConfig(cfg Config) error {
 	configMutex.Lock()
 	defer configMutex.Unlock()
 

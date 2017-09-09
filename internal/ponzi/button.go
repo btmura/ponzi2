@@ -4,19 +4,19 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
-type button struct {
+type Button struct {
 	iconVAO        *gfx.VAO
 	clickCallbacks []func()
 }
 
-func newButton(iconVAO *gfx.VAO) *button {
-	return &button{
+func NewButton(iconVAO *gfx.VAO) *Button {
+	return &Button{
 		iconVAO: iconVAO,
 	}
 }
 
-func (b *button) render(vc viewContext) {
-	if vc.leftClickedInBounds() {
+func (b *Button) Render(vc ViewContext) {
+	if vc.LeftClickedInBounds() {
 		vc.scheduleCallbacks(b.clickCallbacks)
 	}
 
@@ -25,6 +25,6 @@ func (b *button) render(vc viewContext) {
 	b.iconVAO.Render()
 }
 
-func (b *button) addClickCallback(cb func()) {
+func (b *Button) AddClickCallback(cb func()) {
 	b.clickCallbacks = append(b.clickCallbacks, cb)
 }

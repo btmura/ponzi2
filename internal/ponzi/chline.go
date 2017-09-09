@@ -7,20 +7,20 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
-type chartLines struct {
-	stock               *modelStock
+type ChartLines struct {
+	stock               *ModelStock
 	lastStockUpdateTime time.Time
 	renderable          bool
 	weekLines           *gfx.VAO
 }
 
-func newChartLines(stock *modelStock) *chartLines {
-	return &chartLines{
+func NewChartLines(stock *ModelStock) *ChartLines {
+	return &ChartLines{
 		stock: stock,
 	}
 }
 
-func (ch *chartLines) update() {
+func (ch *ChartLines) Update() {
 	if ch.lastStockUpdateTime == ch.stock.lastUpdateTime {
 		return
 	}
@@ -32,7 +32,7 @@ func (ch *chartLines) update() {
 	ch.renderable = true
 }
 
-func createChartWeekLinesVAO(ds []*modelTradingSession) *gfx.VAO {
+func createChartWeekLinesVAO(ds []*ModelTradingSession) *gfx.VAO {
 	data := &gfx.VAOVertexData{}
 
 	// Amount to move on X-axis for one session.
@@ -68,7 +68,7 @@ func createChartWeekLinesVAO(ds []*modelTradingSession) *gfx.VAO {
 	return gfx.NewVAO(gfx.Lines, data)
 }
 
-func (ch *chartLines) render(r image.Rectangle) {
+func (ch *ChartLines) Render(r image.Rectangle) {
 	if !ch.renderable {
 		return
 	}
@@ -77,7 +77,7 @@ func (ch *chartLines) render(r image.Rectangle) {
 	ch.weekLines.Render()
 }
 
-func (ch *chartLines) close() {
+func (ch *ChartLines) Close() {
 	ch.renderable = false
 	ch.weekLines.Delete()
 }

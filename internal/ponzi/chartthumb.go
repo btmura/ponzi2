@@ -16,7 +16,7 @@ const (
 
 var (
 	thumbSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
-	thumbFormatQuote             = func(q *modelQuote) string {
+	thumbFormatQuote             = func(q *ModelQuote) string {
 		if q.price != 0 {
 			return fmt.Sprintf(" %.2f %+5.2f%% ", q.price, q.percentChange*100.0)
 		}
@@ -25,51 +25,51 @@ var (
 	thumbRemoveButtonVAO = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("removeButton.ply")))
 )
 
-type chartThumbnail struct {
-	stock                      *modelStock
-	header                     *chartHeader
-	lines                      *chartLines
-	dailyStochastics           *chartStochastics
-	weeklyStochastics          *chartStochastics
+type ChartThumbnail struct {
+	stock                      *ModelStock
+	header                     *ChartHeader
+	lines                      *ChartLines
+	dailyStochastics           *ChartStochastics
+	weeklyStochastics          *ChartStochastics
 	removeButtonClickCallbacks []func()
 }
 
-func newChartThumbnail(stock *modelStock) *chartThumbnail {
-	return &chartThumbnail{
+func NewChartThumbnail(stock *ModelStock) *ChartThumbnail {
+	return &ChartThumbnail{
 		stock:             stock,
-		header:            newChartHeader(stock, thumbSymbolQuoteTextRenderer, thumbFormatQuote, newButton(thumbRemoveButtonVAO), thumbChartRounding, thumbChartPadding),
-		lines:             newChartLines(stock),
-		dailyStochastics:  newChartStochastics(stock, dailySTO),
-		weeklyStochastics: newChartStochastics(stock, weeklySTO),
+		header:            NewChartHeader(stock, thumbSymbolQuoteTextRenderer, thumbFormatQuote, NewButton(thumbRemoveButtonVAO), thumbChartRounding, thumbChartPadding),
+		lines:             NewChartLines(stock),
+		dailyStochastics:  NewChartStochastics(stock, DailySTO),
+		weeklyStochastics: NewChartStochastics(stock, WeeklySTO),
 	}
 }
 
-func (ch *chartThumbnail) update() {
-	ch.lines.update()
-	ch.dailyStochastics.update()
-	ch.weeklyStochastics.update()
+func (ch *ChartThumbnail) Update() {
+	ch.lines.Update()
+	ch.dailyStochastics.Update()
+	ch.weeklyStochastics.Update()
 }
 
-func (ch *chartThumbnail) render(vc viewContext) {
-	r := ch.header.render(vc)
+func (ch *ChartThumbnail) Render(vc ViewContext) {
+	r := ch.header.Render(vc)
 
 	rects := renderHorizDividers(r, horizLine, 0.5, 0.5)
 
-	ch.dailyStochastics.render(rects[1].Inset(thumbChartPadding))
-	ch.weeklyStochastics.render(rects[0].Inset(thumbChartPadding))
-	ch.lines.render(rects[1].Inset(thumbChartPadding))
-	ch.lines.render(rects[0].Inset(thumbChartPadding))
+	ch.dailyStochastics.Render(rects[1].Inset(thumbChartPadding))
+	ch.weeklyStochastics.Render(rects[0].Inset(thumbChartPadding))
+	ch.lines.Render(rects[1].Inset(thumbChartPadding))
+	ch.lines.Render(rects[0].Inset(thumbChartPadding))
 }
 
-func (ch *chartThumbnail) addRemoveButtonClickCallback(cb func()) {
-	ch.header.addButtonClickCallback(cb)
+func (ch *ChartThumbnail) AddRemoveButtonClickCallback(cb func()) {
+	ch.header.AddButtonClickCallback(cb)
 }
 
-func (ch *chartThumbnail) close() {
-	ch.lines.close()
+func (ch *ChartThumbnail) Close() {
+	ch.lines.Close()
 	ch.lines = nil
-	ch.dailyStochastics.close()
+	ch.dailyStochastics.Close()
 	ch.dailyStochastics = nil
-	ch.weeklyStochastics.close()
+	ch.weeklyStochastics.Close()
 	ch.weeklyStochastics = nil
 }

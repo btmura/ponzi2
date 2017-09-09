@@ -8,36 +8,36 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
-type chartStochasticType int32
+type ChartStochasticType int32
 
 const (
-	dailySTO chartStochasticType = iota
-	weeklySTO
+	DailySTO ChartStochasticType = iota
+	WeeklySTO
 )
 
-type chartStochastics struct {
-	stock               *modelStock
+type ChartStochastics struct {
+	stock               *ModelStock
 	lastStockUpdateTime time.Time
 	renderable          bool
-	stoType             chartStochasticType
+	stoType             ChartStochasticType
 	stoLines            *gfx.VAO
 }
 
-func newChartStochastics(stock *modelStock, stoType chartStochasticType) *chartStochastics {
-	return &chartStochastics{
+func NewChartStochastics(stock *ModelStock, stoType ChartStochasticType) *ChartStochastics {
+	return &ChartStochastics{
 		stock:   stock,
 		stoType: stoType,
 	}
 }
 
-func (ch *chartStochastics) update() {
+func (ch *ChartStochastics) Update() {
 	if ch.lastStockUpdateTime == ch.stock.lastUpdateTime {
 		return
 	}
 	ch.lastStockUpdateTime = ch.stock.lastUpdateTime
 
 	ss, dColor := ch.stock.dailySessions, yellow
-	if ch.stoType == weeklySTO {
+	if ch.stoType == WeeklySTO {
 		ss, dColor = ch.stock.weeklySessions, purple
 	}
 
@@ -49,7 +49,7 @@ func (ch *chartStochastics) update() {
 	ch.renderable = true
 }
 
-func createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLines *gfx.VAO) {
+func createStochasticVAOs(ss []*ModelTradingSession, dColor [3]float32) (stoLines *gfx.VAO) {
 	data := &gfx.VAOVertexData{}
 
 	width := 2.0 / float32(len(ss)) // (-1 to 1) on X-axis
@@ -97,7 +97,7 @@ func createStochasticVAOs(ss []*modelTradingSession, dColor [3]float32) (stoLine
 	return gfx.NewVAO(gfx.Lines, data)
 }
 
-func (ch *chartStochastics) render(r image.Rectangle) {
+func (ch *ChartStochastics) Render(r image.Rectangle) {
 	if !ch.renderable {
 		return
 	}
@@ -109,7 +109,7 @@ func (ch *chartStochastics) render(r image.Rectangle) {
 	renderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
 }
 
-func (ch *chartStochastics) renderLabels(r image.Rectangle) (maxLabelWidth int) {
+func (ch *ChartStochastics) RenderLabels(r image.Rectangle) (maxLabelWidth int) {
 	if !ch.renderable {
 		return
 	}
@@ -133,12 +133,12 @@ func (ch *chartStochastics) renderLabels(r image.Rectangle) (maxLabelWidth int) 
 	return s.X
 }
 
-func (ch *chartStochastics) stochasticLabelText(percent float32) (text string, size image.Point) {
+func (ch *ChartStochastics) stochasticLabelText(percent float32) (text string, size image.Point) {
 	t := fmt.Sprintf("%.f%%", percent*100)
 	return t, chartAxisLabelTextRenderer.Measure(t)
 }
 
-func (ch *chartStochastics) close() {
+func (ch *ChartStochastics) Close() {
 	ch.renderable = false
 	ch.stoLines.Delete()
 	ch.stoLines = nil

@@ -9,8 +9,8 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
-type chartPrices struct {
-	stock               *modelStock
+type ChartPrices struct {
+	stock               *ModelStock
 	lastStockUpdateTime time.Time
 	renderable          bool
 	minPrice            float32
@@ -20,13 +20,13 @@ type chartPrices struct {
 	stickRects          *gfx.VAO
 }
 
-func newChartPrices(stock *modelStock) *chartPrices {
-	return &chartPrices{
+func NewChartPrices(stock *ModelStock) *ChartPrices {
+	return &ChartPrices{
 		stock: stock,
 	}
 }
 
-func (ch *chartPrices) update() {
+func (ch *ChartPrices) Update() {
 	if ch.lastStockUpdateTime == ch.stock.lastUpdateTime {
 		return
 	}
@@ -56,7 +56,7 @@ func (ch *chartPrices) update() {
 	ch.renderable = true
 }
 
-func createChartCandlestickVAOs(ds []*modelTradingSession, minPrice, maxPrice float32) (stickLines, stickRects *gfx.VAO) {
+func createChartCandlestickVAOs(ds []*ModelTradingSession, minPrice, maxPrice float32) (stickLines, stickRects *gfx.VAO) {
 	// Calculate vertices and indices for the candlesticks.
 	var vertices []float32
 	var colors []float32
@@ -171,7 +171,7 @@ func createChartCandlestickVAOs(ds []*modelTradingSession, minPrice, maxPrice fl
 	return lineVAO, triangleVAO
 }
 
-func (ch *chartPrices) render(r image.Rectangle) {
+func (ch *ChartPrices) Render(r image.Rectangle) {
 	if !ch.renderable {
 		return
 	}
@@ -198,7 +198,7 @@ func (ch *chartPrices) render(r image.Rectangle) {
 	}
 }
 
-func (ch *chartPrices) renderLabels(r image.Rectangle) (maxLabelWidth int) {
+func (ch *ChartPrices) RenderLabels(r image.Rectangle) (maxLabelWidth int) {
 	if !ch.renderable {
 		return
 	}
@@ -244,12 +244,12 @@ func (ch *chartPrices) renderLabels(r image.Rectangle) (maxLabelWidth int) {
 	return maxWidth
 }
 
-func (ch *chartPrices) priceLabelText(v float32) (text string, size image.Point) {
+func (ch *ChartPrices) priceLabelText(v float32) (text string, size image.Point) {
 	t := strconv.FormatFloat(float64(v), 'f', 2, 32)
 	return t, chartAxisLabelTextRenderer.Measure(t)
 }
 
-func (ch *chartPrices) close() {
+func (ch *ChartPrices) Close() {
 	ch.renderable = false
 	ch.stickLines.Delete()
 	ch.stickLines = nil

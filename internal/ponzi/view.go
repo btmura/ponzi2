@@ -53,32 +53,32 @@ const viewOuterPadding = 10
 
 var viewChartThumbSize = image.Pt(140, 90)
 
-type view struct {
-	model              *model                     // model is the model that will be rendered.
-	chart              *chart                     // chart renders the model's current stock.
-	sideBarChartThumbs map[string]*chartThumbnail // sideBarChartThumbs maps symbol to chartThumbnail.
+type View struct {
+	model              *Model                     // model is the model that will be rendered.
+	chart              *Chart                     // chart renders the model's current stock.
+	sideBarChartThumbs map[string]*ChartThumbnail // sideBarChartThumbs maps symbol to chartThumbnail.
 	inputSymbol        string                     // inputSymbol is the symbol being entered by the user.
 	viewMatrix         math2.Matrix4
 	perspectiveMatrix  math2.Matrix4
 	orthoMatrix        math2.Matrix4
 	winSize            image.Point
-	nextViewContext    viewContext // nextViewContext is the next viewContext to pass down the view hierarchy.
+	nextViewContext    ViewContext // nextViewContext is the next viewContext to pass down the view hierarchy.
 }
 
-// viewContext is passed down the view hierarchy providing drawing hints and event information.
+// ViewContext is passed down the view hierarchy providing drawing hints and event information.
 // Meant to be passed around like a Rectangle or Point rather than a pointer to avoid mistakes.
-type viewContext struct {
+type ViewContext struct {
 	bounds                 image.Rectangle    // bounds is a rectangle that should be drawn within.
 	mousePos               image.Point        // mousePos is the current mouse position.
 	mouseLeftButtonClicked bool               // mouseLeftButtonClicked is whether the left mouse button was clicked.
 	scheduleCallbacks      func(cbs []func()) // scheduleCallback is a function to gather callbacks to be executed.
 }
 
-func (vc viewContext) leftClickedInBounds() bool {
+func (vc ViewContext) LeftClickedInBounds() bool {
 	return vc.mouseLeftButtonClicked && vc.mousePos.In(vc.bounds)
 }
 
-func newView(model *model) *view {
+func NewView(model *Model) *View {
 
 	// Initialize OpenGL and enable features.
 
@@ -112,27 +112,27 @@ func newView(model *model) *view {
 	gfx.SetDirectionalLightColor(directionalLightColor)
 	gfx.SetDirectionalLightVector(directionalVector)
 
-	return &view{
+	return &View{
 		model:              model,
-		sideBarChartThumbs: map[string]*chartThumbnail{},
+		sideBarChartThumbs: map[string]*ChartThumbnail{},
 		viewMatrix:         vm,
 	}
 }
 
-func (v *view) update() {
+func (v *View) Update() {
 	v.model.Lock()
 	defer v.model.Unlock()
 
 	if v.chart != nil {
-		v.chart.update()
+		v.chart.Update()
 	}
 
 	for _, th := range v.sideBarChartThumbs {
-		th.update()
+		th.Update()
 	}
 }
 
-func (v *view) render(fudge float32) {
+func (v *View) Render(fudge float32) {
 	v.model.Lock()
 	defer v.model.Unlock()
 
@@ -141,26 +141,26 @@ func (v *view) render(fudge float32) {
 
 	if v.chart == nil || v.chart.stock != v.model.currentStock {
 		if v.chart != nil {
-			v.chart.close()
+			v.chart.Close()
 		}
-		v.chart = newChart(v.model.currentStock)
-		v.chart.addAddButtonClickCallback(func() {
+		v.chart = NewChart(v.model.currentStock)
+		v.chart.AddAddButtonClickCallback(func() {
 			symbol := v.chart.stock.symbol
-			st := v.model.addSideBarStock(symbol)
+			st := v.model.AddSideBarStock(symbol)
 			if st == nil {
 				return
 			}
 			go func() {
-				if err := st.refresh(); err != nil {
+				if err := st.Refresh(); err != nil {
 					glog.Errorf("render: failed to refresh stock: %v", err)
 				}
 			}()
 
-			th := newChartThumbnail(st)
-			th.addRemoveButtonClickCallback(func() {
+			th := NewChartThumbnail(st)
+			th.AddRemoveButtonClickCallback(func() {
 				symbol := th.stock.symbol
-				v.model.removeSideBarStock(symbol)
-				v.sideBarChartThumbs[symbol].close()
+				v.model.RemoveSideBarStock(symbol)
+				v.sideBarChartThumbs[symbol].Close()
 				delete(v.sideBarChartThumbs, symbol)
 			})
 			v.sideBarChartThumbs[symbol] = th
@@ -190,7 +190,7 @@ func (v *view) render(fudge float32) {
 		if len(v.model.sideBarStocks) > 0 {
 			vc.bounds.Min.X += viewOuterPadding + viewChartThumbSize.X
 		}
-		v.chart.render(vc)
+		v.chart.Render(vc)
 	}
 
 	// Render the sidebar thumbnails.
@@ -202,7 +202,7 @@ func (v *view) render(fudge float32) {
 		vc.bounds = image.Rectangle{min, max}
 
 		th := v.sideBarChartThumbs[st.symbol]
-		th.render(vc)
+		th.Render(vc)
 	}
 
 	// Call any callbacks scheduled by views.
@@ -214,8 +214,8 @@ func (v *view) render(fudge float32) {
 	v.nextViewContext.mouseLeftButtonClicked = false
 }
 
-// resize responds to window size changes by updating internal matrices.
-func (v *view) resize(newSize image.Point) {
+// Resize responds to window size changes by updating internal matrices.
+func (v *View) Resize(newSize image.Point) {
 	// Return if the window has not changed size.
 	if v.winSize == newSize {
 		return
@@ -235,7 +235,7 @@ func (v *view) resize(newSize image.Point) {
 	v.orthoMatrix = math2.OrthoMatrix(fw, fh, fw /* use width as depth */)
 }
 
-func (v *view) handleKey(key glfw.Key, action glfw.Action) {
+func (v *View) HandleKey(key glfw.Key, action glfw.Action) {
 	if action != glfw.Release {
 		return
 	}
@@ -244,7 +244,7 @@ func (v *view) handleKey(key glfw.Key, action glfw.Action) {
 	case glfw.KeyEnter:
 		v.submitSymbol()
 		go func() {
-			if err := v.model.refresh(); err != nil {
+			if err := v.model.Refresh(); err != nil {
 				glog.Errorf("refresh failed: %v", err)
 			}
 		}()
@@ -254,36 +254,36 @@ func (v *view) handleKey(key glfw.Key, action glfw.Action) {
 	}
 }
 
-func (v *view) handleChar(ch rune) {
+func (v *View) HandleChar(ch rune) {
 	ch = unicode.ToUpper(ch)
 	if _, ok := acceptedChars[ch]; ok {
 		v.pushSymbolChar(ch)
 	}
 }
 
-func (v *view) pushSymbolChar(ch rune) {
+func (v *View) pushSymbolChar(ch rune) {
 	v.inputSymbol += string(ch)
 }
 
-func (v *view) popSymbolChar() {
+func (v *View) popSymbolChar() {
 	if l := len(v.inputSymbol); l > 0 {
 		v.inputSymbol = v.inputSymbol[:l-1]
 	}
 }
 
-func (v *view) submitSymbol() {
+func (v *View) submitSymbol() {
 	v.model.Lock()
 	defer v.model.Unlock()
-	v.model.currentStock = newModelStock(v.inputSymbol)
+	v.model.currentStock = NewModelStock(v.inputSymbol)
 	v.inputSymbol = ""
 }
 
-func (v *view) handleCursorPos(x, y float64) {
+func (v *View) HandleCursorPos(x, y float64) {
 	// Flip Y-axis since the OpenGL coordinate system makes lower left the origin.
 	v.nextViewContext.mousePos = image.Pt(int(x), v.winSize.Y-int(y))
 }
 
-func (v *view) handleMouseButton(button glfw.MouseButton, action glfw.Action) {
+func (v *View) HandleMouseButton(button glfw.MouseButton, action glfw.Action) {
 	if button != glfw.MouseButtonLeft {
 		glog.Infof("handleMouseButton: ignoring mouse button(%v) and action(%v)", button, action)
 		return // Only interested in left clicks right now.
