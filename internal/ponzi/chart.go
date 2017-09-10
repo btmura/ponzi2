@@ -31,6 +31,7 @@ var (
 	chartGridHorizLine         = gfx.HorizColoredLineVAO(gray, gray)
 )
 
+// Chart shows a stock chart for a single stock.
 type Chart struct {
 	stock                   *ModelStock
 	header                  *ChartHeader
@@ -42,6 +43,7 @@ type Chart struct {
 	addButtonClickCallbacks []func()
 }
 
+// NewChart creates a new chart.
 func NewChart(stock *ModelStock) *Chart {
 	return &Chart{
 		stock:             stock,
@@ -54,6 +56,7 @@ func NewChart(stock *ModelStock) *Chart {
 	}
 }
 
+// Update updates the chart.
 func (ch *Chart) Update() {
 	ch.lines.Update()
 	ch.prices.Update()
@@ -62,6 +65,7 @@ func (ch *Chart) Update() {
 	ch.weeklyStochastics.Update()
 }
 
+// Render renders the chart.
 func (ch *Chart) Render(vc ViewContext) {
 	r, _ := ch.header.Render(vc)
 
@@ -100,10 +104,12 @@ func (ch *Chart) Render(vc ViewContext) {
 	ch.lines.Render(wr)
 }
 
+// AddAddButtonClickCallback adds a callback for when the add button is clicked.
 func (ch *Chart) AddAddButtonClickCallback(cb func()) {
 	ch.header.AddButtonClickCallback(cb)
 }
 
+// Close frees the resources behind the chart. 
 func (ch *Chart) Close() {
 	ch.prices.Close()
 	ch.prices = nil
