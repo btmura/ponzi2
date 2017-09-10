@@ -231,6 +231,13 @@ func (v *View) addSidebarChartThumb(symbol string) {
 			glog.Warningf("removeButtonClickCallback: failed to save config: %v", err)
 		}
 	})
+	th.AddThumbClickCallback(func() {
+		if v.chart != nil {
+			v.chart.Close()
+		}
+		v.model.CurrentStock = newModelStock(symbol)
+		v.chart = v.newChart(v.model.CurrentStock)
+	})
 	v.sideBarChartThumbs[symbol] = th
 }
 

@@ -32,6 +32,7 @@ type ChartThumbnail struct {
 	dailyStochastics           *ChartStochastics
 	weeklyStochastics          *ChartStochastics
 	removeButtonClickCallbacks []func()
+	thumbClickCallbacks        []func()
 }
 
 func NewChartThumbnail(stock *ModelStock) *ChartThumbnail {
@@ -51,7 +52,11 @@ func (ch *ChartThumbnail) Update() {
 }
 
 func (ch *ChartThumbnail) Render(vc ViewContext) {
-	r := ch.header.Render(vc)
+	r, clicked := ch.header.Render(vc)
+
+	if !clicked && vc.LeftClickInBounds() {
+		vc.scheduleCallbacks(ch.thumbClickCallbacks)
+	}
 
 	rects := renderHorizDividers(r, horizLine, 0.5, 0.5)
 
@@ -63,6 +68,10 @@ func (ch *ChartThumbnail) Render(vc ViewContext) {
 
 func (ch *ChartThumbnail) AddRemoveButtonClickCallback(cb func()) {
 	ch.header.AddButtonClickCallback(cb)
+}
+
+func (ch *ChartThumbnail) AddThumbClickCallback(cb func()) {
+	ch.thumbClickCallbacks = append(ch.thumbClickCallbacks, cb)
 }
 
 func (ch *ChartThumbnail) Close() {
