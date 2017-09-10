@@ -57,26 +57,26 @@ func newModelSidebar(symbols []string) *ModelSidebar {
 }
 
 // AddStock adds a stock to the sidebar.
-func (m *ModelSidebar) AddStock(symbol string) bool {
-	if m.Stock(symbol) != nil {
+func (m *ModelSidebar) AddStock(st *ModelStock) bool {
+	if m.Stock(st.symbol) != nil {
 		return false // Already have it.
 	}
-	m.Stocks = append(m.Stocks, newModelStock(symbol))
+	m.Stocks = append(m.Stocks, st)
 	return true
 }
 
 // RemoveStock removes a stock from the sidebar.
-func (m *ModelSidebar) RemoveStock(symbol string) bool {
-	if m.Stock(symbol) == nil {
+func (m *ModelSidebar) RemoveStock(st *ModelStock) bool {
+	if m.Stock(st.symbol) == nil {
 		return false // Don't have it.
 	}
 
 	var ss []*ModelStock
-	for _, st := range m.Stocks {
-		if st.symbol == symbol {
+	for _, stock := range m.Stocks {
+		if stock.symbol == st.symbol {
 			continue
 		}
-		ss = append(ss, st)
+		ss = append(ss, stock)
 	}
 	m.Stocks = ss
 	return true

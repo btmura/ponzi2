@@ -54,15 +54,25 @@ const viewOuterPadding = 10
 var viewChartThumbSize = image.Pt(140, 90)
 
 type View struct {
-	model              *Model                     // model is the model that will be rendered.
-	chart              *Chart                     // chart renders the model's current stock.
-	sideBarChartThumbs map[string]*ChartThumbnail // sideBarChartThumbs maps symbol to chartThumbnail.
-	inputSymbol        string                     // inputSymbol is the symbol being entered by the user.
-	viewMatrix         math2.Matrix4
-	perspectiveMatrix  math2.Matrix4
-	orthoMatrix        math2.Matrix4
-	winSize            image.Point
-	nextViewContext    ViewContext // nextViewContext is the next viewContext to pass down the view hierarchy.
+	// model is the model that will be rendered.
+	model *Model
+
+	// chart renders the model's current stock.
+	chart *Chart
+
+	// sidebarChartThumbs maps stock to ChartThumbnail.
+	sidebarChartThumbs []*ChartThumbnail
+
+	// inputSymbol is the symbol being entered by the user.
+	inputSymbol string
+
+	// nextViewContext is the next viewContext to pass down the view hierarchy.
+	nextViewContext ViewContext
+
+	viewMatrix        math2.Matrix4
+	perspectiveMatrix math2.Matrix4
+	orthoMatrix       math2.Matrix4
+	winSize           image.Point
 }
 
 // ViewContext is passed down the view hierarchy providing drawing hints and event information.
@@ -113,9 +123,8 @@ func NewView(model *Model) *View {
 	gfx.SetDirectionalLightVector(directionalVector)
 
 	v := &View{
-		model:              model,
-		sideBarChartThumbs: map[string]*ChartThumbnail{},
-		viewMatrix:         vm,
+		model:      model,
+		viewMatrix: vm,
 	}
 
 	if model.CurrentStock != nil {
@@ -137,7 +146,7 @@ func (v *View) Update() {
 		v.chart.Update()
 	}
 
-	for _, th := range v.sideBarChartThumbs {
+	for _, th := range v.sidebarChartThumbs {
 		th.Update()
 	}
 }
@@ -183,14 +192,12 @@ func (v *View) Render(fudge float32) {
 	}
 
 	// Render the sidebar thumbnails.
-	for i, st := range v.model.Sidebar.Stocks {
+	for i, th := range v.sidebarChartThumbs {
 		min := image.Pt(viewOuterPadding, 0)
 		max := image.Pt(min.X+viewChartThumbSize.X, 0)
 		max.Y = v.winSize.Y - (viewOuterPadding+viewChartThumbSize.Y)*i - viewOuterPadding
 		min.Y = max.Y - viewChartThumbSize.Y
 		vc.bounds = image.Rectangle{min, max}
-
-		th := v.sideBarChartThumbs[st.symbol]
 		th.Render(vc)
 	}
 
@@ -206,7 +213,7 @@ func (v *View) Render(fudge float32) {
 func (v *View) newChart(st *ModelStock) *Chart {
 	ch := NewChart(st)
 	ch.AddAddButtonClickCallback(func() {
-		if !v.model.Sidebar.AddStock(st.symbol) {
+		if !v.model.Sidebar.AddStock(st) {
 			return
 		}
 		v.addSidebarChartThumb(st)
@@ -221,28 +228,33 @@ func (v *View) newChart(st *ModelStock) *Chart {
 
 func (v *View) addSidebarChartThumb(st *ModelStock) {
 	th := NewChartThumbnail(st)
+	v.sidebarChartThumbs = append(v.sidebarChartThumbs, th)
+
 	th.AddRemoveButtonClickCallback(func() {
-		if !v.model.Sidebar.RemoveStock(st.symbol) {
+		if !v.model.Sidebar.RemoveStock(st) {
 			return
 		}
-		v.removeSidebarChartThumb(st.symbol)
-		if err := v.saveConfig(); err != nil {
-			glog.Warningf("removeButtonClickCallback: failed to save config: %v", err)
-		}
-	})
-	th.AddThumbClickCallback(func() {
-		if v.chart != nil {
-			v.chart.Close()
-		}
-		v.model.CurrentStock = st
-		v.chart = v.newChart(v.model.CurrentStock)
-	})
-	v.sideBarChartThumbs[st.symbol] = th
-}
 
-func (v *View) removeSidebarChartThumb(symbol string) {
-	v.sideBarChartThumbs[symbol].Close()
-	delete(v.sideBarChartThumbs, symbol)
+		var newThumbs []*ChartThumbnail
+		for _, thumb := range v.sidebarChartThumbs {
+			if thumb == th {
+				continue
+			}
+			newThumbs = append(newThumbs, thumb)
+		}
+		th.Close()
+		v.sidebarChartThumbs = newThumbs
+
+		go func() {
+			if err := v.saveConfig(); err != nil {
+				glog.Warningf("removeButtonClickCallback: failed to save config: %v", err)
+			}
+		}()
+	})
+
+	th.AddThumbClickCallback(func() {
+		v.model.CurrentStock = st
+	})
 }
 
 func (v *View) saveConfig() error {
