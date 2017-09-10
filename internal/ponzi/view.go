@@ -123,7 +123,7 @@ func NewView(model *Model) *View {
 	}
 
 	for _, st := range model.Sidebar.Stocks {
-		v.addSidebarChartThumb(st.symbol)
+		v.addSidebarChartThumb(st)
 	}
 
 	return v
@@ -204,13 +204,12 @@ func (v *View) Render(fudge float32) {
 }
 
 func (v *View) newChart(st *ModelStock) *Chart {
-	symbol := st.symbol
 	ch := NewChart(st)
 	ch.AddAddButtonClickCallback(func() {
-		if !v.model.Sidebar.AddStock(symbol) {
+		if !v.model.Sidebar.AddStock(st.symbol) {
 			return
 		}
-		v.addSidebarChartThumb(symbol)
+		v.addSidebarChartThumb(st)
 		go func() {
 			if err := v.saveConfig(); err != nil {
 				glog.Warningf("addButtonClickCallback: failed to save config: %v", err)
@@ -220,13 +219,13 @@ func (v *View) newChart(st *ModelStock) *Chart {
 	return ch
 }
 
-func (v *View) addSidebarChartThumb(symbol string) {
-	th := NewChartThumbnail(v.model.Sidebar.Stock(symbol))
+func (v *View) addSidebarChartThumb(st *ModelStock) {
+	th := NewChartThumbnail(st)
 	th.AddRemoveButtonClickCallback(func() {
-		if !v.model.Sidebar.RemoveStock(symbol) {
+		if !v.model.Sidebar.RemoveStock(st.symbol) {
 			return
 		}
-		v.removeSidebarChartThumb(symbol)
+		v.removeSidebarChartThumb(st.symbol)
 		if err := v.saveConfig(); err != nil {
 			glog.Warningf("removeButtonClickCallback: failed to save config: %v", err)
 		}
@@ -235,10 +234,10 @@ func (v *View) addSidebarChartThumb(symbol string) {
 		if v.chart != nil {
 			v.chart.Close()
 		}
-		v.model.CurrentStock = newModelStock(symbol)
+		v.model.CurrentStock = st
 		v.chart = v.newChart(v.model.CurrentStock)
 	})
-	v.sideBarChartThumbs[symbol] = th
+	v.sideBarChartThumbs[st.symbol] = th
 }
 
 func (v *View) removeSidebarChartThumb(symbol string) {
