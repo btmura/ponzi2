@@ -204,31 +204,47 @@ func (v *View) Render(fudge float32) {
 }
 
 func (v *View) newChart(st *ModelStock) *Chart {
+	symbol := st.symbol
 	ch := NewChart(st)
 	ch.AddAddButtonClickCallback(func() {
-		v.addSidebarChartThumb(ch.stock.symbol)
+		if !v.model.Sidebar.AddStock(symbol) {
+			return
+		}
+		v.addSidebarChartThumb(symbol)
+		go func() {
+			if err := v.saveConfig(); err != nil {
+				glog.Warningf("addButtonClickCallback: failed to save config: %v", err)
+			}
+		}()
 	})
 	return ch
 }
 
 func (v *View) addSidebarChartThumb(symbol string) {
-	if !v.model.Sidebar.AddStock(symbol) {
-		return
-	}
-
-	th := NewChartThumbnail(v.chart.stock)
+	th := NewChartThumbnail(v.model.Sidebar.Stock(symbol))
 	th.AddRemoveButtonClickCallback(func() {
-		v.removeSidebarChartThumb(th.stock.symbol)
+		if !v.model.Sidebar.RemoveStock(symbol) {
+			return
+		}
+		v.removeSidebarChartThumb(symbol)
+		if err := v.saveConfig(); err != nil {
+			glog.Warningf("removeButtonClickCallback: failed to save config: %v", err)
+		}
 	})
 	v.sideBarChartThumbs[symbol] = th
 }
 
 func (v *View) removeSidebarChartThumb(symbol string) {
-	if !v.model.Sidebar.RemoveStock(symbol) {
-		return
-	}
 	v.sideBarChartThumbs[symbol].Close()
 	delete(v.sideBarChartThumbs, symbol)
+}
+
+func (v *View) saveConfig() error {
+	cfg := &Config{}
+	for _, st := range v.model.Sidebar.Stocks {
+		cfg.Stocks = append(cfg.Stocks, ConfigStock{st.symbol})
+	}
+	return SaveConfig(cfg)
 }
 
 // Resize responds to window size changes by updating internal matrices.

@@ -7,6 +7,8 @@ import (
 	"os/user"
 	"path"
 	"sync"
+
+	"github.com/golang/glog"
 )
 
 // Config has the user's saved stocks.
@@ -34,6 +36,8 @@ func LoadConfig() (*Config, error) {
 		return nil, err
 	}
 
+	glog.Infof("LoadConfig: loading config from %s", cfgPath)
+
 	file, err := os.Open(cfgPath)
 	if err != nil && !os.IsNotExist(err) {
 		return nil, err
@@ -53,7 +57,7 @@ func LoadConfig() (*Config, error) {
 }
 
 // SaveConfig saves the user's config to disk.
-func SaveConfig(cfg Config) error {
+func SaveConfig(cfg *Config) error {
 	configMutex.Lock()
 	defer configMutex.Unlock()
 
@@ -61,6 +65,8 @@ func SaveConfig(cfg Config) error {
 	if err != nil {
 		return err
 	}
+
+	glog.Infof("SaveConfig: saving config to %s", cfgPath)
 
 	file, err := os.OpenFile(cfgPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0660)
 	if err != nil {
