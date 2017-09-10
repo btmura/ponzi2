@@ -112,11 +112,21 @@ func NewView(model *Model) *View {
 	gfx.SetDirectionalLightColor(directionalLightColor)
 	gfx.SetDirectionalLightVector(directionalVector)
 
-	return &View{
+	v := &View{
 		model:              model,
 		sideBarChartThumbs: map[string]*ChartThumbnail{},
 		viewMatrix:         vm,
 	}
+
+	if model.CurrentStock != nil {
+		v.chart = v.newChart(model.CurrentStock)
+	}
+
+	for _, st := range model.Sidebar.Stocks {
+		v.addSidebarChartThumb(st.symbol)
+	}
+
+	return v
 }
 
 func (v *View) Update() {
@@ -143,24 +153,7 @@ func (v *View) Render(fudge float32) {
 		if v.chart != nil {
 			v.chart.Close()
 		}
-		v.chart = NewChart(v.model.CurrentStock)
-		v.chart.AddAddButtonClickCallback(func() {
-			symbol := v.chart.stock.symbol
-			if !v.model.Sidebar.AddStock(symbol) {
-				return
-			}
-
-			th := NewChartThumbnail(v.chart.stock)
-			th.AddRemoveButtonClickCallback(func() {
-				symbol := th.stock.symbol
-				if !v.model.Sidebar.RemoveStock(symbol) {
-					return
-				}
-				v.sideBarChartThumbs[symbol].Close()
-				delete(v.sideBarChartThumbs, symbol)
-			})
-			v.sideBarChartThumbs[symbol] = th
-		})
+		v.chart = v.newChart(v.model.CurrentStock)
 	}
 
 	vc := v.nextViewContext
@@ -208,6 +201,34 @@ func (v *View) Render(fudge float32) {
 
 	// Reset any flags for the next viewContext.
 	v.nextViewContext.mouseLeftButtonClicked = false
+}
+
+func (v *View) newChart(st *ModelStock) *Chart {
+	ch := NewChart(st)
+	ch.AddAddButtonClickCallback(func() {
+		v.addSidebarChartThumb(ch.stock.symbol)
+	})
+	return ch
+}
+
+func (v *View) addSidebarChartThumb(symbol string) {
+	if !v.model.Sidebar.AddStock(symbol) {
+		return
+	}
+
+	th := NewChartThumbnail(v.chart.stock)
+	th.AddRemoveButtonClickCallback(func() {
+		v.removeSidebarChartThumb(th.stock.symbol)
+	})
+	v.sideBarChartThumbs[symbol] = th
+}
+
+func (v *View) removeSidebarChartThumb(symbol string) {
+	if !v.model.Sidebar.RemoveStock(symbol) {
+		return
+	}
+	v.sideBarChartThumbs[symbol].Close()
+	delete(v.sideBarChartThumbs, symbol)
 }
 
 // Resize responds to window size changes by updating internal matrices.
