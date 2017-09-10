@@ -25,6 +25,7 @@ var (
 	thumbRemoveButtonVAO = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("removeButton.ply")))
 )
 
+// ChartThumbnail shows a stock chart thumbnail for a single stock.
 type ChartThumbnail struct {
 	stock                      *ModelStock
 	header                     *ChartHeader
@@ -35,6 +36,7 @@ type ChartThumbnail struct {
 	thumbClickCallbacks        []func()
 }
 
+// NewChartThumbnail creates a new chart thumbnail.
 func NewChartThumbnail(stock *ModelStock) *ChartThumbnail {
 	return &ChartThumbnail{
 		stock:             stock,
@@ -45,12 +47,14 @@ func NewChartThumbnail(stock *ModelStock) *ChartThumbnail {
 	}
 }
 
+// Update updates the chart thumbnail.
 func (ch *ChartThumbnail) Update() {
 	ch.lines.Update()
 	ch.dailyStochastics.Update()
 	ch.weeklyStochastics.Update()
 }
 
+// Render renders the chart thumbnail.
 func (ch *ChartThumbnail) Render(vc ViewContext) {
 	r, clicked := ch.header.Render(vc)
 
@@ -66,14 +70,17 @@ func (ch *ChartThumbnail) Render(vc ViewContext) {
 	ch.lines.Render(rects[0].Inset(thumbChartPadding))
 }
 
+// AddRemoveButtonClickCallback adds a callback for when the remove button is clicked.
 func (ch *ChartThumbnail) AddRemoveButtonClickCallback(cb func()) {
 	ch.header.AddButtonClickCallback(cb)
 }
 
+// AddThumbClickCallback adds a callback for when the thumbnail is clicked
 func (ch *ChartThumbnail) AddThumbClickCallback(cb func()) {
 	ch.thumbClickCallbacks = append(ch.thumbClickCallbacks, cb)
 }
 
+// Close frees the resources backing the chart thumbnail.
 func (ch *ChartThumbnail) Close() {
 	ch.lines.Close()
 	ch.lines = nil

@@ -109,7 +109,7 @@ func (ch *Chart) AddAddButtonClickCallback(cb func()) {
 	ch.header.AddButtonClickCallback(cb)
 }
 
-// Close frees the resources behind the chart. 
+// Close frees the resources backing the chart.
 func (ch *Chart) Close() {
 	ch.prices.Close()
 	ch.prices = nil
