@@ -1,42 +1,41 @@
 package ponzi
 
-// ModelSidebar represents the sidebar of ordered stocks on the left of the UI.
+// ModelSidebar models the left sidebar with the user's saved stocks.
 type ModelSidebar struct {
-	Stocks  []*ModelStock   // Stocks is the ordered stocks that can be iterated over.
-	symbols map[string]bool // symbols is a set to track symbols.
+	// Stocks are the ordered stocks from top to bottom.
+	Stocks []*ModelStock
 }
 
-// HasStock returns true if the sidebar has a stock with the given symbol.
+// HasStock returns true if the sidebar has the stock.
 func (m *ModelSidebar) HasStock(symbol string) bool {
-	return m.symbols[symbol]
+	for _, st := range m.Stocks {
+		if st.symbol == symbol {
+			return true
+		}
+	}
+	return false
 }
 
-// AddStock adds a stock to the sidebar with the given symbol.
+// AddStock adds a stock to the sidebar.
 func (m *ModelSidebar) AddStock(symbol string) {
-	if m.symbols[symbol] {
+	if m.HasStock(symbol) {
 		return
 	}
-	if m.symbols == nil {
-		m.symbols = map[string]bool{}
-	}
-	m.symbols[symbol] = true
-
 	m.Stocks = append(m.Stocks, NewModelStock(symbol))
 }
 
-// RemoveStock removes a stock from the sidebar with the given symbol.
+// RemoveStock removes a stock from the sidebar.
 func (m *ModelSidebar) RemoveStock(symbol string) {
-	if !m.symbols[symbol] {
+	if !m.HasStock(symbol) {
 		return
 	}
-	delete(m.symbols, symbol)
 
-	var stocks []*ModelStock
+	var ss []*ModelStock
 	for _, st := range m.Stocks {
-		if symbol == st.symbol {
+		if st.symbol == symbol {
 			continue
 		}
-		stocks = append(stocks, st)
+		ss = append(ss, st)
 	}
-	m.Stocks = stocks
+	m.Stocks = ss
 }
