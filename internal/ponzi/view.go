@@ -146,20 +146,16 @@ func (v *View) Render(fudge float32) {
 		v.chart = NewChart(v.model.currentStock)
 		v.chart.AddAddButtonClickCallback(func() {
 			symbol := v.chart.stock.symbol
-			st := v.model.AddSideBarStock(symbol)
-			if st == nil {
+			if !v.model.Sidebar.AddStock(symbol) {
 				return
 			}
-			go func() {
-				if err := st.Refresh(); err != nil {
-					glog.Errorf("render: failed to refresh stock: %v", err)
-				}
-			}()
 
-			th := NewChartThumbnail(st)
+			th := NewChartThumbnail(v.chart.stock)
 			th.AddRemoveButtonClickCallback(func() {
 				symbol := th.stock.symbol
-				v.model.RemoveSideBarStock(symbol)
+				if !v.model.Sidebar.RemoveStock(symbol) {
+					return
+				}
 				v.sideBarChartThumbs[symbol].Close()
 				delete(v.sideBarChartThumbs, symbol)
 			})
@@ -178,7 +174,7 @@ func (v *View) Render(fudge float32) {
 	if v.inputSymbol != "" {
 		s := inputSymbolTextRenderer.Measure(v.inputSymbol)
 		pt := v.winSize.Sub(s).Div(2)
-		if len(v.model.sideBarStocks) > 0 {
+		if len(v.model.Sidebar.Stocks) > 0 {
 			pt.X += viewChartThumbSize.X / 2
 		}
 		inputSymbolTextRenderer.Render(v.inputSymbol, pt, white)
@@ -187,14 +183,14 @@ func (v *View) Render(fudge float32) {
 	// Render the main chart.
 	if v.chart != nil {
 		vc.bounds = image.Rectangle{image.ZP, v.winSize}.Inset(viewOuterPadding)
-		if len(v.model.sideBarStocks) > 0 {
+		if len(v.model.Sidebar.Stocks) > 0 {
 			vc.bounds.Min.X += viewOuterPadding + viewChartThumbSize.X
 		}
 		v.chart.Render(vc)
 	}
 
 	// Render the sidebar thumbnails.
-	for i, st := range v.model.sideBarStocks {
+	for i, st := range v.model.Sidebar.Stocks {
 		min := image.Pt(viewOuterPadding, 0)
 		max := image.Pt(min.X+viewChartThumbSize.X, 0)
 		max.Y = v.winSize.Y - (viewOuterPadding+viewChartThumbSize.Y)*i - viewOuterPadding

@@ -11,10 +11,14 @@ import (
 
 // Model is the state of the program separate from the view.
 type Model struct {
-	sync.Mutex                     // Mutex guards the model.
-	currentStock   *ModelStock     // currentStock is the stock currently being viewed.
-	sideBarStocks  []*ModelStock   // sideBarStocks are the ordered stocks in the sidebar.
-	sideBarSymbols map[string]bool // sideBarSymbols is a set of the sidebar's symbols.
+	// Mutex guards the model.
+	sync.Mutex
+
+	// currentStock is the stock currently being viewed.
+	currentStock *ModelStock
+
+	// sidebar models the left sidebar with the user's saved stocks.
+	Sidebar *ModelSidebar
 }
 
 type ModelQuote struct {
@@ -47,41 +51,16 @@ type ModelTradingSession struct {
 
 func NewModel(symbol string) *Model {
 	return &Model{
-		currentStock:   NewModelStock("SPY"),
-		sideBarSymbols: map[string]bool{},
+		currentStock: NewModelStock("SPY"),
+		Sidebar:      &ModelSidebar{},
 	}
-}
-
-func (m *Model) AddSideBarStock(symbol string) *ModelStock {
-	if m.sideBarSymbols[symbol] {
-		return nil
-	}
-	st := NewModelStock(symbol)
-	m.sideBarStocks = append(m.sideBarStocks, st)
-	m.sideBarSymbols[symbol] = true
-	return st
-}
-
-func (m *Model) RemoveSideBarStock(symbol string) {
-	if !m.sideBarSymbols[symbol] {
-		return
-	}
-	var newStocks []*ModelStock
-	for _, st := range m.sideBarStocks {
-		if st.symbol == symbol {
-			continue // Don't keep it.
-		}
-		newStocks = append(newStocks, st)
-	}
-	m.sideBarStocks = newStocks
-	delete(m.sideBarSymbols, symbol)
 }
 
 func (m *Model) Refresh() error {
 	if err := m.currentStock.Refresh(); err != nil {
 		return err
 	}
-	for _, st := range m.sideBarStocks {
+	for _, st := range m.Sidebar.Stocks {
 		if err := st.Refresh(); err != nil {
 			return err
 		}
