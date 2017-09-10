@@ -139,11 +139,11 @@ func (v *View) Render(fudge float32) {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gfx.SetProjectionViewMatrix(v.orthoMatrix)
 
-	if v.chart == nil || v.chart.stock != v.model.currentStock {
+	if v.chart == nil || v.chart.stock != v.model.CurrentStock {
 		if v.chart != nil {
 			v.chart.Close()
 		}
-		v.chart = NewChart(v.model.currentStock)
+		v.chart = NewChart(v.model.CurrentStock)
 		v.chart.AddAddButtonClickCallback(func() {
 			symbol := v.chart.stock.symbol
 			if !v.model.Sidebar.AddStock(symbol) {
@@ -270,7 +270,7 @@ func (v *View) popSymbolChar() {
 func (v *View) submitSymbol() {
 	v.model.Lock()
 	defer v.model.Unlock()
-	v.model.currentStock = NewModelStock(v.inputSymbol)
+	v.model.CurrentStock = newModelStock(v.inputSymbol)
 	v.inputSymbol = ""
 }
 

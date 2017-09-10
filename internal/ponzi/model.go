@@ -14,56 +14,22 @@ type Model struct {
 	// Mutex guards the model.
 	sync.Mutex
 
+	// CurrentStock is the stock currently being viewed.
+	CurrentStock *ModelStock
+
 	// Sidebar models the sidebar with the user's stocks.
 	Sidebar *ModelSidebar
-
-	// currentStock is the stock currently being viewed.
-	currentStock *ModelStock
 }
 
-// ModelSidebar models the sidebar with the user's stocks.
-type ModelSidebar struct {
-	// Stocks are the ordered stocks from top to bottom.
-	Stocks []*ModelStock
-}
-
-type ModelStock struct {
-	symbol         string
-	quote          *ModelQuote
-	dailySessions  []*ModelTradingSession
-	weeklySessions []*ModelTradingSession
-	lastUpdateTime time.Time
-}
-
-type ModelQuote struct {
-	symbol        string
-	price         float32
-	change        float32
-	percentChange float32
-}
-
-type ModelTradingSession struct {
-	date          time.Time
-	open          float32
-	high          float32
-	low           float32
-	close         float32
-	volume        int
-	change        float32
-	percentChange float32
-	k             float32
-	d             float32
-}
-
-func NewModel(symbol string) *Model {
+func NewModel(currentSymbol string, sidebarSymbols []string) *Model {
 	return &Model{
-		currentStock: NewModelStock("SPY"),
-		Sidebar:      &ModelSidebar{},
+		CurrentStock: newModelStock(currentSymbol),
+		Sidebar:      newModelSidebar(sidebarSymbols),
 	}
 }
 
 func (m *Model) Refresh() error {
-	if err := m.currentStock.Refresh(); err != nil {
+	if err := m.CurrentStock.Refresh(); err != nil {
 		return err
 	}
 	for _, st := range m.Sidebar.Stocks {
@@ -74,12 +40,28 @@ func (m *Model) Refresh() error {
 	return nil
 }
 
+// ModelSidebar models the sidebar with the user's stocks.
+type ModelSidebar struct {
+	// Stocks are the ordered stocks from top to bottom.
+	Stocks []*ModelStock
+}
+
+func newModelSidebar(symbols []string) *ModelSidebar {
+	var sts []*ModelStock
+	for _, s := range symbols {
+		sts = append(sts, newModelStock(s))
+	}
+	return &ModelSidebar{
+		Stocks: sts,
+	}
+}
+
 // AddStock adds a stock to the sidebar.
 func (m *ModelSidebar) AddStock(symbol string) bool {
 	if m.Stock(symbol) != nil {
 		return false // Already have it.
 	}
-	m.Stocks = append(m.Stocks, NewModelStock(symbol))
+	m.Stocks = append(m.Stocks, newModelStock(symbol))
 	return true
 }
 
@@ -110,7 +92,35 @@ func (m *ModelSidebar) Stock(symbol string) *ModelStock {
 	return nil
 }
 
-func NewModelStock(symbol string) *ModelStock {
+type ModelStock struct {
+	symbol         string
+	quote          *ModelQuote
+	dailySessions  []*ModelTradingSession
+	weeklySessions []*ModelTradingSession
+	lastUpdateTime time.Time
+}
+
+type ModelQuote struct {
+	symbol        string
+	price         float32
+	change        float32
+	percentChange float32
+}
+
+type ModelTradingSession struct {
+	date          time.Time
+	open          float32
+	high          float32
+	low           float32
+	close         float32
+	volume        int
+	change        float32
+	percentChange float32
+	k             float32
+	d             float32
+}
+
+func newModelStock(symbol string) *ModelStock {
 	return &ModelStock{
 		symbol: symbol,
 		quote:  &ModelQuote{symbol: symbol},

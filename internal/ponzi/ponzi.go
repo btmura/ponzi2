@@ -41,7 +41,17 @@ func Run() {
 
 	win.MakeContextCurrent()
 
-	m := NewModel("SPY")
+	cfg, err := LoadConfig()
+	if err != nil {
+		glog.Fatalf("Run: failed to load config: %v", err)
+	}
+
+	var ss []string
+	for _, st := range cfg.Stocks {
+		ss = append(ss, st.Symbol)
+	}
+
+	m := NewModel("SPY", ss)
 	v := NewView(m)
 
 	// GLFW, GL, and shaders OK! Go fetch data for the model.
