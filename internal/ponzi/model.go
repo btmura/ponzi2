@@ -14,18 +14,17 @@ type Model struct {
 	// Mutex guards the model.
 	sync.Mutex
 
+	// Sidebar models the sidebar with the user's stocks.
+	Sidebar *ModelSidebar
+
 	// currentStock is the stock currently being viewed.
 	currentStock *ModelStock
-
-	// sidebar models the left sidebar with the user's saved stocks.
-	Sidebar *ModelSidebar
 }
 
-type ModelQuote struct {
-	symbol        string
-	price         float32
-	change        float32
-	percentChange float32
+// ModelSidebar models the sidebar with the user's stocks.
+type ModelSidebar struct {
+	// Stocks are the ordered stocks from top to bottom.
+	Stocks []*ModelStock
 }
 
 type ModelStock struct {
@@ -34,6 +33,13 @@ type ModelStock struct {
 	dailySessions  []*ModelTradingSession
 	weeklySessions []*ModelTradingSession
 	lastUpdateTime time.Time
+}
+
+type ModelQuote struct {
+	symbol        string
+	price         float32
+	change        float32
+	percentChange float32
 }
 
 type ModelTradingSession struct {
@@ -63,6 +69,42 @@ func (m *Model) Refresh() error {
 	for _, st := range m.Sidebar.Stocks {
 		if err := st.Refresh(); err != nil {
 			return err
+		}
+	}
+	return nil
+}
+
+// AddStock adds a stock to the sidebar.
+func (m *ModelSidebar) AddStock(symbol string) bool {
+	if m.Stock(symbol) != nil {
+		return false // Already have it.
+	}
+	m.Stocks = append(m.Stocks, NewModelStock(symbol))
+	return true
+}
+
+// RemoveStock removes a stock from the sidebar.
+func (m *ModelSidebar) RemoveStock(symbol string) bool {
+	if m.Stock(symbol) == nil {
+		return false // Don't have it.
+	}
+
+	var ss []*ModelStock
+	for _, st := range m.Stocks {
+		if st.symbol == symbol {
+			continue
+		}
+		ss = append(ss, st)
+	}
+	m.Stocks = ss
+	return true
+}
+
+// Stock returns the stock with the symbol or nil if the sidebar doesn't have it.
+func (m *ModelSidebar) Stock(symbol string) *ModelStock {
+	for _, st := range m.Stocks {
+		if st.symbol == symbol {
+			return st
 		}
 	}
 	return nil
