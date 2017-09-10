@@ -6,6 +6,7 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
+// ChartHeader shows a header for charts and thumbnails with a clickable button.
 type ChartHeader struct {
 	stock                   *ModelStock
 	symbolQuoteTextRenderer *gfx.TextRenderer
@@ -16,6 +17,7 @@ type ChartHeader struct {
 	buttonClickCallbacks    []func()
 }
 
+// NewChartHeader creates a new chart header.
 func NewChartHeader(stock *ModelStock, symbolQuoteTextRenderer *gfx.TextRenderer, quoteFormatter func(*ModelQuote) string, button *Button, roundAmount, padding int) *ChartHeader {
 	return &ChartHeader{
 		stock: stock,
@@ -27,6 +29,7 @@ func NewChartHeader(stock *ModelStock, symbolQuoteTextRenderer *gfx.TextRenderer
 	}
 }
 
+// Render renders the chart header.
 func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, buttonClicked bool) {
 	// Render the border around the chart.
 	r := vc.bounds
@@ -53,6 +56,7 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, buttonClick
 	return r, buttonClicked
 }
 
+// AddButtonClickCallback adds a callback for when the button is clicked.
 func (ch *ChartHeader) AddButtonClickCallback(cb func()) {
 	ch.button.AddClickCallback(cb)
 }

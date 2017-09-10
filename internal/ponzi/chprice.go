@@ -9,6 +9,7 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
+// ChartPrices shows the candlesticks and price labels for a single stock.
 type ChartPrices struct {
 	stock               *ModelStock
 	lastStockUpdateTime time.Time
@@ -20,12 +21,14 @@ type ChartPrices struct {
 	stickRects          *gfx.VAO
 }
 
+// NewChartPrices creates a new chart prices instance.
 func NewChartPrices(stock *ModelStock) *ChartPrices {
 	return &ChartPrices{
 		stock: stock,
 	}
 }
 
+// Update updates the candlesticks and price labels.
 func (ch *ChartPrices) Update() {
 	if ch.lastStockUpdateTime == ch.stock.lastUpdateTime {
 		return
@@ -171,6 +174,7 @@ func createChartCandlestickVAOs(ds []*ModelTradingSession, minPrice, maxPrice fl
 	return lineVAO, triangleVAO
 }
 
+// Render renders the price candlesticks.
 func (ch *ChartPrices) Render(r image.Rectangle) {
 	if !ch.renderable {
 		return
@@ -198,6 +202,7 @@ func (ch *ChartPrices) Render(r image.Rectangle) {
 	}
 }
 
+// RenderLabels renders the price labels.
 func (ch *ChartPrices) RenderLabels(r image.Rectangle) (maxLabelWidth int) {
 	if !ch.renderable {
 		return
@@ -249,6 +254,7 @@ func (ch *ChartPrices) priceLabelText(v float32) (text string, size image.Point)
 	return t, chartAxisLabelTextRenderer.Measure(t)
 }
 
+// Close frees the resources backing the chart prices.
 func (ch *ChartPrices) Close() {
 	ch.renderable = false
 	ch.stickLines.Delete()

@@ -7,6 +7,7 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
+// ChartLines shows weekly lines for a single stock.
 type ChartLines struct {
 	stock               *ModelStock
 	lastStockUpdateTime time.Time
@@ -14,12 +15,14 @@ type ChartLines struct {
 	weekLines           *gfx.VAO
 }
 
+// NewChartLines creates a new chart lines instance.
 func NewChartLines(stock *ModelStock) *ChartLines {
 	return &ChartLines{
 		stock: stock,
 	}
 }
 
+// Update updates the chart lines.
 func (ch *ChartLines) Update() {
 	if ch.lastStockUpdateTime == ch.stock.lastUpdateTime {
 		return
@@ -68,6 +71,7 @@ func createChartWeekLinesVAO(ds []*ModelTradingSession) *gfx.VAO {
 	return gfx.NewVAO(gfx.Lines, data)
 }
 
+// Render renders the chart lines.
 func (ch *ChartLines) Render(r image.Rectangle) {
 	if !ch.renderable {
 		return
@@ -77,6 +81,7 @@ func (ch *ChartLines) Render(r image.Rectangle) {
 	ch.weekLines.Render()
 }
 
+// Close frees the resources backing the chart lines.
 func (ch *ChartLines) Close() {
 	ch.renderable = false
 	ch.weekLines.Delete()
