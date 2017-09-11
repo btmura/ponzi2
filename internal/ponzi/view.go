@@ -53,15 +53,16 @@ const viewOuterPadding = 10
 
 var viewChartThumbSize = image.Pt(140, 90)
 
+// The View renders the UI to view and edit the model's stocks that it observes.
 type View struct {
-	// model is the model that will be rendered.
+	// model has the stock data to be rendered.
 	model *Model
 
 	// chart renders the model's current stock.
 	chart *Chart
 
-	// sidebarChartThumbs maps stock to ChartThumbnail.
-	sidebarChartThumbs []*ChartThumbnail
+	// chartThumbs renders the model's other stocks.
+	chartThumbs []*ChartThumbnail
 
 	// inputSymbol is the symbol being entered by the user.
 	inputSymbol string
@@ -69,25 +70,37 @@ type View struct {
 	// nextViewContext is the next viewContext to pass down the view hierarchy.
 	nextViewContext ViewContext
 
+	// winSize is the current window's size used to measure and draw the UI.
+	winSize image.Point
+
 	viewMatrix        math2.Matrix4
 	perspectiveMatrix math2.Matrix4
 	orthoMatrix       math2.Matrix4
-	winSize           image.Point
 }
 
 // ViewContext is passed down the view hierarchy providing drawing hints and event information.
 // Meant to be passed around like a Rectangle or Point rather than a pointer to avoid mistakes.
 type ViewContext struct {
-	bounds                 image.Rectangle    // bounds is a rectangle that should be drawn within.
-	mousePos               image.Point        // mousePos is the current mouse position.
-	mouseLeftButtonClicked bool               // mouseLeftButtonClicked is whether the left mouse button was clicked.
-	scheduleCallbacks      func(cbs []func()) // scheduleCallback is a function to gather callbacks to be executed.
+	// bounds is the rectangle with global coordinates that the view part should draw within.
+	bounds image.Rectangle
+
+	// mousePos is the current global mouse position.
+	mousePos image.Point
+
+	// mouseLeftButtonClicked is whether the left mouse button was clicked.
+	mouseLeftButtonClicked bool
+
+	// scheduleCallback is a function to gather callbacks to be executed.
+	scheduleCallbacks func(cbs []func())
 }
 
+// LeftClickInBounds returns true if the left mouse button was clicked within the context's bounds.
+// Doesn't take into account overlapping view parts.
 func (vc ViewContext) LeftClickInBounds() bool {
 	return vc.mouseLeftButtonClicked && vc.mousePos.In(vc.bounds)
 }
 
+// NewView creates a new View that observes the given Model.
 func NewView(model *Model) *View {
 
 	// Initialize OpenGL and enable features.
@@ -138,6 +151,7 @@ func NewView(model *Model) *View {
 	return v
 }
 
+// Update updates the view.
 func (v *View) Update() {
 	v.model.Lock()
 	defer v.model.Unlock()
@@ -146,11 +160,12 @@ func (v *View) Update() {
 		v.chart.Update()
 	}
 
-	for _, th := range v.sidebarChartThumbs {
+	for _, th := range v.chartThumbs {
 		th.Update()
 	}
 }
 
+// Render renders the view.
 func (v *View) Render(fudge float32) {
 	v.model.Lock()
 	defer v.model.Unlock()
@@ -192,7 +207,7 @@ func (v *View) Render(fudge float32) {
 	}
 
 	// Render the sidebar thumbnails.
-	for i, th := range v.sidebarChartThumbs {
+	for i, th := range v.chartThumbs {
 		min := image.Pt(viewOuterPadding, 0)
 		max := image.Pt(min.X+viewChartThumbSize.X, 0)
 		max.Y = v.winSize.Y - (viewOuterPadding+viewChartThumbSize.Y)*i - viewOuterPadding
@@ -228,7 +243,7 @@ func (v *View) newChart(st *ModelStock) *Chart {
 
 func (v *View) addSidebarChartThumb(st *ModelStock) {
 	th := NewChartThumbnail(st)
-	v.sidebarChartThumbs = append(v.sidebarChartThumbs, th)
+	v.chartThumbs = append(v.chartThumbs, th)
 
 	th.AddRemoveButtonClickCallback(func() {
 		if !v.model.Sidebar.RemoveStock(st) {
@@ -236,14 +251,14 @@ func (v *View) addSidebarChartThumb(st *ModelStock) {
 		}
 
 		var newThumbs []*ChartThumbnail
-		for _, thumb := range v.sidebarChartThumbs {
+		for _, thumb := range v.chartThumbs {
 			if thumb == th {
 				continue
 			}
 			newThumbs = append(newThumbs, thumb)
 		}
 		th.Close()
-		v.sidebarChartThumbs = newThumbs
+		v.chartThumbs = newThumbs
 
 		go func() {
 			if err := v.saveConfig(); err != nil {
@@ -286,6 +301,7 @@ func (v *View) Resize(newSize image.Point) {
 	v.orthoMatrix = math2.OrthoMatrix(fw, fh, fw /* use width as depth */)
 }
 
+// HandleKey is a callback registered with GLFW to receive key presses.
 func (v *View) HandleKey(key glfw.Key, action glfw.Action) {
 	if action != glfw.Release {
 		return
@@ -305,6 +321,7 @@ func (v *View) HandleKey(key glfw.Key, action glfw.Action) {
 	}
 }
 
+// HandleChar is a callback registered with GLFW to receive character input.
 func (v *View) HandleChar(ch rune) {
 	ch = unicode.ToUpper(ch)
 	if _, ok := acceptedChars[ch]; ok {
@@ -329,11 +346,13 @@ func (v *View) submitSymbol() {
 	v.inputSymbol = ""
 }
 
+// HandleCursorPos is a callback registered with GLFW to track cursor movement.
 func (v *View) HandleCursorPos(x, y float64) {
 	// Flip Y-axis since the OpenGL coordinate system makes lower left the origin.
 	v.nextViewContext.mousePos = image.Pt(int(x), v.winSize.Y-int(y))
 }
 
+// HandleMouseButton is a callback registered with GLFW to track mouse clicks.
 func (v *View) HandleMouseButton(button glfw.MouseButton, action glfw.Action) {
 	if button != glfw.MouseButtonLeft {
 		glog.Infof("handleMouseButton: ignoring mouse button(%v) and action(%v)", button, action)
