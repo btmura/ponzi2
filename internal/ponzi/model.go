@@ -17,47 +17,24 @@ type Model struct {
 	// CurrentStock is the stock currently being viewed.
 	CurrentStock *ModelStock
 
-	// Sidebar models the sidebar with the user's stocks.
-	Sidebar *ModelSidebar
-}
-
-func NewModel(currentSymbol string, sidebarSymbols []string) *Model {
-	return &Model{
-		CurrentStock: newModelStock(currentSymbol),
-		Sidebar:      newModelSidebar(sidebarSymbols),
-	}
-}
-
-func (m *Model) Refresh() error {
-	if err := m.CurrentStock.Refresh(); err != nil {
-		return err
-	}
-	for _, st := range m.Sidebar.Stocks {
-		if err := st.Refresh(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// ModelSidebar models the sidebar with the user's stocks.
-type ModelSidebar struct {
-	// Stocks are the ordered stocks from top to bottom.
+	// Stocks are the user's ordered stocks.
 	Stocks []*ModelStock
 }
 
-func newModelSidebar(symbols []string) *ModelSidebar {
+// NewModel creates a new Model.
+func NewModel(currentSymbol string, symbols []string) *Model {
 	var sts []*ModelStock
 	for _, s := range symbols {
 		sts = append(sts, newModelStock(s))
 	}
-	return &ModelSidebar{
-		Stocks: sts,
+	return &Model{
+		CurrentStock: newModelStock(currentSymbol),
+		Stocks:       sts,
 	}
 }
 
-// AddStock adds a stock to the sidebar.
-func (m *ModelSidebar) AddStock(st *ModelStock) bool {
+// AddStock adds a stock to the model.
+func (m *Model) AddStock(st *ModelStock) bool {
 	if m.Stock(st.symbol) != nil {
 		return false // Already have it.
 	}
@@ -65,8 +42,8 @@ func (m *ModelSidebar) AddStock(st *ModelStock) bool {
 	return true
 }
 
-// RemoveStock removes a stock from the sidebar.
-func (m *ModelSidebar) RemoveStock(st *ModelStock) bool {
+// RemoveStock removes a stock from the model.
+func (m *Model) RemoveStock(st *ModelStock) bool {
 	if m.Stock(st.symbol) == nil {
 		return false // Don't have it.
 	}
@@ -83,10 +60,23 @@ func (m *ModelSidebar) RemoveStock(st *ModelStock) bool {
 }
 
 // Stock returns the stock with the symbol or nil if the sidebar doesn't have it.
-func (m *ModelSidebar) Stock(symbol string) *ModelStock {
+func (m *Model) Stock(symbol string) *ModelStock {
 	for _, st := range m.Stocks {
 		if st.symbol == symbol {
 			return st
+		}
+	}
+	return nil
+}
+
+// Refresh refreshes the Model.
+func (m *Model) Refresh() error {
+	if err := m.CurrentStock.Refresh(); err != nil {
+		return err
+	}
+	for _, st := range m.Stocks {
+		if err := st.Refresh(); err != nil {
+			return err
 		}
 	}
 	return nil

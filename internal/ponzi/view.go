@@ -155,7 +155,7 @@ func NewView(model *Model) *View {
 		v.chart = v.newChart(model.CurrentStock)
 	}
 
-	for _, st := range model.Sidebar.Stocks {
+	for _, st := range model.Stocks {
 		v.addSidebarChartThumb(st)
 	}
 
@@ -198,7 +198,7 @@ func (v *View) Render(fudge float32) {
 	if v.inputSymbol != "" {
 		s := inputSymbolTextRenderer.Measure(v.inputSymbol)
 		pt := v.winSize.Sub(s).Div(2)
-		if len(v.model.Sidebar.Stocks) > 0 {
+		if len(v.model.Stocks) > 0 {
 			pt.X += viewChartThumbSize.X / 2
 		}
 		inputSymbolTextRenderer.Render(v.inputSymbol, pt, white)
@@ -207,7 +207,7 @@ func (v *View) Render(fudge float32) {
 	// Render the main chart.
 	if v.chart != nil {
 		vc.Bounds = image.Rectangle{image.ZP, v.winSize}.Inset(viewOuterPadding)
-		if len(v.model.Sidebar.Stocks) > 0 {
+		if len(v.model.Stocks) > 0 {
 			vc.Bounds.Min.X += viewOuterPadding + viewChartThumbSize.X
 		}
 		v.chart.Render(vc)
@@ -235,7 +235,7 @@ func (v *View) Render(fudge float32) {
 func (v *View) newChart(st *ModelStock) *Chart {
 	ch := NewChart(st)
 	ch.AddAddButtonClickCallback(func() {
-		if !v.model.Sidebar.AddStock(st) {
+		if !v.model.AddStock(st) {
 			return
 		}
 		v.addSidebarChartThumb(st)
@@ -253,7 +253,7 @@ func (v *View) addSidebarChartThumb(st *ModelStock) {
 	v.chartThumbs = append(v.chartThumbs, th)
 
 	th.AddRemoveButtonClickCallback(func() {
-		if !v.model.Sidebar.RemoveStock(st) {
+		if !v.model.RemoveStock(st) {
 			return
 		}
 
@@ -281,7 +281,7 @@ func (v *View) addSidebarChartThumb(st *ModelStock) {
 
 func (v *View) saveConfig() error {
 	cfg := &Config{}
-	for _, st := range v.model.Sidebar.Stocks {
+	for _, st := range v.model.Stocks {
 		cfg.Stocks = append(cfg.Stocks, ConfigStock{st.symbol})
 	}
 	return SaveConfig(cfg)
