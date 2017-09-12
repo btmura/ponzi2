@@ -20,12 +20,12 @@ func NewButton(iconVAO *gfx.VAO) *Button {
 // Render renders the button and detects button clicks.
 func (b *Button) Render(vc ViewContext) (clicked bool) {
 	if vc.LeftClickInBounds() {
-		vc.scheduleCallbacks(b.clickCallbacks)
+		vc.ScheduleCallbacks(b.clickCallbacks)
 		clicked = true
 	}
 
 	gfx.SetColorMixAmount(1)
-	gfx.SetModelMatrixRect(vc.bounds)
+	gfx.SetModelMatrixRect(vc.Bounds)
 	b.iconVAO.Render()
 	return clicked
 }

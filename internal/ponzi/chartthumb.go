@@ -59,7 +59,7 @@ func (ch *ChartThumbnail) Render(vc ViewContext) {
 	r, clicked := ch.header.Render(vc)
 
 	if !clicked && vc.LeftClickInBounds() {
-		vc.scheduleCallbacks(ch.thumbClickCallbacks)
+		vc.ScheduleCallbacks(ch.thumbClickCallbacks)
 	}
 
 	rects := renderHorizDividers(r, horizLine, 0.5, 0.5)

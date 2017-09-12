@@ -32,7 +32,7 @@ func NewChartHeader(stock *ModelStock, symbolQuoteTextRenderer *gfx.TextRenderer
 // Render renders the chart header.
 func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, buttonClicked bool) {
 	// Render the border around the chart.
-	r := vc.bounds
+	r := vc.Bounds
 	renderRoundedRect(r, ch.roundAmount)
 
 	// Start rendering from the top left. Track position with point.
@@ -49,7 +49,7 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, buttonClick
 
 	// Render button in the upper right corner.
 	buttonSize := image.Pt(r.Max.Y-pt.Y, r.Max.Y-pt.Y)
-	vc.bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
+	vc.Bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
 	buttonClicked = ch.button.Render(vc)
 
 	r.Max.Y = pt.Y
