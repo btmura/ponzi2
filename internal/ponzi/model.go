@@ -48,14 +48,13 @@ func (m *Model) RemoveStock(st *ModelStock) bool {
 		return false // Don't have it.
 	}
 
-	var ss []*ModelStock
-	for _, stock := range m.Stocks {
+	for i, stock := range m.Stocks {
 		if stock.symbol == st.symbol {
-			continue
+			m.Stocks = append(m.Stocks[:i], m.Stocks[i+1:]...)
+			break
 		}
-		ss = append(ss, stock)
 	}
-	m.Stocks = ss
+
 	return true
 }
 

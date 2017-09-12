@@ -257,15 +257,13 @@ func (v *View) addSidebarChartThumb(st *ModelStock) {
 			return
 		}
 
-		var newThumbs []*ChartThumbnail
-		for _, thumb := range v.chartThumbs {
+		for i, thumb := range v.chartThumbs {
 			if thumb == th {
-				continue
+				v.chartThumbs = append(v.chartThumbs[:i], v.chartThumbs[i+1:]...)
+				break
 			}
-			newThumbs = append(newThumbs, thumb)
 		}
 		th.Close()
-		v.chartThumbs = newThumbs
 
 		go func() {
 			if err := v.saveConfig(); err != nil {
