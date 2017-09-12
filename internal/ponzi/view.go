@@ -90,14 +90,25 @@ type ViewContext struct {
 	// MouseLeftButtonClicked is whether the left mouse button was clicked.
 	MouseLeftButtonClicked bool
 
-	// ScheduleCallbacks is a function to gather callbacks to be executed.
-	ScheduleCallbacks func(cbs []func())
+	// values stores values collected throughout the Render pass.
+	values *viewContextValues
+}
+
+// viewContextValues stores values collected throughout the Render pass.
+type viewContextValues struct {
+	// scheduledCallbacks are callbacks that should be called at the end of Render.
+	scheduledCallbacks []func()
 }
 
 // LeftClickInBounds returns true if the left mouse button was clicked within the context's bounds.
 // Doesn't take into account overlapping view parts.
 func (vc ViewContext) LeftClickInBounds() bool {
 	return vc.MouseLeftButtonClicked && vc.MousePos.In(vc.Bounds)
+}
+
+// ScheduleCallbacks schedules a slice of callbacks that will be called after Render is done.
+func (vc ViewContext) ScheduleCallbacks(cbs []func()) {
+	vc.values.scheduledCallbacks = append(vc.values.scheduledCallbacks, cbs...)
 }
 
 // NewView creates a new View that observes the given Model.
@@ -181,11 +192,7 @@ func (v *View) Render(fudge float32) {
 	}
 
 	vc := v.nextViewContext
-
-	var callbacks []func()
-	vc.ScheduleCallbacks = func(cbs []func()) {
-		callbacks = append(callbacks, cbs...)
-	}
+	vc.values = &viewContextValues{}
 
 	// Render input symbol being typed in the center.
 	if v.inputSymbol != "" {
@@ -217,7 +224,7 @@ func (v *View) Render(fudge float32) {
 	}
 
 	// Call any callbacks scheduled by views.
-	for _, cb := range callbacks {
+	for _, cb := range vc.values.scheduledCallbacks {
 		cb()
 	}
 
