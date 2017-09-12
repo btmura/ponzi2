@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/btmura/ponzi2/internal/stock"
-	t2 "github.com/btmura/ponzi2/internal/time"
+	time2 "github.com/btmura/ponzi2/internal/time"
 )
 
 // Model is the state of the program separate from the view.
@@ -119,7 +119,7 @@ func newModelStock(symbol string) *ModelStock {
 
 func (m *ModelStock) Refresh() error {
 	// Get the trading history for the current stock.
-	end := t2.Midnight(time.Now().In(t2.NewYorkLoc))
+	end := time2.Midnight(time.Now().In(time2.NewYorkLoc))
 	start := end.Add(-6 * 30 * 24 * time.Hour)
 	hist, err := stock.GetTradingHistory(&stock.GetTradingHistoryRequest{
 		Symbol:    m.symbol,
