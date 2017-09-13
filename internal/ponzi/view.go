@@ -124,7 +124,7 @@ func NewView(model *Model) *View {
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 	gl.ClearColor(0, 0, 0, 0)
 
-	if err := gfx.Init(); err != nil {
+	if err := gfx.InitProgram(); err != nil {
 		glog.Fatalf("newView: failed to init gfx: %v", err)
 	}
 

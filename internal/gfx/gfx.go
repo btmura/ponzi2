@@ -30,7 +30,8 @@ const (
 	textColorLocation
 )
 
-func Init() error {
+// InitProgram loads and uses the shader program.
+func InitProgram() error {
 	p, err := program(string(MustAsset("shader.vert")), string(MustAsset("shader.frag")))
 	if err != nil {
 		return err
@@ -39,13 +40,22 @@ func Init() error {
 	return nil
 }
 
+// SetProjectionViewMatrix sets the projection view matrix.
 func SetProjectionViewMatrix(m math2.Matrix4) {
 	gl.UniformMatrix4fv(projectionViewMatrixLocation, 1, false, &m[0])
 }
 
+// SetModelMatrixRect sets the model matrix to the rectangle.
 func SetModelMatrixRect(r image.Rectangle) {
 	m := math2.ScaleMatrix(float32(r.Dx()/2), float32(r.Dy()/2), 1)
 	m = m.Mult(math2.TranslationMatrix(float32(r.Min.X+r.Dx()/2), float32(r.Min.Y+r.Dy()/2), 0))
+	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
+}
+
+// SetModelMatrixOrtho sets the model matrix to a rectangle of the given size with lower left anchored at the given point.
+func SetModelMatrixOrtho(pt, sz image.Point) {
+	m := math2.ScaleMatrix(float32(sz.X), float32(sz.Y), 1)
+	m = m.Mult(math2.TranslationMatrix(float32(pt.X), float32(pt.Y), 0))
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 }
 

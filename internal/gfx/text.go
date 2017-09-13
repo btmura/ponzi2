@@ -11,8 +11,6 @@ import (
 	"github.com/golang/glog"
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
-
-	math2 "github.com/btmura/ponzi2/internal/math"
 )
 
 // A TextRenderer measures and renders text.
@@ -133,13 +131,11 @@ func newRuneRenderer(face font.Face, m font.Metrics, r rune) *runeRenderer {
 var runePlaneObject *VAO
 
 func (r *runeRenderer) render(pt image.Point, color TextColor) image.Point {
-	m := math2.ScaleMatrix(float32(r.size.X), float32(r.size.Y), 1)
-	m = m.Mult(math2.TranslationMatrix(float32(pt.X), float32(pt.Y), 0))
-	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
+	SetModelMatrixOrtho(pt, r.size)
 
 	gl.BindTexture(gl.TEXTURE_2D, r.texture)
 	gl.Uniform3fv(textColorLocation, 1, &color[0])
-	gl.Uniform1f(colorMixAmountLocation, 0)
+	SetColorMixAmount(0)
 
 	if runePlaneObject == nil {
 		runePlaneObject = ReadPLYVAO(bytes.NewReader(MustAsset("textPlane.ply")))
