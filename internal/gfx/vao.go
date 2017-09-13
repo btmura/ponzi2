@@ -26,7 +26,6 @@ const (
 // VAOVertexData is a bunch of slices filled with vertex data to create a VAO.
 type VAOVertexData struct {
 	Vertices  []float32 // Vertices is a required slice of flattened (x, y, z) vertices.
-	Normals   []float32 // Normals is an optional slice of flattened (nx, ny, nz) normals.
 	TexCoords []float32 // TexCoords is an optional slice of flattened (s, t) coords.
 	Colors    []float32 // Colors is an optional slice of flattened (r, g, b) values.
 	Indices   []uint16  // Indices is a required slice of indices into all the buffers.
@@ -37,7 +36,7 @@ type VAOVertexData struct {
 // Since NewVAO defers the creation of the actual OpenGL VAO till the first rendering,
 // callers may call NewVAO at the package scope to simplify their code.
 func NewVAO(mode VAODrawMode, data *VAOVertexData) *VAO {
-	glog.Infof("NewVAO: v(%d) n(%d) tc(%d) c(%d) i(%d)", len(data.Vertices), len(data.Normals), len(data.TexCoords), len(data.Colors), len(data.Indices))
+	glog.Infof("NewVAO: v(%d) tc(%d) c(%d) i(%d)", len(data.Vertices), len(data.TexCoords), len(data.Colors), len(data.Indices))
 	if len(data.Indices) == 0 {
 		return &VAO{} // OpenGL doesn't allow empty buffer objects. Return VAO with zero count.
 	}
@@ -77,11 +76,6 @@ func (v *VAO) Render() {
 func createVAO(data *VAOVertexData) (array uint32, count int32) {
 	vbo := arrayBuffer(data.Vertices)
 
-	var nbo uint32
-	if len(data.Normals) != 0 {
-		nbo = arrayBuffer(data.Normals)
-	}
-
 	var tbo uint32
 	if len(data.TexCoords) != 0 {
 		tbo = arrayBuffer(data.TexCoords)
@@ -100,12 +94,6 @@ func createVAO(data *VAOVertexData) (array uint32, count int32) {
 		gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
 		gl.EnableVertexAttribArray(positionLocation)
 		gl.VertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
-
-		if len(data.Normals) != 0 {
-			gl.BindBuffer(gl.ARRAY_BUFFER, nbo)
-			gl.EnableVertexAttribArray(normalLocation)
-			gl.VertexAttribPointer(normalLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
-		}
 
 		if len(data.TexCoords) != 0 {
 			gl.BindBuffer(gl.ARRAY_BUFFER, tbo)

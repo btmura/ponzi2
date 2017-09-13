@@ -27,10 +27,6 @@ var (
 	cameraPosition = math2.Vector3{X: 0, Y: 5, Z: 10}
 	targetPosition = math2.Vector3{}
 	up             = math2.Vector3{X: 0, Y: 1, Z: 0}
-
-	ambientLightColor     = [3]float32{1, 1, 1}
-	directionalLightColor = [3]float32{1, 1, 1}
-	directionalVector     = [3]float32{1, 1, 1}
 )
 
 // acceptedChars are the chars the user can enter for a symbol.
@@ -71,8 +67,6 @@ type View struct {
 
 	// winSize is the current window's size used to measure and draw the UI.
 	winSize image.Point
-
-	viewMatrix math2.Matrix4
 
 	orthoMatrix math2.Matrix4
 }
@@ -134,21 +128,9 @@ func NewView(model *Model) *View {
 		glog.Fatalf("newView: failed to init gfx: %v", err)
 	}
 
-	// Setup the vertex shader uniforms.
-
-	gfx.SetModelMatrix(math2.ScaleMatrix(1, 1, 1))
-
-	vm := math2.ViewMatrix(cameraPosition, targetPosition, up)
-	gfx.SetNormalMatrix(vm.Inverse().Transpose())
-
-	gfx.SetAmbientLightColor(ambientLightColor)
-	gfx.SetDirectionalLightColor(directionalLightColor)
-	gfx.SetDirectionalLightVector(directionalVector)
-
 	v := &View{
 		model:       model,
 		inputSymbol: NewCenteredText(inputSymbolTextRenderer, ""),
-		viewMatrix:  vm,
 	}
 
 	if model.CurrentStock != nil {

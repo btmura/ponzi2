@@ -2,28 +2,16 @@
 
 layout(location = 0) uniform mat4 projectionViewMatrix;
 layout(location = 1) uniform mat4 modelMatrix;
-layout(location = 2) uniform mat4 normalMatrix;
 
-layout(location = 3) uniform vec3 ambientLightColor;
-layout(location = 4) uniform vec3 directionalLightColor;
-layout(location = 5) uniform vec3 directionalVector;
-
-layout(location = 6) in vec4 position;
-layout(location = 7) in vec4 normal;
-layout(location = 8) in vec2 inTexCoord;
-layout(location = 9) in vec4 inColor;
+layout(location = 2) in vec4 position;
+layout(location = 3) in vec2 inTexCoord;
+layout(location = 4) in vec4 inColor;
 
 out vec2 texCoord;
 out vec4 color;
-out vec3 lighting;
 
 void main(void) {
 	gl_Position = projectionViewMatrix * modelMatrix * position;
-
 	texCoord = inTexCoord;
 	color = inColor;
-
-	vec4 transformedNormal = normalMatrix * vec4(normal.xyz, 1.0);
-	float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
-	lighting = ambientLightColor + (directionalLightColor * directional);
 }

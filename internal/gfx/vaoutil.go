@@ -66,12 +66,6 @@ func ReadPLYVAO(r io.Reader) *VAO {
 		z := e.Float32s["z"]
 		data.Vertices = append(data.Vertices, x, y, z)
 
-		if nx, ok := e.Float32s["nx"]; ok {
-			ny := e.Float32s["ny"]
-			nz := e.Float32s["nz"]
-			data.Normals = append(data.Normals, nx, ny, nz)
-		}
-
 		if s, ok := e.Float32s["s"]; ok {
 			t := e.Float32s["t"]
 			data.TexCoords = append(data.TexCoords, s, 1-t)
