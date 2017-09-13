@@ -6,22 +6,26 @@ import (
 
 // CenteredText draws text that is horizontally and vertically centered.
 type CenteredText struct {
-	// Text is the text to render.
-	Text string
-
 	// textRenderer renders the text.
 	textRenderer *gfx.TextRenderer
+
+	// Text is the text to render.
+	Text string
 }
 
 // NewCenteredText creates a new CenteredText.
-func NewCenteredText(textRenderer *gfx.TextRenderer) *CenteredText {
+func NewCenteredText(textRenderer *gfx.TextRenderer, text string) *CenteredText {
 	return &CenteredText{
 		textRenderer: textRenderer,
+		Text:         text,
 	}
 }
 
 // Render renders the CenteredText.
 func (c *CenteredText) Render(vc ViewContext) {
+	if c.Text == "" {
+		return 
+	}
 	sz := c.textRenderer.Measure(c.Text)
 	pt := vc.Bounds.Min
 	pt.X += (vc.Bounds.Dx() - sz.X) / 2

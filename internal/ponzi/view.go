@@ -64,8 +64,8 @@ type View struct {
 	// chartThumbs renders the model's other stocks.
 	chartThumbs []*ChartThumbnail
 
-	// inputSymbol is the symbol being entered by the user.
-	inputSymbol string
+	// inputSymbol stores and renders the symbol being entered by the user.
+	inputSymbol *CenteredText
 
 	// nextViewContext is the next viewContext to pass down the view hierarchy.
 	nextViewContext ViewContext
@@ -147,8 +147,9 @@ func NewView(model *Model) *View {
 	gfx.SetDirectionalLightVector(directionalVector)
 
 	v := &View{
-		model:      model,
-		viewMatrix: vm,
+		model:       model,
+		inputSymbol: NewCenteredText(inputSymbolTextRenderer, ""),
+		viewMatrix:  vm,
 	}
 
 	if model.CurrentStock != nil {
@@ -194,22 +195,13 @@ func (v *View) Render(fudge float32) {
 	vc := v.nextViewContext
 	vc.values = &viewContextValues{}
 
-	// Render input symbol being typed in the center.
-	if v.inputSymbol != "" {
-		s := inputSymbolTextRenderer.Measure(v.inputSymbol)
-		pt := v.winSize.Sub(s).Div(2)
-		if len(v.model.Stocks) > 0 {
-			pt.X += viewChartThumbSize.X / 2
-		}
-		inputSymbolTextRenderer.Render(v.inputSymbol, pt, white)
-	}
-
-	// Render the main chart.
+	// Render the input symbol and the main chart.
 	if v.chart != nil {
 		vc.Bounds = image.Rectangle{image.ZP, v.winSize}.Inset(viewOuterPadding)
 		if len(v.model.Stocks) > 0 {
 			vc.Bounds.Min.X += viewOuterPadding + viewChartThumbSize.X
 		}
+		v.inputSymbol.Render(vc)
 		v.chart.Render(vc)
 	}
 
@@ -335,20 +327,20 @@ func (v *View) HandleChar(ch rune) {
 }
 
 func (v *View) pushSymbolChar(ch rune) {
-	v.inputSymbol += string(ch)
+	v.inputSymbol.Text += string(ch)
 }
 
 func (v *View) popSymbolChar() {
-	if l := len(v.inputSymbol); l > 0 {
-		v.inputSymbol = v.inputSymbol[:l-1]
+	if l := len(v.inputSymbol.Text); l > 0 {
+		v.inputSymbol.Text = v.inputSymbol.Text[:l-1]
 	}
 }
 
 func (v *View) submitSymbol() {
 	v.model.Lock()
 	defer v.model.Unlock()
-	v.model.CurrentStock = newModelStock(v.inputSymbol)
-	v.inputSymbol = ""
+	v.model.CurrentStock = newModelStock(v.inputSymbol.Text)
+	v.inputSymbol.Text = ""
 }
 
 // HandleCursorPos is a callback registered with GLFW to track cursor movement.
