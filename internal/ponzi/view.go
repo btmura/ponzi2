@@ -2,7 +2,6 @@ package ponzi
 
 import (
 	"image"
-	"math"
 	"unicode"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
@@ -73,9 +72,9 @@ type View struct {
 	// winSize is the current window's size used to measure and draw the UI.
 	winSize image.Point
 
-	viewMatrix        math2.Matrix4
-	perspectiveMatrix math2.Matrix4
-	orthoMatrix       math2.Matrix4
+	viewMatrix math2.Matrix4
+
+	orthoMatrix math2.Matrix4
 }
 
 // ViewContext is passed down the view hierarchy providing drawing hints and event information.
@@ -288,13 +287,8 @@ func (v *View) Resize(newSize image.Point) {
 
 	v.winSize = newSize
 
-	// Calculate the new perspective projection view matrix.
-	fw, fh := float32(v.winSize.X), float32(v.winSize.Y)
-	aspect := fw / fh
-	fovRadians := float32(math.Pi) / 3
-	v.perspectiveMatrix = v.viewMatrix.Mult(math2.PerspectiveMatrix(fovRadians, aspect, 1, 2000))
-
 	// Calculate the new ortho projection view matrix.
+	fw, fh := float32(v.winSize.X), float32(v.winSize.Y)
 	v.orthoMatrix = math2.OrthoMatrix(fw, fh, fw /* use width as depth */)
 }
 
