@@ -180,7 +180,6 @@ func (ch *ChartPrices) Render(r image.Rectangle) {
 		return
 	}
 
-	gfx.SetColorMixAmount(1)
 	gfx.SetModelMatrixRect(r)
 	ch.stickLines.Render()
 	ch.stickRects.Render()

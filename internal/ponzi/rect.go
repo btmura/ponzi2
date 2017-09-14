@@ -23,8 +23,6 @@ var (
 
 // renderRoundedRect renders a rounded rectangle using the given rectangular bounds.
 func renderRoundedRect(r image.Rectangle, roundAmount int) {
-	gfx.SetColorMixAmount(1)
-
 	// NORTHWEST Corner
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y-roundAmount, r.Min.X+roundAmount, r.Max.Y))
 	roundedCornerNW.Render()
@@ -65,8 +63,6 @@ func renderRoundedRect(r image.Rectangle, roundAmount int) {
 // renderHorizDividers horizontally cuts a rectangle from the bottom with the given percentage amounts
 // and draws the given VAO at those percentages.
 func renderHorizDividers(r image.Rectangle, dividerVAO *gfx.VAO, percentages ...float32) []image.Rectangle {
-	gfx.SetColorMixAmount(1)
-
 	rects := sliceRect(r, percentages...)
 	for _, r := range rects {
 		gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))

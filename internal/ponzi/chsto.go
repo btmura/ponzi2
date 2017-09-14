@@ -102,7 +102,6 @@ func (ch *ChartStochastics) Render(r image.Rectangle) {
 		return
 	}
 
-	gfx.SetColorMixAmount(1)
 	gfx.SetModelMatrixRect(r)
 	ch.stoLines.Render()
 

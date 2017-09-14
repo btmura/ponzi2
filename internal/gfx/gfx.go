@@ -52,14 +52,16 @@ func SetModelMatrixRect(r image.Rectangle) {
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 }
 
-// SetModelMatrixOrtho sets the model matrix to a rectangle of the given size with lower left anchored at the given point.
-func SetModelMatrixOrtho(pt, sz image.Point) {
+func setModelMatrixOrtho(pt, sz image.Point) {
 	m := math2.ScaleMatrix(float32(sz.X), float32(sz.Y), 1)
 	m = m.Mult(math2.TranslationMatrix(float32(pt.X), float32(pt.Y), 0))
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 }
 
-// TODO(btmura): rename to SetTextureColorAmount
-func SetColorMixAmount(amount float32) {
+func setColorMixAmount(amount float32) {
 	gl.Uniform1f(colorMixAmountLocation, amount)
+}
+
+func setTextColor(color TextColor) {
+	gl.Uniform3fv(textColorLocation, 1, &color[0])
 }

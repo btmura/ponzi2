@@ -127,7 +127,6 @@ func (ch *ChartVolume) Render(r image.Rectangle) {
 		return
 	}
 
-	gfx.SetColorMixAmount(1)
 	gfx.SetModelMatrixRect(r)
 	ch.volRects.Render()
 

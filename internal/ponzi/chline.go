@@ -76,7 +76,6 @@ func (ch *ChartLines) Render(r image.Rectangle) {
 	if !ch.renderable {
 		return
 	}
-	gfx.SetColorMixAmount(1)
 	gfx.SetModelMatrixRect(r)
 	ch.weekLines.Render()
 }

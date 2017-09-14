@@ -24,7 +24,6 @@ func (b *Button) Render(vc ViewContext) (clicked bool) {
 		clicked = true
 	}
 
-	gfx.SetColorMixAmount(1)
 	gfx.SetModelMatrixRect(vc.Bounds)
 	b.iconVAO.Render()
 	return clicked

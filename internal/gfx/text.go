@@ -77,11 +77,18 @@ func (t *TextRenderer) Measure(text string) image.Point {
 }
 
 // Render renders color text at the given point that points at the origin (baseline).
-func (t *TextRenderer) Render(text string, pt image.Point, color TextColor) int {
-	dx := 0
+func (t *TextRenderer) Render(text string, pt image.Point, color TextColor) (dx int) {
+	if text == "" {
+		return dx
+	}
+
+	setTextColor(color)
+	setColorMixAmount(0)
+	defer setColorMixAmount(1)
+
 	for _, r := range text {
 		rr := t.runeRenderer(r)
-		rr.render(pt, color)
+		rr.render(pt)
 		pt.X += rr.size.X
 		dx += rr.size.X
 	}
@@ -130,13 +137,10 @@ func newRuneRenderer(face font.Face, m font.Metrics, r rune) *runeRenderer {
 // runePlaneObject is a shared Vertex Array Object that all runeRenderers use.
 var runePlaneObject *VAO
 
-func (r *runeRenderer) render(pt image.Point, color TextColor) image.Point {
-	SetModelMatrixOrtho(pt, r.size)
+func (r *runeRenderer) render(pt image.Point) image.Point {
+	setModelMatrixOrtho(pt, r.size)
 
 	gl.BindTexture(gl.TEXTURE_2D, r.texture)
-	gl.Uniform3fv(textColorLocation, 1, &color[0])
-	SetColorMixAmount(0)
-
 	if runePlaneObject == nil {
 		runePlaneObject = ReadPLYVAO(bytes.NewReader(MustAsset("textPlane.ply")))
 	}
