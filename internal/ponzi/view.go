@@ -23,12 +23,6 @@ var (
 	gray   = [3]float32{0.15, 0.15, 0.15}
 )
 
-var (
-	cameraPosition = math2.Vector3{X: 0, Y: 5, Z: 10}
-	targetPosition = math2.Vector3{}
-	up             = math2.Vector3{X: 0, Y: 1, Z: 0}
-)
-
 // acceptedChars are the chars the user can enter for a symbol.
 var acceptedChars = map[rune]bool{
 	'A': true, 'B': true, 'C': true,
