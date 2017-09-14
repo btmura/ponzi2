@@ -62,8 +62,11 @@ type View struct {
 	// inputSymbol stores and renders the symbol being entered by the user.
 	inputSymbol *CenteredText
 
-	// nextViewContext is the next viewContext to pass down the view hierarchy.
-	nextViewContext ViewContext
+	// mousePos is the current global mouse position.
+	mousePos image.Point
+
+	// mouseLeftButtonClicked is whether the left mouse button was clicked.
+	mouseLeftButtonClicked bool
 
 	// winSize is the current window's size used to measure and draw the UI.
 	winSize image.Point
@@ -106,9 +109,6 @@ func (vc ViewContext) ScheduleCallbacks(cbs []func()) {
 
 // NewView creates a new View that observes the given Model.
 func NewView(model *Model) *View {
-
-	// Initialize OpenGL and enable features.
-
 	if err := gl.Init(); err != nil {
 		glog.Fatalf("newView: failed to init OpenGL: %v", err)
 	}
@@ -173,8 +173,11 @@ func (v *View) Render(fudge float32) {
 		v.chart = v.newChart(v.model.CurrentStock)
 	}
 
-	vc := v.nextViewContext
-	vc.values = &viewContextValues{}
+	vc := ViewContext{
+		MousePos:               v.mousePos,
+		MouseLeftButtonClicked: v.mouseLeftButtonClicked,
+		values:                 &viewContextValues{},
+	}
 
 	// Render the input symbol and the main chart.
 	if v.chart != nil {
@@ -202,7 +205,7 @@ func (v *View) Render(fudge float32) {
 	}
 
 	// Reset any flags for the next viewContext.
-	v.nextViewContext.MouseLeftButtonClicked = false
+	v.mouseLeftButtonClicked = false
 }
 
 func (v *View) newChart(st *ModelStock) *Chart {
@@ -322,7 +325,7 @@ func (v *View) submitSymbol() {
 // HandleCursorPos is a callback registered with GLFW to track cursor movement.
 func (v *View) HandleCursorPos(x, y float64) {
 	// Flip Y-axis since the OpenGL coordinate system makes lower left the origin.
-	v.nextViewContext.MousePos = image.Pt(int(x), v.winSize.Y-int(y))
+	v.mousePos = image.Pt(int(x), v.winSize.Y-int(y))
 }
 
 // HandleMouseButton is a callback registered with GLFW to track mouse clicks.
@@ -331,5 +334,5 @@ func (v *View) HandleMouseButton(button glfw.MouseButton, action glfw.Action) {
 		glog.Infof("handleMouseButton: ignoring mouse button(%v) and action(%v)", button, action)
 		return // Only interested in left clicks right now.
 	}
-	v.nextViewContext.MouseLeftButtonClicked = action == glfw.Release
+	v.mouseLeftButtonClicked = action == glfw.Release
 }
