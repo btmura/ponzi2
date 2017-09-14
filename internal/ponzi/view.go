@@ -64,8 +64,6 @@ type View struct {
 
 	// winSize is the current window's size used to measure and draw the UI.
 	winSize image.Point
-
-	orthoMatrix math2.Matrix4
 }
 
 // ViewContext is passed down the view hierarchy providing drawing hints and event information.
@@ -158,7 +156,6 @@ func (v *View) Render(fudge float32) {
 	defer v.model.Unlock()
 
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-	gfx.SetProjectionViewMatrix(v.orthoMatrix)
 
 	if v.chart == nil || v.chart.stock != v.model.CurrentStock {
 		if v.chart != nil {
@@ -268,7 +265,7 @@ func (v *View) Resize(newSize image.Point) {
 
 	// Calculate the new ortho projection view matrix.
 	fw, fh := float32(v.winSize.X), float32(v.winSize.Y)
-	v.orthoMatrix = math2.OrthoMatrix(fw, fh, fw /* use width as depth */)
+	gfx.SetProjectionViewMatrix(math2.OrthoMatrix(fw, fh, fw /* use width as depth */))
 }
 
 // HandleKey is a callback registered with GLFW to receive key presses.
