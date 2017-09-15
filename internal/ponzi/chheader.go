@@ -10,7 +10,7 @@ import (
 type ChartHeader struct {
 	stock                   *ModelStock
 	symbolQuoteTextRenderer *gfx.TextRenderer
-	quoteFormatter          func(*ModelQuote) string
+	quoteFormatter          func(*ModelStock) string
 	button                  *Button
 	roundAmount             int
 	padding                 int
@@ -18,7 +18,7 @@ type ChartHeader struct {
 }
 
 // NewChartHeader creates a new chart header.
-func NewChartHeader(stock *ModelStock, symbolQuoteTextRenderer *gfx.TextRenderer, quoteFormatter func(*ModelQuote) string, button *Button, roundAmount, padding int) *ChartHeader {
+func NewChartHeader(stock *ModelStock, symbolQuoteTextRenderer *gfx.TextRenderer, quoteFormatter func(*ModelStock) string, button *Button, roundAmount, padding int) *ChartHeader {
 	return &ChartHeader{
 		stock: stock,
 		symbolQuoteTextRenderer: symbolQuoteTextRenderer,
@@ -43,7 +43,7 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, buttonClick
 		pt.X += ch.roundAmount
 		pt.X += ch.symbolQuoteTextRenderer.Render(ch.stock.symbol, pt, white)
 		pt.X += ch.padding
-		pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteFormatter(ch.stock.quote), pt, quoteColor(ch.stock.quote))
+		pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteFormatter(ch.stock), pt, quoteColor(ch.stock))
 	}
 	pt.Y -= ch.padding
 
@@ -61,12 +61,12 @@ func (ch *ChartHeader) AddButtonClickCallback(cb func()) {
 	ch.button.AddClickCallback(cb)
 }
 
-func quoteColor(q *ModelQuote) [3]float32 {
+func quoteColor(st *ModelStock) [3]float32 {
 	switch {
-	case q.percentChange > 0:
+	case st.percentChange > 0:
 		return green
 
-	case q.percentChange < 0:
+	case st.percentChange < 0:
 		return red
 	}
 	return white

@@ -16,9 +16,9 @@ const (
 
 var (
 	thumbSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
-	thumbFormatQuote             = func(q *ModelQuote) string {
-		if q.price != 0 {
-			return fmt.Sprintf(" %.2f %+5.2f%% ", q.price, q.percentChange*100.0)
+	thumbFormatQuote             = func(st *ModelStock) string {
+		if st.price != 0 {
+			return fmt.Sprintf(" %.2f %+5.2f%% ", st.price, st.percentChange*100.0)
 		}
 		return ""
 	}

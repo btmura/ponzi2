@@ -83,17 +83,12 @@ func (m *Model) Refresh() error {
 
 type ModelStock struct {
 	symbol         string
-	quote          *ModelQuote
+	price          float32
+	change         float32
+	percentChange  float32
 	dailySessions  []*ModelTradingSession
 	weeklySessions []*ModelTradingSession
 	lastUpdateTime time.Time
-}
-
-type ModelQuote struct {
-	symbol        string
-	price         float32
-	change        float32
-	percentChange float32
 }
 
 type ModelTradingSession struct {
@@ -110,10 +105,7 @@ type ModelTradingSession struct {
 }
 
 func newModelStock(symbol string) *ModelStock {
-	return &ModelStock{
-		symbol: symbol,
-		quote:  &ModelQuote{symbol: symbol},
-	}
+	return &ModelStock{symbol: symbol}
 }
 
 func (m *ModelStock) Refresh() error {
@@ -132,9 +124,9 @@ func (m *ModelStock) Refresh() error {
 	m.dailySessions, m.weeklySessions = convertSessions(hist.Sessions)
 	if len(m.dailySessions) > 0 {
 		last := m.dailySessions[len(m.dailySessions)-1]
-		m.quote.price = last.close
-		m.quote.change = last.change
-		m.quote.percentChange = last.percentChange
+		m.price = last.close
+		m.change = last.change
+		m.percentChange = last.percentChange
 	}
 	m.lastUpdateTime = time.Now()
 
