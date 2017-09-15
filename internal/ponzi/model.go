@@ -25,17 +25,17 @@ type Model struct {
 func NewModel(currentSymbol string, symbols []string) *Model {
 	var sts []*ModelStock
 	for _, s := range symbols {
-		sts = append(sts, newModelStock(s))
+		sts = append(sts, NewModelStock(s))
 	}
 	return &Model{
-		CurrentStock: newModelStock(currentSymbol),
+		CurrentStock: NewModelStock(currentSymbol),
 		Stocks:       sts,
 	}
 }
 
 // AddStock adds a stock to the model.
 func (m *Model) AddStock(st *ModelStock) bool {
-	if m.Stock(st.symbol) != nil {
+	if m.Stock(st.Symbol) != nil {
 		return false // Already have it.
 	}
 	m.Stocks = append(m.Stocks, st)
@@ -44,12 +44,12 @@ func (m *Model) AddStock(st *ModelStock) bool {
 
 // RemoveStock removes a stock from the model.
 func (m *Model) RemoveStock(st *ModelStock) bool {
-	if m.Stock(st.symbol) == nil {
+	if m.Stock(st.Symbol) == nil {
 		return false // Don't have it.
 	}
 
 	for i, stock := range m.Stocks {
-		if stock.symbol == st.symbol {
+		if stock.Symbol == st.Symbol {
 			m.Stocks = append(m.Stocks[:i], m.Stocks[i+1:]...)
 			break
 		}
@@ -61,7 +61,7 @@ func (m *Model) RemoveStock(st *ModelStock) bool {
 // Stock returns the stock with the symbol or nil if the sidebar doesn't have it.
 func (m *Model) Stock(symbol string) *ModelStock {
 	for _, st := range m.Stocks {
-		if st.symbol == symbol {
+		if st.Symbol == symbol {
 			return st
 		}
 	}
@@ -83,61 +83,61 @@ func (m *Model) Refresh() error {
 
 // ModelStock models a single stock.
 type ModelStock struct {
-	symbol         string
-	dailySessions  []*ModelTradingSession
-	weeklySessions []*ModelTradingSession
-	lastUpdateTime time.Time
+	Symbol         string
+	DailySessions  []*ModelTradingSession
+	WeeklySessions []*ModelTradingSession
+	LastUpdateTime time.Time
 }
 
 // ModelTradingSession models a single trading session.
 type ModelTradingSession struct {
-	date          time.Time
-	open          float32
-	high          float32
-	low           float32
-	close         float32
-	volume        int
-	change        float32
-	percentChange float32
-	k             float32
-	d             float32
+	Date          time.Time
+	Open          float32
+	High          float32
+	Low           float32
+	Close         float32
+	Volume        int
+	Change        float32
+	PercentChange float32
+	K             float32
+	D             float32
 }
 
-func newModelStock(symbol string) *ModelStock {
-	return &ModelStock{symbol: symbol}
+// NewModelStock creates a new ModelStock.
+func NewModelStock(symbol string) *ModelStock {
+	return &ModelStock{Symbol: symbol}
 }
 
 // Price returns the most recent price or 0 if no data.
 func (m *ModelStock) Price() float32 {
-	if len(m.dailySessions) == 0 {
+	if len(m.DailySessions) == 0 {
 		return 0
 	}
-	return m.dailySessions[len(m.dailySessions)-1].close
+	return m.DailySessions[len(m.DailySessions)-1].Close
 }
 
 // Change returns the most recent change or 0 if no data.
 func (m *ModelStock) Change() float32 {
-	if len(m.dailySessions) == 0 {
+	if len(m.DailySessions) == 0 {
 		return 0
 	}
-	return m.dailySessions[len(m.dailySessions)-1].change
+	return m.DailySessions[len(m.DailySessions)-1].Change
 }
 
 // PercentChange returns the most recent percent change or 0 if no data.
 func (m *ModelStock) PercentChange() float32 {
-	if len(m.dailySessions) == 0 {
+	if len(m.DailySessions) == 0 {
 		return 0
 	}
-	return m.dailySessions[len(m.dailySessions)-1].percentChange
+	return m.DailySessions[len(m.DailySessions)-1].PercentChange
 }
 
 // Refresh refreshs the stock.
 func (m *ModelStock) Refresh() error {
-	// Get the trading history for the current stock.
 	end := time2.Midnight(time.Now().In(time2.NewYorkLoc))
 	start := end.Add(-6 * 30 * 24 * time.Hour)
 	hist, err := stock.GetTradingHistory(&stock.GetTradingHistoryRequest{
-		Symbol:    m.symbol,
+		Symbol:    m.Symbol,
 		StartDate: start,
 		EndDate:   end,
 	})
@@ -145,8 +145,8 @@ func (m *ModelStock) Refresh() error {
 		return err
 	}
 
-	m.dailySessions, m.weeklySessions = convertSessions(hist.Sessions)
-	m.lastUpdateTime = time.Now()
+	m.DailySessions, m.WeeklySessions = convertSessions(hist.Sessions)
+	m.LastUpdateTime = time.Now()
 
 	return nil
 }
@@ -156,12 +156,12 @@ func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySes
 	var ds []*ModelTradingSession
 	for _, s := range sessions {
 		ds = append(ds, &ModelTradingSession{
-			date:   s.Date,
-			open:   s.Open,
-			high:   s.High,
-			low:    s.Low,
-			close:  s.Close,
-			volume: s.Volume,
+			Date:   s.Date,
+			Open:   s.Open,
+			High:   s.High,
+			Low:    s.Low,
+			Close:  s.Close,
+			Volume: s.Volume,
 		})
 	}
 	sortByModelTradingSessionDate(ds)
@@ -171,8 +171,8 @@ func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySes
 	for _, s := range ds {
 		diffWeek := ws == nil
 		if !diffWeek {
-			_, week := s.date.ISOWeek()
-			_, prevWeek := ws[len(ws)-1].date.ISOWeek()
+			_, week := s.Date.ISOWeek()
+			_, prevWeek := ws[len(ws)-1].Date.ISOWeek()
 			diffWeek = week != prevWeek
 		}
 
@@ -181,14 +181,14 @@ func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySes
 			ws = append(ws, &sc)
 		} else {
 			ls := ws[len(ws)-1]
-			if ls.high < s.high {
-				ls.high = s.high
+			if ls.High < s.High {
+				ls.High = s.High
 			}
-			if ls.low > s.low {
-				ls.low = s.low
+			if ls.Low > s.Low {
+				ls.Low = s.Low
 			}
-			ls.close = s.close
-			ls.volume += s.volume
+			ls.Close = s.Close
+			ls.Volume += s.Volume
 		}
 	}
 
@@ -196,8 +196,8 @@ func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySes
 	addChanges := func(ss []*ModelTradingSession) {
 		for i := range ss {
 			if i > 0 {
-				ss[i].change = ss[i].close - ss[i-1].close
-				ss[i].percentChange = ss[i].change / ss[i-1].close
+				ss[i].Change = ss[i].Close - ss[i-1].Close
+				ss[i].PercentChange = ss[i].Change / ss[i-1].Close
 			}
 		}
 	}
@@ -218,16 +218,16 @@ func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySes
 				continue
 			}
 
-			highestHigh, lowestLow := ss[i].high, ss[i].low
+			highestHigh, lowestLow := ss[i].High, ss[i].Low
 			for j := 0; j < k; j++ {
-				if highestHigh < ss[i-j].high {
-					highestHigh = ss[i-j].high
+				if highestHigh < ss[i-j].High {
+					highestHigh = ss[i-j].High
 				}
-				if lowestLow > ss[i-j].low {
-					lowestLow = ss[i-j].low
+				if lowestLow > ss[i-j].Low {
+					lowestLow = ss[i-j].Low
 				}
 			}
-			fastK[i] = (ss[i].close - lowestLow) / (highestHigh - lowestLow)
+			fastK[i] = (ss[i].Close - lowestLow) / (highestHigh - lowestLow)
 		}
 
 		// Calculate fast %D (slow %K) for stochastics.
@@ -235,7 +235,7 @@ func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySes
 			if i+1 < k+d {
 				continue
 			}
-			ss[i].k = (fastK[i] + fastK[i-1] + fastK[i-2]) / 3
+			ss[i].K = (fastK[i] + fastK[i-1] + fastK[i-2]) / 3
 		}
 
 		// Calculate slow %D for stochastics.
@@ -243,7 +243,7 @@ func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySes
 			if i+1 < k+d+d {
 				continue
 			}
-			ss[i].d = (ss[i].k + ss[i-1].k + ss[i-2].k) / 3
+			ss[i].D = (ss[i].K + ss[i-1].K + ss[i-2].K) / 3
 		}
 	}
 	addStochastics(ds)
@@ -254,6 +254,6 @@ func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySes
 
 func sortByModelTradingSessionDate(ss []*ModelTradingSession) {
 	sort.Slice(ss, func(i, j int) bool {
-		return ss[i].date.Before(ss[j].date)
+		return ss[i].Date.Before(ss[j].Date)
 	})
 }

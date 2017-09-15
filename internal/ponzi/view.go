@@ -247,7 +247,7 @@ func (v *View) addSidebarChartThumb(st *ModelStock) {
 func (v *View) saveConfig() error {
 	cfg := &Config{}
 	for _, st := range v.model.Stocks {
-		cfg.Stocks = append(cfg.Stocks, ConfigStock{st.symbol})
+		cfg.Stocks = append(cfg.Stocks, ConfigStock{st.Symbol})
 	}
 	return SaveConfig(cfg)
 }
@@ -309,7 +309,7 @@ func (v *View) popSymbolChar() {
 func (v *View) submitSymbol() {
 	v.model.Lock()
 	defer v.model.Unlock()
-	v.model.CurrentStock = newModelStock(v.inputSymbol.Text)
+	v.model.CurrentStock = NewModelStock(v.inputSymbol.Text)
 	v.inputSymbol.Text = ""
 }
 

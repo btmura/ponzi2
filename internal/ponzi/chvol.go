@@ -24,22 +24,22 @@ func NewChartVolume(stock *ModelStock) *ChartVolume {
 }
 
 func (ch *ChartVolume) Update() {
-	if ch.lastStockUpdateTime == ch.stock.lastUpdateTime {
+	if ch.lastStockUpdateTime == ch.stock.LastUpdateTime {
 		return
 	}
-	ch.lastStockUpdateTime = ch.stock.lastUpdateTime
+	ch.lastStockUpdateTime = ch.stock.LastUpdateTime
 
 	ch.maxVolume = 0
-	for _, s := range ch.stock.dailySessions {
-		if ch.maxVolume < s.volume {
-			ch.maxVolume = s.volume
+	for _, s := range ch.stock.DailySessions {
+		if ch.maxVolume < s.Volume {
+			ch.maxVolume = s.Volume
 		}
 	}
 
 	if ch.volRects != nil {
 		ch.volRects.Delete()
 	}
-	ch.volRects = createChartVolumeBarsVAO(ch.stock.dailySessions, ch.maxVolume)
+	ch.volRects = createChartVolumeBarsVAO(ch.stock.DailySessions, ch.maxVolume)
 
 	ch.renderable = true
 }
@@ -58,7 +58,7 @@ func createChartVolumeBarsVAO(ds []*ModelTradingSession, maxVolume int) *gfx.VAO
 	}
 
 	for i, s := range ds {
-		topY := calcY(s.volume)
+		topY := calcY(s.Volume)
 		botY := calcY(0)
 
 		// Add the vertices needed to create the volume bar.
@@ -71,7 +71,7 @@ func createChartVolumeBarsVAO(ds []*ModelTradingSession, maxVolume int) *gfx.VAO
 
 		// Add the colors corresponding to the volume bar.
 		switch {
-		case s.close > s.open:
+		case s.Close > s.Open:
 			colors = append(colors,
 				green[0], green[1], green[2],
 				green[0], green[1], green[2],
@@ -79,7 +79,7 @@ func createChartVolumeBarsVAO(ds []*ModelTradingSession, maxVolume int) *gfx.VAO
 				green[0], green[1], green[2],
 			)
 
-		case s.close < s.open:
+		case s.Close < s.Open:
 			colors = append(colors,
 				red[0], red[1], red[2],
 				red[0], red[1], red[2],

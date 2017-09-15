@@ -24,14 +24,14 @@ func NewChartLines(stock *ModelStock) *ChartLines {
 
 // Update updates the chart lines.
 func (ch *ChartLines) Update() {
-	if ch.lastStockUpdateTime == ch.stock.lastUpdateTime {
+	if ch.lastStockUpdateTime == ch.stock.LastUpdateTime {
 		return
 	}
-	ch.lastStockUpdateTime = ch.stock.lastUpdateTime
+	ch.lastStockUpdateTime = ch.stock.LastUpdateTime
 	if ch.weekLines != nil {
 		ch.weekLines.Delete()
 	}
-	ch.weekLines = createChartWeekLinesVAO(ch.stock.dailySessions)
+	ch.weekLines = createChartWeekLinesVAO(ch.stock.DailySessions)
 	ch.renderable = true
 }
 
@@ -47,8 +47,8 @@ func createChartWeekLinesVAO(ds []*ModelTradingSession) *gfx.VAO {
 			continue // Can't check previous week.
 		}
 
-		_, pwk := ds[i-1].date.ISOWeek()
-		_, wk := s.date.ISOWeek()
+		_, pwk := ds[i-1].Date.ISOWeek()
+		_, wk := s.Date.ISOWeek()
 		if pwk == wk {
 			continue
 		}

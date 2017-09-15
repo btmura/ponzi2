@@ -41,7 +41,7 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, buttonClick
 	{
 		pt := pt
 		pt.X += ch.roundAmount
-		pt.X += ch.symbolQuoteTextRenderer.Render(ch.stock.symbol, pt, white)
+		pt.X += ch.symbolQuoteTextRenderer.Render(ch.stock.Symbol, pt, white)
 		pt.X += ch.padding
 		pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteFormatter(ch.stock), pt, quoteColor(ch.stock))
 	}

@@ -30,18 +30,18 @@ func NewChartPrices(stock *ModelStock) *ChartPrices {
 
 // Update updates the candlesticks and price labels.
 func (ch *ChartPrices) Update() {
-	if ch.lastStockUpdateTime == ch.stock.lastUpdateTime {
+	if ch.lastStockUpdateTime == ch.stock.LastUpdateTime {
 		return
 	}
-	ch.lastStockUpdateTime = ch.stock.lastUpdateTime
+	ch.lastStockUpdateTime = ch.stock.LastUpdateTime
 
 	ch.minPrice, ch.maxPrice = math.MaxFloat32, 0
-	for _, s := range ch.stock.dailySessions {
-		if ch.minPrice > s.low {
-			ch.minPrice = s.low
+	for _, s := range ch.stock.DailySessions {
+		if ch.minPrice > s.Low {
+			ch.minPrice = s.Low
 		}
-		if ch.maxPrice < s.high {
-			ch.maxPrice = s.high
+		if ch.maxPrice < s.High {
+			ch.maxPrice = s.High
 		}
 	}
 
@@ -51,7 +51,7 @@ func (ch *ChartPrices) Update() {
 	if ch.stickRects != nil {
 		ch.stickRects.Delete()
 	}
-	ch.stickLines, ch.stickRects = createChartCandlestickVAOs(ch.stock.dailySessions, ch.minPrice, ch.maxPrice)
+	ch.stickLines, ch.stickRects = createChartCandlestickVAOs(ch.stock.DailySessions, ch.minPrice, ch.maxPrice)
 
 	_, labelSize := ch.priceLabelText(ch.maxPrice)
 	ch.labelHeight = labelSize.Y
@@ -77,7 +77,7 @@ func createChartCandlestickVAOs(ds []*ModelTradingSession, minPrice, maxPrice fl
 
 	for i, s := range ds {
 		// Figure out Y coordinates of the key levels.
-		lowY, highY, openY, closeY := calcY(s.low), calcY(s.high), calcY(s.open), calcY(s.close)
+		lowY, highY, openY, closeY := calcY(s.Low), calcY(s.High), calcY(s.Open), calcY(s.Close)
 
 		// Figure out the top and bottom of the candlestick.
 		topY, botY := openY, closeY
@@ -100,9 +100,9 @@ func createChartCandlestickVAOs(ds []*ModelTradingSession, minPrice, maxPrice fl
 		// Add the colors corresponding to the vertices.
 		var c [3]float32
 		switch {
-		case s.close > s.open:
+		case s.Close > s.Open:
 			c = green
-		case s.close < s.open:
+		case s.Close < s.Open:
 			c = red
 		default:
 			c = yellow
@@ -131,7 +131,7 @@ func createChartCandlestickVAOs(ds []*ModelTradingSession, minPrice, maxPrice fl
 			idx(2), idx(3),
 		)
 
-		if s.close > s.open {
+		if s.Close > s.Open {
 			// Use lines for open candlestick on higher closes.
 			lineIndices = append(lineIndices,
 				idx(4), idx(5),

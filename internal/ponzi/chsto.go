@@ -31,14 +31,14 @@ func NewChartStochastics(stock *ModelStock, stoType ChartStochasticType) *ChartS
 }
 
 func (ch *ChartStochastics) Update() {
-	if ch.lastStockUpdateTime == ch.stock.lastUpdateTime {
+	if ch.lastStockUpdateTime == ch.stock.LastUpdateTime {
 		return
 	}
-	ch.lastStockUpdateTime = ch.stock.lastUpdateTime
+	ch.lastStockUpdateTime = ch.stock.LastUpdateTime
 
-	ss, dColor := ch.stock.dailySessions, yellow
+	ss, dColor := ch.stock.DailySessions, yellow
 	if ch.stoType == WeeklySTO {
-		ss, dColor = ch.stock.weeklySessions, purple
+		ss, dColor = ch.stock.WeeklySessions, purple
 	}
 
 	if ch.stoLines != nil {
@@ -65,11 +65,11 @@ func createStochasticVAOs(ss []*ModelTradingSession, dColor [3]float32) (stoLine
 	// Add vertices and indices for d percent lines.
 	first := true
 	for i, s := range ss {
-		if s.d == 0.0 {
+		if s.D == 0.0 {
 			continue
 		}
 
-		data.Vertices = append(data.Vertices, calcX(i), calcY(s.d), 0)
+		data.Vertices = append(data.Vertices, calcX(i), calcY(s.D), 0)
 		data.Colors = append(data.Colors, dColor[0], dColor[1], dColor[2])
 		if !first {
 			data.Indices = append(data.Indices, v, v-1)
@@ -81,11 +81,11 @@ func createStochasticVAOs(ss []*ModelTradingSession, dColor [3]float32) (stoLine
 	// Add vertices and indices for k percent lines.
 	first = true
 	for i, s := range ss {
-		if s.k == 0.0 {
+		if s.K == 0.0 {
 			continue
 		}
 
-		data.Vertices = append(data.Vertices, calcX(i), calcY(s.k), 0)
+		data.Vertices = append(data.Vertices, calcX(i), calcY(s.K), 0)
 		data.Colors = append(data.Colors, red[0], red[1], red[2])
 		if !first {
 			data.Indices = append(data.Indices, v, v-1)
