@@ -63,10 +63,10 @@ func (ch *ChartHeader) AddButtonClickCallback(cb func()) {
 
 func quoteColor(st *ModelStock) [3]float32 {
 	switch {
-	case st.percentChange > 0:
+	case st.PercentChange() > 0:
 		return green
 
-	case st.percentChange < 0:
+	case st.PercentChange() < 0:
 		return red
 	}
 	return white

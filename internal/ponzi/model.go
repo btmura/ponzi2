@@ -81,16 +81,15 @@ func (m *Model) Refresh() error {
 	return nil
 }
 
+// ModelStock models a single stock.
 type ModelStock struct {
 	symbol         string
-	price          float32
-	change         float32
-	percentChange  float32
 	dailySessions  []*ModelTradingSession
 	weeklySessions []*ModelTradingSession
 	lastUpdateTime time.Time
 }
 
+// ModelTradingSession models a single trading session.
 type ModelTradingSession struct {
 	date          time.Time
 	open          float32
@@ -108,6 +107,31 @@ func newModelStock(symbol string) *ModelStock {
 	return &ModelStock{symbol: symbol}
 }
 
+// Price returns the most recent price or 0 if no data.
+func (m *ModelStock) Price() float32 {
+	if len(m.dailySessions) == 0 {
+		return 0
+	}
+	return m.dailySessions[len(m.dailySessions)-1].close
+}
+
+// Change returns the most recent change or 0 if no data.
+func (m *ModelStock) Change() float32 {
+	if len(m.dailySessions) == 0 {
+		return 0
+	}
+	return m.dailySessions[len(m.dailySessions)-1].change
+}
+
+// PercentChange returns the most recent percent change or 0 if no data.
+func (m *ModelStock) PercentChange() float32 {
+	if len(m.dailySessions) == 0 {
+		return 0
+	}
+	return m.dailySessions[len(m.dailySessions)-1].percentChange
+}
+
+// Refresh refreshs the stock.
 func (m *ModelStock) Refresh() error {
 	// Get the trading history for the current stock.
 	end := time2.Midnight(time.Now().In(time2.NewYorkLoc))
@@ -122,12 +146,6 @@ func (m *ModelStock) Refresh() error {
 	}
 
 	m.dailySessions, m.weeklySessions = convertSessions(hist.Sessions)
-	if len(m.dailySessions) > 0 {
-		last := m.dailySessions[len(m.dailySessions)-1]
-		m.price = last.close
-		m.change = last.change
-		m.percentChange = last.percentChange
-	}
 	m.lastUpdateTime = time.Now()
 
 	return nil
