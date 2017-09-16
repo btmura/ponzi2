@@ -8,28 +8,33 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
-type ChartStochasticType int32
+// ChartInterval is the data interval like daily or weekly.
+type ChartInterval int32
 
+// ChartInterval enums.
 const (
-	DailySTO ChartStochasticType = iota
-	WeeklySTO
+	DailyInterval ChartInterval = iota
+	WeeklyInterval
 )
 
+// ChartStochastics shows the stochastic lines for a single stock.
 type ChartStochastics struct {
 	stock               *ModelStock
 	lastStockUpdateTime time.Time
 	renderable          bool
-	stoType             ChartStochasticType
+	stoInterval         ChartInterval
 	stoLines            *gfx.VAO
 }
 
-func NewChartStochastics(stock *ModelStock, stoType ChartStochasticType) *ChartStochastics {
+// NewChartStochastics creates a new ChartStochastics.
+func NewChartStochastics(stock *ModelStock, stoInterval ChartInterval) *ChartStochastics {
 	return &ChartStochastics{
-		stock:   stock,
-		stoType: stoType,
+		stock:       stock,
+		stoInterval: stoInterval,
 	}
 }
 
+// Update updates the ChartStochastics.
 func (ch *ChartStochastics) Update() {
 	if ch.lastStockUpdateTime == ch.stock.LastUpdateTime {
 		return
@@ -37,7 +42,7 @@ func (ch *ChartStochastics) Update() {
 	ch.lastStockUpdateTime = ch.stock.LastUpdateTime
 
 	ss, dColor := ch.stock.DailySessions, yellow
-	if ch.stoType == WeeklySTO {
+	if ch.stoInterval == WeeklyInterval {
 		ss, dColor = ch.stock.WeeklySessions, purple
 	}
 
@@ -97,6 +102,7 @@ func createStochasticVAOs(ss []*ModelTradingSession, dColor [3]float32) (stoLine
 	return gfx.NewVAO(gfx.Lines, data)
 }
 
+// Render renders the stochastic lines.
 func (ch *ChartStochastics) Render(r image.Rectangle) {
 	if !ch.renderable {
 		return
@@ -108,6 +114,7 @@ func (ch *ChartStochastics) Render(r image.Rectangle) {
 	renderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
 }
 
+// RenderLabels renders the Y-axis labels for the stochastic lines.
 func (ch *ChartStochastics) RenderLabels(r image.Rectangle) (maxLabelWidth int) {
 	if !ch.renderable {
 		return
@@ -137,6 +144,7 @@ func (ch *ChartStochastics) stochasticLabelText(percent float32) (text string, s
 	return t, chartAxisLabelTextRenderer.Measure(t)
 }
 
+// Close frees the resources backing the ChartStochastics.
 func (ch *ChartStochastics) Close() {
 	ch.renderable = false
 	ch.stoLines.Delete()

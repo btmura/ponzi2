@@ -51,8 +51,8 @@ func NewChart(stock *ModelStock) *Chart {
 		lines:             NewChartLines(stock),
 		prices:            NewChartPrices(stock),
 		volume:            NewChartVolume(stock),
-		dailyStochastics:  NewChartStochastics(stock, DailySTO),
-		weeklyStochastics: NewChartStochastics(stock, WeeklySTO),
+		dailyStochastics:  NewChartStochastics(stock, DailyInterval),
+		weeklyStochastics: NewChartStochastics(stock, WeeklyInterval),
 	}
 }
 
