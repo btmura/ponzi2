@@ -53,7 +53,7 @@ func (ch *ChartPrices) Update() {
 	}
 	ch.stickLines, ch.stickRects = createChartCandlestickVAOs(ch.stock.DailySessions, ch.minPrice, ch.maxPrice)
 
-	_, labelSize := ch.priceLabelText(ch.maxPrice)
+	_, labelSize := priceLabelText(ch.maxPrice)
 	ch.labelHeight = labelSize.Y
 
 	ch.renderable = true
@@ -232,7 +232,7 @@ func (ch *ChartPrices) RenderLabels(r image.Rectangle) (maxLabelWidth int) {
 			}
 
 			v := v - pricePerPixel*float32(dvy)
-			t, s := ch.priceLabelText(v)
+			t, s := priceLabelText(v)
 			c.X -= s.X
 			chartAxisLabelTextRenderer.Render(t, c, white)
 
@@ -248,7 +248,7 @@ func (ch *ChartPrices) RenderLabels(r image.Rectangle) (maxLabelWidth int) {
 	return maxWidth
 }
 
-func (ch *ChartPrices) priceLabelText(v float32) (text string, size image.Point) {
+func priceLabelText(v float32) (text string, size image.Point) {
 	t := strconv.FormatFloat(float64(v), 'f', 2, 32)
 	return t, chartAxisLabelTextRenderer.Measure(t)
 }

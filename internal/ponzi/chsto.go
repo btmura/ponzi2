@@ -120,8 +120,8 @@ func (ch *ChartStochastics) RenderLabels(r image.Rectangle) (maxLabelWidth int) 
 		return
 	}
 
-	t1, s1 := ch.stochasticLabelText(.7)
-	t2, s2 := ch.stochasticLabelText(.3)
+	t1, s1 := stochasticLabelText(.7)
+	t2, s2 := stochasticLabelText(.3)
 
 	render := func(t string, s image.Point, yLocPercent float32) {
 		x := r.Max.X - s.X
@@ -139,7 +139,7 @@ func (ch *ChartStochastics) RenderLabels(r image.Rectangle) (maxLabelWidth int) 
 	return s.X
 }
 
-func (ch *ChartStochastics) stochasticLabelText(percent float32) (text string, size image.Point) {
+func stochasticLabelText(percent float32) (text string, size image.Point) {
 	t := fmt.Sprintf("%.f%%", percent*100)
 	return t, chartAxisLabelTextRenderer.Measure(t)
 }

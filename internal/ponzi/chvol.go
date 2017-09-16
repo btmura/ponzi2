@@ -143,8 +143,8 @@ func (ch *ChartVolume) RenderLabels(r image.Rectangle) (maxLabelWidth int) {
 		return
 	}
 
-	t1, s1 := ch.volumeLabelText(int(float32(ch.maxVolume) * .7))
-	t2, s2 := ch.volumeLabelText(int(float32(ch.maxVolume) * .3))
+	t1, s1 := volumeLabelText(int(float32(ch.maxVolume) * .7))
+	t2, s2 := volumeLabelText(int(float32(ch.maxVolume) * .3))
 
 	render := func(t string, s image.Point, yLocPercent float32) {
 		x := r.Max.X - s.X
@@ -162,7 +162,7 @@ func (ch *ChartVolume) RenderLabels(r image.Rectangle) (maxLabelWidth int) {
 	return s.X
 }
 
-func (ch *ChartVolume) volumeLabelText(v int) (text string, size image.Point) {
+func volumeLabelText(v int) (text string, size image.Point) {
 	var t string
 	switch {
 	case v > 1000000000:
