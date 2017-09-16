@@ -9,6 +9,7 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
+// ChartVolume shows the volume bars for a single stock.
 type ChartVolume struct {
 	stock               *ModelStock
 	lastStockUpdateTime time.Time
@@ -17,12 +18,14 @@ type ChartVolume struct {
 	volRects            *gfx.VAO
 }
 
+// NewChartVolume creates a new ChartVolume instance.
 func NewChartVolume(stock *ModelStock) *ChartVolume {
 	return &ChartVolume{
 		stock: stock,
 	}
 }
 
+// Update updates the ChartVolume.
 func (ch *ChartVolume) Update() {
 	if ch.lastStockUpdateTime == ch.stock.LastUpdateTime {
 		return
@@ -122,6 +125,7 @@ func createChartVolumeBarsVAO(ds []*ModelTradingSession, maxVolume int) *gfx.VAO
 	)
 }
 
+// Render renders the volume bars.
 func (ch *ChartVolume) Render(r image.Rectangle) {
 	if !ch.renderable {
 		return
@@ -133,6 +137,7 @@ func (ch *ChartVolume) Render(r image.Rectangle) {
 	renderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
 }
 
+// RenderLabels renders the Y-axis labels for the volume bars.
 func (ch *ChartVolume) RenderLabels(r image.Rectangle) (maxLabelWidth int) {
 	if !ch.renderable {
 		return
@@ -172,6 +177,7 @@ func (ch *ChartVolume) volumeLabelText(v int) (text string, size image.Point) {
 	return t, chartAxisLabelTextRenderer.Measure(t)
 }
 
+// Close frees the resources backing the ChartVolume.
 func (ch *ChartVolume) Close() {
 	ch.renderable = false
 	ch.volRects.Delete()
