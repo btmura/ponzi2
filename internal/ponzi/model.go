@@ -2,18 +2,13 @@ package ponzi
 
 import (
 	"sort"
-	"sync"
 	"time"
 
 	"github.com/btmura/ponzi2/internal/stock"
-	time2 "github.com/btmura/ponzi2/internal/time"
 )
 
 // Model is the state of the program separate from the view.
 type Model struct {
-	// Mutex guards the model.
-	sync.Mutex
-
 	// CurrentStock is the stock currently being viewed.
 	CurrentStock *ModelStock
 
@@ -68,25 +63,13 @@ func (m *Model) Stock(symbol string) *ModelStock {
 	return nil
 }
 
-// Refresh refreshes the Model.
-func (m *Model) Refresh() error {
-	if err := m.CurrentStock.Refresh(); err != nil {
-		return err
-	}
-	for _, st := range m.Stocks {
-		if err := st.Refresh(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // ModelStock models a single stock.
 type ModelStock struct {
-	Symbol         string
-	DailySessions  []*ModelTradingSession
-	WeeklySessions []*ModelTradingSession
-	LastUpdateTime time.Time
+	Symbol          string
+	DailySessions   []*ModelTradingSession
+	WeeklySessions  []*ModelTradingSession
+	LastUpdateTime  time.Time
+	changeCallbacks []func()
 }
 
 // ModelTradingSession models a single trading session.
@@ -106,6 +89,11 @@ type ModelTradingSession struct {
 // NewModelStock creates a new ModelStock.
 func NewModelStock(symbol string) *ModelStock {
 	return &ModelStock{Symbol: symbol}
+}
+
+// AddChangeCallback adds a callback to be fired when the stock changes.
+func (m *ModelStock) AddChangeCallback(cb func()) {
+	m.changeCallbacks = append(m.changeCallbacks, cb)
 }
 
 // Price returns the most recent price or 0 if no data.
@@ -132,22 +120,13 @@ func (m *ModelStock) PercentChange() float32 {
 	return m.DailySessions[len(m.DailySessions)-1].PercentChange
 }
 
-// Refresh refreshs the stock.
-func (m *ModelStock) Refresh() error {
-	end := time2.Midnight(time.Now().In(time2.NewYorkLoc))
-	start := end.Add(-6 * 30 * 24 * time.Hour)
-	hist, err := stock.GetTradingHistory(&stock.GetTradingHistoryRequest{
-		Symbol:    m.Symbol,
-		StartDate: start,
-		EndDate:   end,
-	})
-	if err != nil {
-		return err
-	}
-
+// Update updates the stock with the new data.
+func (m *ModelStock) Update(hist *stock.TradingHistory) error {
 	m.DailySessions, m.WeeklySessions = convertSessions(hist.Sessions)
 	m.LastUpdateTime = time.Now()
-
+	for _, cb := range m.changeCallbacks {
+		cb()
+	}
 	return nil
 }
 

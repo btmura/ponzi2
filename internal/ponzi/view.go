@@ -2,6 +2,7 @@ package ponzi
 
 import (
 	"image"
+	"time"
 	"unicode"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
@@ -11,6 +12,8 @@ import (
 
 	"github.com/btmura/ponzi2/internal/gfx"
 	math2 "github.com/btmura/ponzi2/internal/math"
+	"github.com/btmura/ponzi2/internal/stock"
+	time2 "github.com/btmura/ponzi2/internal/time"
 )
 
 // Colors used throughout the UI.
@@ -56,6 +59,9 @@ type View struct {
 	// inputSymbol stores and renders the symbol being entered by the user.
 	inputSymbol *CenteredText
 
+	// pendingStockUpdates is a channel with stock updates ready to apply to the model.
+	pendingStockUpdates chan viewStockUpdate
+
 	// mousePos is the current global mouse position.
 	mousePos image.Point
 
@@ -64,6 +70,12 @@ type View struct {
 
 	// winSize is the current window's size used to measure and draw the UI.
 	winSize image.Point
+}
+
+// viewStockUpdate bundles a stock and new data for that stock.
+type viewStockUpdate struct {
+	stock          *ModelStock
+	tradingHistory *stock.TradingHistory
 }
 
 // ViewContext is passed down the view hierarchy providing drawing hints and event information.
@@ -121,16 +133,19 @@ func NewView(model *Model) *View {
 	}
 
 	v := &View{
-		model:       model,
-		inputSymbol: NewCenteredText(inputSymbolTextRenderer, ""),
+		model:               model,
+		inputSymbol:         NewCenteredText(inputSymbolTextRenderer, ""),
+		pendingStockUpdates: make(chan viewStockUpdate),
 	}
 
-	if model.CurrentStock != nil {
-		v.chart = v.newChart(model.CurrentStock)
+	if st := model.CurrentStock; st != nil {
+		v.setChart(st)
+		v.goRefreshStock(st)
 	}
 
 	for _, st := range model.Stocks {
-		v.addSidebarChartThumb(st)
+		v.addChartThumb(st)
+		v.goRefreshStock(st)
 	}
 
 	return v
@@ -138,8 +153,17 @@ func NewView(model *Model) *View {
 
 // Render renders the view.
 func (v *View) Render(fudge float32) {
-	v.model.Lock()
-	defer v.model.Unlock()
+	// Process any stock updates.
+loop:
+	for {
+		select {
+		case u := <-v.pendingStockUpdates:
+			u.stock.Update(u.tradingHistory)
+
+		default:
+			break loop
+		}
+	}
 
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -178,26 +202,33 @@ func (v *View) Render(fudge float32) {
 	v.mouseLeftButtonClicked = false
 }
 
-func (v *View) newChart(st *ModelStock) *Chart {
+func (v *View) setChart(st *ModelStock) {
 	ch := NewChart()
 	ch.Update(st)
+	st.AddChangeCallback(func() {
+		ch.Update(st)
+	})
+	v.chart = ch
+
 	ch.AddAddButtonClickCallback(func() {
 		if !v.model.AddStock(st) {
 			return
 		}
-		v.addSidebarChartThumb(st)
+		v.addChartThumb(st)
 		go func() {
 			if err := v.saveConfig(); err != nil {
 				glog.Warningf("addButtonClickCallback: failed to save config: %v", err)
 			}
 		}()
 	})
-	return ch
 }
 
-func (v *View) addSidebarChartThumb(st *ModelStock) {
+func (v *View) addChartThumb(st *ModelStock) {
 	th := NewChartThumbnail()
 	th.Update(st)
+	st.AddChangeCallback(func() {
+		th.Update(st)
+	})
 	v.chartThumbs = append(v.chartThumbs, th)
 
 	th.AddRemoveButtonClickCallback(func() {
@@ -222,6 +253,7 @@ func (v *View) addSidebarChartThumb(st *ModelStock) {
 
 	th.AddThumbClickCallback(func() {
 		v.model.CurrentStock = st
+		v.setChart(st)
 	})
 }
 
@@ -258,11 +290,6 @@ func (v *View) HandleKey(key glfw.Key, action glfw.Action) {
 	switch key {
 	case glfw.KeyEnter:
 		v.submitSymbol()
-		go func() {
-			if err := v.model.Refresh(); err != nil {
-				glog.Errorf("refresh failed: %v", err)
-			}
-		}()
 
 	case glfw.KeyBackspace:
 		v.popSymbolChar()
@@ -288,9 +315,10 @@ func (v *View) popSymbolChar() {
 }
 
 func (v *View) submitSymbol() {
-	v.model.Lock()
-	defer v.model.Unlock()
-	v.model.CurrentStock = NewModelStock(v.inputSymbol.Text)
+	st := NewModelStock(v.inputSymbol.Text)
+	v.model.CurrentStock = st
+	v.setChart(st)
+	v.goRefreshStock(st)
 	v.inputSymbol.Text = ""
 }
 
@@ -307,4 +335,25 @@ func (v *View) HandleMouseButton(button glfw.MouseButton, action glfw.Action) {
 		return // Only interested in left clicks right now.
 	}
 	v.mouseLeftButtonClicked = action == glfw.Release
+}
+
+func (v *View) goRefreshStock(st *ModelStock) {
+	go func() {
+		end := time2.Midnight(time.Now().In(time2.NewYorkLoc))
+		start := end.Add(-6 * 30 * 24 * time.Hour)
+		hist, err := stock.GetTradingHistory(&stock.GetTradingHistoryRequest{
+			Symbol:    st.Symbol,
+			StartDate: start,
+			EndDate:   end,
+		})
+		if err != nil {
+			glog.Warningf("goRefreshStock: failed to get trading history for %s: %v", st.Symbol, err)
+			return
+		}
+
+		v.pendingStockUpdates <- viewStockUpdate{
+			stock:          st,
+			tradingHistory: hist,
+		}
+	}()
 }

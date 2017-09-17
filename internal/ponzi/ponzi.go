@@ -54,13 +54,6 @@ func Run() {
 	m := NewModel("SPY", ss)
 	v := NewView(m)
 
-	// GLFW, GL, and shaders OK! Go fetch data for the model.
-	go func() {
-		if err := m.Refresh(); err != nil {
-			glog.Errorf("Run: refresh failed: %v", err)
-		}
-	}()
-
 	// Call the size callback to set the initial viewport.
 	w, h := win.GetSize()
 	v.Resize(image.Pt(w, h))
