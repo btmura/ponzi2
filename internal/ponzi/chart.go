@@ -33,36 +33,34 @@ var (
 
 // Chart shows a stock chart for a single stock.
 type Chart struct {
-	stock                   *ModelStock
-	header                  *ChartHeader
-	lines                   *ChartLines
-	prices                  *ChartPrices
-	volume                  *ChartVolume
-	dailyStochastics        *ChartStochastics
-	weeklyStochastics       *ChartStochastics
-	addButtonClickCallbacks []func()
+	header            *ChartHeader
+	lines             *ChartLines
+	prices            *ChartPrices
+	volume            *ChartVolume
+	dailyStochastics  *ChartStochastics
+	weeklyStochastics *ChartStochastics
 }
 
 // NewChart creates a new chart.
-func NewChart(stock *ModelStock) *Chart {
+func NewChart() *Chart {
 	return &Chart{
-		stock:             stock,
-		header:            NewChartHeader(stock, chartSymbolQuoteTextRenderer, chartFormatQuote, NewButton(chartAddButtonVAO), chartRounding, chartPadding),
-		lines:             NewChartLines(stock),
-		prices:            NewChartPrices(stock),
-		volume:            NewChartVolume(stock),
-		dailyStochastics:  NewChartStochastics(stock, DailyInterval),
-		weeklyStochastics: NewChartStochastics(stock, WeeklyInterval),
+		header:            NewChartHeader(chartSymbolQuoteTextRenderer, chartFormatQuote, NewButton(chartAddButtonVAO), chartRounding, chartPadding),
+		lines:             &ChartLines{},
+		prices:            &ChartPrices{},
+		volume:            &ChartVolume{},
+		dailyStochastics:  &ChartStochastics{Interval: DailyInterval},
+		weeklyStochastics: &ChartStochastics{Interval: WeeklyInterval},
 	}
 }
 
-// Update updates the chart.
-func (ch *Chart) Update() {
-	ch.lines.Update()
-	ch.prices.Update()
-	ch.volume.Update()
-	ch.dailyStochastics.Update()
-	ch.weeklyStochastics.Update()
+// Update updates the Chart.
+func (ch *Chart) Update(st *ModelStock) {
+	ch.header.Update(st)
+	ch.lines.Update(st)
+	ch.prices.Update(st)
+	ch.volume.Update(st)
+	ch.dailyStochastics.Update(st)
+	ch.weeklyStochastics.Update(st)
 }
 
 // Render renders the chart.
@@ -111,12 +109,28 @@ func (ch *Chart) AddAddButtonClickCallback(cb func()) {
 
 // Close frees the resources backing the chart.
 func (ch *Chart) Close() {
-	ch.prices.Close()
-	ch.prices = nil
-	ch.volume.Close()
-	ch.volume = nil
-	ch.dailyStochastics.Close()
-	ch.dailyStochastics = nil
-	ch.weeklyStochastics.Close()
-	ch.weeklyStochastics = nil
+	if ch.header != nil {
+		ch.header.Close()
+		ch.header = nil
+	}
+	if ch.lines != nil {
+		ch.lines.Close()
+		ch.lines = nil
+	}
+	if ch.prices != nil {
+		ch.prices.Close()
+		ch.prices = nil
+	}
+	if ch.volume != nil {
+		ch.volume.Close()
+		ch.volume = nil
+	}
+	if ch.dailyStochastics != nil {
+		ch.dailyStochastics.Close()
+		ch.dailyStochastics = nil
+	}
+	if ch.weeklyStochastics != nil {
+		ch.weeklyStochastics.Close()
+		ch.weeklyStochastics = nil
+	}
 }

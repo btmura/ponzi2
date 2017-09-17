@@ -27,31 +27,29 @@ var (
 
 // ChartThumbnail shows a stock chart thumbnail for a single stock.
 type ChartThumbnail struct {
-	stock                      *ModelStock
-	header                     *ChartHeader
-	lines                      *ChartLines
-	dailyStochastics           *ChartStochastics
-	weeklyStochastics          *ChartStochastics
-	removeButtonClickCallbacks []func()
-	thumbClickCallbacks        []func()
+	header              *ChartHeader
+	lines               *ChartLines
+	dailyStochastics    *ChartStochastics
+	weeklyStochastics   *ChartStochastics
+	thumbClickCallbacks []func()
 }
 
-// NewChartThumbnail creates a new chart thumbnail.
-func NewChartThumbnail(stock *ModelStock) *ChartThumbnail {
+// NewChartThumbnail creates a ChartThumbnail.
+func NewChartThumbnail() *ChartThumbnail {
 	return &ChartThumbnail{
-		stock:             stock,
-		header:            NewChartHeader(stock, thumbSymbolQuoteTextRenderer, thumbFormatQuote, NewButton(thumbRemoveButtonVAO), thumbChartRounding, thumbChartPadding),
-		lines:             NewChartLines(stock),
-		dailyStochastics:  NewChartStochastics(stock, DailyInterval),
-		weeklyStochastics: NewChartStochastics(stock, WeeklyInterval),
+		header:            NewChartHeader(thumbSymbolQuoteTextRenderer, thumbFormatQuote, NewButton(thumbRemoveButtonVAO), thumbChartRounding, thumbChartPadding),
+		lines:             &ChartLines{},
+		dailyStochastics:  &ChartStochastics{Interval: DailyInterval},
+		weeklyStochastics: &ChartStochastics{Interval: WeeklyInterval},
 	}
 }
 
-// Update updates the chart thumbnail.
-func (ch *ChartThumbnail) Update() {
-	ch.lines.Update()
-	ch.dailyStochastics.Update()
-	ch.weeklyStochastics.Update()
+// Update updates the ChartThumbnail.
+func (ch *ChartThumbnail) Update(st *ModelStock) {
+	ch.header.Update(st)
+	ch.lines.Update(st)
+	ch.dailyStochastics.Update(st)
+	ch.weeklyStochastics.Update(st)
 }
 
 // Render renders the chart thumbnail.
@@ -82,10 +80,20 @@ func (ch *ChartThumbnail) AddThumbClickCallback(cb func()) {
 
 // Close frees the resources backing the chart thumbnail.
 func (ch *ChartThumbnail) Close() {
-	ch.lines.Close()
-	ch.lines = nil
-	ch.dailyStochastics.Close()
-	ch.dailyStochastics = nil
-	ch.weeklyStochastics.Close()
-	ch.weeklyStochastics = nil
+	if ch.header != nil {
+		ch.header.Close()
+		ch.header = nil
+	}
+	if ch.lines != nil {
+		ch.lines.Close()
+		ch.lines = nil
+	}
+	if ch.dailyStochastics != nil {
+		ch.dailyStochastics.Close()
+		ch.dailyStochastics = nil
+	}
+	if ch.weeklyStochastics != nil {
+		ch.weeklyStochastics.Close()
+		ch.weeklyStochastics = nil
+	}
 }

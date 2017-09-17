@@ -4,46 +4,68 @@ import (
 	"fmt"
 	"image"
 	"strconv"
-	"time"
 
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
-// ChartVolume shows the volume bars for a single stock.
+// ChartVolume renders the volume bars and labels for a single stock.
 type ChartVolume struct {
-	stock               *ModelStock
-	lastStockUpdateTime time.Time
-	renderable          bool
-	maxVolume           int
-	volRects            *gfx.VAO
+	renderable bool
+	labels     []chartVolumeLabel
+	volRects   *gfx.VAO
 }
 
-// NewChartVolume creates a new ChartVolume instance.
-func NewChartVolume(stock *ModelStock) *ChartVolume {
-	return &ChartVolume{
-		stock: stock,
-	}
+type chartVolumeLabel struct {
+	percent float32
+	text    string
+	size    image.Point
 }
 
-// Update updates the ChartVolume.
-func (ch *ChartVolume) Update() {
-	if ch.lastStockUpdateTime == ch.stock.LastUpdateTime {
-		return
-	}
-	ch.lastStockUpdateTime = ch.stock.LastUpdateTime
+// Update updates the ChartVolume with the stock.
+func (ch *ChartVolume) Update(st *ModelStock) {
+	// Reset everything.
+	ch.Close()
 
-	ch.maxVolume = 0
-	for _, s := range ch.stock.DailySessions {
-		if ch.maxVolume < s.Volume {
-			ch.maxVolume = s.Volume
+	// Bail out if there is no data yet.
+	if st.LastUpdateTime.IsZero() {
+		return // Stock has no data yet.
+	}
+
+	// Find the maximum volume.
+	var maxVolume int
+	for _, s := range st.DailySessions {
+		if maxVolume < s.Volume {
+			maxVolume = s.Volume
 		}
 	}
 
-	if ch.volRects != nil {
-		ch.volRects.Delete()
-	}
-	ch.volRects = createChartVolumeBarsVAO(ch.stock.DailySessions, ch.maxVolume)
+	// Create Y-axis labels for key percentages.
+	makeLabel := func(perc float32) chartVolumeLabel {
+		v := int(float32(maxVolume) * perc)
 
+		var t string
+		switch {
+		case v > 1000000000:
+			t = fmt.Sprintf("%dB", v/1000000000)
+		case v > 1000000:
+			t = fmt.Sprintf("%dM", v/1000000)
+		case v > 1000:
+			t = fmt.Sprintf("%dK", v/1000)
+		default:
+			t = strconv.Itoa(v)
+		}
+
+		return chartVolumeLabel{
+			percent: perc,
+			text:    t,
+			size:    chartAxisLabelTextRenderer.Measure(t),
+		}
+	}
+
+	ch.labels = append(ch.labels, makeLabel(.7))
+	ch.labels = append(ch.labels, makeLabel(.3))
+
+	ch.volRects = createChartVolumeBarsVAO(st.DailySessions, maxVolume)
 	ch.renderable = true
 }
 
@@ -143,43 +165,27 @@ func (ch *ChartVolume) RenderLabels(r image.Rectangle) (maxLabelWidth int) {
 		return
 	}
 
-	t1, s1 := volumeLabelText(int(float32(ch.maxVolume) * .7))
-	t2, s2 := volumeLabelText(int(float32(ch.maxVolume) * .3))
-
-	render := func(t string, s image.Point, yLocPercent float32) {
-		x := r.Max.X - s.X
-		y := r.Min.Y + int(float32(r.Dy())*yLocPercent) - s.Y/2
-		chartAxisLabelTextRenderer.Render(t, image.Pt(x, y), white)
+	var maxWidth int
+	renderLabel := func(l chartVolumeLabel) {
+		x := r.Max.X - l.size.X
+		y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
+		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
+		if maxWidth < l.size.X {
+			maxWidth = l.size.X
+		}
 	}
-
-	render(t1, s1, .7)
-	render(t2, s2, .3)
-
-	s := s1
-	if s.X < s2.X {
-		s = s2
+	for _, l := range ch.labels {
+		renderLabel(l)
 	}
-	return s.X
-}
-
-func volumeLabelText(v int) (text string, size image.Point) {
-	var t string
-	switch {
-	case v > 1000000000:
-		t = fmt.Sprintf("%dB", v/1000000000)
-	case v > 1000000:
-		t = fmt.Sprintf("%dM", v/1000000)
-	case v > 1000:
-		t = fmt.Sprintf("%dK", v/1000)
-	default:
-		t = strconv.Itoa(v)
-	}
-	return t, chartAxisLabelTextRenderer.Measure(t)
+	return maxWidth
 }
 
 // Close frees the resources backing the ChartVolume.
 func (ch *ChartVolume) Close() {
 	ch.renderable = false
-	ch.volRects.Delete()
-	ch.volRects = nil
+	ch.labels = nil
+	if ch.volRects != nil {
+		ch.volRects.Delete()
+		ch.volRects = nil
+	}
 }

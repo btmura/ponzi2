@@ -2,36 +2,27 @@ package ponzi
 
 import (
 	"image"
-	"time"
 
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
-// ChartLines shows weekly lines for a single stock.
+// ChartLines renders the weekly lines for a single stock.
 type ChartLines struct {
-	stock               *ModelStock
-	lastStockUpdateTime time.Time
-	renderable          bool
-	weekLines           *gfx.VAO
+	renderable bool
+	weekLines  *gfx.VAO
 }
 
-// NewChartLines creates a new chart lines instance.
-func NewChartLines(stock *ModelStock) *ChartLines {
-	return &ChartLines{
-		stock: stock,
-	}
-}
+// Update updates the ChartLines with the stock.
+func (ch *ChartLines) Update(st *ModelStock) {
+	// Reset everything.
+	ch.Close()
 
-// Update updates the chart lines.
-func (ch *ChartLines) Update() {
-	if ch.lastStockUpdateTime == ch.stock.LastUpdateTime {
-		return
+	// Bail out if there is no data yet.
+	if st.LastUpdateTime.IsZero() {
+		return // Stock has no data yet.
 	}
-	ch.lastStockUpdateTime = ch.stock.LastUpdateTime
-	if ch.weekLines != nil {
-		ch.weekLines.Delete()
-	}
-	ch.weekLines = createChartWeekLinesVAO(ch.stock.DailySessions)
+
+	ch.weekLines = createChartWeekLinesVAO(st.DailySessions)
 	ch.renderable = true
 }
 
@@ -76,6 +67,7 @@ func (ch *ChartLines) Render(r image.Rectangle) {
 	if !ch.renderable {
 		return
 	}
+
 	gfx.SetModelMatrixRect(r)
 	ch.weekLines.Render()
 }
@@ -83,5 +75,8 @@ func (ch *ChartLines) Render(r image.Rectangle) {
 // Close frees the resources backing the chart lines.
 func (ch *ChartLines) Close() {
 	ch.renderable = false
-	ch.weekLines.Delete()
+	if ch.weekLines != nil {
+		ch.weekLines.Delete()
+		ch.weekLines = nil
+	}
 }

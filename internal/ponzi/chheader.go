@@ -8,7 +8,9 @@ import (
 
 // ChartHeader shows a header for charts and thumbnails with a clickable button.
 type ChartHeader struct {
-	stock                   *ModelStock
+	symbol                  string
+	quoteText               string
+	quoteColor              [3]float32
 	symbolQuoteTextRenderer *gfx.TextRenderer
 	quoteFormatter          func(*ModelStock) string
 	button                  *Button
@@ -18,14 +20,29 @@ type ChartHeader struct {
 }
 
 // NewChartHeader creates a new chart header.
-func NewChartHeader(stock *ModelStock, symbolQuoteTextRenderer *gfx.TextRenderer, quoteFormatter func(*ModelStock) string, button *Button, roundAmount, padding int) *ChartHeader {
+func NewChartHeader(symbolQuoteTextRenderer *gfx.TextRenderer, quoteFormatter func(*ModelStock) string, button *Button, roundAmount, padding int) *ChartHeader {
 	return &ChartHeader{
-		stock: stock,
 		symbolQuoteTextRenderer: symbolQuoteTextRenderer,
 		quoteFormatter:          quoteFormatter,
 		button:                  button,
 		roundAmount:             roundAmount,
 		padding:                 padding,
+	}
+}
+
+// Update updates the ChartHeader with the given stock.
+func (ch *ChartHeader) Update(st *ModelStock) {
+	ch.symbol = st.Symbol
+	ch.quoteText = ch.quoteFormatter(st)
+	switch {
+	case st.PercentChange() > 0:
+		ch.quoteColor = green
+
+	case st.PercentChange() < 0:
+		ch.quoteColor = red
+
+	default:
+		ch.quoteColor = white
 	}
 }
 
@@ -41,9 +58,9 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, buttonClick
 	{
 		pt := pt
 		pt.X += ch.roundAmount
-		pt.X += ch.symbolQuoteTextRenderer.Render(ch.stock.Symbol, pt, white)
+		pt.X += ch.symbolQuoteTextRenderer.Render(ch.symbol, pt, white)
 		pt.X += ch.padding
-		pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteFormatter(ch.stock), pt, quoteColor(ch.stock))
+		pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteText, pt, ch.quoteColor)
 	}
 	pt.Y -= ch.padding
 
@@ -61,13 +78,5 @@ func (ch *ChartHeader) AddButtonClickCallback(cb func()) {
 	ch.button.AddClickCallback(cb)
 }
 
-func quoteColor(st *ModelStock) [3]float32 {
-	switch {
-	case st.PercentChange() > 0:
-		return green
-
-	case st.PercentChange() < 0:
-		return red
-	}
-	return white
-}
+// Close frees the resources backing the ChartHeader.
+func (ch *ChartHeader) Close() {}

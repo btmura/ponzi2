@@ -95,7 +95,7 @@ func Run() {
 		lag += elapsed
 
 		for lag >= secPerUpdate {
-			v.Update()
+			// TODO(btmura): update without rendering here
 			lag -= secPerUpdate
 		}
 

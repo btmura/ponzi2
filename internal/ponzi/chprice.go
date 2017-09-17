@@ -4,39 +4,35 @@ import (
 	"image"
 	"math"
 	"strconv"
-	"time"
 
 	"github.com/btmura/ponzi2/internal/gfx"
+	"github.com/golang/glog"
 )
 
 // ChartPrices shows the candlesticks and price labels for a single stock.
 type ChartPrices struct {
-	stock               *ModelStock
-	lastStockUpdateTime time.Time
-	renderable          bool
-	minPrice            float32
-	maxPrice            float32
-	labelHeight         int
-	stickLines          *gfx.VAO
-	stickRects          *gfx.VAO
+	renderable  bool
+	minPrice    float32
+	maxPrice    float32
+	labelHeight int
+	stickLines  *gfx.VAO
+	stickRects  *gfx.VAO
 }
 
-// NewChartPrices creates a new chart prices instance.
-func NewChartPrices(stock *ModelStock) *ChartPrices {
-	return &ChartPrices{
-		stock: stock,
-	}
-}
+// Update updates the ChartPrices with the stock.
+func (ch *ChartPrices) Update(st *ModelStock) {
+	// Reset everything.
+	ch.Close()
 
-// Update updates the candlesticks and price labels.
-func (ch *ChartPrices) Update() {
-	if ch.lastStockUpdateTime == ch.stock.LastUpdateTime {
-		return
+	// Bail out if there is no data yet.
+	if st.LastUpdateTime.IsZero() {
+		return // Stock has no data yet.
 	}
-	ch.lastStockUpdateTime = ch.stock.LastUpdateTime
 
-	ch.minPrice, ch.maxPrice = math.MaxFloat32, 0
-	for _, s := range ch.stock.DailySessions {
+	// Find the min and max price.
+	ch.minPrice = math.MaxFloat32
+	ch.maxPrice = 0
+	for _, s := range st.DailySessions {
 		if ch.minPrice > s.Low {
 			ch.minPrice = s.Low
 		}
@@ -45,13 +41,7 @@ func (ch *ChartPrices) Update() {
 		}
 	}
 
-	if ch.stickLines != nil {
-		ch.stickLines.Delete()
-	}
-	if ch.stickRects != nil {
-		ch.stickRects.Delete()
-	}
-	ch.stickLines, ch.stickRects = createChartCandlestickVAOs(ch.stock.DailySessions, ch.minPrice, ch.maxPrice)
+	ch.stickLines, ch.stickRects = createChartCandlestickVAOs(st.DailySessions, ch.minPrice, ch.maxPrice)
 
 	_, labelSize := priceLabelText(ch.maxPrice)
 	ch.labelHeight = labelSize.Y
@@ -207,6 +197,8 @@ func (ch *ChartPrices) RenderLabels(r image.Rectangle) (maxLabelWidth int) {
 		return
 	}
 
+	glog.Infof("rendering labels!")
+
 	labelPaddingY := ch.labelHeight / 2
 	pricePerPixel := (ch.maxPrice - ch.minPrice) / float32(r.Dy())
 
@@ -253,11 +245,18 @@ func priceLabelText(v float32) (text string, size image.Point) {
 	return t, chartAxisLabelTextRenderer.Measure(t)
 }
 
-// Close frees the resources backing the chart prices.
+// Close frees the resources backing the ChartPrices.
 func (ch *ChartPrices) Close() {
 	ch.renderable = false
-	ch.stickLines.Delete()
-	ch.stickLines = nil
-	ch.stickRects.Delete()
-	ch.stickRects = nil
+	ch.minPrice = 0
+	ch.maxPrice = 0
+	ch.labelHeight = 0
+	if ch.stickLines != nil {
+		ch.stickLines.Delete()
+		ch.stickLines = nil
+	}
+	if ch.stickRects != nil {
+		ch.stickRects.Delete()
+		ch.stickRects = nil
+	}
 }

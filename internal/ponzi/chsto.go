@@ -3,7 +3,8 @@ package ponzi
 import (
 	"fmt"
 	"image"
-	"time"
+
+	"github.com/golang/glog"
 
 	"github.com/btmura/ponzi2/internal/gfx"
 )
@@ -17,40 +18,55 @@ const (
 	WeeklyInterval
 )
 
-// ChartStochastics shows the stochastic lines for a single stock.
+// ChartStochastics renders the stochastic lines and labels for a single stock.
 type ChartStochastics struct {
-	stock               *ModelStock
-	lastStockUpdateTime time.Time
-	renderable          bool
-	stoInterval         ChartInterval
-	stoLines            *gfx.VAO
+	Interval   ChartInterval
+	renderable bool
+	labels     []chartStochasticLabel
+	stoLines   *gfx.VAO
 }
 
-// NewChartStochastics creates a new ChartStochastics.
-func NewChartStochastics(stock *ModelStock, stoInterval ChartInterval) *ChartStochastics {
-	return &ChartStochastics{
-		stock:       stock,
-		stoInterval: stoInterval,
-	}
+type chartStochasticLabel struct {
+	percent float32
+	text    string
+	size    image.Point
 }
 
-// Update updates the ChartStochastics.
-func (ch *ChartStochastics) Update() {
-	if ch.lastStockUpdateTime == ch.stock.LastUpdateTime {
-		return
-	}
-	ch.lastStockUpdateTime = ch.stock.LastUpdateTime
+// Update updates the ChartStochastics with the stock.
+func (ch *ChartStochastics) Update(st *ModelStock) {
+	// Reset everything.
+	ch.Close()
 
-	ss, dColor := ch.stock.DailySessions, yellow
-	if ch.stoInterval == WeeklyInterval {
-		ss, dColor = ch.stock.WeeklySessions, purple
+	// Bail out if there is no data yet.
+	if st.LastUpdateTime.IsZero() {
+		return // Stock has no data yet.
 	}
 
-	if ch.stoLines != nil {
-		ch.stoLines.Delete()
+	// Create Y-axis labels for key percentages.
+	makeLabel := func(perc float32) chartStochasticLabel {
+		t := fmt.Sprintf("%.f%%", perc*100)
+		return chartStochasticLabel{
+			percent: perc,
+			text:    t,
+			size:    chartAxisLabelTextRenderer.Measure(t),
+		}
 	}
+
+	ch.labels = append(ch.labels, makeLabel(.7))
+	ch.labels = append(ch.labels, makeLabel(.3))
+
+	var ss []*ModelTradingSession
+	var dColor [3]float32
+	switch ch.Interval {
+	case DailyInterval:
+		ss, dColor = st.DailySessions, yellow
+	case WeeklyInterval:
+		ss, dColor = st.WeeklySessions, purple
+	default:
+		glog.Fatalf("Update: unsupported interval: %v", ch.Interval)
+	}
+
 	ch.stoLines = createStochasticVAOs(ss, dColor)
-
 	ch.renderable = true
 }
 
@@ -120,33 +136,27 @@ func (ch *ChartStochastics) RenderLabels(r image.Rectangle) (maxLabelWidth int) 
 		return
 	}
 
-	t1, s1 := stochasticLabelText(.7)
-	t2, s2 := stochasticLabelText(.3)
-
-	render := func(t string, s image.Point, yLocPercent float32) {
-		x := r.Max.X - s.X
-		y := r.Min.Y + int(float32(r.Dy())*yLocPercent) - s.Y/2
-		chartAxisLabelTextRenderer.Render(t, image.Pt(x, y), white)
+	var maxWidth int
+	renderLabel := func(l chartStochasticLabel) {
+		x := r.Max.X - l.size.X
+		y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
+		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
+		if maxWidth < l.size.X {
+			maxWidth = l.size.X
+		}
 	}
-
-	render(t1, s1, .7)
-	render(t2, s2, .3)
-
-	s := s1
-	if s.X < s2.X {
-		s = s2
+	for _, l := range ch.labels {
+		renderLabel(l)
 	}
-	return s.X
-}
-
-func stochasticLabelText(percent float32) (text string, size image.Point) {
-	t := fmt.Sprintf("%.f%%", percent*100)
-	return t, chartAxisLabelTextRenderer.Measure(t)
+	return maxWidth
 }
 
 // Close frees the resources backing the ChartStochastics.
 func (ch *ChartStochastics) Close() {
 	ch.renderable = false
-	ch.stoLines.Delete()
-	ch.stoLines = nil
+	ch.labels = nil
+	if ch.stoLines != nil {
+		ch.stoLines.Delete()
+		ch.stoLines = nil
+	}
 }

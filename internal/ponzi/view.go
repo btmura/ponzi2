@@ -136,33 +136,12 @@ func NewView(model *Model) *View {
 	return v
 }
 
-// Update updates the view.
-func (v *View) Update() {
-	v.model.Lock()
-	defer v.model.Unlock()
-
-	if v.chart != nil {
-		v.chart.Update()
-	}
-
-	for _, th := range v.chartThumbs {
-		th.Update()
-	}
-}
-
 // Render renders the view.
 func (v *View) Render(fudge float32) {
 	v.model.Lock()
 	defer v.model.Unlock()
 
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
-	if v.chart == nil || v.chart.stock != v.model.CurrentStock {
-		if v.chart != nil {
-			v.chart.Close()
-		}
-		v.chart = v.newChart(v.model.CurrentStock)
-	}
 
 	vc := ViewContext{
 		MousePos:               v.mousePos,
@@ -200,7 +179,8 @@ func (v *View) Render(fudge float32) {
 }
 
 func (v *View) newChart(st *ModelStock) *Chart {
-	ch := NewChart(st)
+	ch := NewChart()
+	ch.Update(st)
 	ch.AddAddButtonClickCallback(func() {
 		if !v.model.AddStock(st) {
 			return
@@ -216,7 +196,8 @@ func (v *View) newChart(st *ModelStock) *Chart {
 }
 
 func (v *View) addSidebarChartThumb(st *ModelStock) {
-	th := NewChartThumbnail(st)
+	th := NewChartThumbnail()
+	th.Update(st)
 	v.chartThumbs = append(v.chartThumbs, th)
 
 	th.AddRemoveButtonClickCallback(func() {
