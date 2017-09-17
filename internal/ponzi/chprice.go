@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/btmura/ponzi2/internal/gfx"
-	"github.com/golang/glog"
 )
 
 // ChartPrices shows the candlesticks and price labels for a single stock.
@@ -196,8 +195,6 @@ func (ch *ChartPrices) RenderLabels(r image.Rectangle) (maxLabelWidth int) {
 	if !ch.renderable {
 		return
 	}
-
-	glog.Infof("rendering labels!")
 
 	labelPaddingY := ch.labelHeight / 2
 	pricePerPixel := (ch.maxPrice - ch.minPrice) / float32(r.Dy())
