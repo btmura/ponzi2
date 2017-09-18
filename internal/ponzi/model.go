@@ -7,23 +7,28 @@ import (
 	"github.com/btmura/ponzi2/internal/stock"
 )
 
-// Model is the state of the program separate from the view.
+// Model keeps track of the user's stocks.
 type Model struct {
 	// CurrentStock is the stock currently being viewed.
 	CurrentStock *ModelStock
 
-	// Stocks are the user's ordered stocks.
+	// Stocks are the user's other stocks.
 	Stocks []*ModelStock
 }
 
 // NewModel creates a new Model.
 func NewModel(currentSymbol string, symbols []string) *Model {
+	cs := NewModelStock(currentSymbol)
 	var sts []*ModelStock
 	for _, s := range symbols {
-		sts = append(sts, NewModelStock(s))
+		if s == currentSymbol {
+			sts = append(sts, cs)
+		} else {
+			sts = append(sts, NewModelStock(s))
+		}
 	}
 	return &Model{
-		CurrentStock: NewModelStock(currentSymbol),
+		CurrentStock: cs,
 		Stocks:       sts,
 	}
 }
