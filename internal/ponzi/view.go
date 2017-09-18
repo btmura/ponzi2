@@ -215,11 +215,7 @@ func (v *View) setChart(st *ModelStock) {
 			return
 		}
 		v.addChartThumb(st)
-		go func() {
-			if err := v.saveConfig(); err != nil {
-				glog.Warningf("addButtonClickCallback: failed to save config: %v", err)
-			}
-		}()
+		v.goSaveConfig()
 	})
 }
 
@@ -244,25 +240,13 @@ func (v *View) addChartThumb(st *ModelStock) {
 		}
 		th.Close()
 
-		go func() {
-			if err := v.saveConfig(); err != nil {
-				glog.Warningf("removeButtonClickCallback: failed to save config: %v", err)
-			}
-		}()
+		v.goSaveConfig()
 	})
 
 	th.AddThumbClickCallback(func() {
 		v.model.CurrentStock = st
 		v.setChart(st)
 	})
-}
-
-func (v *View) saveConfig() error {
-	cfg := &Config{}
-	for _, st := range v.model.Stocks {
-		cfg.Stocks = append(cfg.Stocks, ConfigStock{st.Symbol})
-	}
-	return SaveConfig(cfg)
 }
 
 // Resize responds to window size changes by updating internal matrices.
@@ -354,6 +338,21 @@ func (v *View) goRefreshStock(st *ModelStock) {
 		v.pendingStockUpdates <- viewStockUpdate{
 			stock:          st,
 			tradingHistory: hist,
+		}
+	}()
+}
+
+func (v *View) goSaveConfig() {
+	// Make the config on the main thread to save the exact config at the time.
+	cfg := &Config{}
+	for _, st := range v.model.Stocks {
+		cfg.Stocks = append(cfg.Stocks, ConfigStock{st.Symbol})
+	}
+
+	// Handle saving to disk in a separate go routine.
+	go func() {
+		if err := SaveConfig(cfg); err != nil {
+			glog.Warningf("goSaveConfig: failed to save config: %v", err)
 		}
 	}()
 }
