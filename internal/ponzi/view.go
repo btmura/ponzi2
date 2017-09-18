@@ -74,7 +74,10 @@ type View struct {
 
 // viewStockUpdate bundles a stock and new data for that stock.
 type viewStockUpdate struct {
-	stock          *ModelStock
+	// stock is the stock to update.
+	stock *ModelStock
+
+	// tradingHistory is the new data to update the stock with.
 	tradingHistory *stock.TradingHistory
 }
 
