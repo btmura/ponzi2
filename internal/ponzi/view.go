@@ -268,6 +268,14 @@ func (v *View) Resize(newSize image.Point) {
 	gfx.SetProjectionViewMatrix(math2.OrthoMatrix(fw, fh, fw /* use width as depth */))
 }
 
+// HandleChar is a callback registered with GLFW to receive character input.
+func (v *View) HandleChar(ch rune) {
+	ch = unicode.ToUpper(ch)
+	if _, ok := acceptedChars[ch]; ok {
+		v.pushSymbolChar(ch)
+	}
+}
+
 // HandleKey is a callback registered with GLFW to receive key presses.
 func (v *View) HandleKey(key glfw.Key, action glfw.Action) {
 	if action != glfw.Release {
@@ -275,19 +283,14 @@ func (v *View) HandleKey(key glfw.Key, action glfw.Action) {
 	}
 
 	switch key {
-	case glfw.KeyEnter:
-		v.submitSymbol()
-
 	case glfw.KeyBackspace:
 		v.popSymbolChar()
-	}
-}
 
-// HandleChar is a callback registered with GLFW to receive character input.
-func (v *View) HandleChar(ch rune) {
-	ch = unicode.ToUpper(ch)
-	if _, ok := acceptedChars[ch]; ok {
-		v.pushSymbolChar(ch)
+	case glfw.KeyEscape:
+		v.clearSymbol()
+
+	case glfw.KeyEnter:
+		v.submitSymbol()
 	}
 }
 
@@ -299,6 +302,10 @@ func (v *View) popSymbolChar() {
 	if l := len(v.inputSymbol.Text); l > 0 {
 		v.inputSymbol.Text = v.inputSymbol.Text[:l-1]
 	}
+}
+
+func (v *View) clearSymbol() {
+	v.inputSymbol.Text = ""
 }
 
 func (v *View) submitSymbol() {

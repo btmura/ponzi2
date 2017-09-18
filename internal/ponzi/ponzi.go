@@ -61,12 +61,12 @@ func Run() {
 		v.Resize(image.Pt(width, height))
 	})
 
-	win.SetKeyCallback(func(_ *glfw.Window, key glfw.Key, scancode int, action glfw.Action, _ glfw.ModifierKey) {
-		v.HandleKey(key, action)
-	})
-
 	win.SetCharCallback(func(_ *glfw.Window, char rune) {
 		v.HandleChar(char)
+	})
+
+	win.SetKeyCallback(func(_ *glfw.Window, key glfw.Key, scancode int, action glfw.Action, _ glfw.ModifierKey) {
+		v.HandleKey(key, action)
 	})
 
 	win.SetCursorPosCallback(func(_ *glfw.Window, x, y float64) {
