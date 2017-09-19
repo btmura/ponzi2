@@ -77,7 +77,9 @@ func SaveConfig(cfg *Config) error {
 	}
 	defer file.Close()
 
-	return json.NewEncoder(file).Encode(&cfg)
+	e := json.NewEncoder(file)
+	e.SetIndent("", "  ")
+	return e.Encode(&cfg)
 }
 
 func getUserConfigPath() (string, error) {
