@@ -102,9 +102,9 @@ func (ch *Chart) Render(vc ViewContext) {
 	ch.lines.Render(wr)
 }
 
-// AddAddButtonClickCallback adds a callback for when the add button is clicked.
-func (ch *Chart) AddAddButtonClickCallback(cb func()) {
-	ch.header.AddButtonClickCallback(cb)
+// SetAddButtonClickCallback sets the callback for when the add button is clicked.
+func (ch *Chart) SetAddButtonClickCallback(cb func()) {
+	ch.header.SetButtonClickCallback(cb)
 }
 
 // Close frees the resources backing the chart.

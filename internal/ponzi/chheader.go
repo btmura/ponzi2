@@ -73,9 +73,9 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, buttonClick
 	return r, buttonClicked
 }
 
-// AddButtonClickCallback adds a callback for when the button is clicked.
-func (ch *ChartHeader) AddButtonClickCallback(cb func()) {
-	ch.button.AddClickCallback(cb)
+// SetButtonClickCallback sets the callback for when the button is clicked.
+func (ch *ChartHeader) SetButtonClickCallback(cb func()) {
+	ch.button.SetClickCallback(cb)
 }
 
 // Close frees the resources backing the ChartHeader.

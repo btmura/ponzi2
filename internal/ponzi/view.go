@@ -109,9 +109,9 @@ func (vc ViewContext) LeftClickInBounds() bool {
 	return vc.MouseLeftButtonClicked && vc.MousePos.In(vc.Bounds)
 }
 
-// ScheduleCallbacks schedules a slice of callbacks that will be called after Render is done.
-func (vc ViewContext) ScheduleCallbacks(cbs []func()) {
-	vc.values.scheduledCallbacks = append(vc.values.scheduledCallbacks, cbs...)
+// ScheduleCallback schedules a callback that will be called after Render is done.
+func (vc ViewContext) ScheduleCallback(cb func()) {
+	vc.values.scheduledCallbacks = append(vc.values.scheduledCallbacks, cb)
 }
 
 // NewView creates a new View that observes the given Model.
@@ -213,7 +213,7 @@ func (v *View) setChart(st *ModelStock) {
 	})
 	v.chart = ch
 
-	ch.AddAddButtonClickCallback(func() {
+	ch.SetAddButtonClickCallback(func() {
 		if !v.model.AddStock(st) {
 			return
 		}
@@ -230,7 +230,7 @@ func (v *View) addChartThumb(st *ModelStock) {
 	})
 	v.chartThumbs = append(v.chartThumbs, th)
 
-	th.AddRemoveButtonClickCallback(func() {
+	th.SetRemoveButtonClickCallback(func() {
 		if !v.model.RemoveStock(st) {
 			return
 		}
@@ -246,7 +246,7 @@ func (v *View) addChartThumb(st *ModelStock) {
 		v.goSaveConfig()
 	})
 
-	th.AddThumbClickCallback(func() {
+	th.SetThumbClickCallback(func() {
 		v.model.CurrentStock = st
 		v.setChart(st)
 	})

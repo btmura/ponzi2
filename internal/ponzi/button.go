@@ -6,8 +6,8 @@ import (
 
 // Button is a button that can be rendered and clicked.
 type Button struct {
-	iconVAO        *gfx.VAO
-	clickCallbacks []func()
+	iconVAO       *gfx.VAO
+	clickCallback func()
 }
 
 // NewButton creates a new button.
@@ -20,7 +20,7 @@ func NewButton(iconVAO *gfx.VAO) *Button {
 // Render renders the button and detects button clicks.
 func (b *Button) Render(vc ViewContext) (clicked bool) {
 	if vc.LeftClickInBounds() {
-		vc.ScheduleCallbacks(b.clickCallbacks)
+		vc.ScheduleCallback(b.clickCallback)
 		clicked = true
 	}
 
@@ -29,7 +29,7 @@ func (b *Button) Render(vc ViewContext) (clicked bool) {
 	return clicked
 }
 
-// AddClickCallback adds a callback for when the button is clicked.
-func (b *Button) AddClickCallback(cb func()) {
-	b.clickCallbacks = append(b.clickCallbacks, cb)
+// SetClickCallback sets the callback for when the button is clicked.
+func (b *Button) SetClickCallback(cb func()) {
+	b.clickCallback = cb
 }

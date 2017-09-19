@@ -27,11 +27,11 @@ var (
 
 // ChartThumbnail shows a stock chart thumbnail for a single stock.
 type ChartThumbnail struct {
-	header              *ChartHeader
-	lines               *ChartLines
-	dailyStochastics    *ChartStochastics
-	weeklyStochastics   *ChartStochastics
-	thumbClickCallbacks []func()
+	header             *ChartHeader
+	lines              *ChartLines
+	dailyStochastics   *ChartStochastics
+	weeklyStochastics  *ChartStochastics
+	thumbClickCallback func()
 }
 
 // NewChartThumbnail creates a ChartThumbnail.
@@ -57,7 +57,7 @@ func (ch *ChartThumbnail) Render(vc ViewContext) {
 	r, clicked := ch.header.Render(vc)
 
 	if !clicked && vc.LeftClickInBounds() {
-		vc.ScheduleCallbacks(ch.thumbClickCallbacks)
+		vc.ScheduleCallback(ch.thumbClickCallback)
 	}
 
 	rects := renderHorizDividers(r, horizLine, 0.5, 0.5)
@@ -68,14 +68,14 @@ func (ch *ChartThumbnail) Render(vc ViewContext) {
 	ch.lines.Render(rects[0].Inset(thumbChartPadding))
 }
 
-// AddRemoveButtonClickCallback adds a callback for when the remove button is clicked.
-func (ch *ChartThumbnail) AddRemoveButtonClickCallback(cb func()) {
-	ch.header.AddButtonClickCallback(cb)
+// SetRemoveButtonClickCallback sets the callback for when the remove button is clicked.
+func (ch *ChartThumbnail) SetRemoveButtonClickCallback(cb func()) {
+	ch.header.SetButtonClickCallback(cb)
 }
 
-// AddThumbClickCallback adds a callback for when the thumbnail is clicked
-func (ch *ChartThumbnail) AddThumbClickCallback(cb func()) {
-	ch.thumbClickCallbacks = append(ch.thumbClickCallbacks, cb)
+// SetThumbClickCallback sets the callback for when the thumbnail is clicked.
+func (ch *ChartThumbnail) SetThumbClickCallback(cb func()) {
+	ch.thumbClickCallback = cb
 }
 
 // Close frees the resources backing the chart thumbnail.
