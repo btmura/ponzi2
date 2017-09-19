@@ -18,17 +18,27 @@ type Model struct {
 
 // NewModel creates a new Model.
 func NewModel(currentSymbol string, symbols []string) *Model {
-	cs := NewModelStock(currentSymbol)
+	symbolToStockMap := map[string]*ModelStock{}
+
+	if currentSymbol != "" {
+		symbolToStockMap[currentSymbol] = NewModelStock(currentSymbol)
+	}
+
 	var sts []*ModelStock
 	for _, s := range symbols {
-		if s == currentSymbol {
-			sts = append(sts, cs)
-		} else {
-			sts = append(sts, NewModelStock(s))
+		if s == "" {
+			continue
 		}
+
+		if symbolToStockMap[s] == nil {
+			symbolToStockMap[s] = NewModelStock(s)
+		}
+
+		sts = append(sts, symbolToStockMap[s])
 	}
+
 	return &Model{
-		CurrentStock: cs,
+		CurrentStock: symbolToStockMap[currentSymbol],
 		Stocks:       sts,
 	}
 }

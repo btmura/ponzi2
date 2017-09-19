@@ -51,7 +51,7 @@ func Run() {
 		ss = append(ss, st.Symbol)
 	}
 
-	m := NewModel("SPY", ss)
+	m := NewModel(cfg.CurrentStock.Symbol, ss)
 	v := NewView(m)
 
 	// Call the size callback to set the initial viewport.

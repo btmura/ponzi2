@@ -249,6 +249,7 @@ func (v *View) addChartThumb(st *ModelStock) {
 	th.SetThumbClickCallback(func() {
 		v.model.CurrentStock = st
 		v.setChart(st)
+		v.goSaveConfig()
 	})
 }
 
@@ -313,6 +314,7 @@ func (v *View) submitSymbol() {
 	v.model.CurrentStock = st
 	v.setChart(st)
 	v.goRefreshStock(st)
+	v.goSaveConfig()
 	v.inputSymbol.Text = ""
 }
 
@@ -355,6 +357,9 @@ func (v *View) goRefreshStock(st *ModelStock) {
 func (v *View) goSaveConfig() {
 	// Make the config on the main thread to save the exact config at the time.
 	cfg := &Config{}
+	if st := v.model.CurrentStock; st != nil {
+		cfg.CurrentStock = ConfigStock{st.Symbol}
+	}
 	for _, st := range v.model.Stocks {
 		cfg.Stocks = append(cfg.Stocks, ConfigStock{st.Symbol})
 	}

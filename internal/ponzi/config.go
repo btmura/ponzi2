@@ -13,6 +13,9 @@ import (
 
 // Config has the user's saved stocks.
 type Config struct {
+	// CurrentStock is the stock the user is viewing.
+	CurrentStock ConfigStock
+
 	// Stocks are the config's stocks. Capitalized for JSON decoding.
 	Stocks []ConfigStock
 }
