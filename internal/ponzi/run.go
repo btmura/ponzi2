@@ -51,8 +51,28 @@ func Run() {
 		ss = append(ss, st.Symbol)
 	}
 
-	m := NewModel(cfg.CurrentStock.Symbol, ss)
+	m := &Model{}
 	v := NewView(m)
+
+	if s := cfg.CurrentStock.Symbol; s != "" {
+		st := m.SetCurrentStock(s)
+		v.SetChart(st)
+		v.GoRefreshStock(st)
+	}
+
+	for _, cs := range cfg.Stocks {
+		if cs.Symbol == "" {
+			continue
+		}
+
+		st, added := m.AddSavedStock(cs.Symbol)
+		if !added {
+			continue
+		}
+
+		v.AddChartThumb(st)
+		v.GoRefreshStock(st)
+	}
 
 	// Call the size callback to set the initial viewport.
 	w, h := win.GetSize()

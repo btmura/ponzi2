@@ -135,23 +135,11 @@ func NewView(model *Model) *View {
 		glog.Fatalf("newView: failed to init gfx: %v", err)
 	}
 
-	v := &View{
+	return &View{
 		model:               model,
 		inputSymbol:         NewCenteredText(inputSymbolTextRenderer, ""),
 		pendingStockUpdates: make(chan viewStockUpdate),
 	}
-
-	if st := model.CurrentStock; st != nil {
-		v.setChart(st)
-		v.goRefreshStock(st)
-	}
-
-	for _, st := range model.Stocks {
-		v.addChartThumb(st)
-		v.goRefreshStock(st)
-	}
-
-	return v
 }
 
 // Render renders the view.
@@ -179,7 +167,7 @@ loop:
 	// Render the input symbol and the main chart.
 	if v.chart != nil {
 		vc.Bounds = image.Rectangle{image.ZP, v.winSize}.Inset(viewOuterPadding)
-		if len(v.model.Stocks) > 0 {
+		if len(v.model.SavedStocks) > 0 {
 			vc.Bounds.Min.X += viewOuterPadding + viewChartThumbSize.X
 		}
 		v.inputSymbol.Render(vc)
@@ -205,7 +193,7 @@ loop:
 	v.mouseLeftButtonClicked = false
 }
 
-func (v *View) setChart(st *ModelStock) {
+func (v *View) SetChart(st *ModelStock) {
 	ch := NewChart()
 	ch.Update(st)
 	st.AddChangeCallback(func() {
@@ -214,15 +202,16 @@ func (v *View) setChart(st *ModelStock) {
 	v.chart = ch
 
 	ch.SetAddButtonClickCallback(func() {
-		if !v.model.AddStock(st) {
+		st, added := v.model.AddSavedStock(st.Symbol)
+		if !added {
 			return
 		}
-		v.addChartThumb(st)
+		v.AddChartThumb(st)
 		v.goSaveConfig()
 	})
 }
 
-func (v *View) addChartThumb(st *ModelStock) {
+func (v *View) AddChartThumb(st *ModelStock) {
 	th := NewChartThumbnail()
 	th.Update(st)
 	st.AddChangeCallback(func() {
@@ -231,7 +220,8 @@ func (v *View) addChartThumb(st *ModelStock) {
 	v.chartThumbs = append(v.chartThumbs, th)
 
 	th.SetRemoveButtonClickCallback(func() {
-		if !v.model.RemoveStock(st) {
+		removed := v.model.RemoveSavedStock(st.Symbol)
+		if !removed {
 			return
 		}
 
@@ -247,8 +237,8 @@ func (v *View) addChartThumb(st *ModelStock) {
 	})
 
 	th.SetThumbClickCallback(func() {
-		v.model.CurrentStock = st
-		v.setChart(st)
+		st := v.model.SetCurrentStock(st.Symbol)
+		v.SetChart(st)
 		v.goSaveConfig()
 	})
 }
@@ -310,10 +300,9 @@ func (v *View) clearSymbol() {
 }
 
 func (v *View) submitSymbol() {
-	st := NewModelStock(v.inputSymbol.Text)
-	v.model.CurrentStock = st
-	v.setChart(st)
-	v.goRefreshStock(st)
+	st := v.model.SetCurrentStock(v.inputSymbol.Text)
+	v.SetChart(st)
+	v.GoRefreshStock(st)
 	v.goSaveConfig()
 	v.inputSymbol.Text = ""
 }
@@ -333,7 +322,7 @@ func (v *View) HandleMouseButton(button glfw.MouseButton, action glfw.Action) {
 	v.mouseLeftButtonClicked = action == glfw.Release
 }
 
-func (v *View) goRefreshStock(st *ModelStock) {
+func (v *View) GoRefreshStock(st *ModelStock) {
 	go func() {
 		end := time2.Midnight(time.Now().In(time2.NewYorkLoc))
 		start := end.Add(-6 * 30 * 24 * time.Hour)
@@ -360,7 +349,7 @@ func (v *View) goSaveConfig() {
 	if st := v.model.CurrentStock; st != nil {
 		cfg.CurrentStock = ConfigStock{st.Symbol}
 	}
-	for _, st := range v.model.Stocks {
+	for _, st := range v.model.SavedStocks {
 		cfg.Stocks = append(cfg.Stocks, ConfigStock{st.Symbol})
 	}
 

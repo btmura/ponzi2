@@ -12,70 +12,65 @@ type Model struct {
 	// CurrentStock is the stock currently being viewed.
 	CurrentStock *ModelStock
 
-	// Stocks are the user's other stocks.
-	Stocks []*ModelStock
+	// SavedStocks are the user's other stocks.
+	SavedStocks []*ModelStock
+
+	// symbolToStockMap maps symbol to ModelStock to keep symbols and ModelStocks 1:1.
+	symbolToStockMap map[string]*ModelStock
 }
 
-// NewModel creates a new Model.
-func NewModel(currentSymbol string, symbols []string) *Model {
-	symbolToStockMap := map[string]*ModelStock{}
-
-	if currentSymbol != "" {
-		symbolToStockMap[currentSymbol] = NewModelStock(currentSymbol)
-	}
-
-	var sts []*ModelStock
-	for _, s := range symbols {
-		if s == "" {
-			continue
-		}
-
-		if symbolToStockMap[s] == nil {
-			symbolToStockMap[s] = NewModelStock(s)
-		}
-
-		sts = append(sts, symbolToStockMap[s])
-	}
-
-	return &Model{
-		CurrentStock: symbolToStockMap[currentSymbol],
-		Stocks:       sts,
-	}
+// SetCurrentStock sets the current stock to the symbol argument and returns the corresponding ModelStock.
+func (m *Model) SetCurrentStock(symbol string) *ModelStock {
+	m.addSymbolToMap(symbol)
+	m.CurrentStock = m.symbolToStockMap[symbol]
+	return m.CurrentStock
 }
 
-// AddStock adds a stock to the model.
-func (m *Model) AddStock(st *ModelStock) bool {
-	if m.Stock(st.Symbol) != nil {
-		return false // Already have it.
-	}
-	m.Stocks = append(m.Stocks, st)
-	return true
-}
-
-// RemoveStock removes a stock from the model.
-func (m *Model) RemoveStock(st *ModelStock) bool {
-	if m.Stock(st.Symbol) == nil {
-		return false // Don't have it.
-	}
-
-	for i, stock := range m.Stocks {
-		if stock.Symbol == st.Symbol {
-			m.Stocks = append(m.Stocks[:i], m.Stocks[i+1:]...)
-			break
-		}
-	}
-
-	return true
-}
-
-// Stock returns the stock with the symbol or nil if the sidebar doesn't have it.
-func (m *Model) Stock(symbol string) *ModelStock {
-	for _, st := range m.Stocks {
+// AddSavedStock adds the stock by symbol and returns the ModelStock and true. Otherwise, it will return the ModelStock and false.
+func (m *Model) AddSavedStock(symbol string) (st *ModelStock, added bool) {
+	for _, st := range m.SavedStocks {
 		if st.Symbol == symbol {
-			return st
+			return st, false
 		}
 	}
-	return nil
+
+	m.addSymbolToMap(symbol)
+	st = m.symbolToStockMap[symbol]
+	m.SavedStocks = append(m.SavedStocks, st)
+	return st, true
+}
+
+// RemoveSavedStock removes the stock by symbol if it exists and returns true on success.
+func (m *Model) RemoveSavedStock(symbol string) (removed bool) {
+	for i, st := range m.SavedStocks {
+		if st.Symbol == symbol {
+			m.SavedStocks = append(m.SavedStocks[:i], m.SavedStocks[i+1:]...)
+
+			// Remove the symbol from the map if it is no longer even used for the current stock.
+			if m.CurrentStock != nil && m.CurrentStock.Symbol == symbol {
+				m.removeSymbolFromMap(symbol)
+			}
+			return true
+		}
+	}
+	return false
+}
+
+func (m *Model) addSymbolToMap(symbol string) {
+	if m.symbolToStockMap[symbol] != nil {
+		return
+	}
+	if m.symbolToStockMap == nil {
+		m.symbolToStockMap = map[string]*ModelStock{}
+	}
+	m.symbolToStockMap[symbol] = &ModelStock{Symbol: symbol}
+}
+
+func (m *Model) removeSymbolFromMap(symbol string) {
+	if m.symbolToStockMap[symbol] == nil {
+		return
+	}
+	delete(m.symbolToStockMap, symbol)
 }
 
 // ModelStock models a single stock.
@@ -99,11 +94,6 @@ type ModelTradingSession struct {
 	PercentChange float32
 	K             float32
 	D             float32
-}
-
-// NewModelStock creates a new ModelStock.
-func NewModelStock(symbol string) *ModelStock {
-	return &ModelStock{Symbol: symbol}
 }
 
 // AddChangeCallback adds a callback to be fired when the stock changes.
