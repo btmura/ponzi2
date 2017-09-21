@@ -46,11 +46,6 @@ func Run() {
 		glog.Fatalf("Run: failed to load config: %v", err)
 	}
 
-	var ss []string
-	for _, st := range cfg.Stocks {
-		ss = append(ss, st.Symbol)
-	}
-
 	m := &Model{}
 	v := NewView(m)
 
@@ -82,11 +77,24 @@ func Run() {
 	})
 
 	win.SetCharCallback(func(_ *glfw.Window, char rune) {
-		v.HandleChar(char)
+		v.PushInputSymbolChar(char)
 	})
 
-	win.SetKeyCallback(func(_ *glfw.Window, key glfw.Key, scancode int, action glfw.Action, _ glfw.ModifierKey) {
-		v.HandleKey(key, action)
+	win.SetKeyCallback(func(_ *glfw.Window, key glfw.Key, _ int, action glfw.Action, _ glfw.ModifierKey) {
+		if action != glfw.Release {
+			return
+		}
+
+		switch key {
+		case glfw.KeyEscape:
+			v.ClearInputSymbol()
+
+		case glfw.KeyBackspace:
+			v.PopInputSymbolChar()
+
+		case glfw.KeyEnter:
+			v.SubmitSymbol()
+		}
 	})
 
 	win.SetCursorPosCallback(func(_ *glfw.Window, x, y float64) {

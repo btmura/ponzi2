@@ -259,47 +259,26 @@ func (v *View) Resize(newSize image.Point) {
 	gfx.SetProjectionViewMatrix(math2.OrthoMatrix(fw, fh, fw /* use width as depth */))
 }
 
-// HandleChar is a callback registered with GLFW to receive character input.
-func (v *View) HandleChar(ch rune) {
+func (v *View) PushInputSymbolChar(ch rune) (pushed bool) {
 	ch = unicode.ToUpper(ch)
 	if _, ok := acceptedChars[ch]; ok {
-		v.pushSymbolChar(ch)
+		v.inputSymbol.Text += string(ch)
+		return true
 	}
+	return false
 }
 
-// HandleKey is a callback registered with GLFW to receive key presses.
-func (v *View) HandleKey(key glfw.Key, action glfw.Action) {
-	if action != glfw.Release {
-		return
-	}
-
-	switch key {
-	case glfw.KeyBackspace:
-		v.popSymbolChar()
-
-	case glfw.KeyEscape:
-		v.clearSymbol()
-
-	case glfw.KeyEnter:
-		v.submitSymbol()
-	}
-}
-
-func (v *View) pushSymbolChar(ch rune) {
-	v.inputSymbol.Text += string(ch)
-}
-
-func (v *View) popSymbolChar() {
+func (v *View) PopInputSymbolChar() {
 	if l := len(v.inputSymbol.Text); l > 0 {
 		v.inputSymbol.Text = v.inputSymbol.Text[:l-1]
 	}
 }
 
-func (v *View) clearSymbol() {
+func (v *View) ClearInputSymbol() {
 	v.inputSymbol.Text = ""
 }
 
-func (v *View) submitSymbol() {
+func (v *View) SubmitSymbol() {
 	st := v.model.SetCurrentStock(v.inputSymbol.Text)
 	v.SetChart(st)
 	v.GoRefreshStock(st)
