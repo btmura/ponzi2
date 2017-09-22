@@ -5,6 +5,8 @@ import (
 	"image"
 	"runtime"
 
+	"github.com/btmura/ponzi2/internal/gfx"
+	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/golang/glog"
 )
@@ -23,6 +25,18 @@ func init() {
 
 // Run runs the stock chart viewer in a window.
 func Run() {
+	c := &Controller{}
+	c.model = &Model{}
+	c.view = NewView(c.model)
+	c.Run()
+}
+
+type Controller struct {
+	model *Model
+	view  *View
+}
+
+func (p *Controller) Run() {
 	if err := glfw.Init(); err != nil {
 		glog.Fatalf("Run: failed to init glfw: %v", err)
 	}
@@ -41,43 +55,47 @@ func Run() {
 
 	win.MakeContextCurrent()
 
+	if err := gl.Init(); err != nil {
+		glog.Fatalf("newView: failed to init OpenGL: %v", err)
+	}
+	glog.Infof("OpenGL version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
+
+	gl.Enable(gl.CULL_FACE)
+	gl.CullFace(gl.BACK)
+
+	gl.Enable(gl.DEPTH_TEST)
+	gl.DepthFunc(gl.LESS)
+
+	gl.Enable(gl.BLEND)
+	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+	gl.ClearColor(0, 0, 0, 0)
+
+	if err := gfx.InitProgram(); err != nil {
+		glog.Fatalf("newView: failed to init gfx: %v", err)
+	}
+
 	cfg, err := LoadConfig()
 	if err != nil {
 		glog.Fatalf("Run: failed to load config: %v", err)
 	}
 
-	m := &Model{}
-	v := NewView(m)
-
 	if s := cfg.CurrentStock.Symbol; s != "" {
-		st := m.SetCurrentStock(s)
-		v.SetChart(st)
-		v.GoRefreshStock(st)
+		p.setChart(s)
 	}
 
 	for _, cs := range cfg.Stocks {
-		if cs.Symbol == "" {
-			continue
-		}
-
-		st, added := m.AddSavedStock(cs.Symbol)
-		if !added {
-			continue
-		}
-
-		v.AddChartThumb(st)
-		v.GoRefreshStock(st)
+		p.addChartThumb(cs.Symbol)
 	}
 
 	// Call the size callback to set the initial viewport.
 	w, h := win.GetSize()
-	v.Resize(image.Pt(w, h))
+	p.view.Resize(image.Pt(w, h))
 	win.SetSizeCallback(func(_ *glfw.Window, width, height int) {
-		v.Resize(image.Pt(width, height))
+		p.view.Resize(image.Pt(width, height))
 	})
 
 	win.SetCharCallback(func(_ *glfw.Window, char rune) {
-		v.PushInputSymbolChar(char)
+		p.view.PushInputSymbolChar(char)
 	})
 
 	win.SetKeyCallback(func(_ *glfw.Window, key glfw.Key, _ int, action glfw.Action, _ glfw.ModifierKey) {
@@ -87,22 +105,22 @@ func Run() {
 
 		switch key {
 		case glfw.KeyEscape:
-			v.ClearInputSymbol()
+			p.view.ClearInputSymbol()
 
 		case glfw.KeyBackspace:
-			v.PopInputSymbolChar()
+			p.view.PopInputSymbolChar()
 
 		case glfw.KeyEnter:
-			v.SubmitSymbol()
+			p.view.SubmitSymbol()
 		}
 	})
 
 	win.SetCursorPosCallback(func(_ *glfw.Window, x, y float64) {
-		v.HandleCursorPos(x, y)
+		p.view.HandleCursorPos(x, y)
 	})
 
 	win.SetMouseButtonCallback(func(_ *glfw.Window, button glfw.MouseButton, action glfw.Action, _ glfw.ModifierKey) {
-		v.HandleMouseButton(button, action)
+		p.view.HandleMouseButton(button, action)
 	})
 
 	const secPerUpdate = 1.0 / 60
@@ -121,9 +139,32 @@ func Run() {
 		}
 
 		fudge := float32(lag / secPerUpdate)
-		v.Render(fudge)
+		p.view.Render(fudge)
 
 		win.SwapBuffers()
 		glfw.PollEvents()
 	}
+}
+
+func (p *Controller) setChart(symbol string) {
+	if symbol == "" {
+		return
+	}
+	st := p.model.SetCurrentStock(symbol)
+	p.view.SetChart(st)
+	p.view.GoRefreshStock(st)
+}
+
+func (p *Controller) addChartThumb(symbol string) {
+	if symbol == "" {
+		return
+	}
+
+	st, added := p.model.AddSavedStock(symbol)
+	if !added {
+		return
+	}
+
+	p.view.AddChartThumb(st)
+	p.view.GoRefreshStock(st)
 }

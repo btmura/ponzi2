@@ -116,25 +116,6 @@ func (vc ViewContext) ScheduleCallback(cb func()) {
 
 // NewView creates a new View that observes the given Model.
 func NewView(model *Model) *View {
-	if err := gl.Init(); err != nil {
-		glog.Fatalf("newView: failed to init OpenGL: %v", err)
-	}
-	glog.Infof("OpenGL version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
-
-	gl.Enable(gl.CULL_FACE)
-	gl.CullFace(gl.BACK)
-
-	gl.Enable(gl.DEPTH_TEST)
-	gl.DepthFunc(gl.LESS)
-
-	gl.Enable(gl.BLEND)
-	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-	gl.ClearColor(0, 0, 0, 0)
-
-	if err := gfx.InitProgram(); err != nil {
-		glog.Fatalf("newView: failed to init gfx: %v", err)
-	}
-
 	return &View{
 		model:               model,
 		inputSymbol:         NewCenteredText(inputSymbolTextRenderer, ""),
