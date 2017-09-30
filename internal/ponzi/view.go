@@ -102,26 +102,17 @@ func (v *View) Render(vc ViewContext) {
 	}
 }
 
-func (v *View) SetChart(st *ModelStock) *Chart {
-	ch := NewChart()
-	ch.Update(st)
-	st.AddChangeCallback(func() {
-		ch.Update(st)
-	})
+// SetChart sets the View's main chart.
+func (v *View) SetChart(ch *Chart) {
 	v.chart = ch
-	return ch
 }
 
-func (v *View) AddChartThumb(st *ModelStock) *ChartThumbnail {
-	th := NewChartThumbnail()
-	th.Update(st)
-	st.AddChangeCallback(func() {
-		th.Update(st)
-	})
+// AddChartThumb adds the ChartThumbnail to the side bar.
+func (v *View) AddChartThumb(th *ChartThumbnail) {
 	v.chartThumbs = append(v.chartThumbs, th)
-	return th
 }
 
+// RemoveChartThumb removes the ChartThumbnail from the side bar.
 func (v *View) RemoveChartThumb(th *ChartThumbnail) {
 	for i, thumb := range v.chartThumbs {
 		if thumb == th {
@@ -129,21 +120,24 @@ func (v *View) RemoveChartThumb(th *ChartThumbnail) {
 			break
 		}
 	}
-	th.Close()
 }
 
+// InputSymbol returns the input symbol entered by the user.
 func (v *View) InputSymbol() string {
 	return v.inputSymbol.Text
 }
 
+// ClearInputSymbol clears the input symbol entered by the user.
 func (v *View) ClearInputSymbol() {
 	v.inputSymbol.Text = ""
 }
 
+// PushInputSymbolChar pushes the character to the input symbol.
 func (v *View) PushInputSymbolChar(ch rune) {
 	v.inputSymbol.Text += string(ch)
 }
 
+// PopInputSymbolChar pops off the last character of the input symbol.
 func (v *View) PopInputSymbolChar() {
 	if l := len(v.inputSymbol.Text); l > 0 {
 		v.inputSymbol.Text = v.inputSymbol.Text[:l-1]

@@ -96,4 +96,5 @@ func (ch *ChartThumbnail) Close() {
 		ch.weeklyStochastics.Close()
 		ch.weeklyStochastics = nil
 	}
+	ch.thumbClickCallback = nil
 }

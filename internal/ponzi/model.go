@@ -21,14 +21,20 @@ type Model struct {
 
 // NewModel creates a new Model.
 func NewModel() *Model {
-	return &Model{}
+	return &Model{
+		symbolToStockMap: map[string]*ModelStock{},
+	}
 }
 
 // SetCurrentStock sets the current stock to the symbol argument and returns the corresponding ModelStock.
-func (m *Model) SetCurrentStock(symbol string) *ModelStock {
-	m.addSymbolToMap(symbol)
+func (m *Model) SetCurrentStock(symbol string) (st *ModelStock, changed bool) {
+	if m.CurrentStock != nil && m.CurrentStock.Symbol == symbol {
+		return m.CurrentStock, false
+	}
+
+	m.symbolToStockMap[symbol] = &ModelStock{Symbol: symbol}
 	m.CurrentStock = m.symbolToStockMap[symbol]
-	return m.CurrentStock
+	return m.CurrentStock, true
 }
 
 // AddSavedStock adds the stock by symbol and returns the ModelStock and true. Otherwise, it will return the ModelStock and false.
@@ -39,7 +45,7 @@ func (m *Model) AddSavedStock(symbol string) (st *ModelStock, added bool) {
 		}
 	}
 
-	m.addSymbolToMap(symbol)
+	m.symbolToStockMap[symbol] = &ModelStock{Symbol: symbol}
 	st = m.symbolToStockMap[symbol]
 	m.SavedStocks = append(m.SavedStocks, st)
 	return st, true
@@ -53,7 +59,7 @@ func (m *Model) RemoveSavedStock(symbol string) (removed bool) {
 
 			// Remove the symbol from the map if it is no longer even used for the current stock.
 			if m.CurrentStock != nil && m.CurrentStock.Symbol == symbol {
-				m.removeSymbolFromMap(symbol)
+				delete(m.symbolToStockMap, symbol)
 			}
 			return true
 		}
@@ -61,30 +67,23 @@ func (m *Model) RemoveSavedStock(symbol string) (removed bool) {
 	return false
 }
 
-func (m *Model) addSymbolToMap(symbol string) {
-	if m.symbolToStockMap[symbol] != nil {
-		return
+// UpdateStock updates the stock with the TradingHistory if it is in the model.
+func (m *Model) UpdateStock(symbol string, hist *stock.TradingHistory) (st *ModelStock, updated bool) {
+	st, ok := m.symbolToStockMap[symbol]
+	if !ok {
+		return nil, false
 	}
-	if m.symbolToStockMap == nil {
-		m.symbolToStockMap = map[string]*ModelStock{}
-	}
-	m.symbolToStockMap[symbol] = &ModelStock{Symbol: symbol}
-}
-
-func (m *Model) removeSymbolFromMap(symbol string) {
-	if m.symbolToStockMap[symbol] == nil {
-		return
-	}
-	delete(m.symbolToStockMap, symbol)
+	st.DailySessions, st.WeeklySessions = convertSessions(hist.Sessions)
+	st.LastUpdateTime = time.Now()
+	return st, true
 }
 
 // ModelStock models a single stock.
 type ModelStock struct {
-	Symbol          string
-	DailySessions   []*ModelTradingSession
-	WeeklySessions  []*ModelTradingSession
-	LastUpdateTime  time.Time
-	changeCallbacks []func()
+	Symbol         string
+	DailySessions  []*ModelTradingSession
+	WeeklySessions []*ModelTradingSession
+	LastUpdateTime time.Time
 }
 
 // ModelTradingSession models a single trading session.
@@ -99,11 +98,6 @@ type ModelTradingSession struct {
 	PercentChange float32
 	K             float32
 	D             float32
-}
-
-// AddChangeCallback adds a callback to be fired when the stock changes.
-func (m *ModelStock) AddChangeCallback(cb func()) {
-	m.changeCallbacks = append(m.changeCallbacks, cb)
 }
 
 // Price returns the most recent price or 0 if no data.
@@ -128,16 +122,6 @@ func (m *ModelStock) PercentChange() float32 {
 		return 0
 	}
 	return m.DailySessions[len(m.DailySessions)-1].PercentChange
-}
-
-// Update updates the stock with the new data.
-func (m *ModelStock) Update(hist *stock.TradingHistory) error {
-	m.DailySessions, m.WeeklySessions = convertSessions(hist.Sessions)
-	m.LastUpdateTime = time.Now()
-	for _, cb := range m.changeCallbacks {
-		cb()
-	}
-	return nil
 }
 
 func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySessions []*ModelTradingSession) {

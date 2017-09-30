@@ -28,13 +28,22 @@ var acceptedChars = map[rune]bool{
 	'Y': true, 'Z': true,
 }
 
+// Controller runs the program by connecting the model and view and running the "game loop".
 type Controller struct {
+	// model is the data that the Controller connects to the View.
 	model *Model
 
+	// view is the UI that the Controller updates.
 	view *View
 
 	// pendingStockUpdates is a channel with stock updates ready to apply to the model.
 	pendingStockUpdates chan controllerStockUpdate
+
+	// symbolToChartMap maps symbol to Chart. Only one entry right now.
+	symbolToChartMap map[string]*Chart
+
+	// symbolToChartThumbMap maps symbol to ChartThumbnail.
+	symbolToChartThumbMap map[string]*ChartThumbnail
 
 	// mousePos is the current global mouse position.
 	mousePos image.Point
@@ -48,8 +57,8 @@ type Controller struct {
 
 // controllerStockUpdate bundles a stock and new data for that stock.
 type controllerStockUpdate struct {
-	// stock is the stock to update.
-	stock *ModelStock
+	// symbol refers to the stock to update.
+	symbol string
 
 	// tradingHistory is the new data to update the stock with.
 	tradingHistory *stock.TradingHistory
@@ -58,12 +67,15 @@ type controllerStockUpdate struct {
 // NewController creates a new Controller.
 func NewController() *Controller {
 	return &Controller{
-		model:               NewModel(),
-		view:                NewView(),
-		pendingStockUpdates: make(chan controllerStockUpdate),
+		model:                 NewModel(),
+		view:                  NewView(),
+		pendingStockUpdates:   make(chan controllerStockUpdate),
+		symbolToChartMap:      map[string]*Chart{},
+		symbolToChartThumbMap: map[string]*ChartThumbnail{},
 	}
 }
 
+// Run initializes and runs the "game loop".
 func (c *Controller) Run() {
 	if err := glfw.Init(); err != nil {
 		glog.Fatalf("Run: failed to init glfw: %v", err)
@@ -149,7 +161,7 @@ func (c *Controller) Run() {
 		lag += elapsed
 
 		for lag >= secPerUpdate {
-			// add update here
+			c.update()
 			lag -= secPerUpdate
 		}
 
@@ -161,19 +173,30 @@ func (c *Controller) Run() {
 	}
 }
 
-func (c *Controller) render(fudge float32) {
+func (c *Controller) update() {
 	// Process any stock updates.
 loop:
 	for {
 		select {
 		case u := <-c.pendingStockUpdates:
-			u.stock.Update(u.tradingHistory)
+			st, updated := c.model.UpdateStock(u.symbol, u.tradingHistory)
+			if !updated {
+				break loop
+			}
+			if ch, ok := c.symbolToChartMap[u.symbol]; ok {
+				ch.Update(st)
+			}
+			if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
+				th.Update(st)
+			}
 
 		default:
 			break loop
 		}
 	}
+}
 
+func (c *Controller) render(fudge float32) {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	vc := ViewContext{
@@ -199,19 +222,27 @@ func (c *Controller) setChart(symbol string) {
 		return
 	}
 
-	st := c.model.SetCurrentStock(symbol)
-	ch := c.view.SetChart(st)
-	ch.SetAddButtonClickCallback(func() {
-		st, added := c.model.AddSavedStock(symbol)
-		if !added {
-			return
-		}
+	st, changed := c.model.SetCurrentStock(symbol)
+	if !changed {
+		return
+	}
 
-		c.view.AddChartThumb(st)
-		c.goSaveConfig()
+	for symbol, ch := range c.symbolToChartMap {
+		delete(c.symbolToChartMap, symbol)
+		ch.Close()
+	}
+
+	ch := NewChart()
+	c.symbolToChartMap[symbol] = ch
+
+	ch.Update(st)
+	ch.SetAddButtonClickCallback(func() {
+		c.addChartThumb(symbol)
 	})
 
-	c.goRefreshStock(st)
+	c.view.SetChart(ch)
+	c.goRefreshStock(symbol)
+	c.goSaveConfig()
 }
 
 func (c *Controller) addChartThumb(symbol string) {
@@ -224,40 +255,55 @@ func (c *Controller) addChartThumb(symbol string) {
 		return
 	}
 
-	th := c.view.AddChartThumb(st)
-	th.SetRemoveButtonClickCallback(func() {
-		removed := c.model.RemoveSavedStock(symbol)
-		if !removed {
-			return
-		}
+	th := NewChartThumbnail()
+	c.symbolToChartThumbMap[symbol] = th
 
-		c.view.RemoveChartThumb(th)
-		th.SetRemoveButtonClickCallback(nil)
-		c.goSaveConfig()
+	th.Update(st)
+	th.SetRemoveButtonClickCallback(func() {
+		c.removeChartThumb(symbol)
 	})
 	th.SetThumbClickCallback(func() {
 		c.setChart(symbol)
 	})
 
-	c.goRefreshStock(st)
+	c.view.AddChartThumb(th)
+	c.goRefreshStock(symbol)
+	c.goSaveConfig()
 }
 
-func (c *Controller) goRefreshStock(st *ModelStock) {
+func (c *Controller) removeChartThumb(symbol string) {
+	if symbol == "" {
+		return
+	}
+
+	if !c.model.RemoveSavedStock(symbol) {
+		return
+	}
+
+	th := c.symbolToChartThumbMap[symbol]
+	delete(c.symbolToChartThumbMap, symbol)
+	th.Close()
+
+	c.view.RemoveChartThumb(th)
+	c.goSaveConfig()
+}
+
+func (c *Controller) goRefreshStock(symbol string) {
 	go func() {
 		end := time2.Midnight(time.Now().In(time2.NewYorkLoc))
 		start := end.Add(-6 * 30 * 24 * time.Hour)
 		hist, err := stock.GetTradingHistory(&stock.GetTradingHistoryRequest{
-			Symbol:    st.Symbol,
+			Symbol:    symbol,
 			StartDate: start,
 			EndDate:   end,
 		})
 		if err != nil {
-			glog.Warningf("goRefreshStock: failed to get trading history for %s: %v", st.Symbol, err)
+			glog.Warningf("goRefreshStock: failed to get trading history for %s: %v", symbol, err)
 			return
 		}
 
 		c.pendingStockUpdates <- controllerStockUpdate{
-			stock:          st,
+			symbol:         symbol,
 			tradingHistory: hist,
 		}
 	}()
