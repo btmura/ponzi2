@@ -97,13 +97,13 @@ func (v *View) Render(vc ViewContext) {
 	}
 
 	// Render the sidebar thumbnails.
-	for i, th := range v.chartThumbs {
-		min := image.Pt(viewOuterPadding, 0)
-		max := image.Pt(min.X+viewChartThumbSize.X, 0)
-		max.Y = vc.Bounds.Max.Y - (viewOuterPadding+viewChartThumbSize.Y)*i - viewOuterPadding
-		min.Y = max.Y - viewChartThumbSize.Y
-		vc.Bounds = image.Rectangle{min, max}
+	vc.Bounds = image.Rect(
+		viewOuterPadding, vc.Bounds.Max.Y-viewChartThumbSize.Y,
+		viewOuterPadding+viewChartThumbSize.X, vc.Bounds.Max.Y,
+	)
+	for _, th := range v.chartThumbs {
 		th.Render(vc)
+		vc.Bounds = vc.Bounds.Sub(image.Pt(0, viewChartThumbSize.Y+viewOuterPadding))
 	}
 }
 
