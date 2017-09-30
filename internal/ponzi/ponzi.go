@@ -19,8 +19,5 @@ func init() {
 
 // Run runs the stock chart viewer in a window.
 func Run() {
-	c := &Controller{}
-	c.model = &Model{}
-	c.view = NewView(c.model)
-	c.Run()
+	NewController().Run()
 }

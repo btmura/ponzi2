@@ -19,6 +19,11 @@ type Model struct {
 	symbolToStockMap map[string]*ModelStock
 }
 
+// NewModel creates a new Model.
+func NewModel() *Model {
+	return &Model{}
+}
+
 // SetCurrentStock sets the current stock to the symbol argument and returns the corresponding ModelStock.
 func (m *Model) SetCurrentStock(symbol string) *ModelStock {
 	m.addSymbolToMap(symbol)
