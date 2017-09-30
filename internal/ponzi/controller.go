@@ -3,12 +3,14 @@ package ponzi
 import (
 	"image"
 	"time"
+	"unicode"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/golang/glog"
 
 	"github.com/btmura/ponzi2/internal/gfx"
+	math2 "github.com/btmura/ponzi2/internal/math"
 	"github.com/btmura/ponzi2/internal/stock"
 	time2 "github.com/btmura/ponzi2/internal/time"
 )
@@ -172,6 +174,8 @@ loop:
 		}
 	}
 
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
 	vc := ViewContext{
 		Bounds:                 image.Rectangle{image.ZP, c.winSize},
 		MousePos:               c.mousePos,
@@ -279,15 +283,24 @@ func (c *Controller) goSaveConfig() {
 
 func (c *Controller) setSize(width, height int) {
 	s := image.Pt(width, height)
-	if s == c.winSize {
+	if c.winSize == s {
 		return
 	}
-	c.view.Resize(s)
+
+	gl.Viewport(0, 0, int32(s.X), int32(s.Y))
+
+	// Calculate the new ortho projection view matrix.
+	fw, fh := float32(s.X), float32(s.Y)
+	gfx.SetProjectionViewMatrix(math2.OrthoMatrix(fw, fh, fw /* use width as depth */))
+
 	c.winSize = s
 }
 
 func (c *Controller) setChar(char rune) {
-	c.view.PushInputSymbolChar(char)
+	char = unicode.ToUpper(char)
+	if _, ok := acceptedChars[char]; ok {
+		c.view.PushInputSymbolChar(char)
+	}
 }
 
 func (c *Controller) setKey(key glfw.Key, action glfw.Action) {

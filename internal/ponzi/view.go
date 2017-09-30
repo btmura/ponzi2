@@ -2,13 +2,10 @@ package ponzi
 
 import (
 	"image"
-	"unicode"
 
-	"github.com/go-gl/gl/v4.5-core/gl"
 	"golang.org/x/image/font/gofont/goregular"
 
 	"github.com/btmura/ponzi2/internal/gfx"
-	math2 "github.com/btmura/ponzi2/internal/math"
 )
 
 // Colors used throughout the UI.
@@ -84,8 +81,6 @@ func NewView() *View {
 
 // Render renders the view.
 func (v *View) Render(vc ViewContext) {
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
 	// Render the input symbol and the main chart.
 	if v.chart != nil {
 		vc.Bounds = vc.Bounds.Inset(viewOuterPadding)
@@ -137,15 +132,6 @@ func (v *View) RemoveChartThumb(th *ChartThumbnail) {
 	th.Close()
 }
 
-// Resize responds to window size changes by updating internal matrices.
-func (v *View) Resize(newSize image.Point) {
-	gl.Viewport(0, 0, int32(newSize.X), int32(newSize.Y))
-
-	// Calculate the new ortho projection view matrix.
-	fw, fh := float32(newSize.X), float32(newSize.Y)
-	gfx.SetProjectionViewMatrix(math2.OrthoMatrix(fw, fh, fw /* use width as depth */))
-}
-
 func (v *View) InputSymbol() string {
 	return v.inputSymbol.Text
 }
@@ -154,13 +140,8 @@ func (v *View) ClearInputSymbol() {
 	v.inputSymbol.Text = ""
 }
 
-func (v *View) PushInputSymbolChar(ch rune) (pushed bool) {
-	ch = unicode.ToUpper(ch)
-	if _, ok := acceptedChars[ch]; ok {
-		v.inputSymbol.Text += string(ch)
-		return true
-	}
-	return false
+func (v *View) PushInputSymbolChar(ch rune) {
+	v.inputSymbol.Text += string(ch)
 }
 
 func (v *View) PopInputSymbolChar() {
