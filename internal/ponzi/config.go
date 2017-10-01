@@ -19,7 +19,7 @@ func LoadConfig() (*Config, error) {
 	configMutex.RLock()
 	defer configMutex.RUnlock()
 
-	cfgPath, err := getUserConfigPath()
+	cfgPath, err := userConfigPath()
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func SaveConfig(cfg *Config) error {
 	configMutex.Lock()
 	defer configMutex.Unlock()
 
-	cfgPath, err := getUserConfigPath()
+	cfgPath, err := userConfigPath()
 	if err != nil {
 		return err
 	}
@@ -73,15 +73,15 @@ func SaveConfig(cfg *Config) error {
 	return nil
 }
 
-func getUserConfigPath() (string, error) {
-	dirPath, err := getUserConfigDir()
+func userConfigPath() (string, error) {
+	dirPath, err := userConfigDir()
 	if err != nil {
 		return "", err
 	}
 	return path.Join(dirPath, "config.txt"), nil
 }
 
-func getUserConfigDir() (string, error) {
+func userConfigDir() (string, error) {
 	u, err := user.Current()
 	if err != nil {
 		return "", err
