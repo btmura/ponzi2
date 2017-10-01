@@ -6,7 +6,7 @@ import (
 )
 
 // Get go-bindata from github.com/jteeuwen/go-bindata. It's used to embed resources into the binary.
-//go:generate go-bindata -pkg ponzi -prefix data -ignore ".*blend.*" data
+//go:generate go-bindata -pkg ponzi -prefix data -ignore ".*blend.*" -nometadata data
 
 // Generate config.pb.go. Follow setup instructions @ github.com/golang/protobuf.
 //go:generate protoc -I=data --go_out=. config.proto

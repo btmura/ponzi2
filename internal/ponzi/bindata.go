@@ -89,7 +89,7 @@ func addbuttonPly() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "addButton.ply", size: 1258, mode: os.FileMode(438), modTime: time.Unix(1504839318, 0)}
+	info := bindataFileInfo{name: "addButton.ply", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -109,7 +109,7 @@ func configProto() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "config.proto", size: 167, mode: os.FileMode(438), modTime: time.Unix(1506884638, 0)}
+	info := bindataFileInfo{name: "config.proto", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -129,7 +129,7 @@ func removebuttonPly() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "removeButton.ply", size: 1260, mode: os.FileMode(438), modTime: time.Unix(1504846062, 0)}
+	info := bindataFileInfo{name: "removeButton.ply", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -149,7 +149,7 @@ func roundedcornernePly() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "roundedCornerNE.ply", size: 673, mode: os.FileMode(438), modTime: time.Unix(1504845949, 0)}
+	info := bindataFileInfo{name: "roundedCornerNE.ply", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -169,7 +169,7 @@ func roundedcornernwPly() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "roundedCornerNW.ply", size: 649, mode: os.FileMode(438), modTime: time.Unix(1504845956, 0)}
+	info := bindataFileInfo{name: "roundedCornerNW.ply", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -189,7 +189,7 @@ func roundedcornersePly() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "roundedCornerSE.ply", size: 674, mode: os.FileMode(438), modTime: time.Unix(1504845965, 0)}
+	info := bindataFileInfo{name: "roundedCornerSE.ply", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -209,7 +209,7 @@ func roundedcornerswPly() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "roundedCornerSW.ply", size: 675, mode: os.FileMode(438), modTime: time.Unix(1504845973, 0)}
+	info := bindataFileInfo{name: "roundedCornerSW.ply", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
