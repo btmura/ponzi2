@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package ponzi;
+
+message Config {
+    Stock current_stock = 1;
+    repeated Stock stocks = 2;
+}
+
+message Stock {
+    string symbol = 1;
+}

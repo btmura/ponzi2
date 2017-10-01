@@ -1,30 +1,15 @@
 package ponzi
 
 import (
-	"encoding/json"
-	"io"
+	"io/ioutil"
 	"os"
 	"os/user"
 	"path"
 	"sync"
 
 	"github.com/golang/glog"
+	"github.com/golang/protobuf/proto"
 )
-
-// Config has the user's saved stocks.
-type Config struct {
-	// CurrentStock is the stock the user is viewing.
-	CurrentStock ConfigStock
-
-	// Stocks are the config's stocks. Capitalized for JSON decoding.
-	Stocks []ConfigStock
-}
-
-// ConfigStock represents a single user's stock.
-type ConfigStock struct {
-	// Symbol is the stock's symbol. Capitalized for JSON decoding.
-	Symbol string
-}
 
 // configMutex prevents config file reads and writes from conflicting.
 var configMutex sync.RWMutex
@@ -51,9 +36,13 @@ func LoadConfig() (*Config, error) {
 		return &Config{}, nil
 	}
 
+	bytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+
 	cfg := &Config{}
-	d := json.NewDecoder(file)
-	if err := d.Decode(&cfg); err != nil && err != io.EOF {
+	if err := proto.UnmarshalText(string(bytes), cfg); err != nil {
 		return nil, err
 	}
 	return cfg, nil
@@ -77,9 +66,11 @@ func SaveConfig(cfg *Config) error {
 	}
 	defer file.Close()
 
-	e := json.NewEncoder(file)
-	e.SetIndent("", "  ")
-	return e.Encode(&cfg)
+	m := &proto.TextMarshaler{Compact: false}
+	if err := m.Marshal(file, cfg); err != nil {
+		return err
+	}
+	return nil
 }
 
 func getUserConfigPath() (string, error) {
@@ -87,7 +78,7 @@ func getUserConfigPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return path.Join(dirPath, "config.json"), nil
+	return path.Join(dirPath, "config.txt"), nil
 }
 
 func getUserConfigDir() (string, error) {

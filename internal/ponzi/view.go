@@ -81,20 +81,22 @@ func NewView() *View {
 
 // Render renders the view.
 func (v *View) Render(vc ViewContext) {
+	ogBnds := vc.Bounds.Inset(viewOuterPadding)
+
 	// Render the input symbol and the main chart.
+	vc.Bounds = ogBnds
+	if len(v.chartThumbs) > 0 {
+		vc.Bounds.Min.X += viewOuterPadding + viewChartThumbSize.X
+	}
+	v.inputSymbol.Render(vc)
 	if v.chart != nil {
-		vc.Bounds = vc.Bounds.Inset(viewOuterPadding)
-		if len(v.chartThumbs) > 0 {
-			vc.Bounds.Min.X += viewOuterPadding + viewChartThumbSize.X
-		}
-		v.inputSymbol.Render(vc)
 		v.chart.Render(vc)
 	}
 
 	// Render the sidebar thumbnails.
 	vc.Bounds = image.Rect(
-		viewOuterPadding, vc.Bounds.Max.Y-viewChartThumbSize.Y,
-		viewOuterPadding+viewChartThumbSize.X, vc.Bounds.Max.Y,
+		viewOuterPadding, ogBnds.Max.Y-viewChartThumbSize.Y,
+		viewOuterPadding+viewChartThumbSize.X, ogBnds.Max.Y,
 	)
 	for _, th := range v.chartThumbs {
 		th.Render(vc)

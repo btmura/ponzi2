@@ -119,12 +119,14 @@ func (c *Controller) Run() {
 		glog.Fatalf("Run: failed to load config: %v", err)
 	}
 
-	if s := cfg.CurrentStock.Symbol; s != "" {
+	if s := cfg.GetCurrentStock().GetSymbol(); s != "" {
 		c.setChart(s)
 	}
 
-	for _, cs := range cfg.Stocks {
-		c.addChartThumb(cs.Symbol)
+	for _, cs := range cfg.GetStocks() {
+		if s := cs.GetSymbol(); s != "" {
+			c.addChartThumb(s)
+		}
 	}
 
 	// Call the size callback to set the initial viewport.
@@ -313,10 +315,10 @@ func (c *Controller) goSaveConfig() {
 	// Make the config on the main thread to save the exact config at the time.
 	cfg := &Config{}
 	if st := c.model.CurrentStock; st != nil {
-		cfg.CurrentStock = ConfigStock{st.Symbol}
+		cfg.CurrentStock = &Stock{Symbol: st.Symbol}
 	}
 	for _, st := range c.model.SavedStocks {
-		cfg.Stocks = append(cfg.Stocks, ConfigStock{st.Symbol})
+		cfg.Stocks = append(cfg.Stocks, &Stock{st.Symbol})
 	}
 
 	// Handle saving to disk in a separate go routine.
