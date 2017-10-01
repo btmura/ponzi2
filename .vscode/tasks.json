@@ -9,14 +9,14 @@
                 "isDefault": true
             },
 
-            "command": "go build -v -x; if ($?) { ./ponzi2.exe -logtostderr }",
+            "command": "go generate; if ($?) { go build -v -x }; if ($?) { ./ponzi2.exe -logtostderr }",
             "options": {
                 "cwd": "${workspaceRoot}"
             },
             "problemMatcher":["$go"],             
 
             "linux": {
-                "command": "go build -v -x && ./ponzi2 -logtostderr" 
+                "command": "go generate && go build -v -x && ./ponzi2 -logtostderr" 
             }
         }
     ]
