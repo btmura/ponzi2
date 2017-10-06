@@ -4,6 +4,8 @@ import (
 	"sort"
 	"time"
 
+	"github.com/golang/glog"
+
 	"github.com/btmura/ponzi2/internal/stock"
 )
 
@@ -12,10 +14,10 @@ type Model struct {
 	// CurrentStock is the stock currently being viewed.
 	CurrentStock *ModelStock
 
-	// SavedStocks are the user's other stocks.
+	// SavedStocks is the user's ordered set of saved stocks.
 	SavedStocks []*ModelStock
 
-	// symbolToStockMap maps symbol to ModelStock to keep symbols and ModelStocks 1:1.
+	// symbolToStockMap maps symbol to ModelStock to prevent duplicate entries.
 	symbolToStockMap map[string]*ModelStock
 }
 
@@ -26,41 +28,67 @@ func NewModel() *Model {
 	}
 }
 
-// SetCurrentStock sets the current stock to the symbol argument and returns the corresponding ModelStock.
+// SetCurrentStock sets the current stock by symbol. It returns the
+// corresponding ModelStock and true if the current stock changed.
 func (m *Model) SetCurrentStock(symbol string) (st *ModelStock, changed bool) {
+	if symbol == "" {
+		glog.Fatal("model: cannot set current stock to empty symbol")
+	}
+
 	if m.CurrentStock != nil && m.CurrentStock.Symbol == symbol {
 		return m.CurrentStock, false
 	}
 
-	m.symbolToStockMap[symbol] = &ModelStock{Symbol: symbol}
+	if _, ok := m.symbolToStockMap[symbol]; !ok {
+		m.symbolToStockMap[symbol] = &ModelStock{Symbol: symbol}
+	}
+
 	m.CurrentStock = m.symbolToStockMap[symbol]
 	return m.CurrentStock, true
 }
 
-// AddSavedStock adds the stock by symbol and returns the ModelStock and true. Otherwise, it will return the ModelStock and false.
+// AddSavedStock adds the stock by symbol. It returns the corresponding
+// ModelStock and true if the stock was newly added.
 func (m *Model) AddSavedStock(symbol string) (st *ModelStock, added bool) {
+	if symbol == "" {
+		glog.Fatal("model: cannot add empty symbol")
+	}
+
 	for _, st := range m.SavedStocks {
 		if st.Symbol == symbol {
 			return st, false
 		}
 	}
 
-	m.symbolToStockMap[symbol] = &ModelStock{Symbol: symbol}
+	if m.CurrentStock != nil && m.CurrentStock.Symbol == symbol {
+		m.SavedStocks = append(m.SavedStocks, m.CurrentStock)
+		return m.CurrentStock, true
+	}
+
+	if _, ok := m.symbolToStockMap[symbol]; !ok {
+		m.symbolToStockMap[symbol] = &ModelStock{Symbol: symbol}
+	}
+
 	st = m.symbolToStockMap[symbol]
 	m.SavedStocks = append(m.SavedStocks, st)
 	return st, true
 }
 
-// RemoveSavedStock removes the stock by symbol if it exists and returns true on success.
+// RemoveSavedStock removes the stock by symbol and returns true if removed.
 func (m *Model) RemoveSavedStock(symbol string) (removed bool) {
+	if symbol == "" {
+		glog.Fatal("model: cannot remove empty symbol")
+	}
+
 	for i, st := range m.SavedStocks {
 		if st.Symbol == symbol {
 			m.SavedStocks = append(m.SavedStocks[:i], m.SavedStocks[i+1:]...)
 
-			// Remove the symbol from the map if it is no longer even used for the current stock.
+			// Remove the map entry if its not even used for the current stock.
 			if m.CurrentStock != nil && m.CurrentStock.Symbol == symbol {
 				delete(m.symbolToStockMap, symbol)
 			}
+
 			return true
 		}
 	}
