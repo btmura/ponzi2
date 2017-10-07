@@ -16,16 +16,11 @@ type Model struct {
 
 	// SavedStocks is the user's ordered set of saved stocks.
 	SavedStocks []*ModelStock
-
-	// symbolToStockMap maps symbol to ModelStock to prevent duplicate entries.
-	symbolToStockMap map[string]*ModelStock
 }
 
 // NewModel creates a new Model.
 func NewModel() *Model {
-	return &Model{
-		symbolToStockMap: map[string]*ModelStock{},
-	}
+	return &Model{}
 }
 
 // SetCurrentStock sets the current stock by symbol. It returns the
@@ -39,11 +34,9 @@ func (m *Model) SetCurrentStock(symbol string) (st *ModelStock, changed bool) {
 		return m.CurrentStock, false
 	}
 
-	if _, ok := m.symbolToStockMap[symbol]; !ok {
-		m.symbolToStockMap[symbol] = &ModelStock{Symbol: symbol}
+	if m.CurrentStock = m.stock(symbol); m.CurrentStock == nil {
+		m.CurrentStock = &ModelStock{Symbol: symbol}
 	}
-
-	m.CurrentStock = m.symbolToStockMap[symbol]
 	return m.CurrentStock, true
 }
 
@@ -60,16 +53,9 @@ func (m *Model) AddSavedStock(symbol string) (st *ModelStock, added bool) {
 		}
 	}
 
-	if m.CurrentStock != nil && m.CurrentStock.Symbol == symbol {
-		m.SavedStocks = append(m.SavedStocks, m.CurrentStock)
-		return m.CurrentStock, true
+	if st = m.stock(symbol); st == nil {
+		st = &ModelStock{Symbol: symbol}
 	}
-
-	if _, ok := m.symbolToStockMap[symbol]; !ok {
-		m.symbolToStockMap[symbol] = &ModelStock{Symbol: symbol}
-	}
-
-	st = m.symbolToStockMap[symbol]
 	m.SavedStocks = append(m.SavedStocks, st)
 	return st, true
 }
@@ -83,12 +69,6 @@ func (m *Model) RemoveSavedStock(symbol string) (removed bool) {
 	for i, st := range m.SavedStocks {
 		if st.Symbol == symbol {
 			m.SavedStocks = append(m.SavedStocks[:i], m.SavedStocks[i+1:]...)
-
-			// Remove the map entry if its not even used for the current stock.
-			if m.CurrentStock != nil && m.CurrentStock.Symbol == symbol {
-				delete(m.symbolToStockMap, symbol)
-			}
-
 			return true
 		}
 	}
@@ -97,13 +77,26 @@ func (m *Model) RemoveSavedStock(symbol string) (removed bool) {
 
 // UpdateStock updates the stock with the TradingHistory if it is in the model.
 func (m *Model) UpdateStock(symbol string, hist *stock.TradingHistory) (st *ModelStock, updated bool) {
-	st, ok := m.symbolToStockMap[symbol]
-	if !ok {
+	if st = m.stock(symbol); st == nil {
 		return nil, false
 	}
 	st.DailySessions, st.WeeklySessions = convertSessions(hist.Sessions)
 	st.LastUpdateTime = time.Now()
 	return st, true
+}
+
+func (m *Model) stock(symbol string) *ModelStock {
+	if m.CurrentStock != nil && m.CurrentStock.Symbol == symbol {
+		return m.CurrentStock
+	}
+
+	for _, st := range m.SavedStocks {
+		if st.Symbol == symbol {
+			return st
+		}
+	}
+
+	return nil
 }
 
 // ModelStock models a single stock.
