@@ -5,25 +5,38 @@ import "testing"
 func TestSetCurrentStock(t *testing.T) {
 	m := NewModel()
 
-	st, changed := m.SetCurrentStock("SPY")
-	if st == nil {
-		t.Error("SetCurrentStock should return some stock.")
-	}
-	if !changed {
-		t.Error("SetCurrentStock should report TRUE since the stock changed.")
-	}
-	if len(m.symbolToStockMap) != 1 {
-		t.Errorf("SetCurrentStock should have stored a single mapping.")
+	check := func(t *testing.T, got *ModelStock, gotChanged, wantChanged bool, wantMappings int) {
+		if got == nil {
+			t.Error("SetCurrentStock should NEVER return a nil stock.")
+		}
+		if gotChanged != wantChanged {
+			t.Errorf("SetCurrentStock returned %t, wanted %t", gotChanged, wantChanged)
+		}
+		if len(m.symbolToStockMap) != wantMappings {
+			t.Errorf("Model has %d mappings, want %d: %v", len(m.symbolToStockMap), wantMappings, keys(m))
+		}
 	}
 
-	st, changed = m.SetCurrentStock("SPY")
-	if st == nil {
-		t.Error("SetCurrentStock should STILL return some stock.")
+	t.Run("initial stock", func(t *testing.T) {
+		st, changed := m.SetCurrentStock("SPY")
+		check(t, st, changed, true, 1)
+	})
+
+	t.Run("same stock", func(t *testing.T) {
+		st, changed := m.SetCurrentStock("SPY")
+		check(t, st, changed, false, 1)
+	})
+
+	t.Run("change stock", func(t *testing.T) {
+		st, changed := m.SetCurrentStock("MO")
+		check(t, st, changed, true, 1)
+	})
+}
+
+func keys(m *Model) []string {
+	var keys []string
+	for s := range m.symbolToStockMap {
+		keys = append(keys, s)
 	}
-	if changed {
-		t.Error("SetCurrentStock should report FALSE since the stock did NOT change.")
-	}
-	if len(m.symbolToStockMap) != 1 {
-		t.Errorf("SetCurrentStock should STILL have a single mapping.")
-	}
+	return keys
 }
