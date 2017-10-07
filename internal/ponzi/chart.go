@@ -53,6 +53,15 @@ func NewChart() *Chart {
 	}
 }
 
+// ChartUpdate is the argument to Update.
+type ChartUpdate struct {
+	// Loading indicates whether data is being fetched for the chart.
+	Loading bool
+
+	// Stock is the stock the chart should show.
+	Stock *ModelStock
+}
+
 // Update updates the Chart.
 func (ch *Chart) Update(st *ModelStock) {
 	ch.header.Update(st)
