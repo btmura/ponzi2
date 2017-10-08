@@ -127,7 +127,7 @@ func (ch *ChartStochastics) Render(r image.Rectangle) {
 	gfx.SetModelMatrixRect(r)
 	ch.stoLines.Render()
 
-	renderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
+	sliceRenderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
 }
 
 // RenderLabels renders the Y-axis labels for the stochastic lines.

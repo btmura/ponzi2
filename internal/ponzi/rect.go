@@ -21,7 +21,7 @@ var (
 	roundedCornerSW = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerSW.ply")))
 )
 
-// renderRoundedRect renders a rounded rectangle using the given rectangular bounds.
+// renderRoundedRect renders a rounded rectangle using the rectangular bounds.
 func renderRoundedRect(r image.Rectangle, rounding int) {
 	// NORTHWEST Corner
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y-rounding, r.Min.X+rounding, r.Max.Y))
@@ -60,19 +60,25 @@ func renderRoundedRect(r image.Rectangle, rounding int) {
 	vertLine.Render()
 }
 
-// renderHorizDividers horizontally cuts a rectangle from the bottom with the given percentage amounts
-// and draws the given VAO at those percentages.
-func renderHorizDividers(r image.Rectangle, dividerVAO *gfx.VAO, percentages ...float32) []image.Rectangle {
+// sliceRenderHorizDividers horizontally cuts a rectangle from the bottom at
+// the percentage amounts and draws the VAO at those percentages.
+func sliceRenderHorizDividers(r image.Rectangle, dividerVAO *gfx.VAO, percentages ...float32) []image.Rectangle {
 	rects := sliceRect(r, percentages...)
 	for _, r := range rects {
-		gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
-		dividerVAO.Render()
+		renderHorizDivider(r, dividerVAO)
 	}
 	return rects
 }
 
-// sliceRect horizontally cuts a rectangle from the bottom with the given percentage amounts.
-// It returns n rectangles given n percentages.
+// renderHorizDivider renders a VAO in a single pixel horizontal
+// rectangle at the top edge of the rectangle.
+func renderHorizDivider(r image.Rectangle, dividerVAO *gfx.VAO) {
+	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
+	dividerVAO.Render()
+}
+
+// sliceRect horizontally cuts a rectangle from the bottom at the percentage
+// amounts. It returns n rectangles given n percentages.
 func sliceRect(r image.Rectangle, percentages ...float32) []image.Rectangle {
 	var rs []image.Rectangle
 	addRect := func(minY, maxY int) {

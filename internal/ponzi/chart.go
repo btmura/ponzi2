@@ -87,15 +87,20 @@ func (ch *Chart) Render(vc ViewContext) {
 	// Render the border around the chart.
 	renderRoundedRect(vc.Bounds, chartRounding)
 
+	// Render the header and the line below it.
 	r, _, _ := ch.header.Render(vc)
+	rects := sliceRect(r, 0.13, 0.13, 0.13, 0.61)
+	renderHorizDivider(rects[3], horizLine)
 
 	if ch.loading {
-		renderHorizDividers(r, horizLine, 1)
 		chartLoadingText.Render(r)
 		return
 	}
 
-	rects := renderHorizDividers(r, horizLine, 0.13, 0.13, 0.13, 0.61)
+	for i := 0; i < 3; i++ {
+		renderHorizDivider(rects[i], horizLine)
+	}
+
 	pr, vr, dr, wr := rects[3], rects[2], rects[1], rects[0]
 
 	pr = pr.Inset(chartPadding)

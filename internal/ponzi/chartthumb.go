@@ -67,10 +67,12 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 	// Render the border around the chart.
 	renderRoundedRect(vc.Bounds, thumbChartRounding)
 
+	// Render the header and the line below it.
 	r, _, clicked := ch.header.Render(vc)
+	rects := sliceRect(r, 0.5, 0.5)
+	renderHorizDivider(rects[1], horizLine)
 
 	if ch.loading {
-		renderHorizDividers(r, horizLine, 1)
 		thumbLoadingText.Render(r)
 		return
 	}
@@ -79,7 +81,7 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 		vc.ScheduleCallback(ch.thumbClickCallback)
 	}
 
-	rects := renderHorizDividers(r, horizLine, 0.5, 0.5)
+	renderHorizDivider(rects[0], horizLine)
 
 	ch.dailyStochastics.Render(rects[1].Inset(thumbChartPadding))
 	ch.weeklyStochastics.Render(rects[0].Inset(thumbChartPadding))
