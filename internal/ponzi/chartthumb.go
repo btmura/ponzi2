@@ -28,36 +28,37 @@ var (
 
 // ChartThumbnail shows a stock chart thumbnail for a single stock.
 type ChartThumbnail struct {
-	Loading            bool
 	header             *ChartHeader
 	lines              *ChartLines
 	dailyStochastics   *ChartStochastics
 	weeklyStochastics  *ChartStochastics
 	thumbClickCallback func()
+	loading            bool
 }
 
 // NewChartThumbnail creates a ChartThumbnail.
 func NewChartThumbnail() *ChartThumbnail {
 	return &ChartThumbnail{
-		Loading:           true,
 		header:            NewChartHeader(thumbSymbolQuoteTextRenderer, thumbFormatQuote, NewButton(thumbRemoveButtonVAO), thumbChartRounding, thumbChartPadding),
 		lines:             &ChartLines{},
 		dailyStochastics:  &ChartStochastics{Interval: DailyInterval},
 		weeklyStochastics: &ChartStochastics{Interval: WeeklyInterval},
+		loading:           true,
 	}
 }
 
 // Update updates the ChartThumbnail.
-func (ch *ChartThumbnail) Update(st *ModelStock) {
-	ch.header.Update(st)
-	ch.lines.Update(st)
-	ch.dailyStochastics.Update(st)
-	ch.weeklyStochastics.Update(st)
+func (ch *ChartThumbnail) Update(u *ChartUpdate) {
+	ch.loading = u.Loading
+	ch.header.Update(u.Stock)
+	ch.lines.Update(u.Stock)
+	ch.dailyStochastics.Update(u.Stock)
+	ch.weeklyStochastics.Update(u.Stock)
 }
 
 // Render renders the chart thumbnail.
 func (ch *ChartThumbnail) Render(vc ViewContext) {
-	if ch.Loading {
+	if ch.loading {
 		thumbLoadingText.Render(vc)
 		return
 	}

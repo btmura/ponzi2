@@ -34,19 +34,19 @@ var (
 
 // Chart shows a stock chart for a single stock.
 type Chart struct {
-	Loading           bool
 	header            *ChartHeader
 	lines             *ChartLines
 	prices            *ChartPrices
 	volume            *ChartVolume
 	dailyStochastics  *ChartStochastics
 	weeklyStochastics *ChartStochastics
+	loading           bool
 }
 
 // NewChart creates a new chart.
 func NewChart() *Chart {
 	return &Chart{
-		Loading:           true,
+		loading:           true,
 		header:            NewChartHeader(chartSymbolQuoteTextRenderer, chartFormatQuote, NewButton(chartAddButtonVAO), chartRounding, chartPadding),
 		lines:             &ChartLines{},
 		prices:            &ChartPrices{},
@@ -56,19 +56,29 @@ func NewChart() *Chart {
 	}
 }
 
+// ChartUpdate is the argument to Update.
+type ChartUpdate struct {
+	// Loading indicates whether data is being fetched for the chart.
+	Loading bool
+
+	// Stock is the stock the chart should show.
+	Stock *ModelStock
+}
+
 // Update updates the Chart.
-func (ch *Chart) Update(st *ModelStock) {
-	ch.header.Update(st)
-	ch.lines.Update(st)
-	ch.prices.Update(st)
-	ch.volume.Update(st)
-	ch.dailyStochastics.Update(st)
-	ch.weeklyStochastics.Update(st)
+func (ch *Chart) Update(u *ChartUpdate) {
+	ch.loading = u.Loading
+	ch.header.Update(u.Stock)
+	ch.lines.Update(u.Stock)
+	ch.prices.Update(u.Stock)
+	ch.volume.Update(u.Stock)
+	ch.dailyStochastics.Update(u.Stock)
+	ch.weeklyStochastics.Update(u.Stock)
 }
 
 // Render renders the chart.
 func (ch *Chart) Render(vc ViewContext) {
-	if ch.Loading {
+	if ch.loading {
 		chartLoadingText.Render(vc)
 		return
 	}

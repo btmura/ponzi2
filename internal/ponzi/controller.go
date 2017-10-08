@@ -186,12 +186,16 @@ loop:
 				break loop
 			}
 			if ch, ok := c.symbolToChartMap[u.symbol]; ok {
-				ch.Loading = false
-				ch.Update(st)
+				ch.Update(&ChartUpdate{
+					Loading: false,
+					Stock:   st,
+				})
 			}
 			if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
-				th.Loading = false
-				th.Update(st)
+				th.Update(&ChartUpdate{
+					Loading: false,
+					Stock:   st,
+				})
 			}
 
 		default:
@@ -239,7 +243,10 @@ func (c *Controller) setChart(symbol string) {
 	ch := NewChart()
 	c.symbolToChartMap[symbol] = ch
 
-	ch.Update(st)
+	ch.Update(&ChartUpdate{
+		Loading: true,
+		Stock:   st,
+	})
 	ch.SetAddButtonClickCallback(func() {
 		c.addChartThumb(symbol)
 	})
@@ -262,7 +269,10 @@ func (c *Controller) addChartThumb(symbol string) {
 	th := NewChartThumbnail()
 	c.symbolToChartThumbMap[symbol] = th
 
-	th.Update(st)
+	th.Update(&ChartUpdate{
+		Loading: true,
+		Stock:   st,
+	})
 	th.SetRemoveButtonClickCallback(func() {
 		c.removeChartThumb(symbol)
 	})
