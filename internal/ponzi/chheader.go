@@ -15,7 +15,7 @@ type ChartHeader struct {
 	quoteFormatter          func(*ModelStock) string
 	button                  *Button
 	loadingText             *CenteredText
-	roundAmount             int
+	rounding                int
 	padding                 int
 	buttonClickCallbacks    []func()
 	loading                 bool
@@ -25,7 +25,7 @@ type ChartHeaderArgs struct {
 	SymbolQuoteTextRenderer *gfx.TextRenderer
 	QuoteFormatter          func(*ModelStock) string
 	Button                  *Button
-	RoundAmount             int
+	Rounding                int
 	Padding                 int
 }
 
@@ -36,7 +36,7 @@ func NewChartHeader(args *ChartHeaderArgs) *ChartHeader {
 		quoteFormatter:          args.QuoteFormatter,
 		button:                  args.Button,
 		loadingText:             NewCenteredText(args.SymbolQuoteTextRenderer, "LOADING"),
-		roundAmount:             args.RoundAmount,
+		rounding:                args.Rounding,
 		padding:                 args.Padding,
 	}
 }
@@ -62,14 +62,14 @@ func (ch *ChartHeader) Update(u *ChartUpdate) {
 func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, buttonClicked bool) {
 	// Render the border around the chart.
 	r := vc.Bounds
-	renderRoundedRect(r, ch.roundAmount)
+	renderRoundedRect(r, ch.rounding)
 
 	// Start rendering from the top left. Track position with point.
 	pt := image.Pt(r.Min.X, r.Max.Y)
 	pt.Y -= ch.padding + ch.symbolQuoteTextRenderer.LineHeight()
 	{
 		pt := pt
-		pt.X += ch.roundAmount
+		pt.X += ch.rounding
 		pt.X += ch.symbolQuoteTextRenderer.Render(ch.symbol, pt, white)
 		pt.X += ch.padding
 		pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteText, pt, ch.quoteColor)

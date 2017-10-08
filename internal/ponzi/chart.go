@@ -48,7 +48,7 @@ func NewChart() *Chart {
 			SymbolQuoteTextRenderer: chartSymbolQuoteTextRenderer,
 			QuoteFormatter:          chartFormatQuote,
 			Button:                  NewButton(chartAddButtonVAO),
-			RoundAmount:             chartRounding,
+			Rounding:                chartRounding,
 			Padding:                 chartPadding,
 		}),
 		lines:             &ChartLines{},
