@@ -23,7 +23,6 @@ var (
 		return ""
 	}
 	chartAddButtonVAO = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("addButton.ply")))
-	chartLoadingText  = NewCenteredText(chartSymbolQuoteTextRenderer, "LOADING")
 )
 
 // Shared variables used by multiple chart components.
@@ -40,14 +39,18 @@ type Chart struct {
 	volume            *ChartVolume
 	dailyStochastics  *ChartStochastics
 	weeklyStochastics *ChartStochastics
-	loading           bool
 }
 
 // NewChart creates a new chart.
 func NewChart() *Chart {
 	return &Chart{
-		loading:           true,
-		header:            NewChartHeader(chartSymbolQuoteTextRenderer, chartFormatQuote, NewButton(chartAddButtonVAO), chartRounding, chartPadding),
+		header: NewChartHeader(&ChartHeaderArgs{
+			SymbolQuoteTextRenderer: chartSymbolQuoteTextRenderer,
+			QuoteFormatter:          chartFormatQuote,
+			Button:                  NewButton(chartAddButtonVAO),
+			RoundAmount:             chartRounding,
+			Padding:                 chartPadding,
+		}),
 		lines:             &ChartLines{},
 		prices:            &ChartPrices{},
 		volume:            &ChartVolume{},
@@ -67,8 +70,7 @@ type ChartUpdate struct {
 
 // Update updates the Chart.
 func (ch *Chart) Update(u *ChartUpdate) {
-	ch.loading = u.Loading
-	ch.header.Update(u.Stock)
+	ch.header.Update(u)
 	ch.lines.Update(u.Stock)
 	ch.prices.Update(u.Stock)
 	ch.volume.Update(u.Stock)
@@ -78,11 +80,6 @@ func (ch *Chart) Update(u *ChartUpdate) {
 
 // Render renders the chart.
 func (ch *Chart) Render(vc ViewContext) {
-	if ch.loading {
-		chartLoadingText.Render(vc)
-		return
-	}
-
 	r, _ := ch.header.Render(vc)
 
 	rects := renderHorizDividers(r, horizLine, 0.13, 0.13, 0.13, 0.61)

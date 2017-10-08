@@ -14,31 +14,43 @@ type ChartHeader struct {
 	symbolQuoteTextRenderer *gfx.TextRenderer
 	quoteFormatter          func(*ModelStock) string
 	button                  *Button
+	loadingText             *CenteredText
 	roundAmount             int
 	padding                 int
 	buttonClickCallbacks    []func()
+	loading                 bool
+}
+
+type ChartHeaderArgs struct {
+	SymbolQuoteTextRenderer *gfx.TextRenderer
+	QuoteFormatter          func(*ModelStock) string
+	Button                  *Button
+	RoundAmount             int
+	Padding                 int
 }
 
 // NewChartHeader creates a new chart header.
-func NewChartHeader(symbolQuoteTextRenderer *gfx.TextRenderer, quoteFormatter func(*ModelStock) string, button *Button, roundAmount, padding int) *ChartHeader {
+func NewChartHeader(args *ChartHeaderArgs) *ChartHeader {
 	return &ChartHeader{
-		symbolQuoteTextRenderer: symbolQuoteTextRenderer,
-		quoteFormatter:          quoteFormatter,
-		button:                  button,
-		roundAmount:             roundAmount,
-		padding:                 padding,
+		symbolQuoteTextRenderer: args.SymbolQuoteTextRenderer,
+		quoteFormatter:          args.QuoteFormatter,
+		button:                  args.Button,
+		loadingText:             NewCenteredText(args.SymbolQuoteTextRenderer, "LOADING"),
+		roundAmount:             args.RoundAmount,
+		padding:                 args.Padding,
 	}
 }
 
-// Update updates the ChartHeader with the given stock.
-func (ch *ChartHeader) Update(st *ModelStock) {
-	ch.symbol = st.Symbol
-	ch.quoteText = ch.quoteFormatter(st)
+// Update updates the ChartHeader.
+func (ch *ChartHeader) Update(u *ChartUpdate) {
+	ch.loading = u.Loading
+	ch.symbol = u.Stock.Symbol
+	ch.quoteText = ch.quoteFormatter(u.Stock)
 	switch {
-	case st.PercentChange() > 0:
+	case u.Stock.PercentChange() > 0:
 		ch.quoteColor = green
 
-	case st.PercentChange() < 0:
+	case u.Stock.PercentChange() < 0:
 		ch.quoteColor = red
 
 	default:
@@ -64,12 +76,17 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, buttonClick
 	}
 	pt.Y -= ch.padding
 
+	r.Max.Y = pt.Y
+
+	if ch.loading {
+		ch.loadingText.Render(vc)
+		return r, false
+	}
+
 	// Render button in the upper right corner.
 	buttonSize := image.Pt(r.Max.Y-pt.Y, r.Max.Y-pt.Y)
 	vc.Bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
 	buttonClicked = ch.button.Render(vc)
-
-	r.Max.Y = pt.Y
 	return r, buttonClicked
 }
 
