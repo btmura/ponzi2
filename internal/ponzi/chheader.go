@@ -13,10 +13,10 @@ type ChartHeader struct {
 	quoteColor              [3]float32
 	symbolQuoteTextRenderer *gfx.TextRenderer
 	quoteFormatter          func(*ModelStock) string
-	button                  *Button
+	button1                 *Button
+	button2                 *Button
 	rounding                int
 	padding                 int
-	buttonClickCallbacks    []func()
 	loading                 bool
 }
 
@@ -24,7 +24,8 @@ type ChartHeader struct {
 type ChartHeaderArgs struct {
 	SymbolQuoteTextRenderer *gfx.TextRenderer
 	QuoteFormatter          func(*ModelStock) string
-	Button                  *Button
+	Button1                 *Button
+	Button2                 *Button
 	Rounding                int
 	Padding                 int
 }
@@ -34,7 +35,8 @@ func NewChartHeader(args *ChartHeaderArgs) *ChartHeader {
 	return &ChartHeader{
 		symbolQuoteTextRenderer: args.SymbolQuoteTextRenderer,
 		quoteFormatter:          args.QuoteFormatter,
-		button:                  args.Button,
+		button1:                 args.Button1,
+		button2:                 args.Button2,
 		rounding:                args.Rounding,
 		padding:                 args.Padding,
 	}
@@ -58,7 +60,7 @@ func (ch *ChartHeader) Update(u *ChartUpdate) {
 }
 
 // Render renders the chart header.
-func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, buttonClicked bool) {
+func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, button1Clicked, button2Clicked bool) {
 	// Start rendering from the top left. Track position with point.
 	r := vc.Bounds
 	pt := image.Pt(r.Min.X, r.Max.Y)
@@ -74,21 +76,26 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, buttonClick
 
 	if ch.loading {
 		r.Max.Y = pt.Y
-		return r, false /* no button click */
+		return r, false /* no left button click */, false /* no right button click */
 	}
 
 	// Render button in the upper right corner.
 	buttonSize := image.Pt(r.Max.Y-pt.Y, r.Max.Y-pt.Y)
 	vc.Bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
-	buttonClicked = ch.button.Render(vc)
+	button2Clicked = ch.button2.Render(vc)
 
 	r.Max.Y = pt.Y
-	return r, buttonClicked
+	return r, button1Clicked, button2Clicked
 }
 
-// SetButtonClickCallback sets the callback for when the button is clicked.
-func (ch *ChartHeader) SetButtonClickCallback(cb func()) {
-	ch.button.SetClickCallback(cb)
+// SetButton1ClickCallback sets the callback for button 1 clicks.
+func (ch *ChartHeader) SetButton1ClickCallback(cb func()) {
+	ch.button1.SetClickCallback(cb)
+}
+
+// SetButton2ClickCallback sets the callback for when the button is clicked.
+func (ch *ChartHeader) SetButton2ClickCallback(cb func()) {
+	ch.button2.SetClickCallback(cb)
 }
 
 // Close frees the resources backing the ChartHeader.

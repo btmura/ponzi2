@@ -42,7 +42,7 @@ func NewChartThumb() *ChartThumb {
 		header: NewChartHeader(&ChartHeaderArgs{
 			SymbolQuoteTextRenderer: thumbSymbolQuoteTextRenderer,
 			QuoteFormatter:          thumbFormatQuote,
-			Button:                  NewButton(thumbRemoveButtonVAO),
+			Button2:                 NewButton(thumbRemoveButtonVAO),
 			Rounding:                thumbChartRounding,
 			Padding:                 thumbChartPadding,
 		}),
@@ -67,7 +67,7 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 	// Render the border around the chart.
 	renderRoundedRect(vc.Bounds, thumbChartRounding)
 
-	r, clicked := ch.header.Render(vc)
+	r, _, clicked := ch.header.Render(vc)
 
 	if ch.loading {
 		renderHorizDividers(r, horizLine, 1)
@@ -89,7 +89,7 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 
 // SetRemoveButtonClickCallback sets the callback for when the remove button is clicked.
 func (ch *ChartThumb) SetRemoveButtonClickCallback(cb func()) {
-	ch.header.SetButtonClickCallback(cb)
+	ch.header.SetButton2ClickCallback(cb)
 }
 
 // SetThumbClickCallback sets the callback for when the thumbnail is clicked.

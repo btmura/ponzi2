@@ -49,7 +49,7 @@ func NewChart() *Chart {
 		header: NewChartHeader(&ChartHeaderArgs{
 			SymbolQuoteTextRenderer: chartSymbolQuoteTextRenderer,
 			QuoteFormatter:          chartFormatQuote,
-			Button:                  NewButton(chartAddButtonVAO),
+			Button2:                 NewButton(chartAddButtonVAO),
 			Rounding:                chartRounding,
 			Padding:                 chartPadding,
 		}),
@@ -87,7 +87,7 @@ func (ch *Chart) Render(vc ViewContext) {
 	// Render the border around the chart.
 	renderRoundedRect(vc.Bounds, chartRounding)
 
-	r, _ := ch.header.Render(vc)
+	r, _, _ := ch.header.Render(vc)
 
 	if ch.loading {
 		renderHorizDividers(r, horizLine, 1)
@@ -132,7 +132,7 @@ func (ch *Chart) Render(vc ViewContext) {
 
 // SetAddButtonClickCallback sets the callback for when the add button is clicked.
 func (ch *Chart) SetAddButtonClickCallback(cb func()) {
-	ch.header.SetButtonClickCallback(cb)
+	ch.header.SetButton2ClickCallback(cb)
 }
 
 // Close frees the resources backing the chart.
