@@ -42,6 +42,7 @@ func NewChartThumb() *ChartThumb {
 		header: NewChartHeader(&ChartHeaderArgs{
 			SymbolQuoteTextRenderer: thumbSymbolQuoteTextRenderer,
 			QuoteFormatter:          thumbFormatQuote,
+			Button1:                 NewButton(chartRefreshButtonVAO),
 			Button2:                 NewButton(thumbRemoveButtonVAO),
 			Rounding:                thumbChartRounding,
 			Padding:                 thumbChartPadding,

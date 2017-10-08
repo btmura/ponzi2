@@ -30,6 +30,7 @@ var (
 var (
 	chartAxisLabelTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
 	chartGridHorizLine         = gfx.HorizColoredLineVAO(gray, gray)
+	chartRefreshButtonVAO      = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("refreshButton.ply")))
 )
 
 // Chart shows a stock chart for a single stock.
@@ -49,6 +50,7 @@ func NewChart() *Chart {
 		header: NewChartHeader(&ChartHeaderArgs{
 			SymbolQuoteTextRenderer: chartSymbolQuoteTextRenderer,
 			QuoteFormatter:          chartFormatQuote,
+			Button1:                 NewButton(chartRefreshButtonVAO),
 			Button2:                 NewButton(chartAddButtonVAO),
 			Rounding:                chartRounding,
 			Padding:                 chartPadding,

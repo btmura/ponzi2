@@ -20,7 +20,7 @@ var (
 
 const viewOuterPadding = 10
 
-var viewChartThumbSize = image.Pt(140, 90)
+var viewChartThumbSize = image.Pt(155, 105)
 
 var (
 	viewInputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)

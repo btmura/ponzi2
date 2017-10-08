@@ -94,3 +94,8 @@ func sliceRect(r image.Rectangle, percentages ...float32) []image.Rectangle {
 
 	return rs
 }
+
+// transRect returns a rectangle translated by the dx and dy amounts.
+func transRect(r image.Rectangle, dx, dy int) image.Rectangle {
+	return r.Add(image.Pt(dx, dy))
+}

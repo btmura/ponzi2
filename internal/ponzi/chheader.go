@@ -79,10 +79,15 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, button1Clic
 		return r, false /* no left button click */, false /* no right button click */
 	}
 
-	// Render button in the upper right corner.
 	buttonSize := image.Pt(r.Max.Y-pt.Y, r.Max.Y-pt.Y)
+
+	// Render button 2 in the upper right corner.
 	vc.Bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
 	button2Clicked = ch.button2.Render(vc)
+
+	// Render button 1 to the left of button 2.
+	vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
+	button1Clicked = ch.button1.Render(vc)
 
 	r.Max.Y = pt.Y
 	return r, button1Clicked, button2Clicked
