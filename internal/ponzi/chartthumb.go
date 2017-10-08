@@ -70,10 +70,8 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 	r, clicked := ch.header.Render(vc)
 
 	if ch.loading {
-		vc := vc
-		vc.Bounds = r
 		renderHorizDividers(r, horizLine, 1)
-		thumbLoadingText.Render(vc)
+		thumbLoadingText.Render(r)
 		return
 	}
 

@@ -1,6 +1,8 @@
 package ponzi
 
 import (
+	"image"
+
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
@@ -22,13 +24,13 @@ func NewCenteredText(textRenderer *gfx.TextRenderer, text string) *CenteredText 
 }
 
 // Render renders the CenteredText.
-func (c *CenteredText) Render(vc ViewContext) {
+func (c *CenteredText) Render(r image.Rectangle) {
 	if c.Text == "" {
-		return 
+		return
 	}
 	sz := c.textRenderer.Measure(c.Text)
-	pt := vc.Bounds.Min
-	pt.X += (vc.Bounds.Dx() - sz.X) / 2
-	pt.Y += (vc.Bounds.Dy() - sz.Y) / 2
+	pt := r.Min
+	pt.X += (r.Dx() - sz.X) / 2
+	pt.Y += (r.Dy() - sz.Y) / 2
 	c.textRenderer.Render(c.Text, pt, white)
 }

@@ -88,7 +88,7 @@ func (v *View) Render(vc ViewContext) {
 	if len(v.chartThumbs) > 0 {
 		vc.Bounds.Min.X += viewOuterPadding + viewChartThumbSize.X
 	}
-	v.inputSymbol.Render(vc)
+	v.inputSymbol.Render(vc.Bounds)
 	if v.chart != nil {
 		v.chart.Render(vc)
 	}

@@ -90,10 +90,8 @@ func (ch *Chart) Render(vc ViewContext) {
 	r, _ := ch.header.Render(vc)
 
 	if ch.loading {
-		vc := vc
-		vc.Bounds = r
 		renderHorizDividers(r, horizLine, 1)
-		chartLoadingText.Render(vc)
+		chartLoadingText.Render(r)
 		return
 	}
 
