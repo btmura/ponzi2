@@ -186,9 +186,11 @@ loop:
 				break loop
 			}
 			if ch, ok := c.symbolToChartMap[u.symbol]; ok {
+				ch.Loading = false
 				ch.Update(st)
 			}
 			if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
+				th.Loading = false
 				th.Update(st)
 			}
 

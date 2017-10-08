@@ -23,10 +23,12 @@ var (
 		return ""
 	}
 	thumbRemoveButtonVAO = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("removeButton.ply")))
+	thumbLoadingText     = NewCenteredText(thumbSymbolQuoteTextRenderer, "LOADING")
 )
 
 // ChartThumbnail shows a stock chart thumbnail for a single stock.
 type ChartThumbnail struct {
+	Loading            bool
 	header             *ChartHeader
 	lines              *ChartLines
 	dailyStochastics   *ChartStochastics
@@ -37,6 +39,7 @@ type ChartThumbnail struct {
 // NewChartThumbnail creates a ChartThumbnail.
 func NewChartThumbnail() *ChartThumbnail {
 	return &ChartThumbnail{
+		Loading:           true,
 		header:            NewChartHeader(thumbSymbolQuoteTextRenderer, thumbFormatQuote, NewButton(thumbRemoveButtonVAO), thumbChartRounding, thumbChartPadding),
 		lines:             &ChartLines{},
 		dailyStochastics:  &ChartStochastics{Interval: DailyInterval},
@@ -54,6 +57,11 @@ func (ch *ChartThumbnail) Update(st *ModelStock) {
 
 // Render renders the chart thumbnail.
 func (ch *ChartThumbnail) Render(vc ViewContext) {
+	if ch.Loading {
+		thumbLoadingText.Render(vc)
+		return
+	}
+
 	r, clicked := ch.header.Render(vc)
 
 	if !clicked && vc.LeftClickInBounds() {

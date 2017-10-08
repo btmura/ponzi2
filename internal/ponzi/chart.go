@@ -23,6 +23,7 @@ var (
 		return ""
 	}
 	chartAddButtonVAO = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("addButton.ply")))
+	chartLoadingText  = NewCenteredText(chartSymbolQuoteTextRenderer, "LOADING")
 )
 
 // Shared variables used by multiple chart components.
@@ -33,6 +34,7 @@ var (
 
 // Chart shows a stock chart for a single stock.
 type Chart struct {
+	Loading           bool
 	header            *ChartHeader
 	lines             *ChartLines
 	prices            *ChartPrices
@@ -44,6 +46,7 @@ type Chart struct {
 // NewChart creates a new chart.
 func NewChart() *Chart {
 	return &Chart{
+		Loading:           true,
 		header:            NewChartHeader(chartSymbolQuoteTextRenderer, chartFormatQuote, NewButton(chartAddButtonVAO), chartRounding, chartPadding),
 		lines:             &ChartLines{},
 		prices:            &ChartPrices{},
@@ -51,15 +54,6 @@ func NewChart() *Chart {
 		dailyStochastics:  &ChartStochastics{Interval: DailyInterval},
 		weeklyStochastics: &ChartStochastics{Interval: WeeklyInterval},
 	}
-}
-
-// ChartUpdate is the argument to Update.
-type ChartUpdate struct {
-	// Loading indicates whether data is being fetched for the chart.
-	Loading bool
-
-	// Stock is the stock the chart should show.
-	Stock *ModelStock
 }
 
 // Update updates the Chart.
@@ -74,6 +68,11 @@ func (ch *Chart) Update(st *ModelStock) {
 
 // Render renders the chart.
 func (ch *Chart) Render(vc ViewContext) {
+	if ch.Loading {
+		chartLoadingText.Render(vc)
+		return
+	}
+
 	r, _ := ch.header.Render(vc)
 
 	rects := renderHorizDividers(r, horizLine, 0.13, 0.13, 0.13, 0.61)
