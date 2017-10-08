@@ -1,0 +1,27 @@
+ply
+format ascii 1.0
+comment Created by Blender 2.78 (sub 0) - www.blender.org, source file: 'refreshButton.blend'
+element vertex 8
+property float x
+property float y
+property float z
+property float nx
+property float ny
+property float nz
+element face 6
+property list uchar uint vertex_indices
+end_header
+0.000000 -1.000000 0.000000 0.000000 0.000000 1.000000
+0.707107 0.707107 0.000000 0.000000 0.000000 1.000000
+0.000000 1.000000 0.000000 0.000000 0.000000 1.000000
+-0.707107 0.707107 0.000000 0.000000 0.000000 1.000000
+-1.000000 -0.000000 0.000000 0.000000 0.000000 1.000000
+-0.707107 -0.707107 0.000000 0.000000 0.000000 1.000000
+0.707107 -0.707107 0.000000 0.000000 0.000000 1.000000
+1.000000 0.000000 0.000000 0.000000 0.000000 1.000000
+3 0 1 2
+3 2 3 4
+3 4 5 0
+3 0 6 7
+3 7 1 0
+3 2 4 0
