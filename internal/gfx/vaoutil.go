@@ -11,7 +11,8 @@ import (
 // VAOColor is an RGB color with values from 0.0 to 1.0.
 type VAOColor [3]float32
 
-// HorizColoredLineVAO returns a horizontal colored line segment from (-1, 0) to (1, 0).
+// HorizColoredLineVAO returns a horizontal colored line segment
+// from (-1, 0) to (1, 0).
 func HorizColoredLineVAO(leftColor, rightColor VAOColor) *VAO {
 	return NewVAO(
 		Lines,
@@ -31,7 +32,8 @@ func HorizColoredLineVAO(leftColor, rightColor VAOColor) *VAO {
 	)
 }
 
-// VertColoredLineVAO returns a horizontal colored line segment from (0, -1) to (0, 1).
+// VertColoredLineVAO returns a horizontal colored line segment
+// from (0, -1) to (0, 1).
 func VertColoredLineVAO(topColor, botColor VAOColor) *VAO {
 	return NewVAO(
 		Lines,
