@@ -72,9 +72,8 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, buttonClick
 	}
 	pt.Y -= ch.padding
 
-	r.Max.Y = pt.Y
-
 	if ch.loading {
+		r.Max.Y = pt.Y
 		return r, false /* no button click */
 	}
 
@@ -82,6 +81,8 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, buttonClick
 	buttonSize := image.Pt(r.Max.Y-pt.Y, r.Max.Y-pt.Y)
 	vc.Bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
 	buttonClicked = ch.button.Render(vc)
+
+	r.Max.Y = pt.Y
 	return r, buttonClicked
 }
 
