@@ -23,6 +23,7 @@ var (
 		return ""
 	}
 	thumbRemoveButtonVAO = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("removeButton.ply")))
+	thumbLoadingText     = NewCenteredText(thumbSymbolQuoteTextRenderer, "LOADING...")
 )
 
 // ChartThumb shows a thumbnail for a stock.
@@ -48,11 +49,13 @@ func NewChartThumb() *ChartThumb {
 		lines:             &ChartLines{},
 		dailyStochastics:  &ChartStochastics{Interval: DailyInterval},
 		weeklyStochastics: &ChartStochastics{Interval: WeeklyInterval},
+		loading:           true,
 	}
 }
 
 // Update updates the ChartThumb.
 func (ch *ChartThumb) Update(u *ChartUpdate) {
+	ch.loading = u.Loading
 	ch.header.Update(u)
 	ch.lines.Update(u.Stock)
 	ch.dailyStochastics.Update(u.Stock)
@@ -61,7 +64,18 @@ func (ch *ChartThumb) Update(u *ChartUpdate) {
 
 // Render renders the chart thumbnail.
 func (ch *ChartThumb) Render(vc ViewContext) {
+	// Render the border around the chart.
+	renderRoundedRect(vc.Bounds, thumbChartRounding)
+
 	r, clicked := ch.header.Render(vc)
+
+	if ch.loading {
+		vc := vc
+		vc.Bounds = r
+		renderHorizDividers(r, horizLine, 1)
+		thumbLoadingText.Render(vc)
+		return
+	}
 
 	if !clicked && vc.LeftClickInBounds() {
 		vc.ScheduleCallback(ch.thumbClickCallback)

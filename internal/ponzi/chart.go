@@ -23,6 +23,7 @@ var (
 		return ""
 	}
 	chartAddButtonVAO = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("addButton.ply")))
+	chartLoadingText  = NewCenteredText(chartSymbolQuoteTextRenderer, "LOADING...")
 )
 
 // Shared variables used by multiple chart components.
@@ -39,6 +40,7 @@ type Chart struct {
 	volume            *ChartVolume
 	dailyStochastics  *ChartStochastics
 	weeklyStochastics *ChartStochastics
+	loading           bool
 }
 
 // NewChart creates a new chart.
@@ -56,6 +58,7 @@ func NewChart() *Chart {
 		volume:            &ChartVolume{},
 		dailyStochastics:  &ChartStochastics{Interval: DailyInterval},
 		weeklyStochastics: &ChartStochastics{Interval: WeeklyInterval},
+		loading:           true,
 	}
 }
 
@@ -70,6 +73,7 @@ type ChartUpdate struct {
 
 // Update updates the Chart.
 func (ch *Chart) Update(u *ChartUpdate) {
+	ch.loading = u.Loading
 	ch.header.Update(u)
 	ch.lines.Update(u.Stock)
 	ch.prices.Update(u.Stock)
@@ -80,7 +84,18 @@ func (ch *Chart) Update(u *ChartUpdate) {
 
 // Render renders the chart.
 func (ch *Chart) Render(vc ViewContext) {
+	// Render the border around the chart.
+	renderRoundedRect(vc.Bounds, chartRounding)
+
 	r, _ := ch.header.Render(vc)
+
+	if ch.loading {
+		vc := vc
+		vc.Bounds = r
+		renderHorizDividers(r, horizLine, 1)
+		chartLoadingText.Render(vc)
+		return
+	}
 
 	rects := renderHorizDividers(r, horizLine, 0.13, 0.13, 0.13, 0.61)
 	pr, vr, dr, wr := rects[3], rects[2], rects[1], rects[0]

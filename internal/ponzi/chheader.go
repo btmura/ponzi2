@@ -14,13 +14,13 @@ type ChartHeader struct {
 	symbolQuoteTextRenderer *gfx.TextRenderer
 	quoteFormatter          func(*ModelStock) string
 	button                  *Button
-	loadingText             *CenteredText
 	rounding                int
 	padding                 int
 	buttonClickCallbacks    []func()
 	loading                 bool
 }
 
+// ChartHeaderArgs are passed to NewChartHeader.
 type ChartHeaderArgs struct {
 	SymbolQuoteTextRenderer *gfx.TextRenderer
 	QuoteFormatter          func(*ModelStock) string
@@ -35,7 +35,6 @@ func NewChartHeader(args *ChartHeaderArgs) *ChartHeader {
 		symbolQuoteTextRenderer: args.SymbolQuoteTextRenderer,
 		quoteFormatter:          args.QuoteFormatter,
 		button:                  args.Button,
-		loadingText:             NewCenteredText(args.SymbolQuoteTextRenderer, "LOADING"),
 		rounding:                args.Rounding,
 		padding:                 args.Padding,
 	}
@@ -60,11 +59,8 @@ func (ch *ChartHeader) Update(u *ChartUpdate) {
 
 // Render renders the chart header.
 func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, buttonClicked bool) {
-	// Render the border around the chart.
-	r := vc.Bounds
-	renderRoundedRect(r, ch.rounding)
-
 	// Start rendering from the top left. Track position with point.
+	r := vc.Bounds
 	pt := image.Pt(r.Min.X, r.Max.Y)
 	pt.Y -= ch.padding + ch.symbolQuoteTextRenderer.LineHeight()
 	{
@@ -79,8 +75,7 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, buttonClick
 	r.Max.Y = pt.Y
 
 	if ch.loading {
-		ch.loadingText.Render(vc)
-		return r, false
+		return r, false /* no button click */
 	}
 
 	// Render button in the upper right corner.
