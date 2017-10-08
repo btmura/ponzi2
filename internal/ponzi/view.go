@@ -30,7 +30,7 @@ type View struct {
 	chart *Chart
 
 	// chartThumbs renders the stocks in the sidebar.
-	chartThumbs []*ChartThumbnail
+	chartThumbs []*ChartThumb
 
 	// inputSymbol stores and renders the symbol being entered by the user.
 	inputSymbol *CenteredText
@@ -110,12 +110,12 @@ func (v *View) SetChart(ch *Chart) {
 }
 
 // AddChartThumb adds the ChartThumbnail to the side bar.
-func (v *View) AddChartThumb(th *ChartThumbnail) {
+func (v *View) AddChartThumb(th *ChartThumb) {
 	v.chartThumbs = append(v.chartThumbs, th)
 }
 
 // RemoveChartThumb removes the ChartThumbnail from the side bar.
-func (v *View) RemoveChartThumb(th *ChartThumbnail) {
+func (v *View) RemoveChartThumb(th *ChartThumb) {
 	for i, thumb := range v.chartThumbs {
 		if thumb == th {
 			v.chartThumbs = append(v.chartThumbs[:i], v.chartThumbs[i+1:]...)

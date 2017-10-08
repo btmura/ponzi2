@@ -43,7 +43,7 @@ type Controller struct {
 	symbolToChartMap map[string]*Chart
 
 	// symbolToChartThumbMap maps symbol to ChartThumbnail.
-	symbolToChartThumbMap map[string]*ChartThumbnail
+	symbolToChartThumbMap map[string]*ChartThumb
 
 	// mousePos is the current global mouse position.
 	mousePos image.Point
@@ -71,7 +71,7 @@ func NewController() *Controller {
 		view:                  NewView(),
 		pendingStockUpdates:   make(chan controllerStockUpdate),
 		symbolToChartMap:      map[string]*Chart{},
-		symbolToChartThumbMap: map[string]*ChartThumbnail{},
+		symbolToChartThumbMap: map[string]*ChartThumb{},
 	}
 }
 
@@ -266,7 +266,7 @@ func (c *Controller) addChartThumb(symbol string) {
 		return
 	}
 
-	th := NewChartThumbnail()
+	th := NewChartThumb()
 	c.symbolToChartThumbMap[symbol] = th
 
 	th.Update(&ChartUpdate{

@@ -26,8 +26,8 @@ var (
 	thumbLoadingText     = NewCenteredText(thumbSymbolQuoteTextRenderer, "LOADING")
 )
 
-// ChartThumbnail shows a stock chart thumbnail for a single stock.
-type ChartThumbnail struct {
+// ChartThumb shows a thumbnail for a stock.
+type ChartThumb struct {
 	header             *ChartHeader
 	lines              *ChartLines
 	dailyStochastics   *ChartStochastics
@@ -36,9 +36,9 @@ type ChartThumbnail struct {
 	loading            bool
 }
 
-// NewChartThumbnail creates a ChartThumbnail.
-func NewChartThumbnail() *ChartThumbnail {
-	return &ChartThumbnail{
+// NewChartThumb creates a ChartThumb.
+func NewChartThumb() *ChartThumb {
+	return &ChartThumb{
 		header:            NewChartHeader(thumbSymbolQuoteTextRenderer, thumbFormatQuote, NewButton(thumbRemoveButtonVAO), thumbChartRounding, thumbChartPadding),
 		lines:             &ChartLines{},
 		dailyStochastics:  &ChartStochastics{Interval: DailyInterval},
@@ -47,8 +47,8 @@ func NewChartThumbnail() *ChartThumbnail {
 	}
 }
 
-// Update updates the ChartThumbnail.
-func (ch *ChartThumbnail) Update(u *ChartUpdate) {
+// Update updates the ChartThumb.
+func (ch *ChartThumb) Update(u *ChartUpdate) {
 	ch.loading = u.Loading
 	ch.header.Update(u.Stock)
 	ch.lines.Update(u.Stock)
@@ -57,7 +57,7 @@ func (ch *ChartThumbnail) Update(u *ChartUpdate) {
 }
 
 // Render renders the chart thumbnail.
-func (ch *ChartThumbnail) Render(vc ViewContext) {
+func (ch *ChartThumb) Render(vc ViewContext) {
 	if ch.loading {
 		thumbLoadingText.Render(vc)
 		return
@@ -78,17 +78,17 @@ func (ch *ChartThumbnail) Render(vc ViewContext) {
 }
 
 // SetRemoveButtonClickCallback sets the callback for when the remove button is clicked.
-func (ch *ChartThumbnail) SetRemoveButtonClickCallback(cb func()) {
+func (ch *ChartThumb) SetRemoveButtonClickCallback(cb func()) {
 	ch.header.SetButtonClickCallback(cb)
 }
 
 // SetThumbClickCallback sets the callback for when the thumbnail is clicked.
-func (ch *ChartThumbnail) SetThumbClickCallback(cb func()) {
+func (ch *ChartThumb) SetThumbClickCallback(cb func()) {
 	ch.thumbClickCallback = cb
 }
 
 // Close frees the resources backing the chart thumbnail.
-func (ch *ChartThumbnail) Close() {
+func (ch *ChartThumb) Close() {
 	if ch.header != nil {
 		ch.header.Close()
 		ch.header = nil
