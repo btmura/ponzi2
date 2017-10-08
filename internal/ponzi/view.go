@@ -18,11 +18,14 @@ var (
 	gray   = [3]float32{0.15, 0.15, 0.15}
 )
 
-var inputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
-
 const viewOuterPadding = 10
 
 var viewChartThumbSize = image.Pt(140, 90)
+
+var (
+	viewInputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
+	viewInstructionsText        = NewCenteredText(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER...")
+)
 
 // The View renders the UI to view and edit the model's stocks that it observes.
 type View struct {
@@ -75,7 +78,7 @@ func (vc ViewContext) ScheduleCallback(cb func()) {
 // NewView creates a new View.
 func NewView() *View {
 	return &View{
-		inputSymbol: NewCenteredText(inputSymbolTextRenderer, ""),
+		inputSymbol: NewCenteredText(viewInputSymbolTextRenderer, ""),
 	}
 }
 
@@ -91,6 +94,8 @@ func (v *View) Render(vc ViewContext) {
 	v.inputSymbol.Render(vc.Bounds)
 	if v.chart != nil {
 		v.chart.Render(vc)
+	} else {
+		viewInstructionsText.Render(vc.Bounds)
 	}
 
 	// Render the sidebar thumbnails.
