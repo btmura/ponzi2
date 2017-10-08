@@ -5,15 +5,23 @@ import (
 	"github.com/golang/glog"
 )
 
-// VAO is a Vertex Array Object (VAO) for one element type (lines, triangles, etc).
+// VAO is a Vertex Array Object for one element type (lines, triangles, etc).
 type VAO struct {
-	initData *VAOVertexData // initData is used to initialize the VAO when needed. Nil after it is used.
-	array    uint32         // array is the VAO name for gl.BindVertexArray.
-	mode     uint32         // mode is like gl.LINES or gl.TRIANGLES passed to gl.DrawElements.
-	count    int32          // count is the number of elements for gl.DrawElements.
+	// initData is used to initialize the VAO when needed. Nil after it is used.
+	initData *VAOVertexData
+
+	// array is the VAO name for gl.BindVertexArray.
+	array uint32
+
+	// mode is like gl.LINES or gl.TRIANGLES passed to gl.DrawElements.
+	mode uint32
+
+	// count is the number of elements for gl.DrawElements.
+	count int32
 }
 
-// VAODrawMode is analogous to the mode argument to gl.DrawElements like gl.LINES or gl.TRIANGLES.
+// VAODrawMode is analogous to the mode argument to gl.DrawElements
+// like gl.LINES or gl.TRIANGLES.
 type VAODrawMode int
 
 // Enum values for VAODrawMode.
@@ -25,16 +33,23 @@ const (
 
 // VAOVertexData is a bunch of slices filled with vertex data to create a VAO.
 type VAOVertexData struct {
-	Vertices  []float32 // Vertices is a required slice of flattened (x, y, z) vertices.
-	TexCoords []float32 // TexCoords is an optional slice of flattened (s, t) coords.
-	Colors    []float32 // Colors is an optional slice of flattened (r, g, b) values.
-	Indices   []uint16  // Indices is a required slice of indices into all the buffers.
+	// Vertices is a required slice of flattened (x, y, z) vertices.
+	Vertices []float32
+
+	// TexCoords is an optional slice of flattened (s, t) coords.
+	TexCoords []float32
+
+	// Colors is an optional slice of flattened (r, g, b) values.
+	Colors []float32
+
+	// Indices is a required slice of indices into all the buffers.
+	Indices []uint16
 }
 
 // NewVAO creates a VAO with the given data buffers and a drawing mode.
 //
-// Since NewVAO defers the creation of the actual OpenGL VAO till the first rendering,
-// callers may call NewVAO at the package scope to simplify their code.
+// Since NewVAO defers the creation of the actual OpenGL VAO till the first
+// rendering, callers may call NewVAO at the package scope to simplify code.
 func NewVAO(mode VAODrawMode, data *VAOVertexData) *VAO {
 	glog.Infof("NewVAO: v(%d) tc(%d) c(%d) i(%d)", len(data.Vertices), len(data.TexCoords), len(data.Colors), len(data.Indices))
 	if len(data.Indices) == 0 {
