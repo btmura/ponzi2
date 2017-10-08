@@ -1,6 +1,8 @@
 package gfx
 
 import (
+	"image"
+
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/golang/glog"
 )
@@ -18,6 +20,12 @@ type VAO struct {
 
 	// count is the number of elements for gl.DrawElements.
 	count int32
+
+	// texture is the texture name for gl.BindTexture.
+	texture uint32
+
+	// hasTexture is true if a texture was binded.
+	hasTexture bool
 }
 
 // VAODrawMode is analogous to the mode argument to gl.DrawElements
@@ -44,6 +52,9 @@ type VAOVertexData struct {
 
 	// Indices is a required slice of indices into all the buffers.
 	Indices []uint16
+
+	// TextureRGBA is the optional texture to use.
+	TextureRGBA *image.RGBA
 }
 
 // NewVAO creates a VAO with the given data buffers and a drawing mode.
@@ -77,10 +88,22 @@ func NewVAO(mode VAODrawMode, data *VAOVertexData) *VAO {
 func (v *VAO) Render() {
 	if v.initData != nil {
 		v.array, v.count = createVAO(v.initData)
+		if v.initData.TextureRGBA != nil {
+			v.texture = texture(v.initData.TextureRGBA)
+			v.hasTexture = true
+		}
 		v.initData = nil // Reset initData to indicate the data was used to create the VAO.
 	}
 	if v.count == 0 {
 		return // No buffer data. Nothing to render.
+	}
+	if v.hasTexture {
+		setColorMixAmount(0)
+		gl.BindTexture(gl.TEXTURE_2D, v.texture)
+		defer func() {
+			setColorMixAmount(1)
+			gl.BindTexture(gl.TEXTURE_2D, 0)
+		}()
 	}
 	gl.BindVertexArray(v.array)
 	gl.DrawElements(v.mode, v.count, gl.UNSIGNED_SHORT, gl.Ptr(nil))
@@ -136,13 +159,17 @@ func (v *VAO) Delete() {
 		v.array = 0
 		v.mode = 0
 		v.count = 0
+		v.texture = 0
+		v.hasTexture = false
 	}()
 
 	if v.initData != nil {
 		return // Data never used to create the VAO. Bail out.
 	}
-	if v.count == 0 {
-		return // No buffer data. Nothing to delete.
+	if v.count != 0 {
+		gl.DeleteVertexArrays(1, &v.array)
 	}
-	gl.DeleteVertexArrays(1, &v.array)
+	if v.hasTexture {
+		gl.DeleteTextures(1, &v.texture)
+	}
 }

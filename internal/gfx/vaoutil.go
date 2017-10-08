@@ -1,6 +1,9 @@
 package gfx
 
 import (
+	"bytes"
+	"image"
+	"image/draw"
 	"io"
 
 	"github.com/golang/glog"
@@ -53,8 +56,18 @@ func VertColoredLineVAO(topColor, botColor VAOColor) *VAO {
 	)
 }
 
-// ReadPLYVAO returns a VAO decoded from PLY reader.
+// ReadPLYVAO returns a VAO decoded from a PLY reader.
 func ReadPLYVAO(r io.Reader) *VAO {
+	return readTexturedPLYVAO(r, nil)
+}
+
+// SquareImageVAO returns a VAO that renders a square image.
+func SquareImageVAO(r io.Reader) *VAO {
+	return readTexturedPLYVAO(bytes.NewReader(MustAsset("squarePlane.ply")), r)
+}
+
+// readTexturedPLYVAO returns a VAO decoded from PLY reader.
+func readTexturedPLYVAO(r, textureReader io.Reader) *VAO {
 	p, err := ply.Decode(r)
 	if err != nil {
 		glog.Fatalf("ReadPLYVAO: decoding PLY failed: %v", err)
@@ -96,6 +109,17 @@ func ReadPLYVAO(r io.Reader) *VAO {
 		v1 := e.Int32s["vertex1"]
 		v2 := e.Int32s["vertex2"]
 		lineIndices = append(lineIndices, uint16(v1), uint16(v2))
+	}
+
+	if textureReader != nil {
+		img, _, err := image.Decode(textureReader)
+		if err != nil {
+			glog.Fatalf("ReadPLYVAO: decoding texture failed: %v", err)
+		}
+
+		rgba := image.NewRGBA(img.Bounds())
+		draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
+		data.TextureRGBA = rgba
 	}
 
 	switch {

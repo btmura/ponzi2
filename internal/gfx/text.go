@@ -141,6 +141,10 @@ func (r *runeRenderer) render(pt image.Point) image.Point {
 	setModelMatrixOrtho(pt, r.size)
 
 	gl.BindTexture(gl.TEXTURE_2D, r.texture)
+	defer func() {
+		gl.BindTexture(gl.TEXTURE_2D, 0)
+	}()
+
 	if runePlaneObject == nil {
 		runePlaneObject = ReadPLYVAO(bytes.NewReader(MustAsset("textPlane.ply")))
 	}

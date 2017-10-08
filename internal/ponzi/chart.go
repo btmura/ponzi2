@@ -22,7 +22,7 @@ var (
 		}
 		return ""
 	}
-	chartAddButtonVAO = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("addButton.ply")))
+	chartAddButtonVAO = gfx.SquareImageVAO(bytes.NewReader(MustAsset("addButton.png")))
 	chartLoadingText  = NewCenteredText(chartSymbolQuoteTextRenderer, "LOADING...")
 )
 
@@ -30,7 +30,7 @@ var (
 var (
 	chartAxisLabelTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
 	chartGridHorizLine         = gfx.HorizColoredLineVAO(gray, gray)
-	chartRefreshButtonVAO      = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("refreshButton.ply")))
+	chartRefreshButtonVAO      = gfx.SquareImageVAO(bytes.NewReader(MustAsset("refreshButton.png")))
 )
 
 // Chart shows a stock chart for a single stock.

@@ -22,7 +22,7 @@ var (
 		}
 		return ""
 	}
-	thumbRemoveButtonVAO = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("removeButton.ply")))
+	thumbRemoveButtonVAO = gfx.SquareImageVAO(bytes.NewReader(MustAsset("removeButton.png")))
 	thumbLoadingText     = NewCenteredText(thumbSymbolQuoteTextRenderer, "LOADING...")
 )
 
