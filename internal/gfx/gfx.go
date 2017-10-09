@@ -22,12 +22,20 @@ const (
 	modelMatrixLocation
 
 	positionLocation
-	texCoordLocation
 	colorLocation
+	texCoordLocation
 
+	fragModeLocation
 	textureLocation
-	colorMixAmountLocation
 	textColorLocation
+)
+
+type fragMode int32
+
+const (
+	fragColorMode fragMode = iota
+	fragTextureMode
+	fragTextColorMode
 )
 
 // InitProgram loads and uses the shader program.
@@ -58,8 +66,8 @@ func setModelMatrixOrtho(pt, sz image.Point) {
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 }
 
-func setColorMixAmount(amount float32) {
-	gl.Uniform1f(colorMixAmountLocation, amount)
+func setFragMode(mode fragMode) {
+	gl.Uniform1i(fragModeLocation, int32(mode))
 }
 
 func setTextColor(color TextColor) {

@@ -98,10 +98,10 @@ func (v *VAO) Render() {
 		return // No buffer data. Nothing to render.
 	}
 	if v.hasTexture {
-		setColorMixAmount(0)
+		setFragMode(fragTextureMode)
 		gl.BindTexture(gl.TEXTURE_2D, v.texture)
 		defer func() {
-			setColorMixAmount(1)
+			setFragMode(fragColorMode)
 			gl.BindTexture(gl.TEXTURE_2D, 0)
 		}()
 	}

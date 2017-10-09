@@ -83,8 +83,8 @@ func (t *TextRenderer) Render(text string, pt image.Point, color TextColor) (dx 
 	}
 
 	setTextColor(color)
-	setColorMixAmount(0)
-	defer setColorMixAmount(1)
+	setFragMode(fragTextColorMode)
+	defer setFragMode(fragColorMode)
 
 	for _, r := range text {
 		rr := t.runeRenderer(r)
