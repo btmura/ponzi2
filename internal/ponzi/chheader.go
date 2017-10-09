@@ -102,7 +102,7 @@ func (ch *ChartHeader) SetButton1ClickCallback(cb func()) {
 	ch.button1.SetClickCallback(cb)
 }
 
-// SetButton2ClickCallback sets the callback for when the button is clicked.
+// SetButton2ClickCallback sets the callback for button 2 clicks.
 func (ch *ChartHeader) SetButton2ClickCallback(cb func()) {
 	ch.button2.SetClickCallback(cb)
 }

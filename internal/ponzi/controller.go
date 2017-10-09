@@ -247,6 +247,9 @@ func (c *Controller) setChart(symbol string) {
 		Loading: true,
 		Stock:   st,
 	})
+	ch.SetRefreshButtonClickCallback(func() {
+		c.goRefreshStock(symbol)
+	})
 	ch.SetAddButtonClickCallback(func() {
 		c.addChartThumb(symbol)
 	})

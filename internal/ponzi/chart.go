@@ -137,7 +137,12 @@ func (ch *Chart) Render(vc ViewContext) {
 	ch.lines.Render(wr)
 }
 
-// SetAddButtonClickCallback sets the callback for when the add button is clicked.
+// SetRefreshButtonClickCallback sets the callback for refresh button clicks.
+func (ch *Chart) SetRefreshButtonClickCallback(cb func()) {
+	ch.header.SetButton1ClickCallback(cb)
+}
+
+// SetAddButtonClickCallback sets the callback for add button clicks.
 func (ch *Chart) SetAddButtonClickCallback(cb func()) {
 	ch.header.SetButton2ClickCallback(cb)
 }

@@ -89,12 +89,12 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 	ch.lines.Render(rects[0].Inset(thumbChartPadding))
 }
 
-// SetRemoveButtonClickCallback sets the callback for when the remove button is clicked.
+// SetRemoveButtonClickCallback sets the callback for remove button clicks.
 func (ch *ChartThumb) SetRemoveButtonClickCallback(cb func()) {
 	ch.header.SetButton1ClickCallback(cb)
 }
 
-// SetThumbClickCallback sets the callback for when the thumbnail is clicked.
+// SetThumbClickCallback sets the callback for thumbnail clicks.
 func (ch *ChartThumb) SetThumbClickCallback(cb func()) {
 	ch.thumbClickCallback = cb
 }
