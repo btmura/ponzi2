@@ -11,8 +11,6 @@ import (
 // Generate config.pb.go. Follow setup instructions @ github.com/golang/protobuf.
 //go:generate protoc -I=data --go_out=. config.proto
 
-//go:generate go generate github.com/btmura/ponzi2/internal/gfx
-
 func init() {
 	flag.Parse() // Avoid glog errors about logging before flag.Parse.
 
