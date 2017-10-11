@@ -8,16 +8,30 @@
                 "kind": "build",
                 "isDefault": true
             },
-
             "command": "go generate; if ($?) { go build -v -x }; if ($?) { ./ponzi2.exe -logtostderr }",
+            "linux": {
+                "command": "go generate && go build -v -x && ./ponzi2 -logtostderr"
+            },
             "options": {
                 "cwd": "${workspaceRoot}"
             },
-            "problemMatcher":["$go"],             
-
+            "problemMatcher": [
+                "$go"
+            ]
+        },
+        {
+            "taskName": "clean install",
+            "type": "shell",
+            "command": "go clean -i -x; if ($?) { go install -ldflags='-H=windowsgui' }",
             "linux": {
-                "command": "go generate && go build -v -x && ./ponzi2 -logtostderr" 
-            }
+                "command": "go clean -i -x && go install"
+            },
+            "options": {
+                "cwd": "${workspaceRoot}"
+            },
+            "problemMatcher": [
+                "$go"
+            ]
         }
     ]
 }
