@@ -12,17 +12,17 @@ type ChartLines struct {
 	weekLines  *gfx.VAO
 }
 
-// Update updates the ChartLines with the stock.
-func (ch *ChartLines) Update(st *ModelStock) {
+// SetState sets the ChartLines' state.
+func (ch *ChartLines) SetState(state *ChartState) {
 	// Reset everything.
 	ch.Close()
 
 	// Bail out if there is no data yet.
-	if st.LastUpdateTime.IsZero() {
+	if state.Stock.LastUpdateTime.IsZero() {
 		return // Stock has no data yet.
 	}
 
-	ch.weekLines = createChartWeekLinesVAO(st.DailySessions)
+	ch.weekLines = createChartWeekLinesVAO(state.Stock.DailySessions)
 	ch.renderable = true
 }
 

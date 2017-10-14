@@ -42,16 +42,18 @@ func NewChartHeader(args *ChartHeaderArgs) *ChartHeader {
 	}
 }
 
-// Update updates the ChartHeader.
-func (ch *ChartHeader) Update(u *ChartUpdate) {
-	ch.loading = u.Loading
-	ch.symbol = u.Stock.Symbol
-	ch.quoteText = ch.quoteFormatter(u.Stock)
+// SetState sets the ChartHeader's state.
+func (ch *ChartHeader) SetState(state *ChartState) {
+	ch.loading = state.Loading
+	ch.symbol = state.Stock.Symbol
+	ch.quoteText = ch.quoteFormatter(state.Stock)
+
+	c := state.Stock.PercentChange()
 	switch {
-	case u.Stock.PercentChange() > 0:
+	case c > 0:
 		ch.quoteColor = green
 
-	case u.Stock.PercentChange() < 0:
+	case c < 0:
 		ch.quoteColor = red
 
 	default:

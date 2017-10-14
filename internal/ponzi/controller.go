@@ -216,13 +216,13 @@ loop:
 				break loop
 			}
 			if ch, ok := c.symbolToChartMap[u.symbol]; ok {
-				ch.Update(&ChartUpdate{
+				ch.SetState(&ChartState{
 					Loading: false,
 					Stock:   st,
 				})
 			}
 			if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
-				th.Update(&ChartUpdate{
+				th.SetState(&ChartState{
 					Loading: false,
 					Stock:   st,
 				})
@@ -273,7 +273,7 @@ func (c *Controller) setChart(symbol string) {
 	ch := NewChart()
 	c.symbolToChartMap[symbol] = ch
 
-	ch.Update(&ChartUpdate{
+	ch.SetState(&ChartState{
 		Loading: true,
 		Stock:   st,
 	})
@@ -302,7 +302,7 @@ func (c *Controller) addChartThumb(symbol string) {
 	th := NewChartThumb()
 	c.symbolToChartThumbMap[symbol] = th
 
-	th.Update(&ChartUpdate{
+	th.SetState(&ChartState{
 		Loading: true,
 		Stock:   st,
 	})
