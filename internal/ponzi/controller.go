@@ -45,14 +45,14 @@ type Controller struct {
 	// pendingStockUpdates has stock updates ready to apply to the model.
 	pendingStockUpdates chan controllerStockUpdate
 
-	// pendingConfigSaves is a channel with ordered configs to save.
+	// enableSavingConfigs enables saving config changes.
+	enableSavingConfigs bool
+
+	// pendingConfigSaves is a channel with configs to save.
 	pendingConfigSaves chan *Config
 
 	// doneSavingConfigs indicates saving is done and the program may quit.
 	doneSavingConfigs chan bool
-
-	// enableSavingConfigs enables saving config changes.
-	enableSavingConfigs bool
 
 	// mousePos is the current global mouse position.
 	mousePos image.Point
@@ -125,6 +125,7 @@ func (c *Controller) Run() {
 		glog.Fatalf("newView: failed to init gfx: %v", err)
 	}
 
+	// Load the config and setup the initial UI.
 	cfg, err := LoadConfig()
 	if err != nil {
 		glog.Fatalf("Run: failed to load config: %v", err)
@@ -198,9 +199,8 @@ func (c *Controller) Run() {
 		glfw.PollEvents()
 	}
 
+	// Disable config changes to start shutting down save processor.
 	c.enableSavingConfigs = false
-
-	close(c.pendingStockUpdates)
 	close(c.pendingConfigSaves)
 	<-c.doneSavingConfigs
 }
@@ -286,7 +286,7 @@ func (c *Controller) setChart(symbol string) {
 
 	c.view.SetChart(ch)
 	c.goRefreshStock(symbol)
-	c.goSaveConfig()
+	c.saveConfig()
 }
 
 func (c *Controller) addChartThumb(symbol string) {
@@ -315,7 +315,7 @@ func (c *Controller) addChartThumb(symbol string) {
 
 	c.view.AddChartThumb(th)
 	c.goRefreshStock(symbol)
-	c.goSaveConfig()
+	c.saveConfig()
 }
 
 func (c *Controller) removeChartThumb(symbol string) {
@@ -332,7 +332,7 @@ func (c *Controller) removeChartThumb(symbol string) {
 	th.Close()
 
 	c.view.RemoveChartThumb(th)
-	c.goSaveConfig()
+	c.saveConfig()
 }
 
 func (c *Controller) goRefreshStock(symbol string) {
@@ -356,8 +356,9 @@ func (c *Controller) goRefreshStock(symbol string) {
 	}()
 }
 
-func (c *Controller) goSaveConfig() {
+func (c *Controller) saveConfig() {
 	if !c.enableSavingConfigs {
+		glog.Warning("saveConfig: ignoring save request, saving disabled")
 		return
 	}
 
