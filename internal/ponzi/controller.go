@@ -51,6 +51,9 @@ type Controller struct {
 	// doneSavingConfigs indicates saving is done and the program may quit.
 	doneSavingConfigs chan bool
 
+	// enableSavingConfigs enables saving config changes.
+	enableSavingConfigs bool
+
 	// mousePos is the current global mouse position.
 	mousePos image.Point
 
@@ -147,6 +150,9 @@ func (c *Controller) Run() {
 		c.doneSavingConfigs <- true
 	}()
 
+	// Enable saving configs after UI is setup and change processor started.
+	c.enableSavingConfigs = true
+
 	// Call the size callback to set the initial viewport.
 	w, h := win.GetSize()
 	c.setSize(w, h)
@@ -191,6 +197,8 @@ func (c *Controller) Run() {
 		win.SwapBuffers()
 		glfw.PollEvents()
 	}
+
+	c.enableSavingConfigs = false
 
 	close(c.pendingStockUpdates)
 	close(c.pendingConfigSaves)
@@ -349,6 +357,10 @@ func (c *Controller) goRefreshStock(symbol string) {
 }
 
 func (c *Controller) goSaveConfig() {
+	if !c.enableSavingConfigs {
+		return
+	}
+
 	// Make the config on the main thread to save the exact config at the time.
 	cfg := &Config{}
 	if st := c.model.CurrentStock; st != nil {
