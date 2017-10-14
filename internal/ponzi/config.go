@@ -5,20 +5,13 @@ import (
 	"os"
 	"os/user"
 	"path"
-	"sync"
 
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 )
 
-// configMutex prevents config file reads and writes from conflicting.
-var configMutex sync.RWMutex
-
 // LoadConfig loads the user's config from disk.
 func LoadConfig() (*Config, error) {
-	configMutex.RLock()
-	defer configMutex.RUnlock()
-
 	cfgPath, err := userConfigPath()
 	if err != nil {
 		return nil, err
@@ -50,9 +43,6 @@ func LoadConfig() (*Config, error) {
 
 // SaveConfig saves the user's config to disk.
 func SaveConfig(cfg *Config) error {
-	configMutex.Lock()
-	defer configMutex.Unlock()
-
 	cfgPath, err := userConfigPath()
 	if err != nil {
 		return err

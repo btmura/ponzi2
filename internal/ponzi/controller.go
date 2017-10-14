@@ -28,7 +28,7 @@ var acceptedChars = map[rune]bool{
 	'Y': true, 'Z': true,
 }
 
-// Controller runs the program by connecting the model and view and running the "game loop".
+// Controller runs the program in a "game loop".
 type Controller struct {
 	// model is the data that the Controller connects to the View.
 	model *Model
@@ -36,14 +36,20 @@ type Controller struct {
 	// view is the UI that the Controller updates.
 	view *View
 
-	// pendingStockUpdates is a channel with stock updates ready to apply to the model.
-	pendingStockUpdates chan controllerStockUpdate
-
 	// symbolToChartMap maps symbol to Chart. Only one entry right now.
 	symbolToChartMap map[string]*Chart
 
 	// symbolToChartThumbMap maps symbol to ChartThumbnail.
 	symbolToChartThumbMap map[string]*ChartThumb
+
+	// pendingStockUpdates has stock updates ready to apply to the model.
+	pendingStockUpdates chan controllerStockUpdate
+
+	// pendingConfigSaves is a channel with ordered configs to save.
+	pendingConfigSaves chan *Config
+
+	// doneSavingConfigs indicates saving is done and the program may quit.
+	doneSavingConfigs chan bool
 
 	// mousePos is the current global mouse position.
 	mousePos image.Point
@@ -69,9 +75,11 @@ func NewController() *Controller {
 	return &Controller{
 		model:                 NewModel(),
 		view:                  NewView(),
-		pendingStockUpdates:   make(chan controllerStockUpdate),
 		symbolToChartMap:      map[string]*Chart{},
 		symbolToChartThumbMap: map[string]*ChartThumb{},
+		pendingStockUpdates:   make(chan controllerStockUpdate),
+		pendingConfigSaves:    make(chan *Config),
+		doneSavingConfigs:     make(chan bool),
 	}
 }
 
@@ -129,6 +137,16 @@ func (c *Controller) Run() {
 		}
 	}
 
+	// Process config changes in the background until the program ends.
+	go func() {
+		for cfg := range c.pendingConfigSaves {
+			if err := SaveConfig(cfg); err != nil {
+				glog.Warningf("Run: failed to save config: %v", err)
+			}
+		}
+		c.doneSavingConfigs <- true
+	}()
+
 	// Call the size callback to set the initial viewport.
 	w, h := win.GetSize()
 	c.setSize(w, h)
@@ -173,6 +191,10 @@ func (c *Controller) Run() {
 		win.SwapBuffers()
 		glfw.PollEvents()
 	}
+
+	close(c.pendingStockUpdates)
+	close(c.pendingConfigSaves)
+	<-c.doneSavingConfigs
 }
 
 func (c *Controller) update() {
@@ -336,11 +358,9 @@ func (c *Controller) goSaveConfig() {
 		cfg.Stocks = append(cfg.Stocks, &Stock{st.Symbol})
 	}
 
-	// Handle saving to disk in a separate go routine.
+	// Queue the config for saving.
 	go func() {
-		if err := SaveConfig(cfg); err != nil {
-			glog.Warningf("goSaveConfig: failed to save config: %v", err)
-		}
+		c.pendingConfigSaves <- cfg
 	}()
 }
 
