@@ -15,6 +15,9 @@ import (
 	time2 "github.com/btmura/ponzi2/internal/time"
 )
 
+// Frames per second.
+const fps = 60.0
+
 // acceptedChars are the chars the user can enter for a symbol.
 var acceptedChars = map[rune]bool{
 	'A': true, 'B': true, 'C': true,
@@ -177,7 +180,7 @@ func (c *Controller) Run() {
 		c.setMouseButton(button, action)
 	})
 
-	const secPerUpdate = 1.0 / 60
+	const secPerUpdate = 1.0 / fps
 
 	var lag float64
 	prevTime := glfw.GetTime()
@@ -232,6 +235,8 @@ loop:
 			break loop
 		}
 	}
+
+	c.view.Update()
 }
 
 func (c *Controller) render(fudge float32) {

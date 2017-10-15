@@ -60,6 +60,14 @@ func SetModelMatrixRect(r image.Rectangle) {
 	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
 }
 
+// SetModelMatrixRotatedRect sets the model matrix to the rotated rectangle.
+func SetModelMatrixRotatedRect(r image.Rectangle, radians float32) {
+	m := math2.RotationMatrix(radians)
+	m = m.Mult(math2.ScaleMatrix(float32(r.Dx()/2), float32(r.Dy()/2), 1))
+	m = m.Mult(math2.TranslationMatrix(float32(r.Min.X+r.Dx()/2), float32(r.Min.Y+r.Dy()/2), 0))
+	gl.UniformMatrix4fv(modelMatrixLocation, 1, false, &m[0])
+}
+
 func setModelMatrixOrtho(pt, sz image.Point) {
 	m := math2.ScaleMatrix(float32(sz.X), float32(sz.Y), 1)
 	m = m.Mult(math2.TranslationMatrix(float32(pt.X), float32(pt.Y), 0))

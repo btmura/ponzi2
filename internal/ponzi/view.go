@@ -82,7 +82,14 @@ func NewView() *View {
 	}
 }
 
-// Render renders the view.
+// Update updates the View.
+func (v *View) Update() {
+	if v.chart != nil {
+		v.chart.Update()
+	}
+}
+
+// Render renders the View.
 func (v *View) Render(vc ViewContext) {
 	ogBnds := vc.Bounds.Inset(viewOuterPadding)
 

@@ -84,7 +84,12 @@ func (ch *Chart) SetState(state *ChartState) {
 	ch.weeklyStochastics.SetState(state)
 }
 
-// Render renders the chart.
+// Update updates the Chart.
+func (ch *Chart) Update() {
+	ch.header.Update()
+}
+
+// Render renders the Chart.
 func (ch *Chart) Render(vc ViewContext) {
 	// Render the border around the chart.
 	renderRoundedRect(vc.Bounds, chartRounding)

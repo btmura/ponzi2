@@ -3,6 +3,7 @@ package math
 
 import (
 	"fmt"
+	"math"
 )
 
 // Matrix4 is a 4x4 matrix.
@@ -34,6 +35,18 @@ func ScaleMatrix(sx, sy, sz float32) Matrix4 {
 		sx, 0, 0, 0,
 		0, sy, 0, 0,
 		0, 0, sz, 0,
+		0, 0, 0, 1,
+	}
+}
+
+// RotationMatrix creates a rotation matrix.
+func RotationMatrix(radians float32) Matrix4 {
+	c := float32(math.Cos(float64(radians)))
+	s := float32(math.Sin(float64(radians)))
+	return Matrix4{
+		c, s, 0, 0,
+		-s, c, 0, 0,
+		0, 0, 1, 0,
 		0, 0, 0, 1,
 	}
 }

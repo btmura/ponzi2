@@ -44,7 +44,17 @@ func NewChartHeader(args *ChartHeaderArgs) *ChartHeader {
 
 // SetState sets the ChartHeader's state.
 func (ch *ChartHeader) SetState(state *ChartState) {
+	if ch.button1 != nil {
+		switch {
+		case !ch.loading && state.Loading: // Not Loading -> Loading
+			ch.button1.StartSpinning()
+
+		case ch.loading && !state.Loading: // Loading -> Not Loading
+			ch.button1.StopSpinning()
+		}
+	}
 	ch.loading = state.Loading
+
 	ch.symbol = state.Stock.Symbol
 	ch.quoteText = ch.quoteFormatter(state.Stock)
 
@@ -58,6 +68,16 @@ func (ch *ChartHeader) SetState(state *ChartState) {
 
 	default:
 		ch.quoteColor = white
+	}
+}
+
+// Update updates the ChartHeader.
+func (ch *ChartHeader) Update() {
+	if ch.button1 != nil {
+		ch.button1.Update()
+	}
+	if ch.button2 != nil {
+		ch.button2.Update()
 	}
 }
 
@@ -76,11 +96,6 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, button1Clic
 	}
 	pt.Y -= ch.padding
 
-	if ch.loading {
-		r.Max.Y = pt.Y
-		return r, false /* no left button click */, false /* no right button click */
-	}
-
 	// Render buttons in the upper right corner.
 	buttonSize := image.Pt(r.Max.Y-pt.Y, r.Max.Y-pt.Y)
 	vc.Bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
@@ -96,6 +111,12 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, button1Clic
 	}
 
 	r.Max.Y = pt.Y
+
+	if ch.loading {
+		button1Clicked = false
+		button2Clicked = false
+	}
+
 	return r, button1Clicked, button2Clicked
 }
 
