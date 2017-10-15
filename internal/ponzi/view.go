@@ -39,10 +39,11 @@ type View struct {
 	inputSymbol *CenteredText
 }
 
-// ViewContext is passed down the view hierarchy providing drawing hints and event information.
-// Meant to be passed around like a Rectangle or Point rather than a pointer to avoid mistakes.
+// ViewContext is passed down the view hierarchy providing drawing hints and
+// event information. Meant to be passed around like a Rectangle or Point rather
+// than a pointer to avoid mistakes.
 type ViewContext struct {
-	// Bounds is the rectangle with global coordinates that the view part should draw within.
+	// Bounds is the rectangle with global coords that should be drawn within.
 	Bounds image.Rectangle
 
 	// MousePos is the current global mouse position.
@@ -51,7 +52,7 @@ type ViewContext struct {
 	// MouseLeftButtonClicked is whether the left mouse button was clicked.
 	MouseLeftButtonClicked bool
 
-	// Fudge is the position from 0 to 1 between the current and next animation frame.
+	// Fudge is the position from 0 to 1 between the current and next frame.
 	Fudge float32
 
 	// values stores values collected throughout the Render pass.
@@ -60,17 +61,17 @@ type ViewContext struct {
 
 // viewContextValues stores values collected throughout the Render pass.
 type viewContextValues struct {
-	// scheduledCallbacks are callbacks that should be called at the end of Render.
+	// scheduledCallbacks are callbacks to be called at the end of Render.
 	scheduledCallbacks []func()
 }
 
-// LeftClickInBounds returns true if the left mouse button was clicked within the context's bounds.
-// Doesn't take into account overlapping view parts.
+// LeftClickInBounds returns true if the left mouse button was clicked within
+// the context's bounds. Doesn't take into account overlapping view parts.
 func (vc ViewContext) LeftClickInBounds() bool {
 	return vc.MouseLeftButtonClicked && vc.MousePos.In(vc.Bounds)
 }
 
-// ScheduleCallback schedules a callback that will be called after Render is done.
+// ScheduleCallback schedules a callback to be called after Render is done.
 func (vc ViewContext) ScheduleCallback(cb func()) {
 	vc.values.scheduledCallbacks = append(vc.values.scheduledCallbacks, cb)
 }
