@@ -1,56 +1,96 @@
 package ponzi
 
 import (
+	"bytes"
 	"image"
 
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
+var (
+	chartAddButtonVAO     = gfx.SquareImageVAO(bytes.NewReader(MustAsset("addButton.png")))
+	chartRefreshButtonVAO = gfx.SquareImageVAO(bytes.NewReader(MustAsset("refreshButton.png")))
+	chartRemoveButtonVAO  = gfx.SquareImageVAO(bytes.NewReader(MustAsset("removeButton.png")))
+)
+
 // ChartHeader shows a header for charts and thumbnails with a clickable button.
 type ChartHeader struct {
-	symbol                  string
-	quoteText               string
-	quoteColor              [3]float32
+	// symbol is the symbol to render.
+	symbol string
+
+	// quoteText is the text with the price information.
+	quoteText string
+
+	// quoteColor is the color to render the quote text.
+	quoteColor [3]float32
+
+	// symbolQuoteTextRenderer renders the symbol and quote text.
 	symbolQuoteTextRenderer *gfx.TextRenderer
-	quoteFormatter          func(*ModelStock) string
-	button1                 *Button
-	button2                 *Button
-	rounding                int
-	padding                 int
-	loading                 bool
+
+	// quoteFormatter is the function used to generate the quote text.
+	quoteFormatter func(*ModelStock) string
+
+	// refreshButton is the optional button to refresh the chart.
+	refreshButton *Button
+
+	// addButton is the optional button to add the symbol.
+	addButton *Button
+
+	// removeButton is the optional button to remove the symbol.
+	removeButton *Button
+
+	// rounding is only used to layout the symbol and quote text.
+	rounding int
+
+	// padding is only used to layout the symbol and quote text.
+	padding int
+
+	// loading is whether the data for the symbol is loading.
+	loading bool
 }
 
 // ChartHeaderArgs are passed to NewChartHeader.
 type ChartHeaderArgs struct {
 	SymbolQuoteTextRenderer *gfx.TextRenderer
 	QuoteFormatter          func(*ModelStock) string
-	Button1                 *Button
-	Button2                 *Button
+	RefreshButton           bool
+	AddButton               bool
+	RemoveButton            bool
 	Rounding                int
 	Padding                 int
 }
 
 // NewChartHeader creates a new chart header.
 func NewChartHeader(args *ChartHeaderArgs) *ChartHeader {
-	return &ChartHeader{
+	ch := &ChartHeader{
 		symbolQuoteTextRenderer: args.SymbolQuoteTextRenderer,
 		quoteFormatter:          args.QuoteFormatter,
-		button1:                 args.Button1,
-		button2:                 args.Button2,
 		rounding:                args.Rounding,
 		padding:                 args.Padding,
 	}
+	if args.RefreshButton {
+		ch.refreshButton = NewButton(chartRefreshButtonVAO)
+	}
+	if args.AddButton {
+		ch.addButton = NewButton(chartAddButtonVAO)
+	}
+	if args.RemoveButton {
+		ch.removeButton = NewButton(chartRemoveButtonVAO)
+	}
+	return ch
 }
 
 // SetState sets the ChartHeader's state.
 func (ch *ChartHeader) SetState(state *ChartState) {
-	if ch.button1 != nil {
+	if ch.refreshButton != nil {
 		switch {
-		case !ch.loading && state.Loading: // Not Loading -> Loading
-			ch.button1.StartSpinning()
+		// Not Loading -> Loading
+		case !ch.loading && state.Loading:
+			ch.refreshButton.StartSpinning()
 
-		case ch.loading && !state.Loading: // Loading -> Not Loading
-			ch.button1.StopSpinning()
+		// Loading -> Not Loading
+		case ch.loading && !state.Loading:
+			ch.refreshButton.StopSpinning()
 		}
 	}
 	ch.loading = state.Loading
@@ -73,16 +113,19 @@ func (ch *ChartHeader) SetState(state *ChartState) {
 
 // Update updates the ChartHeader.
 func (ch *ChartHeader) Update() {
-	if ch.button1 != nil {
-		ch.button1.Update()
+	if ch.refreshButton != nil {
+		ch.refreshButton.Update()
 	}
-	if ch.button2 != nil {
-		ch.button2.Update()
+	if ch.addButton != nil {
+		ch.addButton.Update()
+	}
+	if ch.removeButton != nil {
+		ch.removeButton.Update()
 	}
 }
 
-// Render renders the chart header.
-func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, button1Clicked, button2Clicked bool) {
+// Render renders the ChartHeader.
+func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, addButtonClicked, refreshButtonClicked, removeButtonClicked bool) {
 	// Start rendering from the top left. Track position with point.
 	r := vc.Bounds
 	pt := image.Pt(r.Min.X, r.Max.Y)
@@ -96,38 +139,43 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, button1Clic
 	}
 	pt.Y -= ch.padding
 
-	// Render buttons in the upper right corner.
+	// Render buttons in the upper right corner from right to left.
 	buttonSize := image.Pt(r.Max.Y-pt.Y, r.Max.Y-pt.Y)
 	vc.Bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
 
-	if ch.button2 != nil {
-		button2Clicked = ch.button2.Render(vc)
+	if ch.removeButton != nil {
+		removeButtonClicked = ch.removeButton.Render(vc)
 		vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
 	}
 
-	if ch.button1 != nil {
-		button1Clicked = ch.button1.Render(vc)
+	if ch.addButton != nil {
+		addButtonClicked = ch.addButton.Render(vc)
+		vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
+	}
+
+	if ch.refreshButton != nil {
+		refreshButtonClicked = ch.refreshButton.Render(vc)
 		vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
 	}
 
 	r.Max.Y = pt.Y
 
-	if ch.loading {
-		button1Clicked = false
-		button2Clicked = false
-	}
-
-	return r, button1Clicked, button2Clicked
+	return r, addButtonClicked, refreshButtonClicked, removeButtonClicked
 }
 
-// SetButton1ClickCallback sets the callback for button 1 clicks.
-func (ch *ChartHeader) SetButton1ClickCallback(cb func()) {
-	ch.button1.SetClickCallback(cb)
+// SetRefreshButtonClickCallback sets the callback for refresh button clicks.
+func (ch *ChartHeader) SetRefreshButtonClickCallback(cb func()) {
+	ch.refreshButton.SetClickCallback(cb)
 }
 
-// SetButton2ClickCallback sets the callback for button 2 clicks.
-func (ch *ChartHeader) SetButton2ClickCallback(cb func()) {
-	ch.button2.SetClickCallback(cb)
+// SetAddButtonClickCallback sets the callback for add button clicks.
+func (ch *ChartHeader) SetAddButtonClickCallback(cb func()) {
+	ch.addButton.SetClickCallback(cb)
+}
+
+// SetRemoveButtonClickCallback sets the callback for remove button clicks.
+func (ch *ChartHeader) SetRemoveButtonClickCallback(cb func()) {
+	ch.removeButton.SetClickCallback(cb)
 }
 
 // Close frees the resources backing the ChartHeader.

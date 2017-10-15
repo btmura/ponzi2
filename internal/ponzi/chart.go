@@ -1,7 +1,6 @@
 package ponzi
 
 import (
-	"bytes"
 	"fmt"
 
 	"golang.org/x/image/font/gofont/goregular"
@@ -22,15 +21,13 @@ var (
 		}
 		return ""
 	}
-	chartAddButtonVAO = gfx.SquareImageVAO(bytes.NewReader(MustAsset("addButton.png")))
-	chartLoadingText  = NewCenteredText(chartSymbolQuoteTextRenderer, "LOADING...")
+	chartLoadingText = NewCenteredText(chartSymbolQuoteTextRenderer, "LOADING...")
 )
 
 // Shared variables used by multiple chart components.
 var (
 	chartAxisLabelTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
 	chartGridHorizLine         = gfx.HorizColoredLineVAO(gray, gray)
-	chartRefreshButtonVAO      = gfx.SquareImageVAO(bytes.NewReader(MustAsset("refreshButton.png")))
 )
 
 // Chart shows a stock chart for a single stock.
@@ -50,8 +47,8 @@ func NewChart() *Chart {
 		header: NewChartHeader(&ChartHeaderArgs{
 			SymbolQuoteTextRenderer: chartSymbolQuoteTextRenderer,
 			QuoteFormatter:          chartFormatQuote,
-			Button1:                 NewButton(chartRefreshButtonVAO),
-			Button2:                 NewButton(chartAddButtonVAO),
+			RefreshButton:           true,
+			AddButton:               true,
 			Rounding:                chartRounding,
 			Padding:                 chartPadding,
 		}),
@@ -95,7 +92,7 @@ func (ch *Chart) Render(vc ViewContext) {
 	renderRoundedRect(vc.Bounds, chartRounding)
 
 	// Render the header and the line below it.
-	r, _, _ := ch.header.Render(vc)
+	r, _, _, _ := ch.header.Render(vc)
 	rects := sliceRect(r, 0.13, 0.13, 0.13, 0.61)
 	renderHorizDivider(rects[3], horizLine)
 
@@ -144,12 +141,12 @@ func (ch *Chart) Render(vc ViewContext) {
 
 // SetRefreshButtonClickCallback sets the callback for refresh button clicks.
 func (ch *Chart) SetRefreshButtonClickCallback(cb func()) {
-	ch.header.SetButton1ClickCallback(cb)
+	ch.header.SetRefreshButtonClickCallback(cb)
 }
 
 // SetAddButtonClickCallback sets the callback for add button clicks.
 func (ch *Chart) SetAddButtonClickCallback(cb func()) {
-	ch.header.SetButton2ClickCallback(cb)
+	ch.header.SetAddButtonClickCallback(cb)
 }
 
 // Close frees the resources backing the chart.

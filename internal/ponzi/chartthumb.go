@@ -1,7 +1,6 @@
 package ponzi
 
 import (
-	"bytes"
 	"fmt"
 
 	"golang.org/x/image/font/gofont/goregular"
@@ -22,8 +21,7 @@ var (
 		}
 		return ""
 	}
-	thumbRemoveButtonVAO = gfx.SquareImageVAO(bytes.NewReader(MustAsset("removeButton.png")))
-	thumbLoadingText     = NewCenteredText(thumbSymbolQuoteTextRenderer, "LOADING...")
+	thumbLoadingText = NewCenteredText(thumbSymbolQuoteTextRenderer, "LOADING...")
 )
 
 // ChartThumb shows a thumbnail for a stock.
@@ -42,7 +40,7 @@ func NewChartThumb() *ChartThumb {
 		header: NewChartHeader(&ChartHeaderArgs{
 			SymbolQuoteTextRenderer: thumbSymbolQuoteTextRenderer,
 			QuoteFormatter:          thumbFormatQuote,
-			Button1:                 NewButton(thumbRemoveButtonVAO),
+			RemoveButton:            true,
 			Rounding:                thumbChartRounding,
 			Padding:                 thumbChartPadding,
 		}),
@@ -68,7 +66,7 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 	renderRoundedRect(vc.Bounds, thumbChartRounding)
 
 	// Render the header and the line below it.
-	r, clicked, _ := ch.header.Render(vc)
+	r, _, _, clicked := ch.header.Render(vc)
 	rects := sliceRect(r, 0.5, 0.5)
 	renderHorizDivider(rects[1], horizLine)
 
@@ -91,7 +89,7 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 
 // SetRemoveButtonClickCallback sets the callback for remove button clicks.
 func (ch *ChartThumb) SetRemoveButtonClickCallback(cb func()) {
-	ch.header.SetButton1ClickCallback(cb)
+	ch.header.SetRemoveButtonClickCallback(cb)
 }
 
 // SetThumbClickCallback sets the callback for thumbnail clicks.
