@@ -419,7 +419,7 @@ func (c *Controller) setCursorPos(x, y float64) {
 
 func (c *Controller) setMouseButton(button glfw.MouseButton, action glfw.Action) {
 	if button != glfw.MouseButtonLeft {
-		glog.Infof("handleMouseButton: ignoring mouse button(%v) and action(%v)", button, action)
+		glog.Infof("setMouseButton: ignoring mouse button(%v) and action(%v)", button, action)
 		return // Only interested in left clicks right now.
 	}
 	c.mouseLeftButtonClicked = action == glfw.Release
