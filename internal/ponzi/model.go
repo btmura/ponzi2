@@ -154,21 +154,7 @@ func (m *ModelStock) Date() time.Time {
 }
 
 func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySessions []*ModelTradingSession) {
-	// Convert the trading sessions into daily sessions.
-	var ds []*ModelTradingSession
-	for _, s := range sessions {
-		ds = append(ds, &ModelTradingSession{
-			Date:   s.Date,
-			Open:   s.Open,
-			High:   s.High,
-			Low:    s.Low,
-			Close:  s.Close,
-			Volume: s.Volume,
-		})
-	}
-	sortByModelTradingSessionDate(ds)
-
-	// Convert the daily sessions into weekly sessions.
+	ds := dailyModelTradingSessions(sessions)
 	ws := weeklyModelTradingSessions(ds)
 
 	// Fill in the change and percent change fields.
@@ -231,14 +217,24 @@ func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySes
 	return ds, ws
 }
 
-func sortByModelTradingSessionDate(ss []*ModelTradingSession) {
-	sort.Slice(ss, func(i, j int) bool {
-		return ss[i].Date.Before(ss[j].Date)
+func dailyModelTradingSessions(ss []*stock.TradingSession) (ds []*ModelTradingSession) {
+	for _, s := range ss {
+		ds = append(ds, &ModelTradingSession{
+			Date:   s.Date,
+			Open:   s.Open,
+			High:   s.High,
+			Low:    s.Low,
+			Close:  s.Close,
+			Volume: s.Volume,
+		})
+	}
+	sort.Slice(ds, func(i, j int) bool {
+		return ds[i].Date.Before(ds[j].Date)
 	})
+	return ds
 }
 
-func weeklyModelTradingSessions(ds []*ModelTradingSession) []*ModelTradingSession {
-	var ws []*ModelTradingSession
+func weeklyModelTradingSessions(ds []*ModelTradingSession) (ws []*ModelTradingSession) {
 	for _, s := range ds {
 		diffWeek := ws == nil
 		if !diffWeek {
