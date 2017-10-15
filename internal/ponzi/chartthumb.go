@@ -54,7 +54,7 @@ func NewChartThumb() *ChartThumb {
 		header: NewChartHeader(&ChartHeaderArgs{
 			SymbolQuoteTextRenderer: thumbSymbolQuoteTextRenderer,
 			QuoteFormatter:          thumbFormatQuote,
-			RemoveButton:            true,
+			ShowRemoveButton:        true,
 			Rounding:                thumbChartRounding,
 			Padding:                 thumbChartPadding,
 		}),
@@ -80,7 +80,12 @@ func (ch *ChartThumb) SetStock(st *ModelStock) {
 	ch.weeklyStochastics.SetStock(st)
 }
 
-// Render renders the chart thumbnail.
+// Update updates the ChartThumb.
+func (ch *ChartThumb) Update() {
+	ch.header.Update()
+}
+
+// Render renders the ChartThumb.
 func (ch *ChartThumb) Render(vc ViewContext) {
 	// Render the border around the chart.
 	renderRoundedRect(vc.Bounds, thumbChartRounding)

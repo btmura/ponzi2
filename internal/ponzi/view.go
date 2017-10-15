@@ -88,6 +88,9 @@ func (v *View) Update() {
 	if v.chart != nil {
 		v.chart.Update()
 	}
+	for _, th := range v.chartThumbs {
+		th.Update() 
+	}
 }
 
 // Render renders the View.

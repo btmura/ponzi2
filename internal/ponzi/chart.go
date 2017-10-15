@@ -63,8 +63,8 @@ func NewChart() *Chart {
 		header: NewChartHeader(&ChartHeaderArgs{
 			SymbolQuoteTextRenderer: chartSymbolQuoteTextRenderer,
 			QuoteFormatter:          chartFormatQuote,
-			RefreshButton:           true,
-			AddButton:               true,
+			ShowRefreshButton:       true,
+			ShowAddButton:           true,
 			Rounding:                chartRounding,
 			Padding:                 chartPadding,
 		}),

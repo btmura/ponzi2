@@ -30,14 +30,14 @@ type ChartHeader struct {
 	// quoteFormatter is the function used to generate the quote text.
 	quoteFormatter func(*ModelStock) string
 
-	// refreshButton is the optional button to refresh the chart.
-	refreshButton *Button
+	// refreshButton is the button to refresh the chart.
+	refreshButton *chartHeaderButton
 
-	// addButton is the optional button to add the symbol.
-	addButton *Button
+	// addButton is the button to add the symbol.
+	addButton *chartHeaderButton
 
-	// removeButton is the optional button to remove the symbol.
-	removeButton *Button
+	// removeButton is the button to remove the symbol.
+	removeButton *chartHeaderButton
 
 	// rounding is only used to layout the symbol and quote text.
 	rounding int
@@ -49,49 +49,58 @@ type ChartHeader struct {
 	loading bool
 }
 
+// chartHeaderButton is a button with an additional enabled flag.
+type chartHeaderButton struct {
+	// Button is the underlying button.
+	*Button
+
+	// enabled is whether the button is present and clickable.
+	enabled bool
+}
+
 // ChartHeaderArgs are passed to NewChartHeader.
 type ChartHeaderArgs struct {
 	SymbolQuoteTextRenderer *gfx.TextRenderer
 	QuoteFormatter          func(*ModelStock) string
-	RefreshButton           bool
-	AddButton               bool
-	RemoveButton            bool
+	ShowRefreshButton       bool
+	ShowAddButton           bool
+	ShowRemoveButton        bool
 	Rounding                int
 	Padding                 int
 }
 
 // NewChartHeader creates a new chart header.
 func NewChartHeader(args *ChartHeaderArgs) *ChartHeader {
-	ch := &ChartHeader{
+	return &ChartHeader{
 		symbolQuoteTextRenderer: args.SymbolQuoteTextRenderer,
 		quoteFormatter:          args.QuoteFormatter,
-		rounding:                args.Rounding,
-		padding:                 args.Padding,
+		refreshButton: &chartHeaderButton{
+			Button:  NewButton(chartRefreshButtonVAO),
+			enabled: args.ShowRefreshButton,
+		},
+		addButton: &chartHeaderButton{
+			Button:  NewButton(chartAddButtonVAO),
+			enabled: args.ShowAddButton,
+		},
+		removeButton: &chartHeaderButton{
+			Button:  NewButton(chartRemoveButtonVAO),
+			enabled: args.ShowRemoveButton,
+		},
+		rounding: args.Rounding,
+		padding:  args.Padding,
 	}
-	if args.RefreshButton {
-		ch.refreshButton = NewButton(chartRefreshButtonVAO)
-	}
-	if args.AddButton {
-		ch.addButton = NewButton(chartAddButtonVAO)
-	}
-	if args.RemoveButton {
-		ch.removeButton = NewButton(chartRemoveButtonVAO)
-	}
-	return ch
 }
 
 // SetLoading sets the ChartHeader's loading state.
 func (ch *ChartHeader) SetLoading(loading bool) {
-	if ch.refreshButton != nil {
-		switch {
-		// Not Loading -> Loading
-		case !ch.loading && loading:
-			ch.refreshButton.StartSpinning()
+	switch {
+	// Not Loading -> Loading
+	case !ch.loading && loading:
+		ch.refreshButton.StartSpinning()
 
-		// Loading -> Not Loading
-		case ch.loading && !loading:
-			ch.refreshButton.StopSpinning()
-		}
+	// Loading -> Not Loading
+	case ch.loading && !loading:
+		ch.refreshButton.StopSpinning()
 	}
 	ch.loading = loading
 }
@@ -116,22 +125,21 @@ func (ch *ChartHeader) SetStock(st *ModelStock) {
 
 // Update updates the ChartHeader.
 func (ch *ChartHeader) Update() {
-	if ch.refreshButton != nil {
-		ch.refreshButton.Update()
-	}
-	if ch.addButton != nil {
-		ch.addButton.Update()
-	}
-	if ch.removeButton != nil {
-		ch.removeButton.Update()
-	}
+	ch.refreshButton.Update()
+	ch.addButton.Update()
+	ch.removeButton.Update()
 }
 
 // ChartHeaderClicks reports what buttons were clicked.
 type ChartHeaderClicks struct {
-	AddButtonClicked     bool
+	// AddButtonClicked is true if the add button was clicked.
+	AddButtonClicked bool
+
+	// RefreshButtonClicked is true if the refresh button was clicked.
 	RefreshButtonClicked bool
-	RemoveButtonClicked  bool
+
+	// RemoveButtonClicked is true if the remove button was clicked.
+	RemoveButtonClicked bool
 }
 
 // HasClicks returns true if a clickable part of the header was clicked.
@@ -158,19 +166,24 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, clicks Char
 	buttonSize := image.Pt(r.Max.Y-pt.Y, r.Max.Y-pt.Y)
 	vc.Bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
 
-	if ch.removeButton != nil {
+	if ch.removeButton.enabled {
 		clicks.RemoveButtonClicked = ch.removeButton.Render(vc)
 		vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
 	}
 
-	if ch.addButton != nil {
+	if ch.addButton.enabled {
 		clicks.AddButtonClicked = ch.addButton.Render(vc)
 		vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
 	}
 
-	if ch.refreshButton != nil {
+	if ch.refreshButton.enabled || ch.loading {
 		clicks.RefreshButtonClicked = ch.refreshButton.Render(vc)
 		vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
+	}
+
+	// Don't report clicks when the refresh button is just an indicator.
+	if !ch.refreshButton.enabled {
+		clicks.RefreshButtonClicked = false
 	}
 
 	r.Max.Y = pt.Y
