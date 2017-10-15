@@ -26,12 +26,26 @@ var (
 
 // ChartThumb shows a thumbnail for a stock.
 type ChartThumb struct {
-	header             *ChartHeader
-	lines              *ChartLines
-	dailyStochastics   *ChartStochastics
-	weeklyStochastics  *ChartStochastics
+	// header renders the header with the symbol, quote, and buttons.
+	header *ChartHeader
+
+	// lines renders the vertical weekly lines.
+	lines *ChartLines
+
+	// dailyStochastics renders the daily stochastics.
+	dailyStochastics *ChartStochastics
+
+	// weeklyStochastics renders the weekly stochastics.
+	weeklyStochastics *ChartStochastics
+
+	// thumbClickCallback is the callback to schedule when the thumb is clicked.
 	thumbClickCallback func()
-	loading            bool
+
+	// loading is true when data for the stock is being retrieved.
+	loading bool
+
+	// hasStockUpdated is true if the stock has reported data.
+	hasStockUpdated bool
 }
 
 // NewChartThumb creates a ChartThumb.
@@ -59,6 +73,7 @@ func (ch *ChartThumb) SetLoading(loading bool) {
 
 // SetStock sets the ChartThumb's stock.
 func (ch *ChartThumb) SetStock(st *ModelStock) {
+	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
 	ch.header.SetStock(st)
 	ch.lines.SetStock(st)
 	ch.dailyStochastics.SetStock(st)
@@ -75,7 +90,7 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 	rects := sliceRect(r, 0.5, 0.5)
 	renderHorizDivider(rects[1], horizLine)
 
-	if ch.loading {
+	if ch.loading && !ch.hasStockUpdated {
 		thumbLoadingText.Render(r)
 		return
 	}

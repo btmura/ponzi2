@@ -32,13 +32,29 @@ var (
 
 // Chart shows a stock chart for a single stock.
 type Chart struct {
-	header            *ChartHeader
-	lines             *ChartLines
-	prices            *ChartPrices
-	volume            *ChartVolume
-	dailyStochastics  *ChartStochastics
+	// header renders the header with the symbol, quote, and buttons.
+	header *ChartHeader
+
+	// lines renders the vertical weekly lines.
+	lines *ChartLines
+
+	// prices renders the candlesticks.
+	prices *ChartPrices
+
+	// volume renders the volume bars.
+	volume *ChartVolume
+
+	// dailyStochastics renders the daily stochastics.
+	dailyStochastics *ChartStochastics
+
+	// weeklyStochastics renders the weekly stochastics.
 	weeklyStochastics *ChartStochastics
-	loading           bool
+
+	// loading is true when data for the stock is being retrieved.
+	loading bool
+
+	// hasStockUpdated is true if the stock has reported data.
+	hasStockUpdated bool
 }
 
 // NewChart creates a new chart.
@@ -69,6 +85,7 @@ func (ch *Chart) SetLoading(loading bool) {
 
 // SetStock sets the Chart's stock.
 func (ch *Chart) SetStock(st *ModelStock) {
+	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
 	ch.header.SetStock(st)
 	ch.lines.SetStock(st)
 	ch.prices.SetStock(st)
@@ -92,7 +109,7 @@ func (ch *Chart) Render(vc ViewContext) {
 	rects := sliceRect(r, 0.13, 0.13, 0.13, 0.61)
 	renderHorizDivider(rects[3], horizLine)
 
-	if ch.loading {
+	if ch.loading && !ch.hasStockUpdated {
 		chartLoadingText.Render(r)
 		return
 	}

@@ -149,10 +149,8 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, clicks Char
 		pt := pt
 		pt.X += ch.rounding
 		pt.X += ch.symbolQuoteTextRenderer.Render(ch.symbol, pt, white)
-		if !ch.loading {
-			pt.X += ch.padding
-			pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteText, pt, ch.quoteColor)
-		}
+		pt.X += ch.padding
+		pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteText, pt, ch.quoteColor)
 	}
 	pt.Y -= ch.padding
 
