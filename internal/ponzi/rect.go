@@ -3,6 +3,7 @@ package ponzi
 import (
 	"bytes"
 	"image"
+	math "math"
 
 	"github.com/btmura/ponzi2/internal/gfx"
 )
@@ -13,13 +14,7 @@ var (
 	vertLine  = gfx.VertColoredLineVAO(white, white)
 )
 
-// VAOs for each corner. Rotation could possibly be used to simplify this...
-var (
-	roundedCornerNW = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNW.ply")))
-	roundedCornerNE = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNE.ply")))
-	roundedCornerSE = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerSE.ply")))
-	roundedCornerSW = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerSW.ply")))
-)
+var roundedCornerNW = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNW.ply")))
 
 // renderRoundedRect renders a rounded rectangle using the rectangular bounds.
 func renderRoundedRect(r image.Rectangle, rounding int) {
@@ -28,15 +23,16 @@ func renderRoundedRect(r image.Rectangle, rounding int) {
 	roundedCornerNW.Render()
 
 	// NORTHEAST Corner
-	gfx.SetModelMatrixRect(image.Rect(r.Max.X-rounding, r.Max.Y-rounding, r.Max.X, r.Max.Y))
-	roundedCornerNE.Render()
+	gfx.SetModelMatrixRotatedRect(image.Rect(r.Max.X-rounding, r.Max.Y-rounding, r.Max.X, r.Max.Y), -math.Pi/2)
+	roundedCornerNW.Render()
 
 	// SOUTHEAST Corner
-	gfx.SetModelMatrixRect(image.Rect(r.Max.X-rounding, r.Min.Y, r.Max.X, r.Min.Y+rounding))
-	roundedCornerSE.Render()
+	gfx.SetModelMatrixRotatedRect(image.Rect(r.Max.X-rounding, r.Min.Y, r.Max.X, r.Min.Y+rounding), -math.Pi)
+	roundedCornerNW.Render()
 
-	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Min.Y, r.Min.X+rounding, r.Min.Y+rounding))
-	roundedCornerSW.Render()
+	// SOUTHWEST Corner
+	gfx.SetModelMatrixRotatedRect(image.Rect(r.Min.X, r.Min.Y, r.Min.X+rounding, r.Min.Y+rounding), -3*math.Pi/2)
+	roundedCornerNW.Render()
 
 	// fudge is how much to extend the borders to close gaps in OpenGL rendering.
 	const fudge = 2
