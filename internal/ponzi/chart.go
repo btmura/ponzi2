@@ -88,7 +88,7 @@ func (ch *Chart) Render(vc ViewContext) {
 	renderRoundedRect(vc.Bounds, chartRounding)
 
 	// Render the header and the line below it.
-	r, _, _, _ := ch.header.Render(vc)
+	r, _ := ch.header.Render(vc)
 	rects := sliceRect(r, 0.13, 0.13, 0.13, 0.61)
 	renderHorizDivider(rects[3], horizLine)
 

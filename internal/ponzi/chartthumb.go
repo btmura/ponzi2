@@ -71,7 +71,7 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 	renderRoundedRect(vc.Bounds, thumbChartRounding)
 
 	// Render the header and the line below it.
-	r, _, _, clicked := ch.header.Render(vc)
+	r, clicks := ch.header.Render(vc)
 	rects := sliceRect(r, 0.5, 0.5)
 	renderHorizDivider(rects[1], horizLine)
 
@@ -80,17 +80,21 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 		return
 	}
 
-	if !clicked && vc.LeftClickInBounds() {
+	if !clicks.HasClicks() && vc.LeftClickInBounds() {
 		vc.ScheduleCallback(ch.thumbClickCallback)
 	}
 
 	renderHorizDivider(rects[0], horizLine)
 
-	ch.lines.Render(rects[1].Inset(thumbChartPadding))
-	ch.lines.Render(rects[0].Inset(thumbChartPadding))
+	for i := range rects {
+		rects[i] = rects[i].Inset(thumbChartPadding)
+	}
 
-	ch.dailyStochastics.Render(rects[1].Inset(thumbChartPadding))
-	ch.weeklyStochastics.Render(rects[0].Inset(thumbChartPadding))
+	ch.lines.Render(rects[1])
+	ch.lines.Render(rects[0])
+
+	ch.dailyStochastics.Render(rects[1])
+	ch.weeklyStochastics.Render(rects[0])
 }
 
 // SetRemoveButtonClickCallback sets the callback for remove button clicks.

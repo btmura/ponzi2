@@ -127,8 +127,20 @@ func (ch *ChartHeader) Update() {
 	}
 }
 
+// ChartHeaderClicks reports what buttons were clicked.
+type ChartHeaderClicks struct {
+	AddButtonClicked     bool
+	RefreshButtonClicked bool
+	RemoveButtonClicked  bool
+}
+
+// HasClicks returns true if a clickable part of the header was clicked.
+func (c ChartHeaderClicks) HasClicks() bool {
+	return c.AddButtonClicked || c.RefreshButtonClicked || c.RemoveButtonClicked
+}
+
 // Render renders the ChartHeader.
-func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, addButtonClicked, refreshButtonClicked, removeButtonClicked bool) {
+func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, clicks ChartHeaderClicks) {
 	// Start rendering from the top left. Track position with point.
 	r := vc.Bounds
 	pt := image.Pt(r.Min.X, r.Max.Y)
@@ -149,23 +161,23 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, addButtonCl
 	vc.Bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
 
 	if ch.removeButton != nil {
-		removeButtonClicked = ch.removeButton.Render(vc)
+		clicks.RemoveButtonClicked = ch.removeButton.Render(vc)
 		vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
 	}
 
 	if ch.addButton != nil {
-		addButtonClicked = ch.addButton.Render(vc)
+		clicks.AddButtonClicked = ch.addButton.Render(vc)
 		vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
 	}
 
 	if ch.refreshButton != nil {
-		refreshButtonClicked = ch.refreshButton.Render(vc)
+		clicks.RefreshButtonClicked = ch.refreshButton.Render(vc)
 		vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
 	}
 
 	r.Max.Y = pt.Y
 
-	return r, addButtonClicked, refreshButtonClicked, removeButtonClicked
+	return r, clicks
 }
 
 // SetRefreshButtonClickCallback sets the callback for refresh button clicks.
