@@ -93,17 +93,21 @@ func (v *View) Update() {
 func (v *View) Render(vc ViewContext) {
 	ogBnds := vc.Bounds.Inset(viewOuterPadding)
 
-	// Render the input symbol and the main chart.
+	// Calculate bounds for main area.
 	vc.Bounds = ogBnds
 	if len(v.chartThumbs) > 0 {
 		vc.Bounds.Min.X += viewOuterPadding + viewChartThumbSize.X
 	}
-	v.inputSymbol.Render(vc.Bounds)
+
+	// Render the the main chart or instructions.
 	if v.chart != nil {
 		v.chart.Render(vc)
 	} else {
 		viewInstructionsText.Render(vc.Bounds)
 	}
+
+	// Render the input symbol over the chart.
+	v.inputSymbol.Render(vc.Bounds)
 
 	// Render the sidebar thumbnails.
 	vc.Bounds = image.Rect(
