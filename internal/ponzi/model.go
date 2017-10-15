@@ -153,72 +153,21 @@ func (m *ModelStock) Date() time.Time {
 	return m.DailySessions[len(m.DailySessions)-1].Date
 }
 
-func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySessions []*ModelTradingSession) {
-	ds := dailyModelTradingSessions(sessions)
-	ws := weeklyModelTradingSessions(ds)
+func convertSessions(ts []*stock.TradingSession) (ds, ws []*ModelTradingSession) {
+	ds = dailySessions(ts)
+	ws = weeklySessions(ds)
 
-	// Fill in the change and percent change fields.
-	addChanges := func(ss []*ModelTradingSession) {
-		for i := range ss {
-			if i > 0 {
-				ss[i].Change = ss[i].Close - ss[i-1].Close
-				ss[i].PercentChange = ss[i].Change / ss[i-1].Close
-			}
-		}
-	}
-	addChanges(ds)
-	addChanges(ws)
+	fillChangeValues(ds)
+	fillChangeValues(ws)
 
-	// Fill in the stochastics.
-	addStochastics := func(ss []*ModelTradingSession) {
-		const (
-			k = 10
-			d = 3
-		)
-
-		// Calculate fast %K for stochastics.
-		fastK := make([]float32, len(ss))
-		for i := range ss {
-			if i+1 < k {
-				continue
-			}
-
-			highestHigh, lowestLow := ss[i].High, ss[i].Low
-			for j := 0; j < k; j++ {
-				if highestHigh < ss[i-j].High {
-					highestHigh = ss[i-j].High
-				}
-				if lowestLow > ss[i-j].Low {
-					lowestLow = ss[i-j].Low
-				}
-			}
-			fastK[i] = (ss[i].Close - lowestLow) / (highestHigh - lowestLow)
-		}
-
-		// Calculate fast %D (slow %K) for stochastics.
-		for i := range ss {
-			if i+1 < k+d {
-				continue
-			}
-			ss[i].K = (fastK[i] + fastK[i-1] + fastK[i-2]) / 3
-		}
-
-		// Calculate slow %D for stochastics.
-		for i := range ss {
-			if i+1 < k+d+d {
-				continue
-			}
-			ss[i].D = (ss[i].K + ss[i-1].K + ss[i-2].K) / 3
-		}
-	}
-	addStochastics(ds)
-	addStochastics(ws)
+	fillStochastics(ds)
+	fillStochastics(ws)
 
 	return ds, ws
 }
 
-func dailyModelTradingSessions(ss []*stock.TradingSession) (ds []*ModelTradingSession) {
-	for _, s := range ss {
+func dailySessions(ts []*stock.TradingSession) (ds []*ModelTradingSession) {
+	for _, s := range ts {
 		ds = append(ds, &ModelTradingSession{
 			Date:   s.Date,
 			Open:   s.Open,
@@ -234,7 +183,7 @@ func dailyModelTradingSessions(ss []*stock.TradingSession) (ds []*ModelTradingSe
 	return ds
 }
 
-func weeklyModelTradingSessions(ds []*ModelTradingSession) (ws []*ModelTradingSession) {
+func weeklySessions(ds []*ModelTradingSession) (ws []*ModelTradingSession) {
 	for _, s := range ds {
 		diffWeek := ws == nil
 		if !diffWeek {
@@ -259,4 +208,55 @@ func weeklyModelTradingSessions(ds []*ModelTradingSession) (ws []*ModelTradingSe
 		}
 	}
 	return ws
+}
+
+func fillChangeValues(ss []*ModelTradingSession) {
+	for i := range ss {
+		if i > 0 {
+			ss[i].Change = ss[i].Close - ss[i-1].Close
+			ss[i].PercentChange = ss[i].Change / ss[i-1].Close
+		}
+	}
+}
+
+func fillStochastics(ss []*ModelTradingSession) {
+	const (
+		k = 10
+		d = 3
+	)
+
+	// Calculate fast %K for stochastics.
+	fastK := make([]float32, len(ss))
+	for i := range ss {
+		if i+1 < k {
+			continue
+		}
+
+		highestHigh, lowestLow := ss[i].High, ss[i].Low
+		for j := 0; j < k; j++ {
+			if highestHigh < ss[i-j].High {
+				highestHigh = ss[i-j].High
+			}
+			if lowestLow > ss[i-j].Low {
+				lowestLow = ss[i-j].Low
+			}
+		}
+		fastK[i] = (ss[i].Close - lowestLow) / (highestHigh - lowestLow)
+	}
+
+	// Calculate fast %D (slow %K) for stochastics.
+	for i := range ss {
+		if i+1 < k+d {
+			continue
+		}
+		ss[i].K = (fastK[i] + fastK[i-1] + fastK[i-2]) / 3
+	}
+
+	// Calculate slow %D for stochastics.
+	for i := range ss {
+		if i+1 < k+d+d {
+			continue
+		}
+		ss[i].D = (ss[i].K + ss[i-1].K + ss[i-2].K) / 3
+	}
 }
