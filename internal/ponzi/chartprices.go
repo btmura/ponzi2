@@ -18,20 +18,20 @@ type ChartPrices struct {
 	stickRects  *gfx.VAO
 }
 
-// SetState sets the ChartPrices' state.
-func (ch *ChartPrices) SetState(state *ChartState) {
+// SetStock sets the ChartPrices' stock.
+func (ch *ChartPrices) SetStock(st *ModelStock) {
 	// Reset everything.
 	ch.Close()
 
 	// Bail out if there is no data yet.
-	if state.Stock.LastUpdateTime.IsZero() {
+	if st.LastUpdateTime.IsZero() {
 		return // Stock has no data yet.
 	}
 
 	// Find the min and max price.
 	ch.minPrice = math.MaxFloat32
 	ch.maxPrice = 0
-	for _, s := range state.Stock.DailySessions {
+	for _, s := range st.DailySessions {
 		if ch.minPrice > s.Low {
 			ch.minPrice = s.Low
 		}
@@ -40,7 +40,7 @@ func (ch *ChartPrices) SetState(state *ChartState) {
 		}
 	}
 
-	ch.stickLines, ch.stickRects = createChartCandlestickVAOs(state.Stock.DailySessions, ch.minPrice, ch.maxPrice)
+	ch.stickLines, ch.stickRects = createChartCandlestickVAOs(st.DailySessions, ch.minPrice, ch.maxPrice)
 
 	_, labelSize := priceLabelText(ch.maxPrice)
 	ch.labelHeight = labelSize.Y

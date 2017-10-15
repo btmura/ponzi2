@@ -61,24 +61,20 @@ func NewChart() *Chart {
 	}
 }
 
-// ChartState is the argument to SetState that signals a state change.
-type ChartState struct {
-	// Loading indicates whether data is being fetched for the chart.
-	Loading bool
-
-	// Stock is the stock the chart should show.
-	Stock *ModelStock
+// SetLoading sets the Chart's loading state.
+func (ch *Chart) SetLoading(loading bool) {
+	ch.loading = loading
+	ch.header.SetLoading(loading)
 }
 
-// SetState sets the Chart's state.
-func (ch *Chart) SetState(state *ChartState) {
-	ch.loading = state.Loading
-	ch.header.SetState(state)
-	ch.lines.SetState(state)
-	ch.prices.SetState(state)
-	ch.volume.SetState(state)
-	ch.dailyStochastics.SetState(state)
-	ch.weeklyStochastics.SetState(state)
+// SetStock sets the Chart's stock.
+func (ch *Chart) SetStock(st *ModelStock) {
+	ch.header.SetStock(st)
+	ch.lines.SetStock(st)
+	ch.prices.SetStock(st)
+	ch.volume.SetStock(st)
+	ch.dailyStochastics.SetStock(st)
+	ch.weeklyStochastics.SetStock(st)
 }
 
 // Update updates the Chart.

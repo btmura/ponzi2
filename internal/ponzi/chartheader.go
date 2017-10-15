@@ -80,25 +80,28 @@ func NewChartHeader(args *ChartHeaderArgs) *ChartHeader {
 	return ch
 }
 
-// SetState sets the ChartHeader's state.
-func (ch *ChartHeader) SetState(state *ChartState) {
+// SetLoading sets the ChartHeader's loading state.
+func (ch *ChartHeader) SetLoading(loading bool) {
 	if ch.refreshButton != nil {
 		switch {
 		// Not Loading -> Loading
-		case !ch.loading && state.Loading:
+		case !ch.loading && loading:
 			ch.refreshButton.StartSpinning()
 
 		// Loading -> Not Loading
-		case ch.loading && !state.Loading:
+		case ch.loading && !loading:
 			ch.refreshButton.StopSpinning()
 		}
 	}
-	ch.loading = state.Loading
+	ch.loading = loading
+}
 
-	ch.symbol = state.Stock.Symbol
-	ch.quoteText = ch.quoteFormatter(state.Stock)
+// SetStock sets the ChartHeader's stock.
+func (ch *ChartHeader) SetStock(st *ModelStock) {
+	ch.symbol = st.Symbol
+	ch.quoteText = ch.quoteFormatter(st)
 
-	c := state.Stock.PercentChange()
+	c := st.PercentChange()
 	switch {
 	case c > 0:
 		ch.quoteColor = green
@@ -134,8 +137,10 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, addButtonCl
 		pt := pt
 		pt.X += ch.rounding
 		pt.X += ch.symbolQuoteTextRenderer.Render(ch.symbol, pt, white)
-		pt.X += ch.padding
-		pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteText, pt, ch.quoteColor)
+		if !ch.loading {
+			pt.X += ch.padding
+			pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteText, pt, ch.quoteColor)
+		}
 	}
 	pt.Y -= ch.padding
 

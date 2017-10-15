@@ -32,13 +32,13 @@ type chartStochasticLabel struct {
 	size    image.Point
 }
 
-// SetState sets the ChartStochastics' state.
-func (ch *ChartStochastics) SetState(state *ChartState) {
+// SetStock sets the ChartStochastics' stock.
+func (ch *ChartStochastics) SetStock(st *ModelStock) {
 	// Reset everything.
 	ch.Close()
 
 	// Bail out if there is no data yet.
-	if state.Stock.LastUpdateTime.IsZero() {
+	if st.LastUpdateTime.IsZero() {
 		return // Stock has no data yet.
 	}
 
@@ -59,9 +59,9 @@ func (ch *ChartStochastics) SetState(state *ChartState) {
 	var dColor [3]float32
 	switch ch.Interval {
 	case DailyInterval:
-		ss, dColor = state.Stock.DailySessions, yellow
+		ss, dColor = st.DailySessions, yellow
 	case WeeklyInterval:
-		ss, dColor = state.Stock.WeeklySessions, purple
+		ss, dColor = st.WeeklySessions, purple
 	default:
 		glog.Fatalf("Update: unsupported interval: %v", ch.Interval)
 	}

@@ -51,13 +51,18 @@ func NewChartThumb() *ChartThumb {
 	}
 }
 
-// SetState sets the ChartThumb's state.
-func (ch *ChartThumb) SetState(state *ChartState) {
-	ch.loading = state.Loading
-	ch.header.SetState(state)
-	ch.lines.SetState(state)
-	ch.dailyStochastics.SetState(state)
-	ch.weeklyStochastics.SetState(state)
+// SetLoading sets the ChartThumb's loading state.
+func (ch *ChartThumb) SetLoading(loading bool) {
+	ch.loading = loading
+	ch.header.SetLoading(loading)
+}
+
+// SetStock sets the ChartThumb's stock.
+func (ch *ChartThumb) SetStock(st *ModelStock) {
+	ch.header.SetStock(st)
+	ch.lines.SetStock(st)
+	ch.dailyStochastics.SetStock(st)
+	ch.weeklyStochastics.SetStock(st)
 }
 
 // Render renders the chart thumbnail.

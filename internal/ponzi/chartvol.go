@@ -21,19 +21,19 @@ type chartVolumeLabel struct {
 	size    image.Point
 }
 
-// SetState sets the ChartVolume's state.
-func (ch *ChartVolume) SetState(state *ChartState) {
+// SetStock sets the ChartVolume's stock.
+func (ch *ChartVolume) SetStock(st *ModelStock) {
 	// Reset everything.
 	ch.Close()
 
 	// Bail out if there is no data yet.
-	if state.Stock.LastUpdateTime.IsZero() {
+	if st.LastUpdateTime.IsZero() {
 		return // Stock has no data yet.
 	}
 
 	// Find the maximum volume.
 	var maxVolume int
-	for _, s := range state.Stock.DailySessions {
+	for _, s := range st.DailySessions {
 		if maxVolume < s.Volume {
 			maxVolume = s.Volume
 		}
@@ -65,7 +65,7 @@ func (ch *ChartVolume) SetState(state *ChartState) {
 	ch.labels = append(ch.labels, makeLabel(.7))
 	ch.labels = append(ch.labels, makeLabel(.3))
 
-	ch.volRects = createChartVolumeBarsVAO(state.Stock.DailySessions, maxVolume)
+	ch.volRects = createChartVolumeBarsVAO(st.DailySessions, maxVolume)
 	ch.renderable = true
 }
 

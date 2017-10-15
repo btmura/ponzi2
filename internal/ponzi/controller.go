@@ -219,16 +219,12 @@ loop:
 				break loop
 			}
 			if ch, ok := c.symbolToChartMap[u.symbol]; ok {
-				ch.SetState(&ChartState{
-					Loading: false,
-					Stock:   st,
-				})
+				ch.SetLoading(false)
+				ch.SetStock(st)
 			}
 			if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
-				th.SetState(&ChartState{
-					Loading: false,
-					Stock:   st,
-				})
+				th.SetLoading(false)
+				th.SetStock(st)
 			}
 
 		default:
@@ -278,19 +274,16 @@ func (c *Controller) setChart(symbol string) {
 	ch := NewChart()
 	c.symbolToChartMap[symbol] = ch
 
-	ch.SetState(&ChartState{
-		Loading: true,
-		Stock:   st,
-	})
+	ch.SetStock(st)
 	ch.SetRefreshButtonClickCallback(func() {
-		c.goRefreshStock(symbol)
+		c.refreshStock(symbol)
 	})
 	ch.SetAddButtonClickCallback(func() {
 		c.addChartThumb(symbol)
 	})
 
 	c.view.SetChart(ch)
-	c.goRefreshStock(symbol)
+	c.refreshStock(symbol)
 	c.saveConfig()
 }
 
@@ -307,10 +300,7 @@ func (c *Controller) addChartThumb(symbol string) {
 	th := NewChartThumb()
 	c.symbolToChartThumbMap[symbol] = th
 
-	th.SetState(&ChartState{
-		Loading: true,
-		Stock:   st,
-	})
+	th.SetStock(st)
 	th.SetRemoveButtonClickCallback(func() {
 		c.removeChartThumb(symbol)
 	})
@@ -319,7 +309,7 @@ func (c *Controller) addChartThumb(symbol string) {
 	})
 
 	c.view.AddChartThumb(th)
-	c.goRefreshStock(symbol)
+	c.refreshStock(symbol)
 	c.saveConfig()
 }
 
@@ -340,7 +330,13 @@ func (c *Controller) removeChartThumb(symbol string) {
 	c.saveConfig()
 }
 
-func (c *Controller) goRefreshStock(symbol string) {
+func (c *Controller) refreshStock(symbol string) {
+	if ch, ok := c.symbolToChartMap[symbol]; ok {
+		ch.SetLoading(true)
+	}
+	if th, ok := c.symbolToChartThumbMap[symbol]; ok {
+		th.SetLoading(true)
+	}
 	go func() {
 		end := time2.Midnight(time.Now().In(time2.NewYorkLoc))
 		start := end.Add(-6 * 30 * 24 * time.Hour)
