@@ -169,30 +169,7 @@ func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySes
 	sortByModelTradingSessionDate(ds)
 
 	// Convert the daily sessions into weekly sessions.
-	var ws []*ModelTradingSession
-	for _, s := range ds {
-		diffWeek := ws == nil
-		if !diffWeek {
-			_, week := s.Date.ISOWeek()
-			_, prevWeek := ws[len(ws)-1].Date.ISOWeek()
-			diffWeek = week != prevWeek
-		}
-
-		if diffWeek {
-			sc := *s
-			ws = append(ws, &sc)
-		} else {
-			ls := ws[len(ws)-1]
-			if ls.High < s.High {
-				ls.High = s.High
-			}
-			if ls.Low > s.Low {
-				ls.Low = s.Low
-			}
-			ls.Close = s.Close
-			ls.Volume += s.Volume
-		}
-	}
+	ws := weeklyModelTradingSessions(ds)
 
 	// Fill in the change and percent change fields.
 	addChanges := func(ss []*ModelTradingSession) {
@@ -258,4 +235,32 @@ func sortByModelTradingSessionDate(ss []*ModelTradingSession) {
 	sort.Slice(ss, func(i, j int) bool {
 		return ss[i].Date.Before(ss[j].Date)
 	})
+}
+
+func weeklyModelTradingSessions(ds []*ModelTradingSession) []*ModelTradingSession {
+	var ws []*ModelTradingSession
+	for _, s := range ds {
+		diffWeek := ws == nil
+		if !diffWeek {
+			_, week := s.Date.ISOWeek()
+			_, prevWeek := ws[len(ws)-1].Date.ISOWeek()
+			diffWeek = week != prevWeek
+		}
+
+		if diffWeek {
+			sc := *s
+			ws = append(ws, &sc)
+		} else {
+			ls := ws[len(ws)-1]
+			if ls.High < s.High {
+				ls.High = s.High
+			}
+			if ls.Low > s.Low {
+				ls.Low = s.Low
+			}
+			ls.Close = s.Close
+			ls.Volume += s.Volume
+		}
+	}
+	return ws
 }
