@@ -114,12 +114,6 @@ func (c *Controller) Run() {
 	}
 	glog.Infof("OpenGL version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
 
-	gl.Enable(gl.CULL_FACE)
-	gl.CullFace(gl.BACK)
-
-	gl.Enable(gl.DEPTH_TEST)
-	gl.DepthFunc(gl.LESS)
-
 	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 	gl.ClearColor(0, 0, 0, 0)
