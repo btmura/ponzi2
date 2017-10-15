@@ -153,10 +153,10 @@ func (ch *ChartVolume) Render(r image.Rectangle) {
 		return
 	}
 
+	sliceRenderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
+
 	gfx.SetModelMatrixRect(r)
 	ch.volRects.Render()
-
-	sliceRenderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
 }
 
 // RenderLabels renders the Y-axis labels for the volume bars.

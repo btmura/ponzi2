@@ -86,10 +86,11 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 
 	renderHorizDivider(rects[0], horizLine)
 
-	ch.dailyStochastics.Render(rects[1].Inset(thumbChartPadding))
-	ch.weeklyStochastics.Render(rects[0].Inset(thumbChartPadding))
 	ch.lines.Render(rects[1].Inset(thumbChartPadding))
 	ch.lines.Render(rects[0].Inset(thumbChartPadding))
+
+	ch.dailyStochastics.Render(rects[1].Inset(thumbChartPadding))
+	ch.weeklyStochastics.Render(rects[0].Inset(thumbChartPadding))
 }
 
 // SetRemoveButtonClickCallback sets the callback for remove button clicks.

@@ -169,10 +169,6 @@ func (ch *ChartPrices) Render(r image.Rectangle) {
 		return
 	}
 
-	gfx.SetModelMatrixRect(r)
-	ch.stickLines.Render()
-	ch.stickRects.Render()
-
 	labelPaddingY := ch.labelHeight / 2
 	y := r.Max.Y - labelPaddingY - ch.labelHeight/2
 	dy := ch.labelHeight + labelPaddingY*2
@@ -188,6 +184,10 @@ func (ch *ChartPrices) Render(r image.Rectangle) {
 		}
 		y -= dy
 	}
+
+	gfx.SetModelMatrixRect(r)
+	ch.stickLines.Render()
+	ch.stickRects.Render()
 }
 
 // RenderLabels renders the price labels.

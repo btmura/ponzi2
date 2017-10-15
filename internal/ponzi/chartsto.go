@@ -83,24 +83,8 @@ func createStochasticVAOs(ss []*ModelTradingSession, dColor [3]float32) (stoLine
 
 	var v uint16 // vertex index
 
-	// Add vertices and indices for d percent lines.
-	first := true
-	for i, s := range ss {
-		if s.D == 0.0 {
-			continue
-		}
-
-		data.Vertices = append(data.Vertices, calcX(i), calcY(s.D), 0)
-		data.Colors = append(data.Colors, dColor[0], dColor[1], dColor[2])
-		if !first {
-			data.Indices = append(data.Indices, v, v-1)
-		}
-		v++
-		first = false
-	}
-
 	// Add vertices and indices for k percent lines.
-	first = true
+	first := true
 	for i, s := range ss {
 		if s.K == 0.0 {
 			continue
@@ -108,6 +92,22 @@ func createStochasticVAOs(ss []*ModelTradingSession, dColor [3]float32) (stoLine
 
 		data.Vertices = append(data.Vertices, calcX(i), calcY(s.K), 0)
 		data.Colors = append(data.Colors, red[0], red[1], red[2])
+		if !first {
+			data.Indices = append(data.Indices, v, v-1)
+		}
+		v++
+		first = false
+	}
+
+	// Add vertices and indices for d percent lines.
+	first = true
+	for i, s := range ss {
+		if s.D == 0.0 {
+			continue
+		}
+
+		data.Vertices = append(data.Vertices, calcX(i), calcY(s.D), 0)
+		data.Colors = append(data.Colors, dColor[0], dColor[1], dColor[2])
 		if !first {
 			data.Indices = append(data.Indices, v, v-1)
 		}
@@ -124,10 +124,10 @@ func (ch *ChartStochastics) Render(r image.Rectangle) {
 		return
 	}
 
+	sliceRenderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
+
 	gfx.SetModelMatrixRect(r)
 	ch.stoLines.Render()
-
-	sliceRenderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
 }
 
 // RenderLabels renders the Y-axis labels for the stochastic lines.

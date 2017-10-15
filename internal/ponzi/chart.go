@@ -124,15 +124,15 @@ func (ch *Chart) Render(vc ViewContext) {
 	dr.Max.X -= maxWidth + chartPadding
 	wr.Max.X -= maxWidth + chartPadding
 
-	ch.prices.Render(pr)
-	ch.volume.Render(vr)
-	ch.dailyStochastics.Render(dr)
-	ch.weeklyStochastics.Render(wr)
-
 	ch.lines.Render(pr)
 	ch.lines.Render(vr)
 	ch.lines.Render(dr)
 	ch.lines.Render(wr)
+
+	ch.prices.Render(pr)
+	ch.volume.Render(vr)
+	ch.dailyStochastics.Render(dr)
+	ch.weeklyStochastics.Render(wr)
 }
 
 // SetRefreshButtonClickCallback sets the callback for refresh button clicks.
