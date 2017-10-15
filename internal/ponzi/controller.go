@@ -265,8 +265,6 @@ func (c *Controller) setChart(symbol string) {
 		return
 	}
 
-	c.refreshWindowTitle()
-
 	for symbol, ch := range c.symbolToChartMap {
 		delete(c.symbolToChartMap, symbol)
 		ch.Close()
