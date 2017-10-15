@@ -1,6 +1,7 @@
 package ponzi
 
 import (
+	"fmt"
 	"image"
 	"time"
 	"unicode"
@@ -14,6 +15,9 @@ import (
 	"github.com/btmura/ponzi2/internal/stock"
 	time2 "github.com/btmura/ponzi2/internal/time"
 )
+
+// Application name for the window title.
+const appName = "ponzi"
 
 // Frames per second.
 const fps = 60.0
@@ -102,7 +106,7 @@ func (c *Controller) Run() {
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
-	win, err := glfw.CreateWindow(800, 600, "ponzi", nil, nil)
+	win, err := glfw.CreateWindow(800, 600, appName, nil, nil)
 	if err != nil {
 		glog.Fatalf("Run: failed to create window: %v", err)
 	}
@@ -226,6 +230,7 @@ loop:
 		}
 	}
 
+	c.refreshWindowTitle()
 	c.view.Update()
 }
 
@@ -259,6 +264,8 @@ func (c *Controller) setChart(symbol string) {
 	if !changed {
 		return
 	}
+
+	c.refreshWindowTitle()
 
 	for symbol, ch := range c.symbolToChartMap {
 		delete(c.symbolToChartMap, symbol)
@@ -423,4 +430,27 @@ func (c *Controller) setMouseButton(button glfw.MouseButton, action glfw.Action)
 		return // Only interested in left clicks right now.
 	}
 	c.mouseLeftButtonClicked = action == glfw.Release
+}
+
+func (c *Controller) refreshWindowTitle() {
+	glfw.GetCurrentContext().SetTitle(c.windowTitle())
+}
+
+func (c *Controller) windowTitle() string {
+	st := c.model.CurrentStock
+	if st == nil {
+		return appName
+	}
+
+	if st.Price() == 0 {
+		return fmt.Sprintf("%s - %s", st.Symbol, appName)
+	}
+
+	return fmt.Sprintf("%s %.2f %+5.2f %+5.2f%% %s - %s",
+		st.Symbol,
+		st.Price(),
+		st.Change(),
+		st.PercentChange()*100.0,
+		st.Date().Format("1/2/06"),
+		appName)
 }

@@ -145,6 +145,14 @@ func (m *ModelStock) PercentChange() float32 {
 	return m.DailySessions[len(m.DailySessions)-1].PercentChange
 }
 
+// Date returns the most recent date or zero time if no data.
+func (m *ModelStock) Date() time.Time {
+	if len(m.DailySessions) == 0 {
+		return time.Time{}
+	}
+	return m.DailySessions[len(m.DailySessions)-1].Date
+}
+
 func convertSessions(sessions []*stock.TradingSession) (dailySessions, weeklySessions []*ModelTradingSession) {
 	// Convert the trading sessions into daily sessions.
 	var ds []*ModelTradingSession
