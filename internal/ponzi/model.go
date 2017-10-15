@@ -27,7 +27,7 @@ func NewModel() *Model {
 // corresponding ModelStock and true if the current stock changed.
 func (m *Model) SetCurrentStock(symbol string) (st *ModelStock, changed bool) {
 	if symbol == "" {
-		glog.Fatal("model: cannot set current stock to empty symbol")
+		glog.Fatal("SetCurrentStock: cannot set current stock to empty symbol")
 	}
 
 	if m.CurrentStock != nil && m.CurrentStock.Symbol == symbol {
@@ -44,7 +44,7 @@ func (m *Model) SetCurrentStock(symbol string) (st *ModelStock, changed bool) {
 // ModelStock and true if the stock was newly added.
 func (m *Model) AddSavedStock(symbol string) (st *ModelStock, added bool) {
 	if symbol == "" {
-		glog.Fatal("model: cannot add empty symbol")
+		glog.Fatal("AddSavedStock: cannot add empty symbol")
 	}
 
 	for _, st := range m.SavedStocks {
@@ -63,7 +63,7 @@ func (m *Model) AddSavedStock(symbol string) (st *ModelStock, added bool) {
 // RemoveSavedStock removes the stock by symbol and returns true if removed.
 func (m *Model) RemoveSavedStock(symbol string) (removed bool) {
 	if symbol == "" {
-		glog.Fatal("model: cannot remove empty symbol")
+		glog.Fatal("RemovedSavedStock: cannot remove empty symbol")
 	}
 
 	for i, st := range m.SavedStocks {

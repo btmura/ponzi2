@@ -110,7 +110,7 @@ func (c *Controller) Run() {
 	win.MakeContextCurrent()
 
 	if err := gl.Init(); err != nil {
-		glog.Fatalf("newView: failed to init OpenGL: %v", err)
+		glog.Fatalf("Run: failed to init OpenGL: %v", err)
 	}
 	glog.Infof("OpenGL version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
 
@@ -119,7 +119,7 @@ func (c *Controller) Run() {
 	gl.ClearColor(0, 0, 0, 0)
 
 	if err := gfx.InitProgram(); err != nil {
-		glog.Fatalf("newView: failed to init gfx: %v", err)
+		glog.Fatalf("Run: failed to init gfx: %v", err)
 	}
 
 	// Load the config and setup the initial UI.
@@ -340,7 +340,7 @@ func (c *Controller) refreshStock(symbol string) {
 			EndDate:   end,
 		})
 		if err != nil {
-			glog.Warningf("goRefreshStock: failed to get trading history for %s: %v", symbol, err)
+			glog.Warningf("refreshStock: failed to get trading history for %s: %v", symbol, err)
 			return
 		}
 

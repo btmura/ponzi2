@@ -63,7 +63,7 @@ func (ch *ChartStochastics) SetStock(st *ModelStock) {
 	case WeeklyInterval:
 		ss, dColor = st.WeeklySessions, purple
 	default:
-		glog.Fatalf("Update: unsupported interval: %v", ch.Interval)
+		glog.Fatalf("SetStock: unsupported interval: %v", ch.Interval)
 	}
 
 	ch.stoLines = createStochasticVAOs(ss, dColor)

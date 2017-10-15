@@ -70,7 +70,7 @@ func SquareImageVAO(r io.Reader) *VAO {
 func readTexturedPLYVAO(r, textureReader io.Reader) *VAO {
 	p, err := ply.Decode(r)
 	if err != nil {
-		glog.Fatalf("ReadPLYVAO: decoding PLY failed: %v", err)
+		glog.Fatalf("readTexturedPLYVAO: decoding PLY failed: %v", err)
 	}
 
 	data := &VAOVertexData{}
@@ -97,7 +97,7 @@ func readTexturedPLYVAO(r, textureReader io.Reader) *VAO {
 	for _, e := range p.Elements["face"] {
 		list := e.Uint32Lists["vertex_indices"]
 		if len(list) != 3 {
-			glog.Fatalf("ReadPLYVAO: index list has %d elements, want 3", len(list))
+			glog.Fatalf("readTexturedPLYVAO: index list has %d elements, want 3", len(list))
 		}
 		for _, idx := range list {
 			triangleIndices = append(triangleIndices, uint16(idx))
@@ -114,7 +114,7 @@ func readTexturedPLYVAO(r, textureReader io.Reader) *VAO {
 	if textureReader != nil {
 		img, _, err := image.Decode(textureReader)
 		if err != nil {
-			glog.Fatalf("ReadPLYVAO: decoding texture failed: %v", err)
+			glog.Fatalf("readTexturedPLYVAO: decoding texture failed: %v", err)
 		}
 
 		rgba := image.NewRGBA(img.Bounds())
@@ -124,7 +124,7 @@ func readTexturedPLYVAO(r, textureReader io.Reader) *VAO {
 
 	switch {
 	case len(triangleIndices) > 0 && len(lineIndices) > 0:
-		glog.Fatalf("ReadPLYVAO: both triangles and lines is unsupported")
+		glog.Fatalf("readTexturedPLYVAO: both triangles and lines is unsupported")
 
 	case len(triangleIndices) > 0:
 		data.Indices = triangleIndices
@@ -135,6 +135,6 @@ func readTexturedPLYVAO(r, textureReader io.Reader) *VAO {
 		return NewVAO(Lines, data)
 	}
 
-	glog.Fatal("ReadPLYVAO: missing indices")
+	glog.Fatal("readTexturedPLYVAO: missing indices")
 	return nil
 }
