@@ -21,6 +21,11 @@ type chartVolumeLabel struct {
 	size    image.Point
 }
 
+// NewChartVolume creates a new ChartVolume.
+func NewChartVolume() *ChartVolume {
+	return &ChartVolume{}
+}
+
 // SetStock sets the ChartVolume's stock.
 func (ch *ChartVolume) SetStock(st *ModelStock) {
 	// Reset everything.

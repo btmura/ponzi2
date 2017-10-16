@@ -18,6 +18,11 @@ type ChartPrices struct {
 	stickRects  *gfx.VAO
 }
 
+// NewChartPrices creates a new ChartPrices.
+func NewChartPrices() *ChartPrices {
+	return &ChartPrices{}
+}
+
 // SetStock sets the ChartPrices' stock.
 func (ch *ChartPrices) SetStock(st *ModelStock) {
 	// Reset everything.

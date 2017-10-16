@@ -69,7 +69,7 @@ type ChartHeaderArgs struct {
 	Padding                 int
 }
 
-// NewChartHeader creates a new chart header.
+// NewChartHeader creates a new ChartHeader.
 func NewChartHeader(args *ChartHeaderArgs) *ChartHeader {
 	return &ChartHeader{
 		symbolQuoteTextRenderer: args.SymbolQuoteTextRenderer,

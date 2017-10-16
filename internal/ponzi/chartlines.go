@@ -12,6 +12,11 @@ type ChartLines struct {
 	weekLines  *gfx.VAO
 }
 
+// NewChartLines creates a new ChartLines.
+func NewChartLines() *ChartLines {
+	return &ChartLines{}
+}
+
 // SetStock sets the ChartLines' stock.
 func (ch *ChartLines) SetStock(st *ModelStock) {
 	// Reset everything.

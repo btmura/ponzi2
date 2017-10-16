@@ -60,7 +60,7 @@ type Chart struct {
 	hasStockUpdated bool
 }
 
-// NewChart creates a new chart.
+// NewChart creates a new Chart.
 func NewChart() *Chart {
 	return &Chart{
 		header: NewChartHeader(&ChartHeaderArgs{
@@ -71,12 +71,12 @@ func NewChart() *Chart {
 			Rounding:                chartRounding,
 			Padding:                 chartPadding,
 		}),
-		lines:             &ChartLines{},
-		prices:            &ChartPrices{},
+		lines:             NewChartLines(),
+		prices:            NewChartPrices(),
 		avgLines:          NewChartAvgLines(),
-		volume:            &ChartVolume{},
-		dailyStochastics:  &ChartStochastics{Interval: DailyInterval},
-		weeklyStochastics: &ChartStochastics{Interval: WeeklyInterval},
+		volume:            NewChartVolume(),
+		dailyStochastics:  NewChartStochastics(DailyInterval),
+		weeklyStochastics: NewChartStochastics(WeeklyInterval),
 		loading:           true,
 	}
 }

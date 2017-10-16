@@ -32,6 +32,11 @@ type chartStochasticLabel struct {
 	size    image.Point
 }
 
+// NewChartStochastics creates a new ChartStochastics.
+func NewChartStochastics(interval ChartInterval) *ChartStochastics {
+	return &ChartStochastics{Interval: interval}
+}
+
 // SetStock sets the ChartStochastics' stock.
 func (ch *ChartStochastics) SetStock(st *ModelStock) {
 	// Reset everything.

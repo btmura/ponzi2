@@ -58,9 +58,9 @@ func NewChartThumb() *ChartThumb {
 			Rounding:                thumbChartRounding,
 			Padding:                 thumbChartPadding,
 		}),
-		lines:             &ChartLines{},
-		dailyStochastics:  &ChartStochastics{Interval: DailyInterval},
-		weeklyStochastics: &ChartStochastics{Interval: WeeklyInterval},
+		lines:             NewChartLines(),
+		dailyStochastics:  NewChartStochastics(DailyInterval),
+		weeklyStochastics: NewChartStochastics(WeeklyInterval),
 		loading:           true,
 	}
 }
