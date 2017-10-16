@@ -109,16 +109,22 @@ type ModelStock struct {
 
 // ModelTradingSession models a single trading session.
 type ModelTradingSession struct {
-	Date          time.Time
-	Open          float32
-	High          float32
-	Low           float32
-	Close         float32
-	Volume        int
+	Date   time.Time
+	Open   float32
+	High   float32
+	Low    float32
+	Close  float32
+	Volume int
+
 	Change        float32
 	PercentChange float32
-	K             float32
-	D             float32
+
+	K float32
+	D float32
+
+	MovingAverage25  float32
+	MovingAverage50  float32
+	MovingAverage200 float32
 }
 
 // Price returns the most recent price or 0 if no data.
@@ -162,6 +168,9 @@ func convertSessions(ts []*stock.TradingSession) (ds, ws []*ModelTradingSession)
 
 	fillStochastics(ds)
 	fillStochastics(ws)
+
+	fillMovingAverages(ds)
+	fillMovingAverages(ws)
 
 	return ds, ws
 }
@@ -258,5 +267,24 @@ func fillStochastics(ss []*ModelTradingSession) {
 			continue
 		}
 		ss[i].D = (ss[i].K + ss[i-1].K + ss[i-2].K) / 3
+	}
+}
+
+func fillMovingAverages(ss []*ModelTradingSession) {
+	average := func(i, n int) (avg float32) {
+		if i+1-n < 0 {
+			return 0 // Not enough data
+		}
+		var sum float32
+		for j := 0; j < n; j++ {
+			sum += ss[i-j].Close
+		}
+		return sum / float32(n)
+	}
+
+	for i := range ss {
+		ss[i].MovingAverage25 = average(i, 25)
+		ss[i].MovingAverage50 = average(i, 50)
+		ss[i].MovingAverage200 = average(i, 200)
 	}
 }

@@ -71,22 +71,21 @@ func (ch *ChartStochastics) SetStock(st *ModelStock) {
 }
 
 func createStochasticVAOs(ss []*ModelTradingSession, dColor [3]float32) (stoLines *gfx.VAO) {
-	data := &gfx.VAOVertexData{}
-
 	width := 2.0 / float32(len(ss)) // (-1 to 1) on X-axis
 	calcX := func(i int) float32 {
-		return -1.0 + width*0.5 + width*float32(i)
+		return -1.0 + width*float32(i) + width*0.5
 	}
 	calcY := func(value float32) float32 {
-		return 2*float32(value) - 1
+		return 2.0*float32(value) - 1.0
 	}
 
+	data := &gfx.VAOVertexData{}
 	var v uint16 // vertex index
 
 	// Add vertices and indices for k percent lines.
 	first := true
 	for i, s := range ss {
-		if s.K == 0.0 {
+		if s.K == 0 {
 			continue
 		}
 
@@ -102,7 +101,7 @@ func createStochasticVAOs(ss []*ModelTradingSession, dColor [3]float32) (stoLine
 	// Add vertices and indices for d percent lines.
 	first = true
 	for i, s := range ss {
-		if s.D == 0.0 {
+		if s.D == 0 {
 			continue
 		}
 

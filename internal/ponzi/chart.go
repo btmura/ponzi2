@@ -41,6 +41,9 @@ type Chart struct {
 	// prices renders the candlesticks.
 	prices *ChartPrices
 
+	// avgLines renders the moving average lines.
+	avgLines *ChartAvgLines
+
 	// volume renders the volume bars.
 	volume *ChartVolume
 
@@ -70,6 +73,7 @@ func NewChart() *Chart {
 		}),
 		lines:             &ChartLines{},
 		prices:            &ChartPrices{},
+		avgLines:          NewChartAvgLines(),
 		volume:            &ChartVolume{},
 		dailyStochastics:  &ChartStochastics{Interval: DailyInterval},
 		weeklyStochastics: &ChartStochastics{Interval: WeeklyInterval},
@@ -89,6 +93,7 @@ func (ch *Chart) SetStock(st *ModelStock) {
 	ch.header.SetStock(st)
 	ch.lines.SetStock(st)
 	ch.prices.SetStock(st)
+	ch.avgLines.SetStock(st)
 	ch.volume.SetStock(st)
 	ch.dailyStochastics.SetStock(st)
 	ch.weeklyStochastics.SetStock(st)
@@ -147,6 +152,7 @@ func (ch *Chart) Render(vc ViewContext) {
 	ch.lines.Render(wr)
 
 	ch.prices.Render(pr)
+	ch.avgLines.Render(pr)
 	ch.volume.Render(vr)
 	ch.dailyStochastics.Render(dr)
 	ch.weeklyStochastics.Render(wr)
