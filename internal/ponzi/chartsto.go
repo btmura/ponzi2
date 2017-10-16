@@ -20,7 +20,7 @@ const (
 
 // ChartStochastics renders the stochastic lines and labels for a single stock.
 type ChartStochastics struct {
-	Interval   ChartInterval
+	interval   ChartInterval
 	renderable bool
 	labels     []chartStochasticLabel
 	stoLines   *gfx.VAO
@@ -34,7 +34,7 @@ type chartStochasticLabel struct {
 
 // NewChartStochastics creates a new ChartStochastics.
 func NewChartStochastics(interval ChartInterval) *ChartStochastics {
-	return &ChartStochastics{Interval: interval}
+	return &ChartStochastics{interval: interval}
 }
 
 // SetStock sets the ChartStochastics' stock.
@@ -62,13 +62,13 @@ func (ch *ChartStochastics) SetStock(st *ModelStock) {
 
 	var ss []*ModelTradingSession
 	var dColor [3]float32
-	switch ch.Interval {
+	switch ch.interval {
 	case DailyInterval:
 		ss, dColor = st.DailySessions, yellow
 	case WeeklyInterval:
 		ss, dColor = st.WeeklySessions, purple
 	default:
-		glog.Fatalf("SetStock: unsupported interval: %v", ch.Interval)
+		glog.Fatalf("SetStock: unsupported interval: %v", ch.interval)
 	}
 
 	ch.stoLines = createStochasticVAOs(ss, dColor)
