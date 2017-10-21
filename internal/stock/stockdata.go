@@ -72,7 +72,7 @@ func googleGetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, er
 	v.Set("enddate", formatTime(req.EndDate))
 	v.Set("output", "csv")
 
-	u, err := url.Parse("http://www.google.com/finance/historical")
+	u, err := url.Parse("http://finance.google.com/finance/historical")
 	if err != nil {
 		return nil, err
 	}
