@@ -22,6 +22,7 @@ var (
 		return ""
 	}
 	thumbLoadingText = NewCenteredText(thumbSymbolQuoteTextRenderer, "LOADING...")
+	thumbErrorText   = NewCenteredText(thumbSymbolQuoteTextRenderer, "ERROR")
 )
 
 // ChartThumb shows a thumbnail for a stock.
@@ -46,6 +47,9 @@ type ChartThumb struct {
 
 	// hasStockUpdated is true if the stock has reported data.
 	hasStockUpdated bool
+
+	// hasError is true there was a loading issue.
+	hasError bool
 }
 
 // NewChartThumb creates a ChartThumb.
@@ -69,6 +73,12 @@ func NewChartThumb() *ChartThumb {
 func (ch *ChartThumb) SetLoading(loading bool) {
 	ch.loading = loading
 	ch.header.SetLoading(loading)
+}
+
+// SetError sets the ChartThumb's error flag.
+func (ch *ChartThumb) SetError(error bool) {
+	ch.hasError = error
+	ch.header.SetError(error)
 }
 
 // SetStock sets the ChartThumb's stock.
@@ -95,13 +105,21 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 	rects := sliceRect(r, 0.5, 0.5)
 	renderHorizDivider(rects[1], horizLine)
 
-	if ch.loading && !ch.hasStockUpdated {
-		thumbLoadingText.Render(r)
-		return
-	}
-
 	if !clicks.HasClicks() && vc.LeftClickInBounds() {
 		vc.ScheduleCallback(ch.thumbClickCallback)
+	}
+
+	// Only show messages if no prior data to show.
+	if !ch.hasStockUpdated {
+		if ch.loading {
+			thumbLoadingText.Render(r)
+			return
+		}
+
+		if ch.hasError {
+			thumbErrorText.Render(r)
+			return
+		}
 	}
 
 	renderHorizDivider(rects[0], horizLine)

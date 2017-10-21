@@ -105,6 +105,11 @@ func (ch *ChartHeader) SetLoading(loading bool) {
 	ch.loading = loading
 }
 
+// SetError sets the ChartHeader's error flag.
+func (ch *ChartHeader) SetError(error bool) {
+	// TODO(btmura): implement error handling, maybe show icon in header
+}
+
 // SetStock sets the ChartHeader's stock.
 func (ch *ChartHeader) SetStock(st *ModelStock) {
 	ch.symbol = st.Symbol

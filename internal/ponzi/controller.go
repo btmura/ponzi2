@@ -73,8 +73,11 @@ type controllerStockUpdate struct {
 	// symbol is the stock's symbol.
 	symbol string
 
-	// stockUpdate is the new data for the stock.
-	stockUpdate *ModelStockUpdate
+	// update is the new data for the stock. Nil if an error happened.
+	update *ModelStockUpdate
+
+	// updateErr is the error getting the update. Nil if no error happened.
+	updateErr error
 }
 
 // NewController creates a new Controller.
@@ -209,19 +212,31 @@ loop:
 	for {
 		select {
 		case u := <-c.pendingStockUpdates:
-			st, updated := c.model.UpdateStock(u.stockUpdate)
-			if !updated {
-				break loop
-			}
-			if ch, ok := c.symbolToChartMap[u.symbol]; ok {
-				ch.SetLoading(false)
-				ch.SetStock(st)
-			}
-			if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
-				th.SetLoading(false)
-				th.SetStock(st)
-			}
+			switch {
+			case u.update != nil:
+				st, updated := c.model.UpdateStock(u.update)
+				if !updated {
+					break loop
+				}
+				if ch, ok := c.symbolToChartMap[u.symbol]; ok {
+					ch.SetLoading(false)
+					ch.SetStock(st)
+				}
+				if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
+					th.SetLoading(false)
+					th.SetStock(st)
+				}
 
+			case u.updateErr != nil:
+				if ch, ok := c.symbolToChartMap[u.symbol]; ok {
+					ch.SetLoading(false)
+					ch.SetError(true)
+				}
+				if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
+					th.SetLoading(false)
+					th.SetError(true)
+				}
+			}
 		default:
 			break loop
 		}
@@ -329,20 +344,18 @@ func (c *Controller) removeChartThumb(symbol string) {
 func (c *Controller) refreshStock(symbol string) {
 	if ch, ok := c.symbolToChartMap[symbol]; ok {
 		ch.SetLoading(true)
+		ch.SetError(false)
 	}
 	if th, ok := c.symbolToChartThumbMap[symbol]; ok {
 		th.SetLoading(true)
+		th.SetError(false)
 	}
 	go func() {
 		u, err := FetchStockUpdate(symbol)
-		if err != nil {
-			glog.Warningf("refreshStock: failed to get data for %s: %v", symbol, err)
-			return
-		}
-
 		c.pendingStockUpdates <- controllerStockUpdate{
 			symbol:      symbol,
-			stockUpdate: u,
+			update:      u,
+			updateErr: err,
 		}
 	}()
 }

@@ -22,6 +22,7 @@ var (
 		return ""
 	}
 	chartLoadingText = NewCenteredText(chartSymbolQuoteTextRenderer, "LOADING...")
+	chartErrorText   = NewCenteredText(chartSymbolQuoteTextRenderer, "ERROR")
 )
 
 // Shared variables used by multiple chart components.
@@ -58,6 +59,9 @@ type Chart struct {
 
 	// hasStockUpdated is true if the stock has reported data.
 	hasStockUpdated bool
+
+	// hasError is true there was a loading issue.
+	hasError bool
 }
 
 // NewChart creates a new Chart.
@@ -87,6 +91,12 @@ func (ch *Chart) SetLoading(loading bool) {
 	ch.header.SetLoading(loading)
 }
 
+// SetError sets the Chart's error flag.
+func (ch *Chart) SetError(error bool) {
+	ch.hasError = error
+	ch.header.SetError(error)
+}
+
 // SetStock sets the Chart's stock.
 func (ch *Chart) SetStock(st *ModelStock) {
 	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
@@ -114,9 +124,17 @@ func (ch *Chart) Render(vc ViewContext) {
 	rects := sliceRect(r, 0.13, 0.13, 0.13, 0.61)
 	renderHorizDivider(rects[3], horizLine)
 
-	if ch.loading && !ch.hasStockUpdated {
-		chartLoadingText.Render(r)
-		return
+	// Only show messages if no prior data to show.
+	if !ch.hasStockUpdated {
+		if ch.loading {
+			chartLoadingText.Render(r)
+			return
+		}
+
+		if ch.hasError {
+			chartErrorText.Render(r)
+			return
+		}
 	}
 
 	for i := 0; i < 3; i++ {
