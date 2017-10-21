@@ -3,7 +3,6 @@ package ponzi
 import (
 	"fmt"
 	"image"
-	"time"
 	"unicode"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
@@ -12,8 +11,6 @@ import (
 
 	"github.com/btmura/ponzi2/internal/gfx"
 	math2 "github.com/btmura/ponzi2/internal/math"
-	"github.com/btmura/ponzi2/internal/stock"
-	time2 "github.com/btmura/ponzi2/internal/time"
 )
 
 // Application name for the window title.
@@ -73,11 +70,11 @@ type Controller struct {
 
 // controllerStockUpdate bundles a stock and new data for that stock.
 type controllerStockUpdate struct {
-	// symbol refers to the stock to update.
+	// symbol is the stock's symbol.
 	symbol string
 
-	// tradingHistory is the new data to update the stock with.
-	tradingHistory *stock.TradingHistory
+	// stockUpdate is the new data for the stock.
+	stockUpdate *ModelStockUpdate
 }
 
 // NewController creates a new Controller.
@@ -212,7 +209,7 @@ loop:
 	for {
 		select {
 		case u := <-c.pendingStockUpdates:
-			st, updated := c.model.UpdateStock(u.symbol, u.tradingHistory)
+			st, updated := c.model.UpdateStock(u.stockUpdate)
 			if !updated {
 				break loop
 			}
@@ -337,21 +334,15 @@ func (c *Controller) refreshStock(symbol string) {
 		th.SetLoading(true)
 	}
 	go func() {
-		end := time2.Midnight(time.Now().In(time2.NewYorkLoc))
-		start := end.Add(-6 * 30 * 24 * time.Hour)
-		hist, err := stock.GetTradingHistory(&stock.GetTradingHistoryRequest{
-			Symbol:    symbol,
-			StartDate: start,
-			EndDate:   end,
-		})
+		u, err := FetchStockUpdate(symbol)
 		if err != nil {
-			glog.Warningf("refreshStock: failed to get trading history for %s: %v", symbol, err)
+			glog.Warningf("refreshStock: failed to get data for %s: %v", symbol, err)
 			return
 		}
 
 		c.pendingStockUpdates <- controllerStockUpdate{
-			symbol:         symbol,
-			tradingHistory: hist,
+			symbol:      symbol,
+			stockUpdate: u,
 		}
 	}()
 }

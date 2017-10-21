@@ -7,6 +7,7 @@ import (
 	"github.com/golang/glog"
 
 	"github.com/btmura/ponzi2/internal/stock"
+	time2 "github.com/btmura/ponzi2/internal/time"
 )
 
 // Model keeps track of the user's stocks.
@@ -75,12 +76,13 @@ func (m *Model) RemoveSavedStock(symbol string) (removed bool) {
 	return false
 }
 
-// UpdateStock updates the stock with the TradingHistory if it is in the model.
-func (m *Model) UpdateStock(symbol string, hist *stock.TradingHistory) (st *ModelStock, updated bool) {
-	if st = m.stock(symbol); st == nil {
+// UpdateStock updates a stock with the update if it is in the model.
+func (m *Model) UpdateStock(update *ModelStockUpdate) (st *ModelStock, updated bool) {
+	if st = m.stock(update.Symbol); st == nil {
 		return nil, false
 	}
-	st.DailySessions, st.WeeklySessions = convertSessions(hist.Sessions)
+	st.DailySessions = update.DailySessions
+	st.WeeklySessions = update.WeeklySessions
 	st.LastUpdateTime = time.Now()
 	return st, true
 }
@@ -157,6 +159,35 @@ func (m *ModelStock) Date() time.Time {
 		return time.Time{}
 	}
 	return m.DailySessions[len(m.DailySessions)-1].Date
+}
+
+// ModelStockUpdate is an update that can be applied to the model.
+type ModelStockUpdate struct {
+	Symbol         string
+	DailySessions  []*ModelTradingSession
+	WeeklySessions []*ModelTradingSession
+}
+
+// FetchStockUpdate fetches a stock update for a single stock.
+func FetchStockUpdate(symbol string) (*ModelStockUpdate, error) {
+	end := time2.Midnight(time.Now().In(time2.NewYorkLoc))
+	start := end.Add(-6 * 30 * 24 * time.Hour)
+	hist, err := stock.GetTradingHistory(&stock.GetTradingHistoryRequest{
+		Symbol:    symbol,
+		StartDate: start,
+		EndDate:   end,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ds, ws := convertSessions(hist.Sessions)
+
+	return &ModelStockUpdate{
+		Symbol:         symbol,
+		DailySessions:  ds,
+		WeeklySessions: ws,
+	}, nil
 }
 
 func convertSessions(ts []*stock.TradingSession) (ds, ws []*ModelTradingSession) {
