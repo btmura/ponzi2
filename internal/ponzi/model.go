@@ -15,8 +15,55 @@ type Model struct {
 	// CurrentStock is the stock currently being viewed.
 	CurrentStock *ModelStock
 
-	// SavedStocks is the user's ordered set of saved stocks.
+	// SavedStocks is the user's saved stocks.
 	SavedStocks []*ModelStock
+}
+
+// ModelStock models a single stock.
+type ModelStock struct {
+	// Symbol is the symbol of the stock.
+	Symbol string
+
+	// DailySessions are trading sessions that span a single day.
+	DailySessions []*ModelTradingSession
+
+	// WeeklySessions are trading sessions that span a single week.
+	WeeklySessions []*ModelTradingSession
+
+	// LastUpdateTime is when the ModelStock was last updated.
+	LastUpdateTime time.Time
+}
+
+// ModelTradingSession models a single trading session.
+type ModelTradingSession struct {
+	Date   time.Time
+	Open   float32
+	High   float32
+	Low    float32
+	Close  float32
+	Volume int
+
+	Change        float32
+	PercentChange float32
+
+	K float32
+	D float32
+
+	MovingAverage25  float32
+	MovingAverage50  float32
+	MovingAverage200 float32
+}
+
+// ModelStockUpdate is an update that can be applied to the model.
+type ModelStockUpdate struct {
+	// Symbol is the symbol of the stock.
+	Symbol string
+
+	// DailySessions are trading sessions that span a single day.
+	DailySessions []*ModelTradingSession
+
+	// WeeklySessions are trading sessions that span a single week.
+	WeeklySessions []*ModelTradingSession
 }
 
 // NewModel creates a new Model.
@@ -101,34 +148,6 @@ func (m *Model) stock(symbol string) *ModelStock {
 	return nil
 }
 
-// ModelStock models a single stock.
-type ModelStock struct {
-	Symbol         string
-	DailySessions  []*ModelTradingSession
-	WeeklySessions []*ModelTradingSession
-	LastUpdateTime time.Time
-}
-
-// ModelTradingSession models a single trading session.
-type ModelTradingSession struct {
-	Date   time.Time
-	Open   float32
-	High   float32
-	Low    float32
-	Close  float32
-	Volume int
-
-	Change        float32
-	PercentChange float32
-
-	K float32
-	D float32
-
-	MovingAverage25  float32
-	MovingAverage50  float32
-	MovingAverage200 float32
-}
-
 // Price returns the most recent price or 0 if no data.
 func (m *ModelStock) Price() float32 {
 	if len(m.DailySessions) == 0 {
@@ -159,13 +178,6 @@ func (m *ModelStock) Date() time.Time {
 		return time.Time{}
 	}
 	return m.DailySessions[len(m.DailySessions)-1].Date
-}
-
-// ModelStockUpdate is an update that can be applied to the model.
-type ModelStockUpdate struct {
-	Symbol         string
-	DailySessions  []*ModelTradingSession
-	WeeklySessions []*ModelTradingSession
 }
 
 // FetchStockUpdate fetches a stock update for a single stock.
