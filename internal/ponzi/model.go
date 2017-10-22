@@ -182,8 +182,13 @@ func (m *ModelStock) Date() time.Time {
 
 // FetchStockUpdate fetches a stock update for a single stock.
 func FetchStockUpdate(symbol string) (*ModelStockUpdate, error) {
+	// Request 2 years worth of data for moving averages and stochastics
+	// that require prior history for the first value.
+	const twoYearsDuration = 24 * time.Hour * 30 /* days */ * 12 /* months */ * 2 /* years */
+
 	end := time2.Midnight(time.Now().In(time2.NewYorkLoc))
-	start := end.Add(-6 * 30 * 24 * time.Hour)
+	start := end.Add(-twoYearsDuration)
+
 	hist, err := stock.GetTradingHistory(&stock.GetTradingHistoryRequest{
 		Symbol:    symbol,
 		StartDate: start,
@@ -214,6 +219,8 @@ func convertSessions(ts []*stock.TradingSession) (ds, ws []*ModelTradingSession)
 
 	fillMovingAverages(ds)
 	fillMovingAverages(ws)
+
+	ds, ws = trimSessions(ds, ws)
 
 	return ds, ws
 }
@@ -330,4 +337,18 @@ func fillMovingAverages(ss []*ModelTradingSession) {
 		ss[i].MovingAverage50 = average(i, 50)
 		ss[i].MovingAverage200 = average(i, 200)
 	}
+}
+
+func trimSessions(ds, ws []*ModelTradingSession) (trimDs, trimWs []*ModelTradingSession) {
+	const sixMonthWeeks = 4 /* weeks */ * 6 /* months */
+	if len(ws) >= sixMonthWeeks {
+		ws = ws[len(ws)-sixMonthWeeks:]
+		for i := range ds {
+			if ds[i].Date == ws[0].Date {
+				ds = ds[i:]
+				return ds, ws
+			}
+		}
+	}
+	return ds, ws
 }
