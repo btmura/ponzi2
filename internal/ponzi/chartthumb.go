@@ -30,8 +30,8 @@ type ChartThumb struct {
 	// header renders the header with the symbol, quote, and buttons.
 	header *ChartHeader
 
-	// lines renders the vertical weekly lines.
-	lines *ChartLines
+	// weekLines renders the vertical week lines.
+	weekLines *ChartWeekLines
 
 	// dailyStochastics renders the daily stochastics.
 	dailyStochastics *ChartStochastics
@@ -62,7 +62,7 @@ func NewChartThumb() *ChartThumb {
 			Rounding:                thumbChartRounding,
 			Padding:                 thumbChartPadding,
 		}),
-		lines:             NewChartLines(),
+		weekLines:         NewChartWeekLines(),
 		dailyStochastics:  NewChartStochastics(DailyInterval),
 		weeklyStochastics: NewChartStochastics(WeeklyInterval),
 		loading:           true,
@@ -85,7 +85,7 @@ func (ch *ChartThumb) SetError(error bool) {
 func (ch *ChartThumb) SetStock(st *ModelStock) {
 	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
 	ch.header.SetStock(st)
-	ch.lines.SetStock(st)
+	ch.weekLines.SetStock(st)
 	ch.dailyStochastics.SetStock(st)
 	ch.weeklyStochastics.SetStock(st)
 }
@@ -128,8 +128,8 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 		rects[i] = rects[i].Inset(thumbChartPadding)
 	}
 
-	ch.lines.Render(rects[1])
-	ch.lines.Render(rects[0])
+	ch.weekLines.Render(rects[1])
+	ch.weekLines.Render(rects[0])
 
 	ch.dailyStochastics.Render(rects[1])
 	ch.weeklyStochastics.Render(rects[0])
@@ -151,9 +151,9 @@ func (ch *ChartThumb) Close() {
 		ch.header.Close()
 		ch.header = nil
 	}
-	if ch.lines != nil {
-		ch.lines.Close()
-		ch.lines = nil
+	if ch.weekLines != nil {
+		ch.weekLines.Close()
+		ch.weekLines = nil
 	}
 	if ch.dailyStochastics != nil {
 		ch.dailyStochastics.Close()

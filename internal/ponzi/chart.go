@@ -36,8 +36,8 @@ type Chart struct {
 	// header renders the header with the symbol, quote, and buttons.
 	header *ChartHeader
 
-	// lines renders the vertical weekly lines.
-	lines *ChartLines
+	// weekLines renders the vertical weekly lines.
+	weekLines *ChartWeekLines
 
 	// prices renders the candlesticks.
 	prices *ChartPrices
@@ -75,7 +75,7 @@ func NewChart() *Chart {
 			Rounding:                chartRounding,
 			Padding:                 chartPadding,
 		}),
-		lines:             NewChartLines(),
+		weekLines:         NewChartWeekLines(),
 		prices:            NewChartPrices(),
 		avgLines:          NewChartAvgLines(),
 		volume:            NewChartVolume(),
@@ -101,7 +101,7 @@ func (ch *Chart) SetError(error bool) {
 func (ch *Chart) SetStock(st *ModelStock) {
 	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
 	ch.header.SetStock(st)
-	ch.lines.SetStock(st)
+	ch.weekLines.SetStock(st)
 	ch.prices.SetStock(st)
 	ch.avgLines.SetStock(st)
 	ch.volume.SetStock(st)
@@ -164,10 +164,10 @@ func (ch *Chart) Render(vc ViewContext) {
 	dr.Max.X -= maxWidth + chartPadding
 	wr.Max.X -= maxWidth + chartPadding
 
-	ch.lines.Render(pr)
-	ch.lines.Render(vr)
-	ch.lines.Render(dr)
-	ch.lines.Render(wr)
+	ch.weekLines.Render(pr)
+	ch.weekLines.Render(vr)
+	ch.weekLines.Render(dr)
+	ch.weekLines.Render(wr)
 
 	ch.prices.Render(pr)
 	ch.avgLines.Render(pr)
@@ -192,9 +192,9 @@ func (ch *Chart) Close() {
 		ch.header.Close()
 		ch.header = nil
 	}
-	if ch.lines != nil {
-		ch.lines.Close()
-		ch.lines = nil
+	if ch.weekLines != nil {
+		ch.weekLines.Close()
+		ch.weekLines = nil
 	}
 	if ch.prices != nil {
 		ch.prices.Close()
