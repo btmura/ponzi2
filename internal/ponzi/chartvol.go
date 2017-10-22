@@ -75,24 +75,23 @@ func (ch *ChartVolume) SetStock(st *ModelStock) {
 }
 
 func createChartVolumeBarsVAO(ds []*ModelTradingSession, maxVolume int) *gfx.VAO {
-	var vertices []float32
-	var colors []float32
-	var indices []uint16
+	data := &gfx.VAOVertexData{}
 
-	barWidth := 2.0 / float32(len(ds)) // (-1 to 1) on X-axis
-	leftX := -1.0 + barWidth*0.2
-	rightX := -1.0 + barWidth*0.8
-
-	calcY := func(value int) float32 {
-		return 2*float32(value)/float32(maxVolume) - 1
+	dx := 2.0 / float32(len(ds)) // (-1 to 1) on X-axis
+	calcX := func(i int) (leftX, rightX float32) {
+		x := -1.0 + dx*float32(i)
+		return x + dx*0.2, x + dx*0.8
+	}
+	calcY := func(v int) (topY, botY float32) {
+		return 2*float32(v)/float32(maxVolume) - 1, -1
 	}
 
 	for i, s := range ds {
-		topY := calcY(s.Volume)
-		botY := calcY(0)
+		leftX, rightX := calcX(i)
+		topY, botY := calcY(s.Volume)
 
 		// Add the vertices needed to create the volume bar.
-		vertices = append(vertices,
+		data.Vertices = append(data.Vertices,
 			leftX, topY, 0, // UL
 			rightX, topY, 0, // UR
 			leftX, botY, 0, // BL
@@ -102,7 +101,7 @@ func createChartVolumeBarsVAO(ds []*ModelTradingSession, maxVolume int) *gfx.VAO
 		// Add the colors corresponding to the volume bar.
 		switch {
 		case s.Close > s.Open:
-			colors = append(colors,
+			data.Colors = append(data.Colors,
 				green[0], green[1], green[2],
 				green[0], green[1], green[2],
 				green[0], green[1], green[2],
@@ -110,7 +109,7 @@ func createChartVolumeBarsVAO(ds []*ModelTradingSession, maxVolume int) *gfx.VAO
 			)
 
 		case s.Close < s.Open:
-			colors = append(colors,
+			data.Colors = append(data.Colors,
 				red[0], red[1], red[2],
 				red[0], red[1], red[2],
 				red[0], red[1], red[2],
@@ -118,7 +117,7 @@ func createChartVolumeBarsVAO(ds []*ModelTradingSession, maxVolume int) *gfx.VAO
 			)
 
 		default:
-			colors = append(colors,
+			data.Colors = append(data.Colors,
 				yellow[0], yellow[1], yellow[2],
 				yellow[0], yellow[1], yellow[2],
 				yellow[0], yellow[1], yellow[2],
@@ -132,24 +131,13 @@ func createChartVolumeBarsVAO(ds []*ModelTradingSession, maxVolume int) *gfx.VAO
 		}
 
 		// Use triangles for filled candlestick on lower closes.
-		indices = append(indices,
+		data.Indices = append(data.Indices,
 			idx(0), idx(2), idx(1),
 			idx(1), idx(2), idx(3),
 		)
-
-		// Move the X coordinates one bar over.
-		leftX += barWidth
-		rightX += barWidth
 	}
 
-	return gfx.NewVAO(
-		gfx.Triangles,
-		&gfx.VAOVertexData{
-			Vertices: vertices,
-			Colors:   colors,
-			Indices:  indices,
-		},
-	)
+	return gfx.NewVAO(gfx.Triangles, data)
 }
 
 // Render renders the volume bars.

@@ -43,16 +43,16 @@ func createChartAvgLinesVAO(ds []*ModelTradingSession) *gfx.VAO {
 		}
 	}
 
-	width := 2.0 / float32(len(ds))
+	data := &gfx.VAOVertexData{}
+	var v uint16 // vertex index
+
+	dx := 2.0 / float32(len(ds)) // (-1 to 1) on X-axis
 	calcX := func(i int) float32 {
-		return -1.0 + width*float32(i) + width*0.5
+		return -1.0 + dx*float32(i) + dx*0.5
 	}
 	calcY := func(v float32) float32 {
 		return 2.0*(v-minPrice)/(maxPrice-minPrice) - 1.0
 	}
-
-	data := &gfx.VAOVertexData{}
-	var v uint16 // vertex index
 
 	first := true
 	for i, s := range ds {

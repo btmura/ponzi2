@@ -35,7 +35,7 @@ func createChartWeekLinesVAO(ds []*ModelTradingSession) *gfx.VAO {
 	data := &gfx.VAOVertexData{}
 	var v uint16 // vertex index
 
-	dx := 2.0 / float32(len(ds))
+	dx := 2.0 / float32(len(ds)) // (-1 to 1) on X-axis
 	calcX := func(i int) float32 {
 		return -1.0 + dx*float32(i)
 	}
