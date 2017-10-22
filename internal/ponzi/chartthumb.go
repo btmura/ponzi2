@@ -21,8 +21,8 @@ var (
 		}
 		return ""
 	}
-	thumbLoadingText = NewCenteredText(thumbSymbolQuoteTextRenderer, "LOADING...")
-	thumbErrorText   = NewCenteredText(thumbSymbolQuoteTextRenderer, "ERROR")
+	thumbLoadingText = NewCenteredText(thumbSymbolQuoteTextRenderer, "LOADING...", white)
+	thumbErrorText   = NewCenteredText(thumbSymbolQuoteTextRenderer, "ERROR", orange)
 )
 
 // ChartThumb shows a thumbnail for a stock.

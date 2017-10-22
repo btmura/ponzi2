@@ -16,6 +16,7 @@ var (
 	purple = [3]float32{0.5, 0, 1}
 	white  = [3]float32{1, 1, 1}
 	gray   = [3]float32{0.15, 0.15, 0.15}
+	orange = [3]float32{1, 0.5, 0}
 )
 
 const viewOuterPadding = 10
@@ -24,7 +25,7 @@ var viewChartThumbSize = image.Pt(155, 105)
 
 var (
 	viewInputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
-	viewInstructionsText        = NewCenteredText(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER...")
+	viewInstructionsText        = NewCenteredText(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER...", white)
 )
 
 // The View renders the UI to view and edit the model's stocks that it observes.
@@ -79,7 +80,7 @@ func (vc ViewContext) ScheduleCallback(cb func()) {
 // NewView creates a new View.
 func NewView() *View {
 	return &View{
-		inputSymbol: NewCenteredText(viewInputSymbolTextRenderer, ""),
+		inputSymbol: NewCenteredText(viewInputSymbolTextRenderer, "", white),
 	}
 }
 
@@ -89,7 +90,7 @@ func (v *View) Update() {
 		v.chart.Update()
 	}
 	for _, th := range v.chartThumbs {
-		th.Update() 
+		th.Update()
 	}
 }
 

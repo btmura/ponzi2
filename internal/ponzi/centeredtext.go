@@ -13,13 +13,17 @@ type CenteredText struct {
 
 	// Text is the text to render.
 	Text string
+
+	// color is the color to render the text in.
+	color [3]float32
 }
 
 // NewCenteredText creates a new CenteredText.
-func NewCenteredText(textRenderer *gfx.TextRenderer, text string) *CenteredText {
+func NewCenteredText(textRenderer *gfx.TextRenderer, text string, color [3]float32) *CenteredText {
 	return &CenteredText{
 		textRenderer: textRenderer,
 		Text:         text,
+		color:        color,
 	}
 }
 
@@ -32,5 +36,5 @@ func (c *CenteredText) Render(r image.Rectangle) {
 	pt := r.Min
 	pt.X += (r.Dx() - sz.X) / 2
 	pt.Y += (r.Dy() - sz.Y) / 2
-	c.textRenderer.Render(c.Text, pt, white)
+	c.textRenderer.Render(c.Text, pt, c.color)
 }

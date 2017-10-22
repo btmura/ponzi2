@@ -21,8 +21,8 @@ var (
 		}
 		return ""
 	}
-	chartLoadingText = NewCenteredText(chartSymbolQuoteTextRenderer, "LOADING...")
-	chartErrorText   = NewCenteredText(chartSymbolQuoteTextRenderer, "ERROR")
+	chartLoadingText = NewCenteredText(chartSymbolQuoteTextRenderer, "LOADING...", white)
+	chartErrorText   = NewCenteredText(chartSymbolQuoteTextRenderer, "ERROR", orange)
 )
 
 // Shared variables used by multiple chart components.
