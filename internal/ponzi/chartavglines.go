@@ -57,7 +57,7 @@ func createChartAvgLinesVAO(ds []*ModelTradingSession) *gfx.VAO {
 
 	first := true
 	for i, s := range ds {
-		if s.MovingAverage25 == 0 {
+		if s.MovingAverage25 <= minPrice {
 			continue
 		}
 		data.Vertices = append(data.Vertices, calcX(i), calcY(s.MovingAverage25), 0)
@@ -71,7 +71,7 @@ func createChartAvgLinesVAO(ds []*ModelTradingSession) *gfx.VAO {
 
 	first = true
 	for i, s := range ds {
-		if s.MovingAverage50 == 0 {
+		if s.MovingAverage50 <= minPrice {
 			continue
 		}
 
@@ -86,7 +86,7 @@ func createChartAvgLinesVAO(ds []*ModelTradingSession) *gfx.VAO {
 
 	first = true
 	for i, s := range ds {
-		if s.MovingAverage200 == 0 {
+		if s.MovingAverage200 <= minPrice {
 			continue
 		}
 
