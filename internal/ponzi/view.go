@@ -10,13 +10,14 @@ import (
 
 // Colors used throughout the UI.
 var (
-	green  = [3]float32{0.25, 1, 0}
-	red    = [3]float32{1, 0.3, 0}
-	yellow = [3]float32{1, 1, 0}
-	purple = [3]float32{0.5, 0, 1}
-	white  = [3]float32{1, 1, 1}
-	gray   = [3]float32{0.15, 0.15, 0.15}
-	orange = [3]float32{1, 0.5, 0}
+	green     = [3]float32{0.25, 1, 0}
+	red       = [3]float32{1, 0.3, 0}
+	yellow    = [3]float32{1, 1, 0}
+	purple    = [3]float32{0.5, 0, 1}
+	white     = [3]float32{1, 1, 1}
+	gray      = [3]float32{0.15, 0.15, 0.15}
+	lightGray = [3]float32{0.35, 0.35, 0.35}
+	orange    = [3]float32{1, 0.5, 0}
 )
 
 const viewOuterPadding = 10
