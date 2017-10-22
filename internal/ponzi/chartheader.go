@@ -11,6 +11,7 @@ var (
 	chartAddButtonVAO     = gfx.SquareImageVAO(bytes.NewReader(MustAsset("addButton.png")))
 	chartRefreshButtonVAO = gfx.SquareImageVAO(bytes.NewReader(MustAsset("refreshButton.png")))
 	chartRemoveButtonVAO  = gfx.SquareImageVAO(bytes.NewReader(MustAsset("removeButton.png")))
+	chartErrorIconVAO     = gfx.SquareImageVAO(bytes.NewReader(MustAsset("errorIcon.png")))
 )
 
 // ChartHeader shows a header for charts and thumbnails with a clickable button.
@@ -47,6 +48,9 @@ type ChartHeader struct {
 
 	// loading is whether the data for the symbol is loading.
 	loading bool
+
+	// hasError is true there was a loading issue.
+	hasError bool
 }
 
 // chartHeaderButton is a button with an additional enabled flag.
@@ -107,7 +111,7 @@ func (ch *ChartHeader) SetLoading(loading bool) {
 
 // SetError sets the ChartHeader's error flag.
 func (ch *ChartHeader) SetError(error bool) {
-	// TODO(btmura): implement error handling, maybe show icon in header
+	ch.hasError = error
 }
 
 // SetStock sets the ChartHeader's stock.
@@ -189,6 +193,12 @@ func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, clicks Char
 	// Don't report clicks when the refresh button is just an indicator.
 	if !ch.refreshButton.enabled {
 		clicks.RefreshButtonClicked = false
+	}
+
+	if ch.hasError {
+		gfx.SetModelMatrixRect(vc.Bounds)
+		chartErrorIconVAO.Render()
+		vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
 	}
 
 	r.Max.Y = pt.Y
