@@ -54,6 +54,9 @@ type Chart struct {
 	// weeklyStochastics renders the weekly stochastics.
 	weeklyStochastics *ChartStochastics
 
+	// cursor renders the price below the user's cursor.
+	cursor *ChartCursor
+
 	// loading is true when data for the stock is being retrieved.
 	loading bool
 
@@ -81,6 +84,7 @@ func NewChart() *Chart {
 		volume:            NewChartVolume(),
 		dailyStochastics:  NewChartStochastics(DailyInterval),
 		weeklyStochastics: NewChartStochastics(WeeklyInterval),
+		cursor:            NewChartCursor(),
 		loading:           true,
 	}
 }
@@ -174,6 +178,18 @@ func (ch *Chart) Render(vc ViewContext) {
 	ch.volume.Render(vr)
 	ch.dailyStochastics.Render(dr)
 	ch.weeklyStochastics.Render(wr)
+
+	vc.Bounds = pr
+	ch.cursor.RenderHorizLine(vc)
+
+	vc.Bounds = vr
+	ch.cursor.RenderHorizLine(vc)
+
+	vc.Bounds = dr
+	ch.cursor.RenderHorizLine(vc)
+
+	vc.Bounds = wr
+	ch.cursor.RenderHorizLine(vc)
 }
 
 // SetRefreshButtonClickCallback sets the callback for refresh button clicks.
