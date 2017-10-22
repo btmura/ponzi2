@@ -2,6 +2,7 @@ package ponzi
 
 import (
 	"image"
+	"math"
 
 	"github.com/btmura/ponzi2/internal/gfx"
 )
@@ -32,8 +33,8 @@ func (ch *ChartAvgLines) SetStock(st *ModelStock) {
 }
 
 func createChartAvgLinesVAO(ds []*ModelTradingSession) *gfx.VAO {
-	var minPrice float32
-	var maxPrice float32
+	minPrice := float32(math.MaxFloat32)
+	maxPrice := float32(0)
 	for _, s := range ds {
 		if minPrice > s.Low {
 			minPrice = s.Low
