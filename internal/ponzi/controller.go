@@ -178,7 +178,10 @@ func (c *Controller) Run() {
 		c.setMouseButton(button, action)
 	})
 
-	const secPerUpdate = 1.0 / fps
+	const (
+		secPerUpdate = 1.0 / fps
+		maxUpdates   = 10
+	)
 
 	var lag float64
 	prevTime := glfw.GetTime()
@@ -188,7 +191,7 @@ func (c *Controller) Run() {
 		prevTime = currTime
 		lag += elapsed
 
-		for lag >= secPerUpdate {
+		for i := 0; lag >= secPerUpdate && i < maxUpdates; i++ {
 			c.update()
 			lag -= secPerUpdate
 		}
@@ -353,8 +356,8 @@ func (c *Controller) refreshStock(symbol string) {
 	go func() {
 		u, err := FetchStockUpdate(symbol)
 		c.pendingStockUpdates <- controllerStockUpdate{
-			symbol:      symbol,
-			update:      u,
+			symbol:    symbol,
+			update:    u,
 			updateErr: err,
 		}
 	}()
