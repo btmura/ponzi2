@@ -152,7 +152,7 @@ func (ch *Chart) Render(vc ViewContext) {
 	dr = dr.Inset(chartPadding)
 	wr = wr.Inset(chartPadding)
 
-	maxWidth := ch.prices.RenderLabels(pr)
+	maxWidth := ch.prices.RenderLabels(pr, vc.MousePos)
 	if w := ch.volume.RenderLabels(vr, vc.MousePos); w > maxWidth {
 		maxWidth = w
 	}
