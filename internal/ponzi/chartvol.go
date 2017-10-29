@@ -10,18 +10,20 @@ import (
 
 // ChartVolume renders the volume bars and labels for a single stock.
 type ChartVolume struct {
+	// renderable is whether the ChartVolume can be rendered.
 	renderable bool
-	maxVolume  int
-	maxLabel   chartVolumeLabel
-	labels     []chartVolumeLabel
-	volBars    *gfx.VAO
-}
 
-// chartVolumeLabel is a right-justified Y-axis label with the volume.
-type chartVolumeLabel struct {
-	percent float32
-	text    string
-	size    image.Point
+	// maxVolume is the maximum volume used for rendering measurements.
+	maxVolume int
+
+	// maxLabelWidth is the maximum label width used for rendering measurements.
+	maxLabelWidth int
+
+	// labels bundle rendering measurements for volume labels.
+	labels []chartVolumeLabel
+
+	// barsVAO is the VAO with the colored volume bars.
+	barsVAO *gfx.VAO
 }
 
 // NewChartVolume creates a new ChartVolume.
@@ -48,14 +50,69 @@ func (ch *ChartVolume) SetStock(st *ModelStock) {
 	}
 
 	// Create Y-axis label for maximum volume for rendering measurements.
-	ch.maxLabel = makeChartVolumeLabel(ch.maxVolume, 1)
+	ch.maxLabelWidth = makeChartVolumeLabel(ch.maxVolume, 1).size.X
 
 	// Create Y-axis labels for key percentages.
-	ch.labels = append(ch.labels, makeChartVolumeLabel(ch.maxVolume, .7))
-	ch.labels = append(ch.labels, makeChartVolumeLabel(ch.maxVolume, .3))
+	ch.labels = []chartVolumeLabel{
+		makeChartVolumeLabel(ch.maxVolume, .7),
+		makeChartVolumeLabel(ch.maxVolume, .3),
+	}
 
-	ch.volBars = chartVolumeBarsVAO(st.DailySessions, ch.maxVolume)
+	ch.barsVAO = chartVolumeBarsVAO(st.DailySessions, ch.maxVolume)
 	ch.renderable = true
+}
+
+// Render renders the volume bars.
+func (ch *ChartVolume) Render(r image.Rectangle) {
+	if !ch.renderable {
+		return
+	}
+
+	// Render lines for the 30% and 70% levels.
+	sliceRenderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
+
+	// Render the volume bars.
+	gfx.SetModelMatrixRect(r)
+	ch.barsVAO.Render()
+}
+
+// RenderLabels renders the Y-axis labels for the volume bars.
+func (ch *ChartVolume) RenderLabels(r image.Rectangle, mousePos image.Point) (maxLabelWidth int) {
+	if !ch.renderable {
+		return
+	}
+
+	render := func(l chartVolumeLabel) {
+		x := r.Max.X - l.size.X
+		y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
+		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
+	}
+
+	for _, l := range ch.labels {
+		render(l)
+	}
+
+	if mousePos.In(r) {
+		perc := float32(mousePos.Y-r.Min.Y) / float32(r.Dy())
+		render(makeChartVolumeLabel(ch.maxVolume, perc))
+	}
+
+	return ch.maxLabelWidth
+}
+
+// Close frees the resources backing the ChartVolume.
+func (ch *ChartVolume) Close() {
+	ch.renderable = false
+	if ch.barsVAO != nil {
+		ch.barsVAO.Delete()
+	}
+}
+
+// chartVolumeLabel is a right-justified Y-axis label with the volume.
+type chartVolumeLabel struct {
+	percent float32
+	text    string
+	size    image.Point
 }
 
 func makeChartVolumeLabel(maxVolume int, perc float32) chartVolumeLabel {
@@ -78,12 +135,6 @@ func makeChartVolumeLabel(maxVolume int, perc float32) chartVolumeLabel {
 		text:    t,
 		size:    chartAxisLabelTextRenderer.Measure(t),
 	}
-}
-
-func (l chartVolumeLabel) render(r image.Rectangle) {
-	x := r.Max.X - l.size.X
-	y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
-	chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
 }
 
 func chartVolumeBarsVAO(ds []*ModelTradingSession, maxVolume int) *gfx.VAO {
@@ -150,45 +201,4 @@ func chartVolumeBarsVAO(ds []*ModelTradingSession, maxVolume int) *gfx.VAO {
 	}
 
 	return gfx.NewVAO(gfx.Triangles, data)
-}
-
-// Render renders the volume bars.
-func (ch *ChartVolume) Render(r image.Rectangle) {
-	if !ch.renderable {
-		return
-	}
-
-	sliceRenderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
-
-	gfx.SetModelMatrixRect(r)
-	ch.volBars.Render()
-}
-
-// RenderLabels renders the Y-axis labels for the volume bars.
-func (ch *ChartVolume) RenderLabels(r image.Rectangle, mousePos image.Point) (maxLabelWidth int) {
-	if !ch.renderable {
-		return
-	}
-
-	for _, l := range ch.labels {
-		l.render(r)
-	}
-
-	if mousePos.In(r) {
-		perc := float32(mousePos.Y-r.Min.Y) / float32(r.Dy())
-		l := makeChartVolumeLabel(ch.maxVolume, perc)
-		l.render(r)
-	}
-
-	return ch.maxLabel.size.X
-}
-
-// Close frees the resources backing the ChartVolume.
-func (ch *ChartVolume) Close() {
-	ch.renderable = false
-	ch.labels = nil
-	if ch.volBars != nil {
-		ch.volBars.Delete()
-		ch.volBars = nil
-	}
 }
