@@ -14,7 +14,7 @@ type ChartVolume struct {
 	maxVolume  int
 	maxLabel   chartVolumeLabel
 	labels     []chartVolumeLabel
-	barsVAO    *gfx.VAO
+	volBars    *gfx.VAO
 }
 
 // chartVolumeLabel is a right-justified Y-axis label with the volume.
@@ -54,7 +54,7 @@ func (ch *ChartVolume) SetStock(st *ModelStock) {
 	ch.labels = append(ch.labels, makeChartVolumeLabel(ch.maxVolume, .7))
 	ch.labels = append(ch.labels, makeChartVolumeLabel(ch.maxVolume, .3))
 
-	ch.barsVAO = chartVolumeBarsVAO(st.DailySessions, ch.maxVolume)
+	ch.volBars = chartVolumeBarsVAO(st.DailySessions, ch.maxVolume)
 	ch.renderable = true
 }
 
@@ -81,7 +81,7 @@ func makeChartVolumeLabel(maxVolume int, perc float32) chartVolumeLabel {
 }
 
 func (l chartVolumeLabel) render(r image.Rectangle) {
-	x := r.Max.X - l.size.X // Right-justified
+	x := r.Max.X - l.size.X
 	y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
 	chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
 }
@@ -161,7 +161,7 @@ func (ch *ChartVolume) Render(r image.Rectangle) {
 	sliceRenderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
 
 	gfx.SetModelMatrixRect(r)
-	ch.barsVAO.Render()
+	ch.volBars.Render()
 }
 
 // RenderLabels renders the Y-axis labels for the volume bars.
@@ -187,8 +187,8 @@ func (ch *ChartVolume) RenderLabels(r image.Rectangle, mousePos image.Point) (ma
 func (ch *ChartVolume) Close() {
 	ch.renderable = false
 	ch.labels = nil
-	if ch.barsVAO != nil {
-		ch.barsVAO.Delete()
-		ch.barsVAO = nil
+	if ch.volBars != nil {
+		ch.volBars.Delete()
+		ch.volBars = nil
 	}
 }

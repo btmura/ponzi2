@@ -156,10 +156,10 @@ func (ch *Chart) Render(vc ViewContext) {
 	if w := ch.volume.RenderLabels(vr, vc.MousePos); w > maxWidth {
 		maxWidth = w
 	}
-	if w := ch.dailyStochastics.RenderLabels(dr); w > maxWidth {
+	if w := ch.dailyStochastics.RenderLabels(dr, vc.MousePos); w > maxWidth {
 		maxWidth = w
 	}
-	if w := ch.weeklyStochastics.RenderLabels(wr); w > maxWidth {
+	if w := ch.weeklyStochastics.RenderLabels(wr, vc.MousePos); w > maxWidth {
 		maxWidth = w
 	}
 
