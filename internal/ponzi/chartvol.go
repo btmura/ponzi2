@@ -22,8 +22,8 @@ type ChartVolume struct {
 	// labels bundle rendering measurements for volume labels.
 	labels []chartVolumeLabel
 
-	// barsVAO is the VAO with the colored volume bars.
-	barsVAO *gfx.VAO
+	// volBars is the VAO with the colored volume bars.
+	volBars *gfx.VAO
 }
 
 // NewChartVolume creates a new ChartVolume.
@@ -58,7 +58,7 @@ func (ch *ChartVolume) SetStock(st *ModelStock) {
 		makeChartVolumeLabel(ch.maxVolume, .3),
 	}
 
-	ch.barsVAO = chartVolumeBarsVAO(st.DailySessions, ch.maxVolume)
+	ch.volBars = chartVolumeBarsVAO(st.DailySessions, ch.maxVolume)
 	ch.renderable = true
 }
 
@@ -73,7 +73,7 @@ func (ch *ChartVolume) Render(r image.Rectangle) {
 
 	// Render the volume bars.
 	gfx.SetModelMatrixRect(r)
-	ch.barsVAO.Render()
+	ch.volBars.Render()
 }
 
 // RenderLabels renders the Y-axis labels for the volume bars.
@@ -103,8 +103,8 @@ func (ch *ChartVolume) RenderLabels(r image.Rectangle, mousePos image.Point) (ma
 // Close frees the resources backing the ChartVolume.
 func (ch *ChartVolume) Close() {
 	ch.renderable = false
-	if ch.barsVAO != nil {
-		ch.barsVAO.Delete()
+	if ch.volBars != nil {
+		ch.volBars.Delete()
 	}
 }
 

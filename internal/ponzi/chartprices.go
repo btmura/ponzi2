@@ -10,17 +10,11 @@ import (
 
 // ChartPrices shows the candlesticks and price labels for a single stock.
 type ChartPrices struct {
-	renderable bool
-	minPrice   float32
-	maxPrice   float32
-	maxLabel   chartPriceLabel
-	stickLines *gfx.VAO
-	stickRects *gfx.VAO
-}
-
-type chartPriceLabel struct {
-	text string
-	size image.Point
+	renderable   bool
+	priceRange   [2]float32
+	maxLabelSize image.Point
+	stickLines   *gfx.VAO
+	stickRects   *gfx.VAO
 }
 
 // NewChartPrices creates a new ChartPrices.
@@ -39,23 +33,114 @@ func (ch *ChartPrices) SetStock(st *ModelStock) {
 	}
 
 	// Find the min and max price.
-	ch.minPrice = math.MaxFloat32
-	ch.maxPrice = 0
+	ch.priceRange = [2]float32{math.MaxFloat32, 0}
 	for _, s := range st.DailySessions {
-		if ch.minPrice > s.Low {
-			ch.minPrice = s.Low
+		if ch.priceRange[0] > s.Low {
+			ch.priceRange[0] = s.Low
 		}
-		if ch.maxPrice < s.High {
-			ch.maxPrice = s.High
+		if ch.priceRange[1] < s.High {
+			ch.priceRange[1] = s.High
 		}
 	}
 
 	// Create Y-axis label for maximum price for rendering measurements.
-	ch.maxLabel = makeChartPriceLabel(ch.maxPrice)
+	ch.maxLabelSize = makeChartPriceLabel(ch.priceRange[1]).size
 
-	ch.stickLines, ch.stickRects = chartPriceCandlestickVAOs(st.DailySessions, ch.minPrice, ch.maxPrice)
+	ch.stickLines, ch.stickRects = chartPriceCandlestickVAOs(st.DailySessions, ch.priceRange)
 
 	ch.renderable = true
+}
+
+// Render renders the price candlesticks.
+func (ch *ChartPrices) Render(r image.Rectangle) {
+	if !ch.renderable {
+		return
+	}
+
+	labelPaddingY := ch.maxLabelSize.Y / 2
+	y := r.Max.Y - labelPaddingY - ch.maxLabelSize.Y/2
+	dy := ch.maxLabelSize.Y + labelPaddingY*2
+
+	for {
+		{
+			if y < r.Min.Y {
+				break
+			}
+
+			gfx.SetModelMatrixRect(image.Rect(r.Min.X, y, r.Max.X, y))
+			chartGridHorizLine.Render()
+		}
+		y -= dy
+	}
+
+	gfx.SetModelMatrixRect(r)
+	ch.stickLines.Render()
+	ch.stickRects.Render()
+}
+
+// RenderLabels renders the price labels.
+func (ch *ChartPrices) RenderLabels(r image.Rectangle, mousePos image.Point) (maxLabelWidth int) {
+	if !ch.renderable {
+		return
+	}
+
+	labelPaddingY := ch.maxLabelSize.Y / 2
+	pricePerPixel := (ch.priceRange[1] - ch.priceRange[0]) / float32(r.Dy())
+
+	// Start at top and decrement one label with top and bottom padding.
+	pt := r.Max
+	dp := image.Pt(0, labelPaddingY+ch.maxLabelSize.Y+labelPaddingY)
+
+	// Start at top with max price and decrement change in price of a label with padding.
+	v := ch.priceRange[1]
+	dv := pricePerPixel * float32(dp.Y)
+
+	// Offets to the cursor and price value when drawing.
+	dpy := labelPaddingY + ch.maxLabelSize.Y   // Puts point at the baseline of the text.
+	dvy := labelPaddingY + ch.maxLabelSize.Y/2 // Uses value in the middle of the label.
+
+	for {
+		{
+			l := makeChartPriceLabel(v - pricePerPixel*float32(dvy))
+
+			pt := image.Pt(pt.X-l.size.X, pt.Y-dpy)
+			if pt.Y < r.Min.Y {
+				break
+			}
+
+			chartAxisLabelTextRenderer.Render(l.text, pt, white)
+		}
+
+		pt = pt.Sub(dp)
+		v -= dv
+	}
+
+	if mousePos.In(r) {
+		perc := float32(mousePos.Y-r.Min.Y) / float32(r.Dy())
+		v = ch.priceRange[0] + (ch.priceRange[1]-ch.priceRange[0])*perc
+		l := makeChartPriceLabel(v)
+		x := r.Max.X - l.size.X
+		y := r.Min.Y + int(float32(r.Dy())*perc) - l.size.Y/2
+		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
+	}
+
+	return ch.maxLabelSize.X
+}
+
+// Close frees the resources backing the ChartPrices.
+func (ch *ChartPrices) Close() {
+	ch.renderable = false
+	if ch.stickLines != nil {
+		ch.stickLines.Delete()
+	}
+	if ch.stickRects != nil {
+		ch.stickRects.Delete()
+	}
+}
+
+type chartPriceLabel struct {
+	text string
+	size image.Point
 }
 
 func makeChartPriceLabel(v float32) chartPriceLabel {
@@ -66,7 +151,7 @@ func makeChartPriceLabel(v float32) chartPriceLabel {
 	}
 }
 
-func chartPriceCandlestickVAOs(ds []*ModelTradingSession, minPrice, maxPrice float32) (stickLines, stickRects *gfx.VAO) {
+func chartPriceCandlestickVAOs(ds []*ModelTradingSession, priceRange [2]float32) (stickLines, stickRects *gfx.VAO) {
 	// Calculate vertices and indices for the candlesticks.
 	var vertices []float32
 	var colors []float32
@@ -79,7 +164,7 @@ func chartPriceCandlestickVAOs(ds []*ModelTradingSession, minPrice, maxPrice flo
 	rightX := -1.0 + stickWidth*0.9
 
 	calcY := func(value float32) float32 {
-		return 2*(value-minPrice)/(maxPrice-minPrice) - 1
+		return 2*(value-priceRange[0])/(priceRange[1]-priceRange[0]) - 1
 	}
 
 	for i, s := range ds {
@@ -179,100 +264,4 @@ func chartPriceCandlestickVAOs(ds []*ModelTradingSession, minPrice, maxPrice flo
 	)
 
 	return lineVAO, triangleVAO
-}
-
-// Render renders the price candlesticks.
-func (ch *ChartPrices) Render(r image.Rectangle) {
-	if !ch.renderable {
-		return
-	}
-
-	labelPaddingY := ch.maxLabel.size.Y / 2
-	y := r.Max.Y - labelPaddingY - ch.maxLabel.size.Y/2
-	dy := ch.maxLabel.size.Y + labelPaddingY*2
-
-	for {
-		{
-			if y < r.Min.Y {
-				break
-			}
-
-			gfx.SetModelMatrixRect(image.Rect(r.Min.X, y, r.Max.X, y))
-			chartGridHorizLine.Render()
-		}
-		y -= dy
-	}
-
-	gfx.SetModelMatrixRect(r)
-	ch.stickLines.Render()
-	ch.stickRects.Render()
-}
-
-// RenderLabels renders the price labels.
-func (ch *ChartPrices) RenderLabels(r image.Rectangle, mousePos image.Point) (maxLabelWidth int) {
-	if !ch.renderable {
-		return
-	}
-
-	labelPaddingY := ch.maxLabel.size.Y / 2
-	pricePerPixel := (ch.maxPrice - ch.minPrice) / float32(r.Dy())
-
-	// Start at top and decrement one label with top and bottom padding.
-	c := r.Max
-	dc := image.Pt(0, labelPaddingY+ch.maxLabel.size.Y+labelPaddingY)
-
-	// Start at top with max price and decrement change in price of a label with padding.
-	v := ch.maxPrice
-	dv := pricePerPixel * float32(dc.Y)
-
-	// Offets to the cursor and price value when drawing.
-	dcy := labelPaddingY + ch.maxLabel.size.Y   // Puts cursor at the baseline of the text.
-	dvy := labelPaddingY + ch.maxLabel.size.Y/2 // Uses value in the middle of the label.
-
-	for {
-		{
-			c := image.Pt(c.X, c.Y-dcy)
-			if c.Y < r.Min.Y {
-				break
-			}
-
-			v := v - pricePerPixel*float32(dvy)
-			l := makeChartPriceLabel(v)
-			l.render(c)
-		}
-
-		c = c.Sub(dc)
-		v -= dv
-	}
-
-	if mousePos.In(r) {
-		perc := float32(mousePos.Y-r.Min.Y) / float32(r.Dy())
-		v = ch.minPrice + (ch.maxPrice-ch.minPrice)*perc
-		l := makeChartPriceLabel(v)
-		x := r.Max.X
-		y := r.Min.Y + int(float32(r.Dy())*perc) - l.size.Y/2
-		l.render(image.Pt(x, y))
-	}
-
-	return ch.maxLabel.size.X
-}
-
-func (l chartPriceLabel) render(pt image.Point) {
-	pt.X -= l.size.X
-	chartAxisLabelTextRenderer.Render(l.text, pt, white)
-}
-
-// Close frees the resources backing the ChartPrices.
-func (ch *ChartPrices) Close() {
-	ch.renderable = false
-	ch.minPrice = 0
-	ch.maxPrice = 0
-	if ch.stickLines != nil {
-		ch.stickLines.Delete()
-		ch.stickLines = nil
-	}
-	if ch.stickRects != nil {
-		ch.stickRects.Delete()
-		ch.stickRects = nil
-	}
 }

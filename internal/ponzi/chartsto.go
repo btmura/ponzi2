@@ -31,8 +31,8 @@ type ChartStochastics struct {
 	// labels bundle rendering measurements for stochastic labels.
 	labels []chartStochasticLabel
 
-	// stoLinesVAO is the VAO with the colored stochastic lines.
-	stoLinesVAO *gfx.VAO
+	// stoLines is the VAO with the colored stochastic lines.
+	stoLines *gfx.VAO
 }
 
 // NewChartStochastics creates a new ChartStochastics.
@@ -70,7 +70,7 @@ func (ch *ChartStochastics) SetStock(st *ModelStock) {
 		glog.Fatalf("SetStock: unsupported interval: %v", ch.interval)
 	}
 
-	ch.stoLinesVAO = chartStochasticVAO(ss, dColor)
+	ch.stoLines = chartStochasticVAO(ss, dColor)
 	ch.renderable = true
 }
 
@@ -85,7 +85,7 @@ func (ch *ChartStochastics) Render(r image.Rectangle) {
 
 	// Render the stochastic lines.
 	gfx.SetModelMatrixRect(r)
-	ch.stoLinesVAO.Render()
+	ch.stoLines.Render()
 }
 
 // RenderLabels renders the Y-axis labels for the stochastic lines.
@@ -115,8 +115,8 @@ func (ch *ChartStochastics) RenderLabels(r image.Rectangle, mousePos image.Point
 // Close frees the resources backing the ChartStochastics.
 func (ch *ChartStochastics) Close() {
 	ch.renderable = false
-	if ch.stoLinesVAO != nil {
-		ch.stoLinesVAO.Delete()
+	if ch.stoLines != nil {
+		ch.stoLines.Delete()
 	}
 }
 
