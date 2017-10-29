@@ -11,10 +11,13 @@ import (
 // ChartVolume renders the volume bars and labels for a single stock.
 type ChartVolume struct {
 	renderable bool
+	maxVolume  int
+	maxLabel   chartVolumeLabel
 	labels     []chartVolumeLabel
-	volRects   *gfx.VAO
+	barsVAO    *gfx.VAO
 }
 
+// chartVolumeLabel is a right-justified Y-axis label with the volume.
 type chartVolumeLabel struct {
 	percent float32
 	text    string
@@ -37,44 +40,53 @@ func (ch *ChartVolume) SetStock(st *ModelStock) {
 	}
 
 	// Find the maximum volume.
-	var maxVolume int
+	ch.maxVolume = 0
 	for _, s := range st.DailySessions {
-		if maxVolume < s.Volume {
-			maxVolume = s.Volume
+		if ch.maxVolume < s.Volume {
+			ch.maxVolume = s.Volume
 		}
 	}
+
+	// Create Y-axis label for maximum volume for rendering measurements.
+	ch.maxLabel = makeChartVolumeLabel(ch.maxVolume, 1)
 
 	// Create Y-axis labels for key percentages.
-	makeLabel := func(perc float32) chartVolumeLabel {
-		v := int(float32(maxVolume) * perc)
+	ch.labels = append(ch.labels, makeChartVolumeLabel(ch.maxVolume, .7))
+	ch.labels = append(ch.labels, makeChartVolumeLabel(ch.maxVolume, .3))
 
-		var t string
-		switch {
-		case v > 1000000000:
-			t = fmt.Sprintf("%dB", v/1000000000)
-		case v > 1000000:
-			t = fmt.Sprintf("%dM", v/1000000)
-		case v > 1000:
-			t = fmt.Sprintf("%dK", v/1000)
-		default:
-			t = strconv.Itoa(v)
-		}
-
-		return chartVolumeLabel{
-			percent: perc,
-			text:    t,
-			size:    chartAxisLabelTextRenderer.Measure(t),
-		}
-	}
-
-	ch.labels = append(ch.labels, makeLabel(.7))
-	ch.labels = append(ch.labels, makeLabel(.3))
-
-	ch.volRects = createChartVolumeBarsVAO(st.DailySessions, maxVolume)
+	ch.barsVAO = chartVolumeBarsVAO(st.DailySessions, ch.maxVolume)
 	ch.renderable = true
 }
 
-func createChartVolumeBarsVAO(ds []*ModelTradingSession, maxVolume int) *gfx.VAO {
+func makeChartVolumeLabel(maxVolume int, perc float32) chartVolumeLabel {
+	v := int(float32(maxVolume) * perc)
+
+	var t string
+	switch {
+	case v > 1000000000:
+		t = fmt.Sprintf("%dB", v/1000000000)
+	case v > 1000000:
+		t = fmt.Sprintf("%dM", v/1000000)
+	case v > 1000:
+		t = fmt.Sprintf("%dK", v/1000)
+	default:
+		t = strconv.Itoa(v)
+	}
+
+	return chartVolumeLabel{
+		percent: perc,
+		text:    t,
+		size:    chartAxisLabelTextRenderer.Measure(t),
+	}
+}
+
+func (l chartVolumeLabel) render(r image.Rectangle) {
+	x := r.Max.X - l.size.X // Right-justified
+	y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
+	chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
+}
+
+func chartVolumeBarsVAO(ds []*ModelTradingSession, maxVolume int) *gfx.VAO {
 	data := &gfx.VAOVertexData{}
 
 	dx := 2.0 / float32(len(ds)) // (-1 to 1) on X-axis
@@ -149,36 +161,34 @@ func (ch *ChartVolume) Render(r image.Rectangle) {
 	sliceRenderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
 
 	gfx.SetModelMatrixRect(r)
-	ch.volRects.Render()
+	ch.barsVAO.Render()
 }
 
 // RenderLabels renders the Y-axis labels for the volume bars.
-func (ch *ChartVolume) RenderLabels(r image.Rectangle) (maxLabelWidth int) {
+func (ch *ChartVolume) RenderLabels(r image.Rectangle, mousePos image.Point) (maxLabelWidth int) {
 	if !ch.renderable {
 		return
 	}
 
-	var maxWidth int
-	renderLabel := func(l chartVolumeLabel) {
-		x := r.Max.X - l.size.X
-		y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
-		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
-		if maxWidth < l.size.X {
-			maxWidth = l.size.X
-		}
-	}
 	for _, l := range ch.labels {
-		renderLabel(l)
+		l.render(r)
 	}
-	return maxWidth
+
+	if mousePos.In(r) {
+		perc := float32(mousePos.Y-r.Min.Y) / float32(r.Dy())
+		l := makeChartVolumeLabel(ch.maxVolume, perc)
+		l.render(r)
+	}
+
+	return ch.maxLabel.size.X
 }
 
 // Close frees the resources backing the ChartVolume.
 func (ch *ChartVolume) Close() {
 	ch.renderable = false
 	ch.labels = nil
-	if ch.volRects != nil {
-		ch.volRects.Delete()
-		ch.volRects = nil
+	if ch.barsVAO != nil {
+		ch.barsVAO.Delete()
+		ch.barsVAO = nil
 	}
 }

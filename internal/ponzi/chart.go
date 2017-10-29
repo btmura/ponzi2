@@ -153,7 +153,7 @@ func (ch *Chart) Render(vc ViewContext) {
 	wr = wr.Inset(chartPadding)
 
 	maxWidth := ch.prices.RenderLabels(pr)
-	if w := ch.volume.RenderLabels(vr); w > maxWidth {
+	if w := ch.volume.RenderLabels(vr, vc.MousePos); w > maxWidth {
 		maxWidth = w
 	}
 	if w := ch.dailyStochastics.RenderLabels(dr); w > maxWidth {
