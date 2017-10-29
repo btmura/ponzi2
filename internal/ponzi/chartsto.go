@@ -20,18 +20,19 @@ const (
 
 // ChartStochastics renders the stochastic lines and labels for a single stock.
 type ChartStochastics struct {
-	interval   ChartInterval
-	renderable bool
-	maxLabel   chartStochasticLabel
-	labels     []chartStochasticLabel
-	stoLines   *gfx.VAO
-}
+	interval ChartInterval
 
-// chartStochasticLabel is a right-justified Y-axis label with the value.
-type chartStochasticLabel struct {
-	percent float32
-	text    string
-	size    image.Point
+	// renderable is whether the ChartStochastics can be rendered.
+	renderable bool
+
+	// maxLabelWidth is the maximum label width used for rendering measurements.
+	maxLabelWidth int
+
+	// labels bundle rendering measurements for stochastic labels.
+	labels []chartStochasticLabel
+
+	// stoLinesVAO is the VAO with the colored stochastic lines.
+	stoLinesVAO *gfx.VAO
 }
 
 // NewChartStochastics creates a new ChartStochastics.
@@ -50,11 +51,13 @@ func (ch *ChartStochastics) SetStock(st *ModelStock) {
 	}
 
 	// Create Y-axis label for 10% for rendering measurements.
-	ch.maxLabel = makeChartStochasticLabel(1)
+	ch.maxLabelWidth = makeChartStochasticLabel(1).size.X
 
 	// Create Y-axis labels for key percentages.
-	ch.labels = append(ch.labels, makeChartStochasticLabel(.7))
-	ch.labels = append(ch.labels, makeChartStochasticLabel(.3))
+	ch.labels = []chartStochasticLabel{
+		makeChartStochasticLabel(.7),
+		makeChartStochasticLabel(.3),
+	}
 
 	var ss []*ModelTradingSession
 	var dColor [3]float32
@@ -67,8 +70,61 @@ func (ch *ChartStochastics) SetStock(st *ModelStock) {
 		glog.Fatalf("SetStock: unsupported interval: %v", ch.interval)
 	}
 
-	ch.stoLines = chartStochasticVAO(ss, dColor)
+	ch.stoLinesVAO = chartStochasticVAO(ss, dColor)
 	ch.renderable = true
+}
+
+// Render renders the stochastic lines.
+func (ch *ChartStochastics) Render(r image.Rectangle) {
+	if !ch.renderable {
+		return
+	}
+
+	// Render lines for the 30% and 70% levels.
+	sliceRenderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
+
+	// Render the stochastic lines.
+	gfx.SetModelMatrixRect(r)
+	ch.stoLinesVAO.Render()
+}
+
+// RenderLabels renders the Y-axis labels for the stochastic lines.
+func (ch *ChartStochastics) RenderLabels(r image.Rectangle, mousePos image.Point) (maxLabelWidth int) {
+	if !ch.renderable {
+		return
+	}
+
+	render := func(l chartStochasticLabel) {
+		x := r.Max.X - l.size.X
+		y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
+		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
+	}
+
+	for _, l := range ch.labels {
+		render(l)
+	}
+
+	if mousePos.In(r) {
+		perc := float32(mousePos.Y-r.Min.Y) / float32(r.Dy())
+		render(makeChartStochasticLabel(perc))
+	}
+
+	return ch.maxLabelWidth
+}
+
+// Close frees the resources backing the ChartStochastics.
+func (ch *ChartStochastics) Close() {
+	ch.renderable = false
+	if ch.stoLinesVAO != nil {
+		ch.stoLinesVAO.Delete()
+	}
+}
+
+// chartStochasticLabel is a right-justified Y-axis label with the value.
+type chartStochasticLabel struct {
+	percent float32
+	text    string
+	size    image.Point
 }
 
 func makeChartStochasticLabel(perc float32) chartStochasticLabel {
@@ -80,13 +136,7 @@ func makeChartStochasticLabel(perc float32) chartStochasticLabel {
 	}
 }
 
-func (l chartStochasticLabel) render(r image.Rectangle) {
-	x := r.Max.X - l.size.X
-	y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
-	chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
-}
-
-func chartStochasticVAO(ss []*ModelTradingSession, dColor [3]float32) (stoLines *gfx.VAO) {
+func chartStochasticVAO(ss []*ModelTradingSession, dColor [3]float32) *gfx.VAO {
 	data := &gfx.VAOVertexData{}
 	var v uint16 // vertex index
 
@@ -131,45 +181,4 @@ func chartStochasticVAO(ss []*ModelTradingSession, dColor [3]float32) (stoLines 
 	}
 
 	return gfx.NewVAO(gfx.Lines, data)
-}
-
-// Render renders the stochastic lines.
-func (ch *ChartStochastics) Render(r image.Rectangle) {
-	if !ch.renderable {
-		return
-	}
-
-	sliceRenderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
-
-	gfx.SetModelMatrixRect(r)
-	ch.stoLines.Render()
-}
-
-// RenderLabels renders the Y-axis labels for the stochastic lines.
-func (ch *ChartStochastics) RenderLabels(r image.Rectangle, mousePos image.Point) (maxLabelWidth int) {
-	if !ch.renderable {
-		return
-	}
-
-	for _, l := range ch.labels {
-		l.render(r)
-	}
-
-	if mousePos.In(r) {
-		perc := float32(mousePos.Y-r.Min.Y) / float32(r.Dy())
-		l := makeChartStochasticLabel(perc)
-		l.render(r)
-	}
-
-	return ch.maxLabel.size.X
-}
-
-// Close frees the resources backing the ChartStochastics.
-func (ch *ChartStochastics) Close() {
-	ch.renderable = false
-	ch.labels = nil
-	if ch.stoLines != nil {
-		ch.stoLines.Delete()
-		ch.stoLines = nil
-	}
 }
