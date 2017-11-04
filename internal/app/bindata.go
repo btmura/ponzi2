@@ -5,9 +5,10 @@
 // data/refreshButton.png
 // data/removeButton.png
 // data/roundedCornerNWEdges.ply
+// data/roundedCornerNWFaces.ply
 // DO NOT EDIT!
 
-package ponzi
+package app
 
 import (
 	"bytes"
@@ -87,7 +88,7 @@ func addbuttonPng() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "addButton.png", size: 170, mode: os.FileMode(438), modTime: time.Unix(1507506109, 0)}
+	info := bindataFileInfo{name: "addButton.png", size: 170, mode: os.FileMode(438), modTime: time.Unix(1509818038, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -107,7 +108,7 @@ func erroriconPng() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "errorIcon.png", size: 605, mode: os.FileMode(438), modTime: time.Unix(1508701550, 0)}
+	info := bindataFileInfo{name: "errorIcon.png", size: 605, mode: os.FileMode(438), modTime: time.Unix(1509818038, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -127,7 +128,7 @@ func refreshbuttonPng() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "refreshButton.png", size: 687, mode: os.FileMode(438), modTime: time.Unix(1507506722, 0)}
+	info := bindataFileInfo{name: "refreshButton.png", size: 687, mode: os.FileMode(438), modTime: time.Unix(1509818038, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -147,7 +148,7 @@ func removebuttonPng() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "removeButton.png", size: 530, mode: os.FileMode(438), modTime: time.Unix(1507506105, 0)}
+	info := bindataFileInfo{name: "removeButton.png", size: 530, mode: os.FileMode(438), modTime: time.Unix(1509818038, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -167,7 +168,27 @@ func roundedcornernwedgesPly() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "roundedCornerNWEdges.ply", size: 649, mode: os.FileMode(438), modTime: time.Unix(1509817018, 0)}
+	info := bindataFileInfo{name: "roundedCornerNWEdges.ply", size: 649, mode: os.FileMode(438), modTime: time.Unix(1509818038, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _roundedcornernwfacesPly = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x8c\x8e\xbd\x6e\xc2\x30\x14\x85\x77\x3f\xc5\xd9\x68\xa5\x62\xf9\x87\x26\xa1\x63\x91\x3a\x76\xed\x88\x8c\x7d\x53\x2c\x05\x1b\x39\x4e\x21\x3c\x7d\x45\xa8\xa8\x14\x68\x95\x2c\xb9\x3e\xf7\xfb\x74\xee\xbe\xe9\x59\x1d\xd3\xce\x64\x98\xd6\x7a\x0f\xc9\x05\xb3\x71\xb7\xa3\x90\xb1\x4a\x64\x32\x39\x6c\x7a\xbc\x36\x14\x1c\x25\x28\x5e\x56\x78\x68\xbb\x0d\xc4\x23\xe6\x38\x1c\x0e\x7c\x73\x59\xf1\x98\x3e\x9f\xd0\xc6\x2e\x59\x42\xed\x1b\x7a\xc1\x2c\xc5\x2e\x38\x72\xab\x98\x02\xa5\xf7\x8f\x37\x63\xa9\xbd\xf0\x33\x46\x0d\x0d\x25\x5f\x94\x32\x1d\x51\xb0\x7d\x8a\x7b\x4a\xb9\x47\xdd\x44\x93\x71\x1c\x07\xfd\x38\x38\x8d\x83\x70\xe3\x84\x1b\x29\x9c\xae\xcd\xb5\xb1\x84\xc5\x2f\xd0\xf8\x36\xa3\xb3\x5b\x93\xd0\xf9\xeb\x65\x6b\x1f\x9c\xb7\xd4\x32\x0a\x6e\xbd\x25\xe3\x28\x31\xc1\xd5\x52\x55\x4b\x0d\xc1\x4b\x51\x4a\x51\x42\x70\x31\x7c\x77\x06\xf9\x33\x30\xf9\x37\xf3\x8f\x25\x78\x21\x4b\x2d\xcf\x15\x4b\xa5\xab\x6a\x9a\x25\xc7\xc9\x1d\x78\x7e\xaf\x4c\x94\x85\x54\x67\x48\x57\xaa\xa8\xf4\x64\x6d\xbc\x9b\x72\xa4\x86\x80\x84\x62\x1a\x1a\x0a\x72\x78\x2f\x86\xff\x33\x24\x16\xec\x3b\x00\x00\xff\xff\x55\xda\x84\xfb\x9d\x02\x00\x00")
+
+func roundedcornernwfacesPlyBytes() ([]byte, error) {
+	return bindataRead(
+		_roundedcornernwfacesPly,
+		"roundedCornerNWFaces.ply",
+	)
+}
+
+func roundedcornernwfacesPly() (*asset, error) {
+	bytes, err := roundedcornernwfacesPlyBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "roundedCornerNWFaces.ply", size: 669, mode: os.FileMode(438), modTime: time.Unix(1509818038, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -229,6 +250,7 @@ var _bindata = map[string]func() (*asset, error){
 	"refreshButton.png": refreshbuttonPng,
 	"removeButton.png": removebuttonPng,
 	"roundedCornerNWEdges.ply": roundedcornernwedgesPly,
+	"roundedCornerNWFaces.ply": roundedcornernwfacesPly,
 }
 
 // AssetDir returns the file names below a certain
@@ -276,6 +298,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"refreshButton.png": &bintree{refreshbuttonPng, map[string]*bintree{}},
 	"removeButton.png": &bintree{removebuttonPng, map[string]*bintree{}},
 	"roundedCornerNWEdges.ply": &bintree{roundedcornernwedgesPly, map[string]*bintree{}},
+	"roundedCornerNWFaces.ply": &bintree{roundedcornernwfacesPly, map[string]*bintree{}},
 }}
 
 // RestoreAsset restores an asset under the given directory

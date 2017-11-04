@@ -1,4 +1,4 @@
-package ponzi
+package app
 
 import (
 	"io/ioutil"

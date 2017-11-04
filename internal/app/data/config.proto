@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package ponzi;
+package app;
 
 message Config {
     Stock current_stock = 1;
