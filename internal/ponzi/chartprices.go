@@ -118,10 +118,14 @@ func (ch *ChartPrices) RenderLabels(r image.Rectangle, mousePos image.Point) (ma
 	if mousePos.In(r) {
 		perc := float32(mousePos.Y-r.Min.Y) / float32(r.Dy())
 		v = ch.priceRange[0] + (ch.priceRange[1]-ch.priceRange[0])*perc
+
 		l := makeChartPriceLabel(v)
 		x := r.Max.X - l.size.X
 		y := r.Min.Y + int(float32(r.Dy())*perc) - l.size.Y/2
 		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
+
+		r := image.Rect(x, y, r.Max.X, y+l.size.Y).Inset(-chartAxisLabelBubblePadding)
+		renderRoundedRect(r, chartAxisLabelBubbleRounding)
 	}
 
 	return ch.maxLabelSize.X

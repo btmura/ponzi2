@@ -25,6 +25,12 @@ var (
 	chartErrorText   = NewCenteredText(chartSymbolQuoteTextRenderer, "ERROR", orange)
 )
 
+// Constants for rendering a bubble behind an axis-label.
+const (
+	chartAxisLabelBubblePadding  = 4
+	chartAxisLabelBubbleRounding = 6
+)
+
 // Shared variables used by multiple chart components.
 var (
 	chartAxisLabelTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
