@@ -14,25 +14,25 @@ var (
 	vertLine  = gfx.VertColoredLineVAO(white, white)
 )
 
-var roundedCornerNW = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNW.ply")))
+var roundedCornerNWEdges = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNWEdges.ply")))
 
 // renderRoundedRect renders a rounded rectangle using the rectangular bounds.
 func renderRoundedRect(r image.Rectangle, rounding int) {
 	// NORTHWEST Corner
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y-rounding, r.Min.X+rounding, r.Max.Y))
-	roundedCornerNW.Render()
+	roundedCornerNWEdges.Render()
 
 	// NORTHEAST Corner
 	gfx.SetModelMatrixRotatedRect(image.Rect(r.Max.X-rounding, r.Max.Y-rounding, r.Max.X, r.Max.Y), -math.Pi/2)
-	roundedCornerNW.Render()
+	roundedCornerNWEdges.Render()
 
 	// SOUTHEAST Corner
 	gfx.SetModelMatrixRotatedRect(image.Rect(r.Max.X-rounding, r.Min.Y, r.Max.X, r.Min.Y+rounding), -math.Pi)
-	roundedCornerNW.Render()
+	roundedCornerNWEdges.Render()
 
 	// SOUTHWEST Corner
 	gfx.SetModelMatrixRotatedRect(image.Rect(r.Min.X, r.Min.Y, r.Min.X+rounding, r.Min.Y+rounding), -3*math.Pi/2)
-	roundedCornerNW.Render()
+	roundedCornerNWEdges.Render()
 
 	// fudge is how much to extend the borders to close gaps in OpenGL rendering.
 	const fudge = 2
