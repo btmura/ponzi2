@@ -10,11 +10,20 @@ import (
 
 // ChartPrices shows the candlesticks and price labels for a single stock.
 type ChartPrices struct {
-	renderable   bool
-	priceRange   [2]float32
-	maxLabelSize image.Point
-	stickLines   *gfx.VAO
-	stickRects   *gfx.VAO
+	// renderable is whether the ChartPrices can be rendered.
+	renderable bool
+
+	// priceRange represents the inclusive range from min to max price.
+	priceRange [2]float32
+
+	// MaxLabelSize is the maximum label size useful for rendering measurements.
+	MaxLabelSize image.Point
+
+	// stickLines is the VAO with the vertical candlestick lines.
+	stickLines *gfx.VAO
+
+	// stickRects ithe VAO with the candlestick boxes without the lines.
+	stickRects *gfx.VAO
 }
 
 // NewChartPrices creates a new ChartPrices.
@@ -43,8 +52,8 @@ func (ch *ChartPrices) SetStock(st *ModelStock) {
 		}
 	}
 
-	// Create Y-axis label for maximum price for rendering measurements.
-	ch.maxLabelSize = makeChartPriceLabel(ch.priceRange[1]).size
+	// Measure the max label size by creating a label with the max value.
+	ch.MaxLabelSize = makeChartPriceLabel(ch.priceRange[1]).size
 
 	ch.stickLines, ch.stickRects = chartPriceCandlestickVAOs(st.DailySessions, ch.priceRange)
 
@@ -57,9 +66,9 @@ func (ch *ChartPrices) Render(r image.Rectangle) {
 		return
 	}
 
-	labelPaddingY := ch.maxLabelSize.Y / 2
-	y := r.Max.Y - labelPaddingY - ch.maxLabelSize.Y/2
-	dy := ch.maxLabelSize.Y + labelPaddingY*2
+	labelPaddingY := ch.MaxLabelSize.Y / 2
+	y := r.Max.Y - labelPaddingY - ch.MaxLabelSize.Y/2
+	dy := ch.MaxLabelSize.Y + labelPaddingY*2
 
 	for {
 		{
@@ -78,26 +87,26 @@ func (ch *ChartPrices) Render(r image.Rectangle) {
 	ch.stickRects.Render()
 }
 
-// RenderLabels renders the price labels.
-func (ch *ChartPrices) RenderLabels(r image.Rectangle, mousePos image.Point) (maxLabelWidth int) {
+// RenderAxisLabels renders the price labels.
+func (ch *ChartPrices) RenderAxisLabels(r image.Rectangle) {
 	if !ch.renderable {
 		return
 	}
 
-	labelPaddingY := ch.maxLabelSize.Y / 2
+	labelPaddingY := ch.MaxLabelSize.Y / 2
 	pricePerPixel := (ch.priceRange[1] - ch.priceRange[0]) / float32(r.Dy())
 
 	// Start at top and decrement one label with top and bottom padding.
 	pt := r.Max
-	dp := image.Pt(0, labelPaddingY+ch.maxLabelSize.Y+labelPaddingY)
+	dp := image.Pt(0, labelPaddingY+ch.MaxLabelSize.Y+labelPaddingY)
 
 	// Start at top with max price and decrement change in price of a label with padding.
 	v := ch.priceRange[1]
 	dv := pricePerPixel * float32(dp.Y)
 
 	// Offets to the cursor and price value when drawing.
-	dpy := labelPaddingY + ch.maxLabelSize.Y   // Puts point at the baseline of the text.
-	dvy := labelPaddingY + ch.maxLabelSize.Y/2 // Uses value in the middle of the label.
+	dpy := labelPaddingY + ch.MaxLabelSize.Y   // Puts point at the baseline of the text.
+	dvy := labelPaddingY + ch.MaxLabelSize.Y/2 // Uses value in the middle of the label.
 
 	for {
 		{
@@ -114,23 +123,30 @@ func (ch *ChartPrices) RenderLabels(r image.Rectangle, mousePos image.Point) (ma
 		pt = pt.Sub(dp)
 		v -= dv
 	}
+}
 
-	if mousePos.In(r) {
-		perc := float32(mousePos.Y-r.Min.Y) / float32(r.Dy())
-		v = ch.priceRange[0] + (ch.priceRange[1]-ch.priceRange[0])*perc
-
-		l := makeChartPriceLabel(v)
-		x := r.Max.X - l.size.X
-		y := r.Min.Y + int(float32(r.Dy())*perc) - l.size.Y/2
-
-		r := image.Rect(x, y, r.Max.X, y+l.size.Y).Inset(-chartAxisLabelBubblePadding)
-		fillRoundedRect(r, chartAxisLabelBubbleRounding)
-		strokeRoundedRect(r, chartAxisLabelBubbleRounding)
-
-		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
+// RenderCursorLabels renders a label for the value under the mouse cursor.
+func (ch *ChartPrices) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {
+	if !ch.renderable {
+		return
 	}
 
-	return ch.maxLabelSize.X
+	if !mousePos.In(mainRect) {
+		return
+	}
+
+	perc := float32(mousePos.Y-mainRect.Min.Y) / float32(mainRect.Dy())
+	v := ch.priceRange[0] + (ch.priceRange[1]-ch.priceRange[0])*perc
+
+	l := makeChartPriceLabel(v)
+	x := labelRect.Max.X - l.size.X
+	y := labelRect.Min.Y + int(float32(labelRect.Dy())*perc) - l.size.Y/2
+
+	r := image.Rect(x, y, labelRect.Max.X, y+l.size.Y).Inset(-chartAxisLabelBubblePadding)
+	fillRoundedRect(r, chartAxisLabelBubbleRounding)
+	strokeRoundedRect(r, chartAxisLabelBubbleRounding)
+
+	chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
 }
 
 // Close frees the resources backing the ChartPrices.

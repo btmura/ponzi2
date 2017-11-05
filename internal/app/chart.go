@@ -39,8 +39,8 @@ var (
 )
 
 var (
-	chartCrosshairHorizLine = gfx.HorizColoredLineVAO(lightGray, lightGray)
-	chartCrosshairVertLine  = gfx.VertColoredLineVAO(lightGray, lightGray)
+	chartCursorHorizLine = gfx.HorizColoredLineVAO(lightGray, lightGray)
+	chartCursorVertLine  = gfx.VertColoredLineVAO(lightGray, lightGray)
 )
 
 // Chart shows a stock chart for a single stock.
@@ -160,16 +160,21 @@ func (ch *Chart) Render(vc ViewContext) {
 	dr = dr.Inset(chartPadding)
 	wr = wr.Inset(chartPadding)
 
-	maxWidth := ch.prices.RenderLabels(pr, vc.MousePos)
-	if w := ch.volume.RenderLabels(vr, vc.MousePos); w > maxWidth {
-		maxWidth = w
+	maxWidth := ch.prices.MaxLabelSize.X
+	if ch.volume.MaxLabelSize.X > maxWidth {
+		maxWidth = ch.volume.MaxLabelSize.X
 	}
-	if w := ch.dailyStochastics.RenderLabels(dr, vc.MousePos); w > maxWidth {
-		maxWidth = w
+	if ch.dailyStochastics.MaxLabelSize.X > maxWidth {
+		maxWidth = ch.dailyStochastics.MaxLabelSize.X
 	}
-	if w := ch.weeklyStochastics.RenderLabels(wr, vc.MousePos); w > maxWidth {
-		maxWidth = w
+	if ch.weeklyStochastics.MaxLabelSize.X > maxWidth {
+		maxWidth = ch.weeklyStochastics.MaxLabelSize.X
 	}
+
+	plr := image.Rect(pr.Max.X-maxWidth, pr.Min.Y, pr.Max.X, pr.Max.Y)
+	vlr := image.Rect(vr.Max.X-maxWidth, vr.Min.Y, vr.Max.X, vr.Max.Y)
+	dlr := image.Rect(dr.Max.X-maxWidth, dr.Min.Y, dr.Max.X, dr.Max.Y)
+	wlr := image.Rect(wr.Max.X-maxWidth, wr.Min.Y, wr.Max.X, wr.Max.Y)
 
 	pr.Max.X -= maxWidth + chartPadding
 	vr.Max.X -= maxWidth + chartPadding
@@ -187,10 +192,20 @@ func (ch *Chart) Render(vc ViewContext) {
 	ch.dailyStochastics.Render(dr)
 	ch.weeklyStochastics.Render(wr)
 
-	renderCrosshairs(pr, vc.MousePos)
-	renderCrosshairs(vr, vc.MousePos)
-	renderCrosshairs(dr, vc.MousePos)
-	renderCrosshairs(wr, vc.MousePos)
+	renderCursorLines(pr, vc.MousePos)
+	renderCursorLines(vr, vc.MousePos)
+	renderCursorLines(dr, vc.MousePos)
+	renderCursorLines(wr, vc.MousePos)
+
+	ch.prices.RenderAxisLabels(plr)
+	ch.volume.RenderAxisLabels(vlr)
+	ch.dailyStochastics.RenderAxisLabels(dlr)
+	ch.weeklyStochastics.RenderAxisLabels(wlr)
+
+	ch.prices.RenderCursorLabels(pr, plr, vc.MousePos)
+	ch.volume.RenderCursorLabels(vr, vlr, vc.MousePos)
+	ch.dailyStochastics.RenderCursorLabels(dr, dlr, vc.MousePos)
+	ch.weeklyStochastics.RenderCursorLabels(wr, wlr, vc.MousePos)
 }
 
 // SetRefreshButtonClickCallback sets the callback for refresh button clicks.
@@ -231,14 +246,14 @@ func (ch *Chart) Close() {
 	}
 }
 
-func renderCrosshairs(r image.Rectangle, mousePos image.Point) {
+func renderCursorLines(r image.Rectangle, mousePos image.Point) {
 	if mousePos.In(r) {
 		gfx.SetModelMatrixRect(image.Rect(r.Min.X, mousePos.Y, r.Max.X, mousePos.Y))
-		chartCrosshairHorizLine.Render()
+		chartCursorHorizLine.Render()
 	}
 
 	if mousePos.X >= r.Min.X && mousePos.X <= r.Max.X {
 		gfx.SetModelMatrixRect(image.Rect(mousePos.X, r.Min.Y, mousePos.X, r.Max.Y))
-		chartCrosshairVertLine.Render()
+		chartCursorVertLine.Render()
 	}
 }

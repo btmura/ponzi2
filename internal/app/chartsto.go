@@ -25,8 +25,8 @@ type ChartStochastics struct {
 	// renderable is whether the ChartStochastics can be rendered.
 	renderable bool
 
-	// maxLabelWidth is the maximum label width used for rendering measurements.
-	maxLabelWidth int
+	// MaxLabelSize is the maximum label size useful for rendering measurements.
+	MaxLabelSize image.Point
 
 	// labels bundle rendering measurements for stochastic labels.
 	labels []chartStochasticLabel
@@ -50,8 +50,8 @@ func (ch *ChartStochastics) SetStock(st *ModelStock) {
 		return // Stock has no data yet.
 	}
 
-	// Create Y-axis label for 10% for rendering measurements.
-	ch.maxLabelWidth = makeChartStochasticLabel(1).size.X
+	// Measure the max label size by creating a label with the max value.
+	ch.MaxLabelSize = makeChartStochasticLabel(1).size
 
 	// Create Y-axis labels for key percentages.
 	ch.labels = []chartStochasticLabel{
@@ -71,6 +71,7 @@ func (ch *ChartStochastics) SetStock(st *ModelStock) {
 	}
 
 	ch.stoLines = chartStochasticVAO(ss, dColor)
+
 	ch.renderable = true
 }
 
@@ -88,35 +89,39 @@ func (ch *ChartStochastics) Render(r image.Rectangle) {
 	ch.stoLines.Render()
 }
 
-// RenderLabels renders the Y-axis labels for the stochastic lines.
-func (ch *ChartStochastics) RenderLabels(r image.Rectangle, mousePos image.Point) (maxLabelWidth int) {
+// RenderAxisLabels renders the Y-axis labels for the stochastic lines.
+func (ch *ChartStochastics) RenderAxisLabels(r image.Rectangle) {
 	if !ch.renderable {
 		return
 	}
 
-	render := func(l chartStochasticLabel, drawBubble bool) {
-		x := r.Max.X - l.size.X
-		y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
-
-		if drawBubble {
-			r := image.Rect(x, y, r.Max.X, y+l.size.Y).Inset(-chartAxisLabelBubblePadding)
-			fillRoundedRect(r, chartAxisLabelBubbleRounding)
-			strokeRoundedRect(r, chartAxisLabelBubbleRounding)
-		}
-
-		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
-	}
-
 	for _, l := range ch.labels {
-		render(l, false /* no bubble */)
+		tx := r.Max.X - l.size.X
+		ty := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
+		chartAxisLabelTextRenderer.Render(l.text, image.Pt(tx, ty), white)
+	}
+}
+
+// RenderCursorLabels renders a label for the value under the mouse cursor.
+func (ch *ChartStochastics) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {
+	if !ch.renderable {
+		return
 	}
 
-	if mousePos.In(r) {
-		perc := float32(mousePos.Y-r.Min.Y) / float32(r.Dy())
-		render(makeChartStochasticLabel(perc), true /* draw bubble */)
+	if !mousePos.In(mainRect) {
+		return
 	}
 
-	return ch.maxLabelWidth
+	perc := float32(mousePos.Y-mainRect.Min.Y) / float32(mainRect.Dy())
+	l := makeChartStochasticLabel(perc)
+
+	tx := labelRect.Max.X - l.size.X
+	ty := labelRect.Min.Y + int(float32(labelRect.Dy())*l.percent) - l.size.Y/2
+	br := image.Rect(tx, ty, labelRect.Max.X, ty+l.size.Y).Inset(-chartAxisLabelBubblePadding)
+
+	fillRoundedRect(br, chartAxisLabelBubbleRounding)
+	strokeRoundedRect(br, chartAxisLabelBubbleRounding)
+	chartAxisLabelTextRenderer.Render(l.text, image.Pt(tx, ty), white)
 }
 
 // Close frees the resources backing the ChartStochastics.

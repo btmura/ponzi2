@@ -128,14 +128,19 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 		rects[i] = rects[i].Inset(thumbChartPadding)
 	}
 
-	ch.weekLines.Render(rects[1])
-	ch.weekLines.Render(rects[0])
+	dr, wr := rects[1], rects[0]
 
-	ch.dailyStochastics.Render(rects[1])
-	ch.weeklyStochastics.Render(rects[0])
+	ch.weekLines.Render(dr)
+	ch.weekLines.Render(wr)
 
-	renderCrosshairs(rects[1], vc.MousePos)
-	renderCrosshairs(rects[0], vc.MousePos)
+	ch.dailyStochastics.Render(dr)
+	ch.weeklyStochastics.Render(wr)
+
+	renderCursorLines(dr, vc.MousePos)
+	renderCursorLines(wr, vc.MousePos)
+
+	ch.dailyStochastics.RenderCursorLabels(dr, dr, vc.MousePos)
+	ch.weeklyStochastics.RenderCursorLabels(wr, wr, vc.MousePos)
 }
 
 // SetRemoveButtonClickCallback sets the callback for remove button clicks.

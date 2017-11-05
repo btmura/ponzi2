@@ -16,8 +16,8 @@ type ChartVolume struct {
 	// maxVolume is the maximum volume used for rendering measurements.
 	maxVolume int
 
-	// maxLabelWidth is the maximum label width used for rendering measurements.
-	maxLabelWidth int
+	// MaxLabelSize is the maximum label size useful for rendering measurements.
+	MaxLabelSize image.Point
 
 	// labels bundle rendering measurements for volume labels.
 	labels []chartVolumeLabel
@@ -49,8 +49,8 @@ func (ch *ChartVolume) SetStock(st *ModelStock) {
 		}
 	}
 
-	// Create Y-axis label for maximum volume for rendering measurements.
-	ch.maxLabelWidth = makeChartVolumeLabel(ch.maxVolume, 1).size.X
+	// Measure the max label size by creating a label with the max value.
+	ch.MaxLabelSize = makeChartVolumeLabel(ch.maxVolume, 1).size
 
 	// Create Y-axis labels for key percentages.
 	ch.labels = []chartVolumeLabel{
@@ -59,6 +59,7 @@ func (ch *ChartVolume) SetStock(st *ModelStock) {
 	}
 
 	ch.volBars = chartVolumeBarsVAO(st.DailySessions, ch.maxVolume)
+
 	ch.renderable = true
 }
 
@@ -76,35 +77,39 @@ func (ch *ChartVolume) Render(r image.Rectangle) {
 	ch.volBars.Render()
 }
 
-// RenderLabels renders the Y-axis labels for the volume bars.
-func (ch *ChartVolume) RenderLabels(r image.Rectangle, mousePos image.Point) (maxLabelWidth int) {
+// RenderAxisLabels renders the Y-axis labels for the volume bars.
+func (ch *ChartVolume) RenderAxisLabels(r image.Rectangle) {
 	if !ch.renderable {
 		return
 	}
 
-	render := func(l chartVolumeLabel, drawBubble bool) {
+	for _, l := range ch.labels {
 		x := r.Max.X - l.size.X
 		y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
-
-		if drawBubble {
-			r := image.Rect(x, y, r.Max.X, y+l.size.Y).Inset(-chartAxisLabelBubblePadding)
-			fillRoundedRect(r, chartAxisLabelBubbleRounding)
-			strokeRoundedRect(r, chartAxisLabelBubbleRounding)
-		}
-
 		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
 	}
+}
 
-	for _, l := range ch.labels {
-		render(l, false /* no bubble */)
+// RenderCursorLabels renders a label for the value under the mouse cursor.
+func (ch *ChartVolume) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {
+	if !ch.renderable {
+		return
 	}
 
-	if mousePos.In(r) {
-		perc := float32(mousePos.Y-r.Min.Y) / float32(r.Dy())
-		render(makeChartVolumeLabel(ch.maxVolume, perc), true /* draw bubble */)
+	if !mousePos.In(mainRect) {
+		return
 	}
 
-	return ch.maxLabelWidth
+	perc := float32(mousePos.Y-mainRect.Min.Y) / float32(mainRect.Dy())
+	l := makeChartVolumeLabel(ch.maxVolume, perc)
+
+	tx := labelRect.Max.X - l.size.X
+	ty := labelRect.Min.Y + int(float32(labelRect.Dy())*l.percent) - l.size.Y/2
+	br := image.Rect(tx, ty, labelRect.Max.X, ty+l.size.Y).Inset(-chartAxisLabelBubblePadding)
+
+	fillRoundedRect(br, chartAxisLabelBubbleRounding)
+	strokeRoundedRect(br, chartAxisLabelBubbleRounding)
+	chartAxisLabelTextRenderer.Render(l.text, image.Pt(tx, ty), white)
 }
 
 // Close frees the resources backing the ChartVolume.
