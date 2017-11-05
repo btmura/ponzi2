@@ -10,14 +10,14 @@ import (
 
 // White horizontal and vertical line VAOs that can be reused anywhere.
 var (
-	horizLine = gfx.HorizColoredLineVAO(white, white)
-	vertLine  = gfx.VertColoredLineVAO(white, white)
+	horizLine   = gfx.HorizColoredLineVAO(white, white)
+	vertLine    = gfx.VertColoredLineVAO(white, white)
+	squarePlane = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("squarePlane.ply")))
 )
 
 var (
 	roundedCornerNWFaces = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNWFaces.ply")))
 	roundedCornerNWEdges = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNWEdges.ply")))
-	roundedRectFace      = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedRectFace.ply")))
 )
 
 // fillRoundedRect renders a filled rounded rectangle within r.
@@ -27,11 +27,11 @@ func fillRoundedRect(r image.Rectangle, rounding int) {
 
 	// [|]
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X+rounding-fudge, r.Min.Y, r.Max.X-rounding+fudge, r.Max.Y))
-	roundedRectFace.Render()
+	squarePlane.Render()
 
 	// [-]
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Min.Y+rounding, r.Max.X, r.Max.Y-rounding))
-	roundedRectFace.Render()
+	squarePlane.Render()
 
 	// NORTHWEST Corner
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y-rounding, r.Min.X+rounding, r.Max.Y))
