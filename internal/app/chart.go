@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"image"
 
 	"golang.org/x/image/font/gofont/goregular"
 
@@ -37,6 +38,11 @@ var (
 	chartGridHorizLine         = gfx.HorizColoredLineVAO(gray, gray)
 )
 
+var (
+	chartCrosshairHorizLine = gfx.HorizColoredLineVAO(lightGray, lightGray)
+	chartCrosshairVertLine  = gfx.VertColoredLineVAO(lightGray, lightGray)
+)
+
 // Chart shows a stock chart for a single stock.
 type Chart struct {
 	// header renders the header with the symbol, quote, and buttons.
@@ -59,9 +65,6 @@ type Chart struct {
 
 	// weeklyStochastics renders the weekly stochastics.
 	weeklyStochastics *ChartStochastics
-
-	// cursor renders the price below the user's cursor.
-	cursor *ChartCursor
 
 	// loading is true when data for the stock is being retrieved.
 	loading bool
@@ -90,7 +93,6 @@ func NewChart() *Chart {
 		volume:            NewChartVolume(),
 		dailyStochastics:  NewChartStochastics(DailyInterval),
 		weeklyStochastics: NewChartStochastics(WeeklyInterval),
-		cursor:            NewChartCursor(),
 		loading:           true,
 	}
 }
@@ -185,10 +187,10 @@ func (ch *Chart) Render(vc ViewContext) {
 	ch.dailyStochastics.Render(dr)
 	ch.weeklyStochastics.Render(wr)
 
-	ch.cursor.Render(pr, vc.MousePos)
-	ch.cursor.Render(vr, vc.MousePos)
-	ch.cursor.Render(dr, vc.MousePos)
-	ch.cursor.Render(wr, vc.MousePos)
+	renderCrosshairs(pr, vc.MousePos)
+	renderCrosshairs(vr, vc.MousePos)
+	renderCrosshairs(dr, vc.MousePos)
+	renderCrosshairs(wr, vc.MousePos)
 }
 
 // SetRefreshButtonClickCallback sets the callback for refresh button clicks.
@@ -226,5 +228,17 @@ func (ch *Chart) Close() {
 	if ch.weeklyStochastics != nil {
 		ch.weeklyStochastics.Close()
 		ch.weeklyStochastics = nil
+	}
+}
+
+func renderCrosshairs(r image.Rectangle, mousePos image.Point) {
+	if mousePos.In(r) {
+		gfx.SetModelMatrixRect(image.Rect(r.Min.X, mousePos.Y, r.Max.X, mousePos.Y))
+		chartCrosshairHorizLine.Render()
+	}
+
+	if mousePos.X >= r.Min.X && mousePos.X <= r.Max.X {
+		gfx.SetModelMatrixRect(image.Rect(mousePos.X, r.Min.Y, mousePos.X, r.Max.Y))
+		chartCrosshairVertLine.Render()
 	}
 }

@@ -133,6 +133,9 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 
 	ch.dailyStochastics.Render(rects[1])
 	ch.weeklyStochastics.Render(rects[0])
+
+	renderCrosshairs(rects[1], vc.MousePos)
+	renderCrosshairs(rects[0], vc.MousePos)
 }
 
 // SetRemoveButtonClickCallback sets the callback for remove button clicks.
