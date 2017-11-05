@@ -127,7 +127,7 @@ func (ch *Chart) Update() {
 // Render renders the Chart.
 func (ch *Chart) Render(vc ViewContext) {
 	// Render the border around the chart.
-	renderRoundedRect(vc.Bounds, chartRounding)
+	strokeRoundedRect(vc.Bounds, chartRounding)
 
 	// Render the header and the line below it.
 	r, _ := ch.header.Render(vc)

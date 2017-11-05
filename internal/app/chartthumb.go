@@ -98,7 +98,7 @@ func (ch *ChartThumb) Update() {
 // Render renders the ChartThumb.
 func (ch *ChartThumb) Render(vc ViewContext) {
 	// Render the border around the chart.
-	renderRoundedRect(vc.Bounds, thumbChartRounding)
+	strokeRoundedRect(vc.Bounds, thumbChartRounding)
 
 	// Render the header and the line below it.
 	r, clicks := ch.header.Render(vc)

@@ -14,10 +14,32 @@ var (
 	vertLine  = gfx.VertColoredLineVAO(white, white)
 )
 
-var roundedCornerNWEdges = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNWEdges.ply")))
+var (
+	roundedCornerNWFaces = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNWFaces.ply")))
+	roundedCornerNWEdges = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNWEdges.ply")))
+)
 
-// renderRoundedRect renders a rounded rectangle using the rectangular bounds.
-func renderRoundedRect(r image.Rectangle, rounding int) {
+// fillRoundedRect renders a filled rounded rectangle within r.
+func fillRoundedRect(r image.Rectangle, rounding int) {
+	// NORTHWEST Corner
+	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y-rounding, r.Min.X+rounding, r.Max.Y))
+	roundedCornerNWFaces.Render()
+
+	// NORTHEAST Corner
+	gfx.SetModelMatrixRotatedRect(image.Rect(r.Max.X-rounding, r.Max.Y-rounding, r.Max.X, r.Max.Y), -math.Pi/2)
+	roundedCornerNWFaces.Render()
+
+	// SOUTHEAST Corner
+	gfx.SetModelMatrixRotatedRect(image.Rect(r.Max.X-rounding, r.Min.Y, r.Max.X, r.Min.Y+rounding), -math.Pi)
+	roundedCornerNWFaces.Render()
+
+	// SOUTHWEST Corner
+	gfx.SetModelMatrixRotatedRect(image.Rect(r.Min.X, r.Min.Y, r.Min.X+rounding, r.Min.Y+rounding), -3*math.Pi/2)
+	roundedCornerNWFaces.Render()
+}
+
+// strokeRoundedRect renders a stroked rounded rectangle within r.
+func strokeRoundedRect(r image.Rectangle, rounding int) {
 	// NORTHWEST Corner
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y-rounding, r.Min.X+rounding, r.Max.Y))
 	roundedCornerNWEdges.Render()

@@ -97,12 +97,14 @@ func (ch *ChartStochastics) RenderLabels(r image.Rectangle, mousePos image.Point
 	render := func(l chartStochasticLabel, drawBubble bool) {
 		x := r.Max.X - l.size.X
 		y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
-		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
 
 		if drawBubble {
 			r := image.Rect(x, y, r.Max.X, y+l.size.Y).Inset(-chartAxisLabelBubblePadding)
-			renderRoundedRect(r, chartAxisLabelBubbleRounding)
+			fillRoundedRect(r, chartAxisLabelBubbleRounding)
+			strokeRoundedRect(r, chartAxisLabelBubbleRounding)
 		}
+
+		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
 	}
 
 	for _, l := range ch.labels {
