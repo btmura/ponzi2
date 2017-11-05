@@ -149,16 +149,15 @@ func (ch *Chart) Render(vc ViewContext) {
 		}
 	}
 
+	// Render the rest of the dividers.
 	for i := 0; i < 3; i++ {
 		renderHorizDivider(rects[i], horizLine)
 	}
 
 	pr, vr, dr, wr := rects[3], rects[2], rects[1], rects[0]
 
-	pr = pr.Inset(chartPadding)
-	vr = vr.Inset(chartPadding)
-	dr = dr.Inset(chartPadding)
-	wr = wr.Inset(chartPadding)
+	// Create separate rects for each section's labels.
+	plr, vlr, dlr, wlr := pr, vr, dr, wr
 
 	maxWidth := ch.prices.MaxLabelSize.X
 	if ch.volume.MaxLabelSize.X > maxWidth {
@@ -170,16 +169,29 @@ func (ch *Chart) Render(vc ViewContext) {
 	if ch.weeklyStochastics.MaxLabelSize.X > maxWidth {
 		maxWidth = ch.weeklyStochastics.MaxLabelSize.X
 	}
+	maxWidth += chartPadding
 
-	plr := image.Rect(pr.Max.X-maxWidth, pr.Min.Y, pr.Max.X, pr.Max.Y)
-	vlr := image.Rect(vr.Max.X-maxWidth, vr.Min.Y, vr.Max.X, vr.Max.Y)
-	dlr := image.Rect(dr.Max.X-maxWidth, dr.Min.Y, dr.Max.X, dr.Max.Y)
-	wlr := image.Rect(wr.Max.X-maxWidth, wr.Min.Y, wr.Max.X, wr.Max.Y)
+	plr.Min.X = pr.Max.X - maxWidth
+	vlr.Min.X = vr.Max.X - maxWidth
+	dlr.Min.X = dr.Max.X - maxWidth
+	wlr.Min.X = wr.Max.X - maxWidth
 
-	pr.Max.X -= maxWidth + chartPadding
-	vr.Max.X -= maxWidth + chartPadding
-	dr.Max.X -= maxWidth + chartPadding
-	wr.Max.X -= maxWidth + chartPadding
+	// Trim off the label rects from the main rects.
+	pr.Max.X = plr.Min.X
+	vr.Max.X = vlr.Min.X
+	dr.Max.X = dlr.Min.X
+	wr.Max.X = wlr.Min.X
+
+	// Pad all the rects.
+	pr = pr.Inset(chartPadding)
+	vr = vr.Inset(chartPadding)
+	dr = dr.Inset(chartPadding)
+	wr = wr.Inset(chartPadding)
+
+	plr = plr.Inset(chartPadding)
+	vlr = vlr.Inset(chartPadding)
+	dlr = dlr.Inset(chartPadding)
+	wlr = wlr.Inset(chartPadding)
 
 	ch.weekLines.Render(pr)
 	ch.weekLines.Render(vr)
@@ -192,15 +204,15 @@ func (ch *Chart) Render(vc ViewContext) {
 	ch.dailyStochastics.Render(dr)
 	ch.weeklyStochastics.Render(wr)
 
-	renderCursorLines(pr, vc.MousePos)
-	renderCursorLines(vr, vc.MousePos)
-	renderCursorLines(dr, vc.MousePos)
-	renderCursorLines(wr, vc.MousePos)
-
 	ch.prices.RenderAxisLabels(plr)
 	ch.volume.RenderAxisLabels(vlr)
 	ch.dailyStochastics.RenderAxisLabels(dlr)
 	ch.weeklyStochastics.RenderAxisLabels(wlr)
+
+	renderCursorLines(pr, vc.MousePos)
+	renderCursorLines(vr, vc.MousePos)
+	renderCursorLines(dr, vc.MousePos)
+	renderCursorLines(wr, vc.MousePos)
 
 	ch.prices.RenderCursorLabels(pr, plr, vc.MousePos)
 	ch.volume.RenderCursorLabels(vr, vlr, vc.MousePos)
