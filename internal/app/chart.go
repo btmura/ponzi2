@@ -185,17 +185,10 @@ func (ch *Chart) Render(vc ViewContext) {
 	ch.dailyStochastics.Render(dr)
 	ch.weeklyStochastics.Render(wr)
 
-	vc.Bounds = pr
-	ch.cursor.Render(vc)
-
-	vc.Bounds = vr
-	ch.cursor.Render(vc)
-
-	vc.Bounds = dr
-	ch.cursor.Render(vc)
-
-	vc.Bounds = wr
-	ch.cursor.Render(vc)
+	ch.cursor.Render(pr, vc.MousePos)
+	ch.cursor.Render(vr, vc.MousePos)
+	ch.cursor.Render(dr, vc.MousePos)
+	ch.cursor.Render(wr, vc.MousePos)
 }
 
 // SetRefreshButtonClickCallback sets the callback for refresh button clicks.

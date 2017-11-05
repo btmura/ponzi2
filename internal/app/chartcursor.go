@@ -20,14 +20,14 @@ func NewChartCursor() *ChartCursor {
 }
 
 // Render renders the ChartCursor.
-func (ch *ChartCursor) Render(vc ViewContext) {
-	if vc.MousePos.In(vc.Bounds) {
-		gfx.SetModelMatrixRect(image.Rect(vc.Bounds.Min.X, vc.MousePos.Y, vc.Bounds.Max.X, vc.MousePos.Y))
+func (ch *ChartCursor) Render(r image.Rectangle, mousePos image.Point) {
+	if mousePos.In(r) {
+		gfx.SetModelMatrixRect(image.Rect(r.Min.X, mousePos.Y, r.Max.X, mousePos.Y))
 		cursorHorizLine.Render()
 	}
 
-	if vc.MousePos.X >= vc.Bounds.Min.X && vc.MousePos.X <= vc.Bounds.Max.X {
-		gfx.SetModelMatrixRect(image.Rect(vc.MousePos.X, vc.Bounds.Min.Y, vc.MousePos.X, vc.Bounds.Max.Y))
+	if mousePos.X >= r.Min.X && mousePos.X <= r.Max.X {
+		gfx.SetModelMatrixRect(image.Rect(mousePos.X, r.Min.Y, mousePos.X, r.Max.Y))
 		cursorVertLine.Render()
 	}
 }
