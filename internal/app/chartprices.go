@@ -137,16 +137,18 @@ func (ch *ChartPrices) RenderCursorLabels(mainRect, labelRect image.Rectangle, m
 
 	perc := float32(mousePos.Y-mainRect.Min.Y) / float32(mainRect.Dy())
 	v := ch.priceRange[0] + (ch.priceRange[1]-ch.priceRange[0])*perc
-
 	l := makeChartPriceLabel(v)
-	x := labelRect.Max.X - l.size.X
-	y := labelRect.Min.Y + int(float32(labelRect.Dy())*perc) - l.size.Y/2
 
-	r := image.Rect(x, y, labelRect.Max.X, y+l.size.Y).Inset(-chartAxisLabelBubblePadding)
-	fillRoundedRect(r, chartAxisLabelBubbleRounding)
-	strokeRoundedRect(r, chartAxisLabelBubbleRounding)
+	var tp image.Point
+	tp.X = labelRect.Max.X - l.size.X
+	tp.Y = labelRect.Min.Y + int(float32(labelRect.Dy())*perc) - l.size.Y/2
 
-	chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
+	br := image.Rectangle{Min: tp, Max: tp.Add(l.size)}
+	br = br.Inset(-chartAxisLabelBubblePadding)
+
+	fillRoundedRect(br, chartAxisLabelBubbleRounding)
+	strokeRoundedRect(br, chartAxisLabelBubbleRounding)
+	chartAxisLabelTextRenderer.Render(l.text, tp, white)
 }
 
 // Close frees the resources backing the ChartPrices.
