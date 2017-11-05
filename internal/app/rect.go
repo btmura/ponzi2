@@ -17,10 +17,22 @@ var (
 var (
 	roundedCornerNWFaces = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNWFaces.ply")))
 	roundedCornerNWEdges = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNWEdges.ply")))
+	roundedRectFace      = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedRectFace.ply")))
 )
 
 // fillRoundedRect renders a filled rounded rectangle within r.
 func fillRoundedRect(r image.Rectangle, rounding int) {
+	// fudge is how much to extend the borders to close gaps in OpenGL rendering.
+	const fudge = 2
+
+	// [|]
+	gfx.SetModelMatrixRect(image.Rect(r.Min.X+rounding-fudge, r.Min.Y, r.Max.X-rounding+fudge, r.Max.Y))
+	roundedRectFace.Render()
+
+	// [-]
+	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Min.Y+rounding, r.Max.X, r.Max.Y-rounding))
+	roundedRectFace.Render()
+
 	// NORTHWEST Corner
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y-rounding, r.Min.X+rounding, r.Max.Y))
 	roundedCornerNWFaces.Render()

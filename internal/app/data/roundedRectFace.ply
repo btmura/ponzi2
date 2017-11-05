@@ -1,0 +1,22 @@
+ply
+format ascii 1.0
+comment Created by Blender 2.78 (sub 0) - www.blender.org, source file: 'roundedRectFace.blend'
+element vertex 4
+property float x
+property float y
+property float z
+property float nx
+property float ny
+property float nz
+property uchar red
+property uchar green
+property uchar blue
+element face 2
+property list uchar uint vertex_indices
+end_header
+1.000000 -1.000000 0.000000 -0.000000 0.000000 1.000000 184 175 0
+-1.000000 1.000000 0.000000 -0.000000 0.000000 1.000000 242 231 0
+-1.000000 -1.000000 0.000000 -0.000000 0.000000 1.000000 238 227 0
+1.000000 1.000000 0.000000 -0.000000 0.000000 1.000000 244 233 0
+3 0 1 2
+3 0 3 1
