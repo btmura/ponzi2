@@ -20,59 +20,27 @@ var (
 	roundedCornerNWEdges = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNWEdges.ply")))
 )
 
+// gapFudge is how much to extend the borders to close gaps in OpenGL rendering.
+const gapFudge = 2
+
 // fillRoundedRect renders a filled rounded rectangle within r.
 func fillRoundedRect(r image.Rectangle, rounding int) {
-	// fudge is how much to extend the borders to close gaps in OpenGL rendering.
-	const fudge = 2
-
-	// [|]
-	gfx.SetModelMatrixRect(image.Rect(r.Min.X+rounding-fudge, r.Min.Y, r.Max.X-rounding+fudge, r.Max.Y))
+	// [|] Render filled rect from bottom to top but less on the X-Axis.
+	gfx.SetModelMatrixRect(image.Rect(r.Min.X+rounding-gapFudge, r.Min.Y, r.Max.X-rounding+gapFudge, r.Max.Y))
 	squarePlane.Render()
 
-	// [-]
+	// [-] Render filled rect from left to right but less on the Y-Axis.
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Min.Y+rounding, r.Max.X, r.Max.Y-rounding))
 	squarePlane.Render()
 
-	// NORTHWEST Corner
-	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y-rounding, r.Min.X+rounding, r.Max.Y))
-	roundedCornerNWFaces.Render()
-
-	// NORTHEAST Corner
-	gfx.SetModelMatrixRotatedRect(image.Rect(r.Max.X-rounding, r.Max.Y-rounding, r.Max.X, r.Max.Y), -math.Pi/2)
-	roundedCornerNWFaces.Render()
-
-	// SOUTHEAST Corner
-	gfx.SetModelMatrixRotatedRect(image.Rect(r.Max.X-rounding, r.Min.Y, r.Max.X, r.Min.Y+rounding), -math.Pi)
-	roundedCornerNWFaces.Render()
-
-	// SOUTHWEST Corner
-	gfx.SetModelMatrixRotatedRect(image.Rect(r.Min.X, r.Min.Y, r.Min.X+rounding, r.Min.Y+rounding), -3*math.Pi/2)
-	roundedCornerNWFaces.Render()
+	// Render rounded corners.
+	renderRoundedRectCorners(r, roundedCornerNWFaces, rounding)
 }
 
 // strokeRoundedRect renders a stroked rounded rectangle within r.
 func strokeRoundedRect(r image.Rectangle, rounding int) {
-	// NORTHWEST Corner
-	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y-rounding, r.Min.X+rounding, r.Max.Y))
-	roundedCornerNWEdges.Render()
-
-	// NORTHEAST Corner
-	gfx.SetModelMatrixRotatedRect(image.Rect(r.Max.X-rounding, r.Max.Y-rounding, r.Max.X, r.Max.Y), -math.Pi/2)
-	roundedCornerNWEdges.Render()
-
-	// SOUTHEAST Corner
-	gfx.SetModelMatrixRotatedRect(image.Rect(r.Max.X-rounding, r.Min.Y, r.Max.X, r.Min.Y+rounding), -math.Pi)
-	roundedCornerNWEdges.Render()
-
-	// SOUTHWEST Corner
-	gfx.SetModelMatrixRotatedRect(image.Rect(r.Min.X, r.Min.Y, r.Min.X+rounding, r.Min.Y+rounding), -3*math.Pi/2)
-	roundedCornerNWEdges.Render()
-
-	// fudge is how much to extend the borders to close gaps in OpenGL rendering.
-	const fudge = 2
-
 	// TOP border
-	hMinX, hMaxX := r.Min.X+rounding-fudge, r.Max.X-rounding+fudge
+	hMinX, hMaxX := r.Min.X+rounding-gapFudge, r.Max.X-rounding+gapFudge
 	gfx.SetModelMatrixRect(image.Rect(hMinX, r.Max.Y, hMaxX, r.Max.Y))
 	horizLine.Render()
 
@@ -81,13 +49,36 @@ func strokeRoundedRect(r image.Rectangle, rounding int) {
 	horizLine.Render()
 
 	// LEFT border
-	vMinX, vMaxX := r.Min.Y+rounding-fudge, r.Max.Y-rounding+fudge
+	vMinX, vMaxX := r.Min.Y+rounding-gapFudge, r.Max.Y-rounding+gapFudge
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, vMinX, r.Min.X, vMaxX))
 	vertLine.Render()
 
 	// RIGHT border
 	gfx.SetModelMatrixRect(image.Rect(r.Max.X, vMinX, r.Max.X, vMaxX))
 	vertLine.Render()
+
+	// Render rounded corners.
+	renderRoundedRectCorners(r, roundedCornerNWEdges, rounding)
+}
+
+// renderRoundedRectCorners is a helper function for fillRoundedRect
+// and strokeRoundedRect that renders a VAO at r's four corners.
+func renderRoundedRectCorners(r image.Rectangle, nwCornerVAO *gfx.VAO, rounding int) {
+	// NORTHWEST Corner
+	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y-rounding, r.Min.X+rounding, r.Max.Y))
+	nwCornerVAO.Render()
+
+	// NORTHEAST Corner
+	gfx.SetModelMatrixRotatedRect(image.Rect(r.Max.X-rounding, r.Max.Y-rounding, r.Max.X, r.Max.Y), -math.Pi/2)
+	nwCornerVAO.Render()
+
+	// SOUTHEAST Corner
+	gfx.SetModelMatrixRotatedRect(image.Rect(r.Max.X-rounding, r.Min.Y, r.Max.X, r.Min.Y+rounding), -math.Pi)
+	nwCornerVAO.Render()
+
+	// SOUTHWEST Corner
+	gfx.SetModelMatrixRotatedRect(image.Rect(r.Min.X, r.Min.Y, r.Min.X+rounding, r.Min.Y+rounding), -3*math.Pi/2)
+	nwCornerVAO.Render()
 }
 
 // sliceRenderHorizDividers horizontally cuts a rectangle from the bottom at
