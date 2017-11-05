@@ -3,7 +3,7 @@ package app
 import (
 	"bytes"
 	"image"
-	math "math"
+	"math"
 
 	"github.com/btmura/ponzi2/internal/gfx"
 )
@@ -15,6 +15,7 @@ var (
 	squarePlane = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("squarePlane.ply")))
 )
 
+// Rounded corner VAOs used to render the rounded rectangle corners.
 var (
 	roundedCornerNWFaces = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNWFaces.ply")))
 	roundedCornerNWEdges = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNWEdges.ply")))
@@ -25,44 +26,46 @@ const gapFudge = 2
 
 // fillRoundedRect renders a filled rounded rectangle within r.
 func fillRoundedRect(r image.Rectangle, rounding int) {
-	// [|] Render filled rect from bottom to top but less on the X-Axis.
+	// [+] Render 2 overlapping rects to fill in everything except the corners.
+
+	// 1. [|] Render filled rect from bottom to top but less on the X-Axis.
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X+rounding-gapFudge, r.Min.Y, r.Max.X-rounding+gapFudge, r.Max.Y))
 	squarePlane.Render()
 
-	// [-] Render filled rect from left to right but less on the Y-Axis.
+	// 2. [-] Render filled rect from left to right but less on the Y-Axis.
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Min.Y+rounding, r.Max.X, r.Max.Y-rounding))
 	squarePlane.Render()
 
-	// Render rounded corners.
+	// Render the four corners.
 	renderRoundedRectCorners(r, roundedCornerNWFaces, rounding)
 }
 
 // strokeRoundedRect renders a stroked rounded rectangle within r.
 func strokeRoundedRect(r image.Rectangle, rounding int) {
-	// TOP border
+	// TOP Border
 	hMinX, hMaxX := r.Min.X+rounding-gapFudge, r.Max.X-rounding+gapFudge
 	gfx.SetModelMatrixRect(image.Rect(hMinX, r.Max.Y, hMaxX, r.Max.Y))
 	horizLine.Render()
 
-	// BOTTOM border
+	// BOTTOM Border
 	gfx.SetModelMatrixRect(image.Rect(hMinX, r.Min.Y, hMaxX, r.Min.Y))
 	horizLine.Render()
 
-	// LEFT border
+	// LEFT Border
 	vMinX, vMaxX := r.Min.Y+rounding-gapFudge, r.Max.Y-rounding+gapFudge
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, vMinX, r.Min.X, vMaxX))
 	vertLine.Render()
 
-	// RIGHT border
+	// RIGHT Border
 	gfx.SetModelMatrixRect(image.Rect(r.Max.X, vMinX, r.Max.X, vMaxX))
 	vertLine.Render()
 
-	// Render rounded corners.
+	// Render the four corners.
 	renderRoundedRectCorners(r, roundedCornerNWEdges, rounding)
 }
 
 // renderRoundedRectCorners is a helper function for fillRoundedRect
-// and strokeRoundedRect that renders a VAO at r's four corners.
+// and strokeRoundedRect that renders a VAO at r's corners.
 func renderRoundedRectCorners(r image.Rectangle, nwCornerVAO *gfx.VAO, rounding int) {
 	// NORTHWEST Corner
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y-rounding, r.Min.X+rounding, r.Max.Y))
