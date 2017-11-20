@@ -157,19 +157,15 @@ func (ch *ChartThumb) SetThumbClickCallback(cb func()) {
 func (ch *ChartThumb) Close() {
 	if ch.header != nil {
 		ch.header.Close()
-		ch.header = nil
 	}
 	if ch.weekLines != nil {
 		ch.weekLines.Close()
-		ch.weekLines = nil
 	}
 	if ch.dailyStochastics != nil {
 		ch.dailyStochastics.Close()
-		ch.dailyStochastics = nil
 	}
 	if ch.weeklyStochastics != nil {
 		ch.weeklyStochastics.Close()
-		ch.weeklyStochastics = nil
 	}
 	ch.thumbClickCallback = nil
 }

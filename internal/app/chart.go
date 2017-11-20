@@ -234,27 +234,21 @@ func (ch *Chart) SetAddButtonClickCallback(cb func()) {
 func (ch *Chart) Close() {
 	if ch.header != nil {
 		ch.header.Close()
-		ch.header = nil
 	}
 	if ch.weekLines != nil {
 		ch.weekLines.Close()
-		ch.weekLines = nil
 	}
 	if ch.prices != nil {
 		ch.prices.Close()
-		ch.prices = nil
 	}
 	if ch.volume != nil {
 		ch.volume.Close()
-		ch.volume = nil
 	}
 	if ch.dailyStochastics != nil {
 		ch.dailyStochastics.Close()
-		ch.dailyStochastics = nil
 	}
 	if ch.weeklyStochastics != nil {
 		ch.weeklyStochastics.Close()
-		ch.weeklyStochastics = nil
 	}
 }
 

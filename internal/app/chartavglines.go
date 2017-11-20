@@ -117,6 +117,5 @@ func (ch *ChartAvgLines) Close() {
 	ch.renderable = false
 	if ch.lines != nil {
 		ch.lines.Delete()
-		ch.lines = nil
 	}
 }

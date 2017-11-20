@@ -82,6 +82,5 @@ func (ch *ChartWeekLines) Close() {
 	ch.renderable = false
 	if ch.lines != nil {
 		ch.lines.Delete()
-		ch.lines = nil
 	}
 }
