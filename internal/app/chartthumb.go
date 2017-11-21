@@ -102,8 +102,7 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 
 	// Render the header and the line below it.
 	r, clicks := ch.header.Render(vc)
-	rects := sliceRect(r, 0.5, 0.5)
-	renderHorizDivider(rects[1], horizLine)
+	renderHorizDivider(r, horizLine)
 
 	if !clicks.HasClicks() && vc.LeftClickInBounds() {
 		vc.ScheduleCallback(ch.thumbClickCallback)
@@ -122,6 +121,7 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 		}
 	}
 
+	rects := sliceRect(r, 0.5, 0.5)
 	renderHorizDivider(rects[0], horizLine)
 
 	for i := range rects {

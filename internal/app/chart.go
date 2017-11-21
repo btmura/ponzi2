@@ -133,8 +133,7 @@ func (ch *Chart) Render(vc ViewContext) {
 
 	// Render the header and the line below it.
 	r, _ := ch.header.Render(vc)
-	rects := sliceRect(r, 0.13, 0.13, 0.13, 0.61)
-	renderHorizDivider(rects[3], horizLine)
+	renderHorizDivider(r, horizLine)
 
 	// Only show messages if no prior data to show.
 	if !ch.hasStockUpdated {
@@ -150,6 +149,7 @@ func (ch *Chart) Render(vc ViewContext) {
 	}
 
 	// Render the rest of the dividers.
+	rects := sliceRect(r, 0.13, 0.13, 0.13, 0.61)
 	for i := 0; i < 3; i++ {
 		renderHorizDivider(rects[i], horizLine)
 	}
