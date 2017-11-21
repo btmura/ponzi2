@@ -82,7 +82,7 @@ func (ch *ChartStochastics) Render(r image.Rectangle) {
 	}
 
 	// Render lines for the 30% and 70% levels.
-	sliceRenderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
+	renderSlicedRectDividers(r, chartGridHorizLine, 0.3, 0.4)
 
 	// Render the stochastic lines.
 	gfx.SetModelMatrixRect(r)
@@ -123,7 +123,7 @@ func (ch *ChartStochastics) RenderCursorLabels(mainRect, labelRect image.Rectang
 	br = br.Inset(-chartAxisLabelBubblePadding)
 
 	if mousePos.In(br) {
-		tp.X = labelRect.Min.X		
+		tp.X = labelRect.Min.X
 		br = image.Rectangle{Min: tp, Max: tp.Add(l.size)}
 		br = br.Inset(-chartAxisLabelBubblePadding)
 	}

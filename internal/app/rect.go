@@ -84,37 +84,37 @@ func renderRoundedRectCorners(r image.Rectangle, nwCornerVAO *gfx.VAO, rounding 
 	nwCornerVAO.Render()
 }
 
-// sliceRenderHorizDividers horizontally cuts a rectangle from the bottom at
+// renderSlicedRectDividers horizontally cuts a rectangle from the bottom at
 // the percentage amounts and draws the VAO at those percentages.
-func sliceRenderHorizDividers(r image.Rectangle, dividerVAO *gfx.VAO, percentages ...float32) []image.Rectangle {
+func renderSlicedRectDividers(r image.Rectangle, dividerVAO *gfx.VAO, percentages ...float32) {
 	rects := sliceRect(r, percentages...)
-	for _, r := range rects {
-		renderHorizDivider(r, dividerVAO)
+	for _, r := range rects[:len(rects)-1] {
+		renderRectTopDivider(r, dividerVAO)
 	}
-	return rects
 }
 
-// renderHorizDivider renders a VAO in a single pixel horizontal
-// rectangle at the top edge of the rectangle.
-func renderHorizDivider(r image.Rectangle, dividerVAO *gfx.VAO) {
+// renderRectTopDivider renders a VAO in a single pixel horizontal rectangle
+// at the top edge of the rectangle.
+func renderRectTopDivider(r image.Rectangle, dividerVAO *gfx.VAO) {
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
 	dividerVAO.Render()
 }
 
 // sliceRect horizontally cuts a rectangle from the bottom at the percentage
-// amounts. It returns n rectangles given n percentages.
+// amounts. It returns n+1 rectangles given n percentages.
 func sliceRect(r image.Rectangle, percentages ...float32) []image.Rectangle {
 	var rs []image.Rectangle
 	addRect := func(minY, maxY int) {
 		rs = append(rs, image.Rect(r.Min.X, minY, r.Max.X, maxY))
 	}
 
-	cy := r.Min.Y // Start at the bottom and cut horizontally up.
+	y := r.Min.Y // Start at the bottom and cut horizontally up.
 	for _, p := range percentages {
 		dy := int(float32(r.Dy()) * p)
-		addRect(cy, cy+dy)
-		cy += dy // Bump upwards.
+		addRect(y, y+dy)
+		y += dy // Bump upwards.
 	}
+	addRect(y, r.Max.Y)
 
 	return rs
 }

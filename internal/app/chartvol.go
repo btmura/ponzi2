@@ -70,7 +70,7 @@ func (ch *ChartVolume) Render(r image.Rectangle) {
 	}
 
 	// Render lines for the 30% and 70% levels.
-	sliceRenderHorizDividers(r, chartGridHorizLine, 0.3, 0.4)
+	renderSlicedRectDividers(r, chartGridHorizLine, 0.3, 0.4)
 
 	// Render the volume bars.
 	gfx.SetModelMatrixRect(r)
