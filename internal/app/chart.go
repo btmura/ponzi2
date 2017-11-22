@@ -66,6 +66,9 @@ type Chart struct {
 	// weeklyStochastics renders the weekly stochastics.
 	weeklyStochastics *ChartStochastics
 
+	// timeLabels renders the time labels.
+	timeLabels *ChartTimeLabels
+
 	// loading is true when data for the stock is being retrieved.
 	loading bool
 
@@ -93,6 +96,7 @@ func NewChart() *Chart {
 		volume:            NewChartVolume(),
 		dailyStochastics:  NewChartStochastics(DailyInterval),
 		weeklyStochastics: NewChartStochastics(WeeklyInterval),
+		timeLabels:        NewChartTimeLabels(),
 		loading:           true,
 	}
 }
@@ -119,6 +123,7 @@ func (ch *Chart) SetStock(st *ModelStock) {
 	ch.volume.SetStock(st)
 	ch.dailyStochastics.SetStock(st)
 	ch.weeklyStochastics.SetStock(st)
+	ch.timeLabels.SetStock(st)
 }
 
 // Update updates the Chart.
@@ -149,25 +154,25 @@ func (ch *Chart) Render(vc ViewContext) {
 	}
 
 	// Render the rest of the dividers.
-	rects := sliceRect(r, 0.13, 0.13, 0.13)
-	for i := 0; i < 3; i++ {
+	rects := sliceRect(r, 0.05 /* TODO(btmura): calculate percentage */, 0.13, 0.13, 0.13)
+	for i := 0; i < len(rects)-1; i++ {
 		renderRectTopDivider(rects[i], horizLine)
 	}
 
-	pr, vr, dr, wr := rects[3], rects[2], rects[1], rects[0]
+	pr, vr, dr, wr, tr := rects[4], rects[3], rects[2], rects[1], rects[0]
 
 	// Create separate rects for each section's labels.
 	plr, vlr, dlr, wlr := pr, vr, dr, wr
 
 	maxWidth := ch.prices.MaxLabelSize.X
-	if ch.volume.MaxLabelSize.X > maxWidth {
-		maxWidth = ch.volume.MaxLabelSize.X
+	if w := ch.volume.MaxLabelSize.X; w > maxWidth {
+		maxWidth = w
 	}
-	if ch.dailyStochastics.MaxLabelSize.X > maxWidth {
-		maxWidth = ch.dailyStochastics.MaxLabelSize.X
+	if w := ch.dailyStochastics.MaxLabelSize.X; w > maxWidth {
+		maxWidth = w
 	}
-	if ch.weeklyStochastics.MaxLabelSize.X > maxWidth {
-		maxWidth = ch.weeklyStochastics.MaxLabelSize.X
+	if w := ch.weeklyStochastics.MaxLabelSize.X; w > maxWidth {
+		maxWidth = w
 	}
 	maxWidth += chartPadding
 
@@ -181,12 +186,14 @@ func (ch *Chart) Render(vc ViewContext) {
 	vr.Max.X = vlr.Min.X
 	dr.Max.X = dlr.Min.X
 	wr.Max.X = wlr.Min.X
+	tr.Max.X = wlr.Min.X // Use other rect's min.
 
 	// Pad all the rects.
 	pr = pr.Inset(chartPadding)
 	vr = vr.Inset(chartPadding)
 	dr = dr.Inset(chartPadding)
 	wr = wr.Inset(chartPadding)
+	tr = tr.Inset(chartPadding)
 
 	plr = plr.Inset(chartPadding)
 	vlr = vlr.Inset(chartPadding)
@@ -203,6 +210,7 @@ func (ch *Chart) Render(vc ViewContext) {
 	ch.volume.Render(vr)
 	ch.dailyStochastics.Render(dr)
 	ch.weeklyStochastics.Render(wr)
+	ch.timeLabels.Render(tr)
 
 	ch.prices.RenderAxisLabels(plr)
 	ch.volume.RenderAxisLabels(vlr)
@@ -249,6 +257,9 @@ func (ch *Chart) Close() {
 	}
 	if ch.weeklyStochastics != nil {
 		ch.weeklyStochastics.Close()
+	}
+	if ch.timeLabels != nil {
+		ch.timeLabels.Close()
 	}
 }
 

@@ -96,9 +96,9 @@ func (ch *ChartStochastics) RenderAxisLabels(r image.Rectangle) {
 	}
 
 	for _, l := range ch.labels {
-		tx := r.Max.X - l.size.X
-		ty := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
-		chartAxisLabelTextRenderer.Render(l.text, image.Pt(tx, ty), white)
+		x := r.Max.X - l.size.X
+		y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
+		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
 	}
 }
 
