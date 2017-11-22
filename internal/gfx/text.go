@@ -16,9 +16,14 @@ import (
 // A TextRenderer measures and renders text.
 // It is designed to render single lines of [A-Z0-9] characters.
 type TextRenderer struct {
-	face            font.Face              // Face to render text with.
-	metrics         font.Metrics           // Custom metrics to ease vertical alignment.
-	runeRendererMap map[rune]*runeRenderer // Map from rune to runeRenderer.
+	// Face is used to render the text with.
+	face font.Face
+
+	// Metrics are measurements used to ease vertical alignment.
+	metrics font.Metrics
+
+	// runeRenererMap caches rune to runeRenderer.
+	runeRendererMap map[rune]*runeRenderer
 }
 
 // TextColor is a RGB color of 3 floats from 0.0 to 1.0.
