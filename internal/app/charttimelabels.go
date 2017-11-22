@@ -2,6 +2,7 @@ package app
 
 import (
 	"image"
+	"math"
 )
 
 // ChartTimeLabels renders the time labels for a single stock.
@@ -10,6 +11,8 @@ type ChartTimeLabels struct {
 	renderable bool
 
 	labels []chartTimeLabel
+
+	sessions []*ModelTradingSession
 }
 
 // NewChartTimeLabels creates a new ChartTimeLabels.
@@ -28,6 +31,7 @@ func (ch *ChartTimeLabels) SetStock(st *ModelStock) {
 	}
 
 	ch.labels = chartTimeLabels(st.DailySessions)
+	ch.sessions = st.DailySessions
 	ch.renderable = true
 }
 
@@ -42,6 +46,34 @@ func (ch *ChartTimeLabels) Render(r image.Rectangle) {
 		y := r.Max.Y - l.size.Y
 		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
 	}
+}
+
+// RenderCursorLabels renders a label for the value under the mouse cursor.
+// TODO(btmura): use similar signature as other render cursor label functions
+func (ch *ChartTimeLabels) RenderCursorLabels(r image.Rectangle, mousePos image.Point) {
+	if !ch.renderable {
+		return
+	}
+
+	if mousePos.X < r.Min.X || mousePos.X > r.Max.X {
+		return
+	}
+
+	perc := float64(mousePos.X-r.Min.X) / float64(r.Dx())
+	i := int(math.Floor(float64(len(ch.sessions))*perc + 0.5))
+	if i >= len(ch.sessions) {
+		i = len(ch.sessions) - 1
+	}
+
+	// TODO(btmura): save slice of dates rather than entire session
+	text := ch.sessions[i].Date.Format("1/2/2006")
+
+	// TODO(btmura): center text vertically
+	// TODO(btmura): draw bubble around text
+	s := chartAxisLabelTextRenderer.Measure(text)
+	x := mousePos.X - s.X/2
+	y := r.Max.Y - s.Y/2
+	chartAxisLabelTextRenderer.Render(text, image.Pt(x, y), white)
 }
 
 // Close frees the resources backing the ChartTimeLabels.

@@ -226,6 +226,7 @@ func (ch *Chart) Render(vc ViewContext) {
 	ch.volume.RenderCursorLabels(vr, vlr, vc.MousePos)
 	ch.dailyStochastics.RenderCursorLabels(dr, dlr, vc.MousePos)
 	ch.weeklyStochastics.RenderCursorLabels(wr, wlr, vc.MousePos)
+	ch.timeLabels.RenderCursorLabels(tr, vc.MousePos)
 }
 
 // SetRefreshButtonClickCallback sets the callback for refresh button clicks.
