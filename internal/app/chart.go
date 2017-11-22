@@ -153,17 +153,21 @@ func (ch *Chart) Render(vc ViewContext) {
 		}
 	}
 
-	// Render the rest of the dividers. 
-	rects := sliceRect(r, 0.05 /* TODO(btmura): calculate percentage */, 0.13, 0.13, 0.13)
+	// Calculate percentage needed for the time labels.
+	tperc := float32(ch.timeLabels.MaxLabelSize.Y+chartPadding*2) / float32(r.Dy())
+
+	// Render the dividers between the sections.
+	rects := sliceRect(r, tperc, 0.13, 0.13, 0.13)
 	for i := 0; i < len(rects)-1; i++ {
 		renderRectTopDivider(rects[i], horizLine)
 	}
 
 	pr, vr, dr, wr, tr := rects[4], rects[3], rects[2], rects[1], rects[0]
 
-	// Create separate rects for each section's labels.
-	plr, vlr, dlr, wlr, tlr := pr, vr, dr, wr, tr
+	// Create separate rects for each section's labels shown on the right.
+	plr, vlr, dlr, wlr := pr, vr, dr, wr
 
+	// Figure out width to trim off on the right of each rect for the labels.
 	maxWidth := ch.prices.MaxLabelSize.X
 	if w := ch.volume.MaxLabelSize.X; w > maxWidth {
 		maxWidth = w
@@ -176,6 +180,7 @@ func (ch *Chart) Render(vc ViewContext) {
 	}
 	maxWidth += chartPadding
 
+	// Set left side of label rects.
 	plr.Min.X = pr.Max.X - maxWidth
 	vlr.Min.X = vr.Max.X - maxWidth
 	dlr.Min.X = dr.Max.X - maxWidth
@@ -186,6 +191,10 @@ func (ch *Chart) Render(vc ViewContext) {
 	vr.Max.X = vlr.Min.X
 	dr.Max.X = dlr.Min.X
 	wr.Max.X = wlr.Min.X
+
+	// Time labels and its cursors labels overlap and use the same rect.
+	tr.Max.X = wlr.Min.X
+	tlr := tr
 
 	// Pad all the rects.
 	pr = pr.Inset(chartPadding)
