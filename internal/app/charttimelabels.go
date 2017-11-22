@@ -3,6 +3,7 @@ package app
 import (
 	"image"
 	"math"
+	"time"
 )
 
 // ChartTimeLabels renders the time labels for a single stock.
@@ -12,7 +13,7 @@ type ChartTimeLabels struct {
 
 	labels []chartTimeLabel
 
-	sessions []*ModelTradingSession
+	dates []time.Time
 }
 
 // NewChartTimeLabels creates a new ChartTimeLabels.
@@ -31,7 +32,12 @@ func (ch *ChartTimeLabels) SetStock(st *ModelStock) {
 	}
 
 	ch.labels = chartTimeLabels(st.DailySessions)
-	ch.sessions = st.DailySessions
+
+	ch.dates = nil
+	for _, s := range st.DailySessions {
+		ch.dates = append(ch.dates, s.Date)
+	}
+
 	ch.renderable = true
 }
 
@@ -49,31 +55,40 @@ func (ch *ChartTimeLabels) Render(r image.Rectangle) {
 }
 
 // RenderCursorLabels renders a label for the value under the mouse cursor.
-// TODO(btmura): use similar signature as other render cursor label functions
-func (ch *ChartTimeLabels) RenderCursorLabels(r image.Rectangle, mousePos image.Point) {
+func (ch *ChartTimeLabels) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {
 	if !ch.renderable {
 		return
 	}
 
-	if mousePos.X < r.Min.X || mousePos.X > r.Max.X {
+	if mousePos.X < mainRect.Min.X || mousePos.X > mainRect.Max.X {
 		return
 	}
 
-	perc := float64(mousePos.X-r.Min.X) / float64(r.Dx())
-	i := int(math.Floor(float64(len(ch.sessions))*perc + 0.5))
-	if i >= len(ch.sessions) {
-		i = len(ch.sessions) - 1
+	l := chartTimeLabel{
+		percent: float32(mousePos.X-mainRect.Min.X) / float32(mainRect.Dx()),
 	}
 
-	// TODO(btmura): save slice of dates rather than entire session
-	text := ch.sessions[i].Date.Format("1/2/2006")
+	i := int(math.Floor(float64(len(ch.dates))*float64(l.percent) + 0.5))
+	if i >= len(ch.dates) {
+		i = len(ch.dates) - 1
+	}
+	l.text = ch.dates[i].Format("1/2/06")
+	l.size = chartAxisLabelTextRenderer.Measure(l.text)
 
-	// TODO(btmura): center text vertically
-	// TODO(btmura): draw bubble around text
-	s := chartAxisLabelTextRenderer.Measure(text)
-	x := mousePos.X - s.X/2
-	y := r.Max.Y - s.Y/2
-	chartAxisLabelTextRenderer.Render(text, image.Pt(x, y), white)
+	tp := image.Point{
+		X: mousePos.X - l.size.X/2,
+		Y: labelRect.Min.Y + labelRect.Dy()/2 - l.size.Y/2,
+	}
+
+	br := image.Rectangle{
+		Min: tp,
+		Max: tp.Add(l.size),
+	}
+	br = br.Inset(-chartAxisLabelBubblePadding)
+
+	fillRoundedRect(br, chartAxisLabelBubbleRounding)
+	strokeRoundedRect(br, chartAxisLabelBubbleRounding)
+	chartAxisLabelTextRenderer.Render(l.text, tp, white)
 }
 
 // Close frees the resources backing the ChartTimeLabels.

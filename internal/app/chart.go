@@ -153,7 +153,7 @@ func (ch *Chart) Render(vc ViewContext) {
 		}
 	}
 
-	// Render the rest of the dividers.
+	// Render the rest of the dividers. 
 	rects := sliceRect(r, 0.05 /* TODO(btmura): calculate percentage */, 0.13, 0.13, 0.13)
 	for i := 0; i < len(rects)-1; i++ {
 		renderRectTopDivider(rects[i], horizLine)
@@ -162,7 +162,7 @@ func (ch *Chart) Render(vc ViewContext) {
 	pr, vr, dr, wr, tr := rects[4], rects[3], rects[2], rects[1], rects[0]
 
 	// Create separate rects for each section's labels.
-	plr, vlr, dlr, wlr := pr, vr, dr, wr
+	plr, vlr, dlr, wlr, tlr := pr, vr, dr, wr, tr
 
 	maxWidth := ch.prices.MaxLabelSize.X
 	if w := ch.volume.MaxLabelSize.X; w > maxWidth {
@@ -186,7 +186,6 @@ func (ch *Chart) Render(vc ViewContext) {
 	vr.Max.X = vlr.Min.X
 	dr.Max.X = dlr.Min.X
 	wr.Max.X = wlr.Min.X
-	tr.Max.X = wlr.Min.X // Use other rect's min.
 
 	// Pad all the rects.
 	pr = pr.Inset(chartPadding)
@@ -199,6 +198,7 @@ func (ch *Chart) Render(vc ViewContext) {
 	vlr = vlr.Inset(chartPadding)
 	dlr = dlr.Inset(chartPadding)
 	wlr = wlr.Inset(chartPadding)
+	tlr = tlr.Inset(chartPadding)
 
 	ch.weekLines.Render(pr)
 	ch.weekLines.Render(vr)
@@ -226,7 +226,7 @@ func (ch *Chart) Render(vc ViewContext) {
 	ch.volume.RenderCursorLabels(vr, vlr, vc.MousePos)
 	ch.dailyStochastics.RenderCursorLabels(dr, dlr, vc.MousePos)
 	ch.weeklyStochastics.RenderCursorLabels(wr, wlr, vc.MousePos)
-	ch.timeLabels.RenderCursorLabels(tr, vc.MousePos)
+	ch.timeLabels.RenderCursorLabels(tr, tlr, vc.MousePos)
 }
 
 // SetRefreshButtonClickCallback sets the callback for refresh button clicks.
