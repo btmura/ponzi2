@@ -24,6 +24,25 @@ var (
 // gapFudge is how much to extend the borders to close gaps in OpenGL rendering.
 const gapFudge = 2
 
+// TODO(btmura): change from bubbleSpec type to bubble type
+type bubbleSpec struct {
+	// rounding is how much rounding of the bubble's rounded rectangle.
+	rounding int
+
+	// padding is how much padding of the bubble's text.
+	padding int
+}
+
+func renderBubble(pt, sz image.Point, bs bubbleSpec) {
+	br := image.Rectangle{
+		Min: pt,
+		Max: pt.Add(sz),
+	}
+	br = br.Inset(-bs.padding)
+	fillRoundedRect(br, bs.rounding)
+	strokeRoundedRect(br, bs.rounding)
+}
+
 // fillRoundedRect renders a filled rounded rectangle within r.
 func fillRoundedRect(r image.Rectangle, rounding int) {
 	// [+] Render 2 overlapping rects to fill in everything except the corners.

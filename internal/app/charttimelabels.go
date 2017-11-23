@@ -89,14 +89,7 @@ func (ch *ChartTimeLabels) RenderCursorLabels(mainRect, labelRect image.Rectangl
 		Y: labelRect.Min.Y + labelRect.Dy()/2 - l.size.Y/2,
 	}
 
-	br := image.Rectangle{
-		Min: tp,
-		Max: tp.Add(l.size),
-	}
-	br = br.Inset(-chartAxisLabelBubblePadding)
-
-	fillRoundedRect(br, chartAxisLabelBubbleRounding)
-	strokeRoundedRect(br, chartAxisLabelBubbleRounding)
+	renderBubble(tp, l.size, chartAxisLabelBubbleSpec)
 	chartAxisLabelTextRenderer.Render(l.text, tp, white)
 }
 

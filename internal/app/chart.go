@@ -32,6 +32,11 @@ const (
 	chartAxisLabelBubbleRounding = 6
 )
 
+var chartAxisLabelBubbleSpec = bubbleSpec{
+	rounding: 6,
+	padding:  4,
+}
+
 // Shared variables used by multiple chart components.
 var (
 	chartAxisLabelTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)

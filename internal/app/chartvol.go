@@ -101,17 +101,13 @@ func (ch *ChartVolume) RenderCursorLabels(mainRect, labelRect image.Rectangle, m
 	}
 
 	perc := float32(mousePos.Y-mainRect.Min.Y) / float32(mainRect.Dy())
-	l := makeChartVolumeLabel(ch.maxVolume, perc)
+	l := makeChartVolumeLabel(ch.maxVolume, perc) 
+	tp := image.Point{
+		X: labelRect.Max.X - l.size.X,
+		Y: labelRect.Min.Y + int(float32(labelRect.Dy())*l.percent) - l.size.Y/2,
+	}
 
-	var tp image.Point
-	tp.X = labelRect.Max.X - l.size.X
-	tp.Y = labelRect.Min.Y + int(float32(labelRect.Dy())*l.percent) - l.size.Y/2
-
-	br := image.Rectangle{Min: tp, Max: tp.Add(l.size)}
-	br = br.Inset(-chartAxisLabelBubblePadding)
-
-	fillRoundedRect(br, chartAxisLabelBubbleRounding)
-	strokeRoundedRect(br, chartAxisLabelBubbleRounding)
+	renderBubble(tp, l.size, chartAxisLabelBubbleSpec)
 	chartAxisLabelTextRenderer.Render(l.text, tp, white)
 }
 

@@ -18,15 +18,7 @@ type CenteredText struct {
 	color [3]float32
 
 	// bubbleSpec specifies the bubble to render behind the text. Nil for none.
-	bubbleSpec *centeredTextBubbleSpec
-}
-
-type centeredTextBubbleSpec struct {
-	// rounding is how much rounding of the bubble's rounded rectangle.
-	rounding int
-
-	// padding is how much padding of the bubble's text.
-	padding int
+	bubbleSpec *bubbleSpec
 }
 
 // CenteredTextOpt is an option to pass to NewCenteredText.
@@ -55,7 +47,7 @@ func CenteredTextColor(color [3]float32) CenteredTextOpt {
 // CenteredTextBubble returns an option to configure the background bubble.
 func CenteredTextBubble(rounding, padding int) CenteredTextOpt {
 	return func(c *CenteredText) {
-		c.bubbleSpec = &centeredTextBubbleSpec{
+		c.bubbleSpec = &bubbleSpec{
 			rounding: rounding,
 			padding:  padding,
 		}
@@ -75,15 +67,8 @@ func (c *CenteredText) Render(r image.Rectangle) {
 		Y: r.Min.Y + r.Dy()/2 - sz.Y/2,
 	}
 
-	if bs := c.bubbleSpec; bs != nil {
-		br := image.Rectangle{
-			Min: pt,
-			Max: pt.Add(sz),
-		}
-		br = br.Inset(-bs.padding)
-
-		fillRoundedRect(br, bs.rounding)
-		strokeRoundedRect(br, bs.rounding)
+	if c.bubbleSpec != nil {
+		renderBubble(pt, sz, *c.bubbleSpec)
 	}
 
 	c.textRenderer.Render(c.Text, pt, c.color)
