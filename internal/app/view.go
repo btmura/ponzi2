@@ -81,7 +81,7 @@ func (vc ViewContext) ScheduleCallback(cb func()) {
 // NewView creates a new View.
 func NewView() *View {
 	return &View{
-		inputSymbol: NewCenteredText(viewInputSymbolTextRenderer, "", white),
+		inputSymbol: NewCenteredText(viewInputSymbolTextRenderer, "", white, CenteredTextBubbleOpt(chartRounding, chartPadding)),
 	}
 }
 

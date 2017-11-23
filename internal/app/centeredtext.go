@@ -6,6 +6,8 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
+const centeredTextBubbleRounding = 10
+
 // CenteredText draws text that is horizontally and vertically centered.
 type CenteredText struct {
 	// textRenderer renders the text.
@@ -16,14 +18,42 @@ type CenteredText struct {
 
 	// color is the color to render the text in.
 	color [3]float32
+
+	// bubbleSpec specifies the bubble to render behind the text. Nil for none.
+	bubbleSpec *centeredTextBubbleSpec
 }
 
+type centeredTextBubbleSpec struct {
+	// rounding is how much rounding of the bubble's rounded rectangle.
+	rounding int
+
+	// padding is how much padding of the bubble's text.
+	padding int
+}
+
+// CenteredTextOpt is an option to pass to NewCenteredText.
+type CenteredTextOpt func(c *CenteredText)
+
 // NewCenteredText creates a new CenteredText.
-func NewCenteredText(textRenderer *gfx.TextRenderer, text string, color [3]float32) *CenteredText {
-	return &CenteredText{
+func NewCenteredText(textRenderer *gfx.TextRenderer, text string, color [3]float32, opts ...CenteredTextOpt) *CenteredText {
+	c := &CenteredText{
 		textRenderer: textRenderer,
 		Text:         text,
 		color:        color,
+	}
+	for _, opt := range opts {
+		opt(c)
+	}
+	return c
+}
+
+// CenteredTextBubbleOpt returns an option to configure the background bubble.
+func CenteredTextBubbleOpt(rounding, padding int) CenteredTextOpt {
+	return func(c *CenteredText) {
+		c.bubbleSpec = &centeredTextBubbleSpec{
+			rounding: rounding,
+			padding:  padding,
+		}
 	}
 }
 
@@ -32,9 +62,24 @@ func (c *CenteredText) Render(r image.Rectangle) {
 	if c.Text == "" {
 		return
 	}
+
 	sz := c.textRenderer.Measure(c.Text)
-	pt := r.Min
-	pt.X += (r.Dx() - sz.X) / 2
-	pt.Y += (r.Dy() - sz.Y) / 2
+
+	pt := image.Point{
+		X: r.Min.X + r.Dx()/2 - sz.X/2,
+		Y: r.Min.Y + r.Dy()/2 - sz.Y/2,
+	}
+
+	if bs := c.bubbleSpec; bs != nil {
+		br := image.Rectangle{
+			Min: pt,
+			Max: pt.Add(sz),
+		}
+		br = br.Inset(-bs.padding)
+
+		fillRoundedRect(br, bs.rounding)
+		strokeRoundedRect(br, bs.rounding)
+	}
+
 	c.textRenderer.Render(c.Text, pt, c.color)
 }
