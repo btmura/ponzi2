@@ -6,8 +6,6 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
-const centeredTextBubbleRounding = 10
-
 // CenteredText draws text that is horizontally and vertically centered.
 type CenteredText struct {
 	// textRenderer renders the text.
@@ -35,11 +33,11 @@ type centeredTextBubbleSpec struct {
 type CenteredTextOpt func(c *CenteredText)
 
 // NewCenteredText creates a new CenteredText.
-func NewCenteredText(textRenderer *gfx.TextRenderer, text string, color [3]float32, opts ...CenteredTextOpt) *CenteredText {
+func NewCenteredText(textRenderer *gfx.TextRenderer, text string, opts ...CenteredTextOpt) *CenteredText {
 	c := &CenteredText{
 		textRenderer: textRenderer,
 		Text:         text,
-		color:        color,
+		color:        white,
 	}
 	for _, opt := range opts {
 		opt(c)
@@ -47,8 +45,15 @@ func NewCenteredText(textRenderer *gfx.TextRenderer, text string, color [3]float
 	return c
 }
 
-// CenteredTextBubbleOpt returns an option to configure the background bubble.
-func CenteredTextBubbleOpt(rounding, padding int) CenteredTextOpt {
+// CenteredTextColor returns an option to set the text color.
+func CenteredTextColor(color [3]float32) CenteredTextOpt {
+	return func(c *CenteredText) {
+		c.color = color
+	}
+}
+
+// CenteredTextBubble returns an option to configure the background bubble.
+func CenteredTextBubble(rounding, padding int) CenteredTextOpt {
 	return func(c *CenteredText) {
 		c.bubbleSpec = &centeredTextBubbleSpec{
 			rounding: rounding,

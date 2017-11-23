@@ -26,7 +26,7 @@ var viewChartThumbSize = image.Pt(155, 105)
 
 var (
 	viewInputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
-	viewInstructionsText        = NewCenteredText(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER...", white)
+	viewInstructionsText        = NewCenteredText(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER...")
 )
 
 // The View renders the UI to view and edit the model's stocks that it observes.
@@ -81,7 +81,7 @@ func (vc ViewContext) ScheduleCallback(cb func()) {
 // NewView creates a new View.
 func NewView() *View {
 	return &View{
-		inputSymbol: NewCenteredText(viewInputSymbolTextRenderer, "", white, CenteredTextBubbleOpt(chartRounding, chartPadding)),
+		inputSymbol: NewCenteredText(viewInputSymbolTextRenderer, "", CenteredTextBubble(chartRounding, chartPadding)),
 	}
 }
 
