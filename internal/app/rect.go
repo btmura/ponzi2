@@ -33,7 +33,7 @@ func fillRoundedRect(r image.Rectangle, rounding int) {
 	squarePlane.Render()
 
 	// 2. [-] Render filled rect from left to right but less on the Y-Axis.
-	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Min.Y+rounding, r.Max.X, r.Max.Y-rounding))
+	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Min.Y+rounding-gapFudge, r.Max.X, r.Max.Y-rounding+gapFudge))
 	squarePlane.Render()
 
 	// Render the four corners.
