@@ -22,7 +22,7 @@ type TextRenderer struct {
 	// Metrics are measurements used to ease vertical alignment.
 	metrics font.Metrics
 
-	// runeRenererMap caches rune to runeRenderer.
+	// runeRendererMap maps rune to runeRenderer.
 	runeRendererMap map[rune]*runeRenderer
 }
 
@@ -142,7 +142,7 @@ func newRuneRenderer(face font.Face, m font.Metrics, r rune) *runeRenderer {
 // runePlaneObject is a shared Vertex Array Object that all runeRenderers use.
 var runePlaneObject *VAO
 
-func (r *runeRenderer) render(pt image.Point) image.Point {
+func (r *runeRenderer) render(pt image.Point) {
 	setModelMatrixOrtho(pt, r.size)
 
 	gl.BindTexture(gl.TEXTURE_2D, r.texture)
@@ -154,6 +154,4 @@ func (r *runeRenderer) render(pt image.Point) image.Point {
 		runePlaneObject = ReadPLYVAO(bytes.NewReader(MustAsset("textPlane.ply")))
 	}
 	runePlaneObject.Render()
-
-	return image.Pt(r.size.X, 0)
 }
