@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"image"
+	"runtime"
 	"unicode"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
@@ -33,6 +34,13 @@ var acceptedChars = map[rune]bool{
 	'S': true, 'T': true, 'U': true,
 	'V': true, 'W': true, 'X': true,
 	'Y': true, 'Z': true,
+}
+
+func init() {
+	// This is needed to arrange that main() runs on main thread for GLFW.
+	// See documentation for functions that are only allowed to be called
+	// from the main thread.
+	runtime.LockOSThread()
 }
 
 // Controller runs the program in a "game loop".
@@ -378,7 +386,7 @@ func (c *Controller) saveConfig() {
 		cfg.CurrentStock = &config.Stock{Symbol: st.Symbol}
 	}
 	for _, st := range c.model.SavedStocks {
-		cfg.Stocks = append(cfg.Stocks, &config.Stock{st.Symbol})
+		cfg.Stocks = append(cfg.Stocks, &config.Stock{Symbol: st.Symbol})
 	}
 
 	// Queue the config for saving.
