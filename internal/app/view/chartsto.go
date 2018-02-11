@@ -1,4 +1,4 @@
-package app
+package view
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang/glog"
 
+	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
@@ -41,7 +42,7 @@ func NewChartStochastics(interval ChartInterval) *ChartStochastics {
 }
 
 // SetStock sets the ChartStochastics' stock.
-func (ch *ChartStochastics) SetStock(st *ModelStock) {
+func (ch *ChartStochastics) SetStock(st *model.ModelStock) {
 	// Reset everything.
 	ch.Close()
 
@@ -59,7 +60,7 @@ func (ch *ChartStochastics) SetStock(st *ModelStock) {
 		makeChartStochasticLabel(.3),
 	}
 
-	var ss []*ModelTradingSession
+	var ss []*model.ModelTradingSession
 	var dColor [3]float32
 	switch ch.interval {
 	case DailyInterval:
@@ -157,7 +158,7 @@ func makeChartStochasticLabel(perc float32) chartStochasticLabel {
 	}
 }
 
-func chartStochasticVAO(ss []*ModelTradingSession, dColor [3]float32) *gfx.VAO {
+func chartStochasticVAO(ss []*model.ModelTradingSession, dColor [3]float32) *gfx.VAO {
 	data := &gfx.VAOVertexData{}
 	var v uint16 // vertex index
 

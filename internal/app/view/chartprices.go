@@ -1,10 +1,11 @@
-package app
+package view
 
 import (
 	"image"
 	"math"
 	"strconv"
 
+	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
@@ -32,7 +33,7 @@ func NewChartPrices() *ChartPrices {
 }
 
 // SetStock sets the ChartPrices' stock.
-func (ch *ChartPrices) SetStock(st *ModelStock) {
+func (ch *ChartPrices) SetStock(st *model.ModelStock) {
 	// Reset everything.
 	ch.Close()
 
@@ -172,7 +173,7 @@ func makeChartPriceLabel(v float32) chartPriceLabel {
 	}
 }
 
-func chartPriceCandlestickVAOs(ds []*ModelTradingSession, priceRange [2]float32) (stickLines, stickRects *gfx.VAO) {
+func chartPriceCandlestickVAOs(ds []*model.ModelTradingSession, priceRange [2]float32) (stickLines, stickRects *gfx.VAO) {
 	// Calculate vertices and indices for the candlesticks.
 	var vertices []float32
 	var colors []float32

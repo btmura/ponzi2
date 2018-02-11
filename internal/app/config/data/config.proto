@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package app;
+package config;
 
 message Config {
     Stock current_stock = 1;

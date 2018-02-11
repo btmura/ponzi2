@@ -1,4 +1,4 @@
-package app
+package config
 
 import (
 	"io/ioutil"
@@ -9,6 +9,9 @@ import (
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 )
+
+// Generate config.pb.go. Follow setup instructions @ github.com/golang/protobuf.
+//go:generate protoc -I=data --go_out=. config.proto
 
 // LoadConfig loads the user's config from disk.
 func LoadConfig() (*Config, error) {

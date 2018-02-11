@@ -1,9 +1,10 @@
-package app
+package view
 
 import (
 	"image"
 	"math"
 
+	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
@@ -19,7 +20,7 @@ func NewChartAvgLines() *ChartAvgLines {
 }
 
 // SetStock sets the ChartAvgLine's stock.
-func (ch *ChartAvgLines) SetStock(st *ModelStock) {
+func (ch *ChartAvgLines) SetStock(st *model.ModelStock) {
 	// Reset everything.
 	ch.Close()
 
@@ -32,7 +33,7 @@ func (ch *ChartAvgLines) SetStock(st *ModelStock) {
 	ch.renderable = true
 }
 
-func createChartAvgLinesVAO(ds []*ModelTradingSession) *gfx.VAO {
+func createChartAvgLinesVAO(ds []*model.ModelTradingSession) *gfx.VAO {
 	minPrice := float32(math.MaxFloat32)
 	maxPrice := float32(0)
 	for _, s := range ds {

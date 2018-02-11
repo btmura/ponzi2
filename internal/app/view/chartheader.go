@@ -1,9 +1,10 @@
-package app
+package view
 
 import (
 	"bytes"
 	"image"
 
+	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
@@ -29,7 +30,7 @@ type ChartHeader struct {
 	symbolQuoteTextRenderer *gfx.TextRenderer
 
 	// quoteFormatter is the function used to generate the quote text.
-	quoteFormatter func(*ModelStock) string
+	quoteFormatter func(*model.ModelStock) string
 
 	// refreshButton is the button to refresh the chart.
 	refreshButton *chartHeaderButton
@@ -65,7 +66,7 @@ type chartHeaderButton struct {
 // ChartHeaderArgs are passed to NewChartHeader.
 type ChartHeaderArgs struct {
 	SymbolQuoteTextRenderer *gfx.TextRenderer
-	QuoteFormatter          func(*ModelStock) string
+	QuoteFormatter          func(*model.ModelStock) string
 	ShowRefreshButton       bool
 	ShowAddButton           bool
 	ShowRemoveButton        bool
@@ -115,7 +116,7 @@ func (ch *ChartHeader) SetError(error bool) {
 }
 
 // SetStock sets the ChartHeader's stock.
-func (ch *ChartHeader) SetStock(st *ModelStock) {
+func (ch *ChartHeader) SetStock(st *model.ModelStock) {
 	ch.symbol = st.Symbol
 	ch.quoteText = ch.quoteFormatter(st)
 

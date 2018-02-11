@@ -1,10 +1,11 @@
-package app
+package view
 
 import (
 	"fmt"
 	"image"
 	"strconv"
 
+	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
@@ -32,7 +33,7 @@ func NewChartVolume() *ChartVolume {
 }
 
 // SetStock sets the ChartVolume's stock.
-func (ch *ChartVolume) SetStock(st *ModelStock) {
+func (ch *ChartVolume) SetStock(st *model.ModelStock) {
 	// Reset everything.
 	ch.Close()
 
@@ -101,7 +102,7 @@ func (ch *ChartVolume) RenderCursorLabels(mainRect, labelRect image.Rectangle, m
 	}
 
 	perc := float32(mousePos.Y-mainRect.Min.Y) / float32(mainRect.Dy())
-	l := makeChartVolumeLabel(ch.maxVolume, perc) 
+	l := makeChartVolumeLabel(ch.maxVolume, perc)
 	tp := image.Point{
 		X: labelRect.Max.X - l.size.X,
 		Y: labelRect.Min.Y + int(float32(labelRect.Dy())*l.percent) - l.size.Y/2,
@@ -148,7 +149,7 @@ func makeChartVolumeLabel(maxVolume int, perc float32) chartVolumeLabel {
 	}
 }
 
-func chartVolumeBarsVAO(ds []*ModelTradingSession, maxVolume int) *gfx.VAO {
+func chartVolumeBarsVAO(ds []*model.ModelTradingSession, maxVolume int) *gfx.VAO {
 	data := &gfx.VAOVertexData{}
 
 	dx := 2.0 / float32(len(ds)) // (-1 to 1) on X-axis

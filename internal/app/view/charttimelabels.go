@@ -1,9 +1,11 @@
-package app
+package view
 
 import (
 	"image"
 	"math"
 	"time"
+
+	"github.com/btmura/ponzi2/internal/app/model"
 )
 
 // ChartTimeLabels renders the time labels for a single stock.
@@ -27,7 +29,7 @@ func NewChartTimeLabels() *ChartTimeLabels {
 }
 
 // SetStock sets the ChartTimeLabels' stock.
-func (ch *ChartTimeLabels) SetStock(st *ModelStock) {
+func (ch *ChartTimeLabels) SetStock(st *model.ModelStock) {
 	// Reset everything.
 	ch.Close()
 
@@ -108,7 +110,7 @@ func chartTimeLabelText(month time.Month) string {
 	return string(month.String()[0:3])
 }
 
-func chartTimeLabels(ds []*ModelTradingSession) []chartTimeLabel {
+func chartTimeLabels(ds []*model.ModelTradingSession) []chartTimeLabel {
 	var ls []chartTimeLabel
 
 	for i, s := range ds {

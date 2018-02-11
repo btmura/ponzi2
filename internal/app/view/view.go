@@ -1,4 +1,4 @@
-package app
+package view
 
 import (
 	"image"
@@ -7,6 +7,13 @@ import (
 
 	"github.com/btmura/ponzi2/internal/gfx"
 )
+
+// Get go-bindata from github.com/jteeuwen/go-bindata. It's used to embed resources into the binary.
+//go:generate go-bindata -pkg view -prefix data -ignore ".*blend.*" -ignore ".*proto" -ignore ".*xcf" data
+
+// Frames per second.
+// TODO(btmura): remove duplicate fps constant in controller
+const fps = 60.0
 
 // Colors used throughout the UI.
 var (
@@ -58,13 +65,13 @@ type ViewContext struct {
 	Fudge float32
 
 	// values stores values collected throughout the Render pass.
-	values *viewContextValues
+	Values *ViewContextValues
 }
 
-// viewContextValues stores values collected throughout the Render pass.
-type viewContextValues struct {
+// ViewContextValues stores values collected throughout the Render pass.
+type ViewContextValues struct {
 	// scheduledCallbacks are callbacks to be called at the end of Render.
-	scheduledCallbacks []func()
+	ScheduledCallbacks []func()
 }
 
 // LeftClickInBounds returns true if the left mouse button was clicked within
@@ -75,7 +82,7 @@ func (vc ViewContext) LeftClickInBounds() bool {
 
 // ScheduleCallback schedules a callback to be called after Render is done.
 func (vc ViewContext) ScheduleCallback(cb func()) {
-	vc.values.scheduledCallbacks = append(vc.values.scheduledCallbacks, cb)
+	vc.Values.ScheduledCallbacks = append(vc.Values.ScheduledCallbacks, cb)
 }
 
 // NewView creates a new View.

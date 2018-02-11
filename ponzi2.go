@@ -1,10 +1,9 @@
 package main
 
-import (
-	"github.com/btmura/ponzi2/internal/app"
-)
+import "github.com/btmura/ponzi2/internal/app"
 
-//go:generate go generate github.com/btmura/ponzi2/internal/app
+//go:generate go generate github.com/btmura/ponzi2/internal/app/config
+//go:generate go generate github.com/btmura/ponzi2/internal/app/view
 //go:generate go generate github.com/btmura/ponzi2/internal/gfx
 
 func main() {

@@ -1,4 +1,4 @@
-package app
+package controller
 
 import (
 	"fmt"
@@ -9,6 +9,9 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/golang/glog"
 
+	"github.com/btmura/ponzi2/internal/app/config"
+	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/gfx"
 	math2 "github.com/btmura/ponzi2/internal/math"
 )
@@ -35,16 +38,16 @@ var acceptedChars = map[rune]bool{
 // Controller runs the program in a "game loop".
 type Controller struct {
 	// model is the data that the Controller connects to the View.
-	model *Model
+	model *model.Model
 
 	// view is the UI that the Controller updates.
-	view *View
+	view *view.View
 
 	// symbolToChartMap maps symbol to Chart. Only one entry right now.
-	symbolToChartMap map[string]*Chart
+	symbolToChartMap map[string]*view.Chart
 
 	// symbolToChartThumbMap maps symbol to ChartThumbnail.
-	symbolToChartThumbMap map[string]*ChartThumb
+	symbolToChartThumbMap map[string]*view.ChartThumb
 
 	// pendingStockUpdates has stock updates ready to apply to the model.
 	pendingStockUpdates chan controllerStockUpdate
@@ -53,7 +56,7 @@ type Controller struct {
 	enableSavingConfigs bool
 
 	// pendingConfigSaves is a channel with configs to save.
-	pendingConfigSaves chan *Config
+	pendingConfigSaves chan *config.Config
 
 	// doneSavingConfigs indicates saving is done and the program may quit.
 	doneSavingConfigs chan bool
@@ -74,7 +77,7 @@ type controllerStockUpdate struct {
 	symbol string
 
 	// update is the new data for the stock. Nil if an error happened.
-	update *ModelStockUpdate
+	update *model.ModelStockUpdate
 
 	// updateErr is the error getting the update. Nil if no error happened.
 	updateErr error
@@ -83,12 +86,12 @@ type controllerStockUpdate struct {
 // NewController creates a new Controller.
 func NewController() *Controller {
 	return &Controller{
-		model:                 NewModel(),
-		view:                  NewView(),
-		symbolToChartMap:      map[string]*Chart{},
-		symbolToChartThumbMap: map[string]*ChartThumb{},
+		model:                 model.NewModel(),
+		view:                  view.NewView(),
+		symbolToChartMap:      map[string]*view.Chart{},
+		symbolToChartThumbMap: map[string]*view.ChartThumb{},
 		pendingStockUpdates:   make(chan controllerStockUpdate),
-		pendingConfigSaves:    make(chan *Config),
+		pendingConfigSaves:    make(chan *config.Config),
 		doneSavingConfigs:     make(chan bool),
 	}
 }
@@ -127,7 +130,7 @@ func (c *Controller) Run() {
 	}
 
 	// Load the config and setup the initial UI.
-	cfg, err := LoadConfig()
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		glog.Fatalf("Run: failed to load config: %v", err)
 	}
@@ -145,7 +148,7 @@ func (c *Controller) Run() {
 	// Process config changes in the background until the program ends.
 	go func() {
 		for cfg := range c.pendingConfigSaves {
-			if err := SaveConfig(cfg); err != nil {
+			if err := config.SaveConfig(cfg); err != nil {
 				glog.Warningf("Run: failed to save config: %v", err)
 			}
 		}
@@ -252,17 +255,17 @@ loop:
 func (c *Controller) render(fudge float32) {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	vc := ViewContext{
+	vc := view.ViewContext{
 		Bounds:                 image.Rectangle{image.ZP, c.winSize},
 		MousePos:               c.mousePos,
 		MouseLeftButtonClicked: c.mouseLeftButtonClicked,
 		Fudge:  fudge,
-		values: &viewContextValues{},
+		Values: &view.ViewContextValues{}, // TODO(btmura): unexport field
 	}
 	c.view.Render(vc)
 
 	// Call any callbacks scheduled by views.
-	for _, cb := range vc.values.scheduledCallbacks {
+	for _, cb := range vc.Values.ScheduledCallbacks {
 		cb()
 	}
 
@@ -285,7 +288,7 @@ func (c *Controller) setChart(symbol string) {
 		ch.Close()
 	}
 
-	ch := NewChart()
+	ch := view.NewChart()
 	c.symbolToChartMap[symbol] = ch
 
 	ch.SetStock(st)
@@ -311,7 +314,7 @@ func (c *Controller) addChartThumb(symbol string) {
 		return
 	}
 
-	th := NewChartThumb()
+	th := view.NewChartThumb()
 	c.symbolToChartThumbMap[symbol] = th
 
 	th.SetStock(st)
@@ -354,7 +357,7 @@ func (c *Controller) refreshStock(symbol string) {
 		th.SetError(false)
 	}
 	go func() {
-		u, err := FetchStockUpdate(symbol)
+		u, err := model.FetchStockUpdate(symbol)
 		c.pendingStockUpdates <- controllerStockUpdate{
 			symbol:    symbol,
 			update:    u,
@@ -370,12 +373,12 @@ func (c *Controller) saveConfig() {
 	}
 
 	// Make the config on the main thread to save the exact config at the time.
-	cfg := &Config{}
+	cfg := &config.Config{}
 	if st := c.model.CurrentStock; st != nil {
-		cfg.CurrentStock = &Stock{Symbol: st.Symbol}
+		cfg.CurrentStock = &config.Stock{Symbol: st.Symbol}
 	}
 	for _, st := range c.model.SavedStocks {
-		cfg.Stocks = append(cfg.Stocks, &Stock{st.Symbol})
+		cfg.Stocks = append(cfg.Stocks, &config.Stock{st.Symbol})
 	}
 
 	// Queue the config for saving.

@@ -1,10 +1,11 @@
-package app
+package view
 
 import (
 	"fmt"
 
 	"golang.org/x/image/font/gofont/goregular"
 
+	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
@@ -15,7 +16,7 @@ const (
 
 var (
 	thumbSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
-	thumbFormatQuote             = func(st *ModelStock) string {
+	thumbFormatQuote             = func(st *model.ModelStock) string {
 		if st.Price() != 0 {
 			return fmt.Sprintf(" %.2f %+5.2f%% ", st.Price(), st.PercentChange()*100.0)
 		}
@@ -82,7 +83,7 @@ func (ch *ChartThumb) SetError(error bool) {
 }
 
 // SetStock sets the ChartThumb's stock.
-func (ch *ChartThumb) SetStock(st *ModelStock) {
+func (ch *ChartThumb) SetStock(st *model.ModelStock) {
 	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
 	ch.header.SetStock(st)
 	ch.weekLines.SetStock(st)

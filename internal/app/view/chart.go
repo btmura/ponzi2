@@ -1,4 +1,4 @@
-package app
+package view
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 
 	"golang.org/x/image/font/gofont/goregular"
 
+	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
@@ -16,7 +17,7 @@ const (
 
 var (
 	chartSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 24)
-	chartFormatQuote             = func(st *ModelStock) string {
+	chartFormatQuote             = func(st *model.ModelStock) string {
 		if st.Price() != 0 {
 			return fmt.Sprintf("%.2f %+5.2f %+5.2f%%", st.Price(), st.Change(), st.PercentChange()*100.0)
 		}
@@ -119,7 +120,7 @@ func (ch *Chart) SetError(error bool) {
 }
 
 // SetStock sets the Chart's stock.
-func (ch *Chart) SetStock(st *ModelStock) {
+func (ch *Chart) SetStock(st *model.ModelStock) {
 	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
 	ch.header.SetStock(st)
 	ch.weekLines.SetStock(st)

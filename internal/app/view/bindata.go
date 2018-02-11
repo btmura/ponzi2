@@ -9,7 +9,7 @@
 // data/squarePlane.ply
 // DO NOT EDIT!
 
-package app
+package view
 
 import (
 	"bytes"

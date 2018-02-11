@@ -1,8 +1,9 @@
-package app
+package view
 
 import (
 	"image"
 
+	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
@@ -18,7 +19,7 @@ func NewChartWeekLines() *ChartWeekLines {
 }
 
 // SetStock sets the ChartWeekLines' stock.
-func (ch *ChartWeekLines) SetStock(st *ModelStock) {
+func (ch *ChartWeekLines) SetStock(st *model.ModelStock) {
 	// Reset everything.
 	ch.Close()
 
@@ -31,7 +32,7 @@ func (ch *ChartWeekLines) SetStock(st *ModelStock) {
 	ch.renderable = true
 }
 
-func createChartWeekLinesVAO(ds []*ModelTradingSession) *gfx.VAO {
+func createChartWeekLinesVAO(ds []*model.ModelTradingSession) *gfx.VAO {
 	data := &gfx.VAOVertexData{}
 	var v uint16 // vertex index
 

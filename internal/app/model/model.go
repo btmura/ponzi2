@@ -1,4 +1,4 @@
-package app
+package model
 
 import (
 	"sort"
