@@ -13,14 +13,14 @@ import (
 // Generate config.pb.go. Follow setup instructions @ github.com/golang/protobuf.
 //go:generate protoc -I=data --go_out=. config.proto
 
-// LoadConfig loads the user's config from disk.
-func LoadConfig() (*Config, error) {
+// Load loads the user's config from disk.
+func Load() (*Config, error) {
 	cfgPath, err := userConfigPath()
 	if err != nil {
 		return nil, err
 	}
 
-	glog.Infof("LoadConfig: loading config from %s", cfgPath)
+	glog.Infof("config.Load: loading config from %s", cfgPath)
 
 	file, err := os.Open(cfgPath)
 	if err != nil && !os.IsNotExist(err) {
@@ -44,14 +44,14 @@ func LoadConfig() (*Config, error) {
 	return cfg, nil
 }
 
-// SaveConfig saves the user's config to disk.
-func SaveConfig(cfg *Config) error {
+// Save saves the user's config to disk.
+func Save(cfg *Config) error {
 	cfgPath, err := userConfigPath()
 	if err != nil {
 		return err
 	}
 
-	glog.Infof("SaveConfig: saving config to %s", cfgPath)
+	glog.Infof("config.Save: saving config to %s", cfgPath)
 
 	file, err := os.OpenFile(cfgPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0660)
 	if err != nil {

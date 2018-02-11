@@ -130,7 +130,7 @@ func (c *Controller) Run() {
 	}
 
 	// Load the config and setup the initial UI.
-	cfg, err := config.LoadConfig()
+	cfg, err := config.Load()
 	if err != nil {
 		glog.Fatalf("Run: failed to load config: %v", err)
 	}
@@ -148,7 +148,7 @@ func (c *Controller) Run() {
 	// Process config changes in the background until the program ends.
 	go func() {
 		for cfg := range c.pendingConfigSaves {
-			if err := config.SaveConfig(cfg); err != nil {
+			if err := config.Save(cfg); err != nil {
 				glog.Warningf("Run: failed to save config: %v", err)
 			}
 		}
