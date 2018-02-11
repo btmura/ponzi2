@@ -54,7 +54,7 @@ func (b *Button) Update() {
 // Render renders the Button and detects clicks.
 func (b *Button) Render(vc ViewContext) (clicked bool) {
 	if vc.LeftClickInBounds() {
-		vc.ScheduleCallback(b.clickCallback)
+		*vc.ScheduledCallbacks = append(*vc.ScheduledCallbacks, b.clickCallback)
 		clicked = true
 	}
 

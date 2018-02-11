@@ -64,25 +64,14 @@ type ViewContext struct {
 	// Fudge is the position from 0 to 1 between the current and next frame.
 	Fudge float32
 
-	// values stores values collected throughout the Render pass.
-	Values *ViewContextValues
-}
-
-// ViewContextValues stores values collected throughout the Render pass.
-type ViewContextValues struct {
-	// scheduledCallbacks are callbacks to be called at the end of Render.
-	ScheduledCallbacks []func()
+	// ScheduledCallbacks are callbacks to be called at the end of Render.
+	ScheduledCallbacks *[]func()
 }
 
 // LeftClickInBounds returns true if the left mouse button was clicked within
 // the context's bounds. Doesn't take into account overlapping view parts.
 func (vc ViewContext) LeftClickInBounds() bool {
 	return vc.MouseLeftButtonClicked && vc.MousePos.In(vc.Bounds)
-}
-
-// ScheduleCallback schedules a callback to be called after Render is done.
-func (vc ViewContext) ScheduleCallback(cb func()) {
-	vc.Values.ScheduledCallbacks = append(vc.Values.ScheduledCallbacks, cb)
 }
 
 // NewView creates a new View.

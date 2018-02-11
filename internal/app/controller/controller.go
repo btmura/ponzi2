@@ -267,13 +267,13 @@ func (c *Controller) render(fudge float32) {
 		Bounds:                 image.Rectangle{image.ZP, c.winSize},
 		MousePos:               c.mousePos,
 		MouseLeftButtonClicked: c.mouseLeftButtonClicked,
-		Fudge:  fudge,
-		Values: &view.ViewContextValues{}, // TODO(btmura): unexport field
+		Fudge:              fudge,
+		ScheduledCallbacks: new([]func()),
 	}
 	c.view.Render(vc)
 
 	// Call any callbacks scheduled by views.
-	for _, cb := range vc.Values.ScheduledCallbacks {
+	for _, cb := range *vc.ScheduledCallbacks {
 		cb()
 	}
 

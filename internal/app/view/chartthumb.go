@@ -106,7 +106,7 @@ func (ch *ChartThumb) Render(vc ViewContext) {
 	renderRectTopDivider(r, horizLine)
 
 	if !clicks.HasClicks() && vc.LeftClickInBounds() {
-		vc.ScheduleCallback(ch.thumbClickCallback)
+		*vc.ScheduledCallbacks = append(*vc.ScheduledCallbacks, ch.thumbClickCallback)
 	}
 
 	// Only show messages if no prior data to show.
