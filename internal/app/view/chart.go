@@ -17,7 +17,7 @@ const (
 
 var (
 	chartSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 24)
-	chartFormatQuote             = func(st *model.ModelStock) string {
+	chartFormatQuote             = func(st *model.Stock) string {
 		if st.Price() != 0 {
 			return fmt.Sprintf("%.2f %+5.2f %+5.2f%%", st.Price(), st.Change(), st.PercentChange()*100.0)
 		}
@@ -120,7 +120,7 @@ func (ch *Chart) SetError(error bool) {
 }
 
 // SetStock sets the Chart's stock.
-func (ch *Chart) SetStock(st *model.ModelStock) {
+func (ch *Chart) SetStock(st *model.Stock) {
 	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
 	ch.header.SetStock(st)
 	ch.weekLines.SetStock(st)

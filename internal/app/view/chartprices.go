@@ -33,7 +33,7 @@ func NewChartPrices() *ChartPrices {
 }
 
 // SetStock sets the ChartPrices' stock.
-func (ch *ChartPrices) SetStock(st *model.ModelStock) {
+func (ch *ChartPrices) SetStock(st *model.Stock) {
 	// Reset everything.
 	ch.Close()
 
@@ -173,7 +173,7 @@ func makeChartPriceLabel(v float32) chartPriceLabel {
 	}
 }
 
-func chartPriceCandlestickVAOs(ds []*model.ModelTradingSession, priceRange [2]float32) (stickLines, stickRects *gfx.VAO) {
+func chartPriceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32) (stickLines, stickRects *gfx.VAO) {
 	// Calculate vertices and indices for the candlesticks.
 	var vertices []float32
 	var colors []float32

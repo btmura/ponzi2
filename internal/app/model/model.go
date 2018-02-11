@@ -13,29 +13,29 @@ import (
 // Model keeps track of the user's stocks.
 type Model struct {
 	// CurrentStock is the stock currently being viewed.
-	CurrentStock *ModelStock
+	CurrentStock *Stock
 
 	// SavedStocks is the user's saved stocks.
-	SavedStocks []*ModelStock
+	SavedStocks []*Stock
 }
 
-// ModelStock models a single stock.
-type ModelStock struct {
+// Stock models a single stock.
+type Stock struct {
 	// Symbol is the symbol of the stock.
 	Symbol string
 
 	// DailySessions are trading sessions that span a single day.
-	DailySessions []*ModelTradingSession
+	DailySessions []*TradingSession
 
 	// WeeklySessions are trading sessions that span a single week.
-	WeeklySessions []*ModelTradingSession
+	WeeklySessions []*TradingSession
 
 	// LastUpdateTime is when the ModelStock was last updated.
 	LastUpdateTime time.Time
 }
 
-// ModelTradingSession models a single trading session.
-type ModelTradingSession struct {
+// TradingSession models a single trading session.
+type TradingSession struct {
 	Date   time.Time
 	Open   float32
 	High   float32
@@ -54,16 +54,16 @@ type ModelTradingSession struct {
 	MovingAverage200 float32
 }
 
-// ModelStockUpdate is an update that can be applied to the model.
-type ModelStockUpdate struct {
+// StockUpdate is an update that can be applied to the model.
+type StockUpdate struct {
 	// Symbol is the symbol of the stock.
 	Symbol string
 
 	// DailySessions are trading sessions that span a single day.
-	DailySessions []*ModelTradingSession
+	DailySessions []*TradingSession
 
 	// WeeklySessions are trading sessions that span a single week.
-	WeeklySessions []*ModelTradingSession
+	WeeklySessions []*TradingSession
 }
 
 // NewModel creates a new Model.
@@ -73,7 +73,7 @@ func NewModel() *Model {
 
 // SetCurrentStock sets the current stock by symbol. It returns the
 // corresponding ModelStock and true if the current stock changed.
-func (m *Model) SetCurrentStock(symbol string) (st *ModelStock, changed bool) {
+func (m *Model) SetCurrentStock(symbol string) (st *Stock, changed bool) {
 	if symbol == "" {
 		glog.Fatal("SetCurrentStock: cannot set current stock to empty symbol")
 	}
@@ -83,14 +83,14 @@ func (m *Model) SetCurrentStock(symbol string) (st *ModelStock, changed bool) {
 	}
 
 	if m.CurrentStock = m.stock(symbol); m.CurrentStock == nil {
-		m.CurrentStock = &ModelStock{Symbol: symbol}
+		m.CurrentStock = &Stock{Symbol: symbol}
 	}
 	return m.CurrentStock, true
 }
 
 // AddSavedStock adds the stock by symbol. It returns the corresponding
 // ModelStock and true if the stock was newly added.
-func (m *Model) AddSavedStock(symbol string) (st *ModelStock, added bool) {
+func (m *Model) AddSavedStock(symbol string) (st *Stock, added bool) {
 	if symbol == "" {
 		glog.Fatal("AddSavedStock: cannot add empty symbol")
 	}
@@ -102,7 +102,7 @@ func (m *Model) AddSavedStock(symbol string) (st *ModelStock, added bool) {
 	}
 
 	if st = m.stock(symbol); st == nil {
-		st = &ModelStock{Symbol: symbol}
+		st = &Stock{Symbol: symbol}
 	}
 	m.SavedStocks = append(m.SavedStocks, st)
 	return st, true
@@ -124,7 +124,7 @@ func (m *Model) RemoveSavedStock(symbol string) (removed bool) {
 }
 
 // UpdateStock updates a stock with the update if it is in the model.
-func (m *Model) UpdateStock(update *ModelStockUpdate) (st *ModelStock, updated bool) {
+func (m *Model) UpdateStock(update *StockUpdate) (st *Stock, updated bool) {
 	if st = m.stock(update.Symbol); st == nil {
 		return nil, false
 	}
@@ -134,7 +134,7 @@ func (m *Model) UpdateStock(update *ModelStockUpdate) (st *ModelStock, updated b
 	return st, true
 }
 
-func (m *Model) stock(symbol string) *ModelStock {
+func (m *Model) stock(symbol string) *Stock {
 	if m.CurrentStock != nil && m.CurrentStock.Symbol == symbol {
 		return m.CurrentStock
 	}
@@ -149,7 +149,7 @@ func (m *Model) stock(symbol string) *ModelStock {
 }
 
 // Price returns the most recent price or 0 if no data.
-func (m *ModelStock) Price() float32 {
+func (m *Stock) Price() float32 {
 	if len(m.DailySessions) == 0 {
 		return 0
 	}
@@ -157,7 +157,7 @@ func (m *ModelStock) Price() float32 {
 }
 
 // Change returns the most recent change or 0 if no data.
-func (m *ModelStock) Change() float32 {
+func (m *Stock) Change() float32 {
 	if len(m.DailySessions) == 0 {
 		return 0
 	}
@@ -165,7 +165,7 @@ func (m *ModelStock) Change() float32 {
 }
 
 // PercentChange returns the most recent percent change or 0 if no data.
-func (m *ModelStock) PercentChange() float32 {
+func (m *Stock) PercentChange() float32 {
 	if len(m.DailySessions) == 0 {
 		return 0
 	}
@@ -173,7 +173,7 @@ func (m *ModelStock) PercentChange() float32 {
 }
 
 // Date returns the most recent date or zero time if no data.
-func (m *ModelStock) Date() time.Time {
+func (m *Stock) Date() time.Time {
 	if len(m.DailySessions) == 0 {
 		return time.Time{}
 	}
@@ -181,7 +181,7 @@ func (m *ModelStock) Date() time.Time {
 }
 
 // FetchStockUpdate fetches a stock update for a single stock.
-func FetchStockUpdate(symbol string) (*ModelStockUpdate, error) {
+func FetchStockUpdate(symbol string) (*StockUpdate, error) {
 	// Request 2 years worth of data for moving averages and stochastics
 	// that require prior history for the first value.
 	const twoYearsDuration = 24 * time.Hour * 30 /* days */ * 12 /* months */ * 2 /* years */
@@ -200,14 +200,14 @@ func FetchStockUpdate(symbol string) (*ModelStockUpdate, error) {
 
 	ds, ws := convertSessions(hist.Sessions)
 
-	return &ModelStockUpdate{
+	return &StockUpdate{
 		Symbol:         symbol,
 		DailySessions:  ds,
 		WeeklySessions: ws,
 	}, nil
 }
 
-func convertSessions(ts []*stock.TradingSession) (ds, ws []*ModelTradingSession) {
+func convertSessions(ts []*stock.TradingSession) (ds, ws []*TradingSession) {
 	ds = dailySessions(ts)
 	ws = weeklySessions(ds)
 
@@ -225,9 +225,9 @@ func convertSessions(ts []*stock.TradingSession) (ds, ws []*ModelTradingSession)
 	return ds, ws
 }
 
-func dailySessions(ts []*stock.TradingSession) (ds []*ModelTradingSession) {
+func dailySessions(ts []*stock.TradingSession) (ds []*TradingSession) {
 	for _, s := range ts {
-		ds = append(ds, &ModelTradingSession{
+		ds = append(ds, &TradingSession{
 			Date:   s.Date,
 			Open:   s.Open,
 			High:   s.High,
@@ -242,7 +242,7 @@ func dailySessions(ts []*stock.TradingSession) (ds []*ModelTradingSession) {
 	return ds
 }
 
-func weeklySessions(ds []*ModelTradingSession) (ws []*ModelTradingSession) {
+func weeklySessions(ds []*TradingSession) (ws []*TradingSession) {
 	for _, s := range ds {
 		diffWeek := ws == nil
 		if !diffWeek {
@@ -269,7 +269,7 @@ func weeklySessions(ds []*ModelTradingSession) (ws []*ModelTradingSession) {
 	return ws
 }
 
-func fillChangeValues(ss []*ModelTradingSession) {
+func fillChangeValues(ss []*TradingSession) {
 	for i := range ss {
 		if i > 0 {
 			ss[i].Change = ss[i].Close - ss[i-1].Close
@@ -278,7 +278,7 @@ func fillChangeValues(ss []*ModelTradingSession) {
 	}
 }
 
-func fillStochastics(ss []*ModelTradingSession) {
+func fillStochastics(ss []*TradingSession) {
 	const (
 		k = 10
 		d = 3
@@ -320,7 +320,7 @@ func fillStochastics(ss []*ModelTradingSession) {
 	}
 }
 
-func fillMovingAverages(ss []*ModelTradingSession) {
+func fillMovingAverages(ss []*TradingSession) {
 	average := func(i, n int) (avg float32) {
 		if i+1-n < 0 {
 			return 0 // Not enough data
@@ -339,7 +339,7 @@ func fillMovingAverages(ss []*ModelTradingSession) {
 	}
 }
 
-func trimSessions(ds, ws []*ModelTradingSession) (trimDs, trimWs []*ModelTradingSession) {
+func trimSessions(ds, ws []*TradingSession) (trimDs, trimWs []*TradingSession) {
 	const sixMonthWeeks = 4 /* weeks */ * 6 /* months */
 	if len(ws) >= sixMonthWeeks {
 		ws = ws[len(ws)-sixMonthWeeks:]

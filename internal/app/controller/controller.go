@@ -77,7 +77,7 @@ type controllerStockUpdate struct {
 	symbol string
 
 	// update is the new data for the stock. Nil if an error happened.
-	update *model.ModelStockUpdate
+	update *model.StockUpdate
 
 	// updateErr is the error getting the update. Nil if no error happened.
 	updateErr error

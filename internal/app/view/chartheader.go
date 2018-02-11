@@ -30,7 +30,7 @@ type ChartHeader struct {
 	symbolQuoteTextRenderer *gfx.TextRenderer
 
 	// quoteFormatter is the function used to generate the quote text.
-	quoteFormatter func(*model.ModelStock) string
+	quoteFormatter func(*model.Stock) string
 
 	// refreshButton is the button to refresh the chart.
 	refreshButton *chartHeaderButton
@@ -66,7 +66,7 @@ type chartHeaderButton struct {
 // ChartHeaderArgs are passed to NewChartHeader.
 type ChartHeaderArgs struct {
 	SymbolQuoteTextRenderer *gfx.TextRenderer
-	QuoteFormatter          func(*model.ModelStock) string
+	QuoteFormatter          func(*model.Stock) string
 	ShowRefreshButton       bool
 	ShowAddButton           bool
 	ShowRemoveButton        bool
@@ -116,7 +116,7 @@ func (ch *ChartHeader) SetError(error bool) {
 }
 
 // SetStock sets the ChartHeader's stock.
-func (ch *ChartHeader) SetStock(st *model.ModelStock) {
+func (ch *ChartHeader) SetStock(st *model.Stock) {
 	ch.symbol = st.Symbol
 	ch.quoteText = ch.quoteFormatter(st)
 

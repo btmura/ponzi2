@@ -33,7 +33,7 @@ func NewChartVolume() *ChartVolume {
 }
 
 // SetStock sets the ChartVolume's stock.
-func (ch *ChartVolume) SetStock(st *model.ModelStock) {
+func (ch *ChartVolume) SetStock(st *model.Stock) {
 	// Reset everything.
 	ch.Close()
 
@@ -149,7 +149,7 @@ func makeChartVolumeLabel(maxVolume int, perc float32) chartVolumeLabel {
 	}
 }
 
-func chartVolumeBarsVAO(ds []*model.ModelTradingSession, maxVolume int) *gfx.VAO {
+func chartVolumeBarsVAO(ds []*model.TradingSession, maxVolume int) *gfx.VAO {
 	data := &gfx.VAOVertexData{}
 
 	dx := 2.0 / float32(len(ds)) // (-1 to 1) on X-axis

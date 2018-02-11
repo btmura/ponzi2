@@ -29,7 +29,7 @@ func NewChartTimeLabels() *ChartTimeLabels {
 }
 
 // SetStock sets the ChartTimeLabels' stock.
-func (ch *ChartTimeLabels) SetStock(st *model.ModelStock) {
+func (ch *ChartTimeLabels) SetStock(st *model.Stock) {
 	// Reset everything.
 	ch.Close()
 
@@ -110,7 +110,7 @@ func chartTimeLabelText(month time.Month) string {
 	return string(month.String()[0:3])
 }
 
-func chartTimeLabels(ds []*model.ModelTradingSession) []chartTimeLabel {
+func chartTimeLabels(ds []*model.TradingSession) []chartTimeLabel {
 	var ls []chartTimeLabel
 
 	for i, s := range ds {

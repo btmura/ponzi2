@@ -42,7 +42,7 @@ func NewChartStochastics(interval ChartInterval) *ChartStochastics {
 }
 
 // SetStock sets the ChartStochastics' stock.
-func (ch *ChartStochastics) SetStock(st *model.ModelStock) {
+func (ch *ChartStochastics) SetStock(st *model.Stock) {
 	// Reset everything.
 	ch.Close()
 
@@ -60,7 +60,7 @@ func (ch *ChartStochastics) SetStock(st *model.ModelStock) {
 		makeChartStochasticLabel(.3),
 	}
 
-	var ss []*model.ModelTradingSession
+	var ss []*model.TradingSession
 	var dColor [3]float32
 	switch ch.interval {
 	case DailyInterval:
@@ -158,7 +158,7 @@ func makeChartStochasticLabel(perc float32) chartStochasticLabel {
 	}
 }
 
-func chartStochasticVAO(ss []*model.ModelTradingSession, dColor [3]float32) *gfx.VAO {
+func chartStochasticVAO(ss []*model.TradingSession, dColor [3]float32) *gfx.VAO {
 	data := &gfx.VAOVertexData{}
 	var v uint16 // vertex index
 

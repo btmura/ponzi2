@@ -19,7 +19,7 @@ func NewChartWeekLines() *ChartWeekLines {
 }
 
 // SetStock sets the ChartWeekLines' stock.
-func (ch *ChartWeekLines) SetStock(st *model.ModelStock) {
+func (ch *ChartWeekLines) SetStock(st *model.Stock) {
 	// Reset everything.
 	ch.Close()
 
@@ -32,7 +32,7 @@ func (ch *ChartWeekLines) SetStock(st *model.ModelStock) {
 	ch.renderable = true
 }
 
-func createChartWeekLinesVAO(ds []*model.ModelTradingSession) *gfx.VAO {
+func createChartWeekLinesVAO(ds []*model.TradingSession) *gfx.VAO {
 	data := &gfx.VAOVertexData{}
 	var v uint16 // vertex index
 

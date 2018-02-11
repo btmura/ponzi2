@@ -5,7 +5,7 @@ import "testing"
 func TestSetCurrentStock(t *testing.T) {
 	m := NewModel()
 
-	check := func(t *testing.T, got *ModelStock, gotChanged bool, wantSymbol string, wantChanged bool) {
+	check := func(t *testing.T, got *Stock, gotChanged bool, wantSymbol string, wantChanged bool) {
 		if got == nil {
 			t.Error("SetCurrentStock should NEVER return a nil stock.")
 		}

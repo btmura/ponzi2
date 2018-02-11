@@ -20,7 +20,7 @@ func NewChartAvgLines() *ChartAvgLines {
 }
 
 // SetStock sets the ChartAvgLine's stock.
-func (ch *ChartAvgLines) SetStock(st *model.ModelStock) {
+func (ch *ChartAvgLines) SetStock(st *model.Stock) {
 	// Reset everything.
 	ch.Close()
 
@@ -33,7 +33,7 @@ func (ch *ChartAvgLines) SetStock(st *model.ModelStock) {
 	ch.renderable = true
 }
 
-func createChartAvgLinesVAO(ds []*model.ModelTradingSession) *gfx.VAO {
+func createChartAvgLinesVAO(ds []*model.TradingSession) *gfx.VAO {
 	minPrice := float32(math.MaxFloat32)
 	maxPrice := float32(0)
 	for _, s := range ds {
