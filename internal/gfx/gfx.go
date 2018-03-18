@@ -1,7 +1,6 @@
 package gfx
 
 import (
-	"flag"
 	"image"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
@@ -11,10 +10,6 @@ import (
 
 // Get go-bindata from github.com/jteeuwen/go-bindata. It's used to embed resources into the binary.
 //go:generate go-bindata -pkg gfx -prefix data -ignore ".*blend.*" data
-
-func init() {
-	flag.Parse() // Avoid glog errors about logging before flag.Parse.
-}
 
 // Locations for the vertex and fragment shaders.
 const (

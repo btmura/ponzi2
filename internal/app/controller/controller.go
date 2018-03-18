@@ -15,6 +15,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/gfx"
 	math2 "github.com/btmura/ponzi2/internal/math"
+	"github.com/btmura/ponzi2/internal/stock"
 )
 
 // Application name for the window title.
@@ -50,6 +51,9 @@ type Controller struct {
 
 	// view is the UI that the Controller updates.
 	view *view.View
+
+	// stockDataFetcher fetches stock data.
+	stockDataFetcher *stock.AlphaVantage
 
 	// symbolToChartMap maps symbol to Chart. Only one entry right now.
 	symbolToChartMap map[string]*view.Chart
@@ -92,10 +96,11 @@ type controllerStockUpdate struct {
 }
 
 // NewController creates a new Controller.
-func NewController() *Controller {
+func NewController(stockDataFetcher *stock.AlphaVantage) *Controller {
 	return &Controller{
 		model:                 model.NewModel(),
 		view:                  view.NewView(),
+		stockDataFetcher:      stockDataFetcher,
 		symbolToChartMap:      map[string]*view.Chart{},
 		symbolToChartThumbMap: map[string]*view.ChartThumb{},
 		pendingStockUpdates:   make(chan controllerStockUpdate),
@@ -365,11 +370,18 @@ func (c *Controller) refreshStock(symbol string) {
 		th.SetError(false)
 	}
 	go func() {
-		u, err := model.FetchStockUpdate(symbol)
+		h, err := c.stockDataFetcher.GetHistory(&stock.HistoryRequest{Symbol: symbol})
+		if err != nil {
+			c.pendingStockUpdates <- controllerStockUpdate{
+				symbol:    symbol,
+				updateErr: err,
+			}
+			return
+		}
+
 		c.pendingStockUpdates <- controllerStockUpdate{
-			symbol:    symbol,
-			update:    u,
-			updateErr: err,
+			symbol: symbol,
+			update: model.NewStockUpdate(symbol, h.TradingSessions),
 		}
 	}()
 }

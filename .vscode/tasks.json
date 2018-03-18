@@ -2,15 +2,15 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "taskName": "build and run",
+            "label": "build and run",
             "type": "shell",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "command": "go generate; if ($?) { go build -v -x }; if ($?) { ./ponzi2.exe -logtostderr }",
+            "command": "go generate; if ($?) { go build -v -x }; if ($?) { ./ponzi2.exe -logtostderr -alpha_vantage_api_key=${config:ponzi2.alphaVantageApiKey} }",
             "linux": {
-                "command": "go generate && go build -v -x && ./ponzi2 -logtostderr"
+                "command": "go generate && go build -v -x && ./ponzi2 -logtostderr -alpha_vantage_api_key=${config:ponzi2.alphaVantageApiKey}"
             },
             "options": {
                 "cwd": "${workspaceRoot}"
@@ -20,7 +20,7 @@
             ]
         },
         {
-            "taskName": "clean install",
+            "label": "clean install",
             "type": "shell",
             "command": "go clean -i -x; if ($?) { go install -ldflags='-H=windowsgui' }",
             "linux": {

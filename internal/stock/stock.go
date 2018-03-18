@@ -2,30 +2,28 @@ package stock
 
 import (
 	"encoding/csv"
-	"flag"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/golang/glog"
 )
 
-func init() {
-	flag.Parse() // Avoid glog errors about logging before flag.Parse.
+// HistoryRequest is a request for a stock's trading history.
+type HistoryRequest struct {
+	// Symbol is the stock's symbol like "SPY".
+	Symbol string
 }
 
-// TradingHistory is a list of trading sessions spanning some time.
-type TradingHistory struct {
-	Symbol     string
-	StartDate  time.Time
-	EndDate    time.Time
-	DataSource DataSource
-	Sessions   []*TradingSession
+// History is a stock's trading history.
+type History struct {
+	// TradingSessions is a sorted slice of trading sessions spanning some time.
+	TradingSessions []*TradingSession
 }
 
 // TradingSession contains stats from a single trading session.
@@ -39,137 +37,90 @@ type TradingSession struct {
 	Volume int
 }
 
-// DataSource is the data source to query for tradingSession data.
-type DataSource int
-
-// dataSource values.
-const (
-	DefaultSource DataSource = iota
-	Google
-)
-
-// GetTradingHistoryRequest is the request for getTradingHistory.
-type GetTradingHistoryRequest struct {
-	Symbol     string
-	StartDate  time.Time
-	EndDate    time.Time
-	DataSource DataSource
+// AlphaVantage uses AlphaVantage to get stock data.
+type AlphaVantage struct {
+	apiKey string
 }
 
-// GetTradingHistory gets the trading history matching the request criteria.
-func GetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, error) {
-	return googleGetTradingHistory(req)
+// NewAlphaVantage returns a new AlphaVantage.
+func NewAlphaVantage(apiKey string) *AlphaVantage {
+	return &AlphaVantage{apiKey: apiKey}
 }
 
-func googleGetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, error) {
-	formatTime := func(date time.Time) string {
-		return date.Format("Jan 02, 2006")
-	}
-
+// GetHistory returns stock data or an error.
+func (a *AlphaVantage) GetHistory(req *HistoryRequest) (*History, error) {
 	v := url.Values{}
-	v.Set("q", req.Symbol)
-	v.Set("startdate", formatTime(req.StartDate))
-	v.Set("enddate", formatTime(req.EndDate))
-	v.Set("output", "csv")
+	v.Set("function", "TIME_SERIES_DAILY")
+	v.Set("symbol", req.Symbol)
+	v.Set("outputsize", "compact")
+	v.Set("datatype", "csv")
+	v.Set("apikey", a.apiKey)
 
-	u, err := url.Parse("http://finance.google.com/finance/historical")
+	u, err := url.Parse("https://www.alphavantage.co/query")
 	if err != nil {
-		return nil, err
+		log.Fatalf("can't parse url")
 	}
 	u.RawQuery = v.Encode()
-	glog.Infof("GET %s", u)
 
+	glog.Infof("GET %s", u)
 	resp, err := http.Get(u.String())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("stock: can't get data: %v", err)
 	}
 	defer resp.Body.Close()
 
-	history := &TradingHistory{
-		Symbol:     req.Symbol,
-		StartDate:  req.StartDate,
-		EndDate:    req.EndDate,
-		DataSource: req.DataSource,
-	}
+	var ts []*TradingSession
+
 	r := csv.NewReader(resp.Body)
 	for i := 0; ; i++ {
-		record, err := r.Read()
+		rec, err := r.Read()
+		if err == io.EOF {
+			break
+		}
 		if err != nil {
-			if err == io.EOF {
-				break
-			}
 			return nil, err
 		}
 
-		// wrapErr adds the error to the record for debugging.
-		wrapErr := func(err error) error {
-			return fmt.Errorf("parsing %q: %v", strings.Join(record, ","), err)
-		}
-
-		// format: Date, Open, High, Low, Close, Volume
-		if len(record) != 6 {
-			return nil, fmt.Errorf("record length should be 6, got %d", len(record))
-		}
-
-		// Skip the header row.
+		// Skip the header row: timestamp, open, high, low, close, volume
 		if i == 0 {
 			continue
 		}
 
-		parseRecordTime := func(i int) (time.Time, error) {
-			return time.Parse("2-Jan-06", record[i])
+		if len(rec) != 6 {
+			return nil, fmt.Errorf("stock: rec length should be 6, got %d", len(rec))
 		}
 
-		parseRecordFloat := func(i int) (float32, error) {
-			return parseFloat(record[i])
-		}
-
-		parseRecordInt := func(i int) (int, error) {
-			return parseInt(record[i])
-		}
-
-		date, err := parseRecordTime(0)
+		date, err := time.Parse("2006-01-02", rec[0])
 		if err != nil {
-			return nil, wrapErr(err)
+			return nil, fmt.Errorf("stock: can't parse timestamp: %v", err)
 		}
 
-		close, err := parseRecordFloat(4)
+		open, err := parseFloat(rec[1])
 		if err != nil {
-			return nil, wrapErr(err)
+			return nil, fmt.Errorf("stock: can't parse open: %v", err)
 		}
 
-		// Open, high, and low can be reported as "-" causing parse errors,
-		// so set them to the close by default to fix graph rendering.
-
-		open, high, low := close, close, close
-
-		if record[1] != "-" {
-			open, err = parseRecordFloat(1)
-			if err != nil {
-				return nil, wrapErr(err)
-			}
-		}
-
-		if record[2] != "-" {
-			high, err = parseRecordFloat(2)
-			if err != nil {
-				return nil, wrapErr(err)
-			}
-		}
-
-		if record[3] != "-" {
-			low, err = parseRecordFloat(3)
-			if err != nil {
-				return nil, wrapErr(err)
-			}
-		}
-
-		volume, err := parseRecordInt(5)
+		high, err := parseFloat(rec[2])
 		if err != nil {
-			return nil, wrapErr(err)
+			return nil, fmt.Errorf("stock: can't parse high: %v", err)
 		}
 
-		history.Sessions = append(history.Sessions, &TradingSession{
+		low, err := parseFloat(rec[3])
+		if err != nil {
+			return nil, fmt.Errorf("stock: can't parse low: %v", err)
+		}
+
+		close, err := parseFloat(rec[4])
+		if err != nil {
+			return nil, fmt.Errorf("stock: can't parse close: %v", err)
+		}
+
+		volume, err := parseInt(rec[5])
+		if err != nil {
+			return nil, fmt.Errorf("stock: can't parse volume: %v", err)
+		}
+
+		ts = append(ts, &TradingSession{
 			Date:   date,
 			Open:   open,
 			High:   high,
@@ -180,14 +131,16 @@ func googleGetTradingHistory(req *GetTradingHistoryRequest) (*TradingHistory, er
 	}
 
 	// Most recent trading sessions at the back.
-	sortByTradingSessionDate(history.Sessions)
+	sort.Slice(ts, func(i, j int) bool {
+		return ts[i].Date.Before(ts[j].Date)
+	})
 
-	return history, nil
+	return &History{TradingSessions: ts}, nil
 }
 
-// parseFloat removes commas and then calls parseFloat.
+// parseFloat parses a string into a float32.
 func parseFloat(value string) (float32, error) {
-	f64, err := strconv.ParseFloat(strings.Replace(value, ",", "", -1), 32)
+	f64, err := strconv.ParseFloat(value, 32)
 	return float32(f64), err
 }
 
@@ -195,10 +148,4 @@ func parseFloat(value string) (float32, error) {
 func parseInt(value string) (int, error) {
 	i64, err := strconv.ParseInt(value, 10, 64)
 	return int(i64), err
-}
-
-func sortByTradingSessionDate(ss []*TradingSession) {
-	sort.Slice(ss, func(i, j int) bool {
-		return ss[i].Date.Before(ss[j].Date)
-	})
 }

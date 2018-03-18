@@ -7,7 +7,6 @@ import (
 	"github.com/golang/glog"
 
 	"github.com/btmura/ponzi2/internal/stock"
-	time2 "github.com/btmura/ponzi2/internal/time"
 )
 
 // Model keeps track of the user's stocks.
@@ -180,36 +179,10 @@ func (m *Stock) Date() time.Time {
 	return m.DailySessions[len(m.DailySessions)-1].Date
 }
 
-// FetchStockUpdate fetches a stock update for a single stock.
-func FetchStockUpdate(symbol string) (*StockUpdate, error) {
-	// Request 2 years worth of data for moving averages and stochastics
-	// that require prior history for the first value.
-	const twoYearsDuration = 24 * time.Hour * 30 /* days */ * 12 /* months */ * 2 /* years */
-
-	end := time2.Midnight(time.Now().In(time2.NewYorkLoc))
-	start := end.Add(-twoYearsDuration)
-
-	hist, err := stock.GetTradingHistory(&stock.GetTradingHistoryRequest{
-		Symbol:    symbol,
-		StartDate: start,
-		EndDate:   end,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	ds, ws := convertSessions(hist.Sessions)
-
-	return &StockUpdate{
-		Symbol:         symbol,
-		DailySessions:  ds,
-		WeeklySessions: ws,
-	}, nil
-}
-
-func convertSessions(ts []*stock.TradingSession) (ds, ws []*TradingSession) {
-	ds = dailySessions(ts)
-	ws = weeklySessions(ds)
+// NewStockUpdate returns a StockUpdate that can be applied to the model.
+func NewStockUpdate(symbol string, ts []*stock.TradingSession) *StockUpdate {
+	ds := dailySessions(ts)
+	ws := weeklySessions(ds)
 
 	fillChangeValues(ds)
 	fillChangeValues(ws)
@@ -222,7 +195,11 @@ func convertSessions(ts []*stock.TradingSession) (ds, ws []*TradingSession) {
 
 	ds, ws = trimSessions(ds, ws)
 
-	return ds, ws
+	return &StockUpdate{
+		Symbol:         symbol,
+		DailySessions:  ds,
+		WeeklySessions: ws,
+	}
 }
 
 func dailySessions(ts []*stock.TradingSession) (ds []*TradingSession) {
