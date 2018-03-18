@@ -87,7 +87,7 @@ func shaderFrag() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "shader.frag", size: 430, mode: os.FileMode(438), modTime: time.Unix(1507508275, 0)}
+	info := bindataFileInfo{name: "shader.frag", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -107,7 +107,7 @@ func shaderVert() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "shader.vert", size: 401, mode: os.FileMode(438), modTime: time.Unix(1507508320, 0)}
+	info := bindataFileInfo{name: "shader.vert", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -127,7 +127,7 @@ func squareplanePly() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "squarePlane.ply", size: 644, mode: os.FileMode(438), modTime: time.Unix(1507500773, 0)}
+	info := bindataFileInfo{name: "squarePlane.ply", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -147,7 +147,7 @@ func testtexturePng() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "testTexture.png", size: 329, mode: os.FileMode(438), modTime: time.Unix(1504323831, 0)}
+	info := bindataFileInfo{name: "testTexture.png", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -167,7 +167,7 @@ func textplanePly() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "textPlane.ply", size: 641, mode: os.FileMode(438), modTime: time.Unix(1504402834, 0)}
+	info := bindataFileInfo{name: "textPlane.ply", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

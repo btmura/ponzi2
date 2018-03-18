@@ -9,7 +9,7 @@ import (
 )
 
 // Get go-bindata from github.com/jteeuwen/go-bindata. It's used to embed resources into the binary.
-//go:generate go-bindata -pkg view -prefix data -ignore ".*blend.*" -ignore ".*proto" -ignore ".*xcf" data
+//go:generate go-bindata -pkg view -prefix data -nometadata -ignore ".*blend.*" -ignore ".*proto" -ignore ".*xcf" data
 
 // Frames per second.
 // TODO(btmura): remove duplicate fps constant in controller
