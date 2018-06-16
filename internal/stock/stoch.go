@@ -12,8 +12,8 @@ import (
 	"github.com/golang/glog"
 )
 
-// StochasticRequest is a request for a stock's stochastics.
-type StochasticRequest struct {
+// GetStochasticsRequest is a request for a stock's stochastics.
+type GetStochasticsRequest struct {
 	// Symbol is the stock's symbol like "SPY".
 	Symbol string
 }
@@ -37,7 +37,7 @@ type StochasticValue struct {
 }
 
 // GetStochastics returns Stochastics or an error.
-func (a *AlphaVantage) GetStochastics(req *StochasticRequest) (*Stochastics, error) {
+func (a *AlphaVantage) GetStochastics(req *GetStochasticsRequest) (*Stochastics, error) {
 	v := url.Values{}
 	v.Set("function", "STOCH")
 	v.Set("symbol", req.Symbol)
@@ -53,7 +53,7 @@ func (a *AlphaVantage) GetStochastics(req *StochasticRequest) (*Stochastics, err
 	glog.Info(u)
 	resp, err := http.Get(u.String())
 	if err != nil {
-		return nil, fmt.Errorf("stock: http getting stoch failed: %v", err)
+		return nil, fmt.Errorf("stock: http get for stoch failed: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -107,17 +107,17 @@ func (a *AlphaVantage) GetStochastics(req *StochasticRequest) (*Stochastics, err
 	for dt, pt := range data.TechnicalAnalysis {
 		date, err := time.Parse("2006-01-02", dt)
 		if err != nil {
-			return nil, fmt.Errorf("stock: parsing stock time failed: %v", err)
+			return nil, fmt.Errorf("stock: parsing stoch time (%v) failed: %v", dt, err)
 		}
 
 		k, err := parseFloat(pt.SlowK)
 		if err != nil {
-			return nil, fmt.Errorf("stock: parsing stoch k failed: %v", err)
+			return nil, fmt.Errorf("stock: parsing stoch k (%f) failed: %v", k, err)
 		}
 
 		d, err := parseFloat(pt.SlowD)
 		if err != nil {
-			return nil, fmt.Errorf("stock: parsing stoch d failed: %v", err)
+			return nil, fmt.Errorf("stock: parsing stoch d (%f) failed: %v", d, err)
 		}
 
 		vs = append(vs, &StochasticValue{
