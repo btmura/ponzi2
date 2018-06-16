@@ -22,6 +22,8 @@ func main() {
 	if err != nil {
 		glog.Exit(err)
 	}
-	// TODO(btmura): print out response properly
-	fmt.Println(resp)
+
+	for i, v := range resp.Values {
+		fmt.Printf("%d: %s K: %.2f D: %.2f\n", i, v.Date, v.K, v.D)
+	}
 }
