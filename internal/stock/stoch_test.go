@@ -50,17 +50,17 @@ func TestDecodeStochastics(t *testing.T) {
 			want: &Stochastics{
 				Values: []*StochasticValue{
 					{
-						Date: parseDate("2018-06-11"),
+						Date: mustParseDate("2018-06-11"),
 						K:    43.8988,
 						D:    63.8097,
 					},
 					{
-						Date: parseDate("2018-06-12"),
+						Date: mustParseDate("2018-06-12"),
 						K:    41.1255,
 						D:    50.5565,
 					},
 					{
-						Date: parseDate("2018-06-13"),
+						Date: mustParseDate("2018-06-13"),
 						K:    29.8701,
 						D:    38.2982,
 					},
@@ -81,8 +81,8 @@ func TestDecodeStochastics(t *testing.T) {
 	}
 }
 
-func parseDate(dstr string) time.Time {
-	date, err := time.Parse("2006-01-02", dstr)
+func mustParseDate(dstr string) time.Time {
+	date, err := parseDate(dstr)
 	if err != nil {
 		log.Fatal(err)
 	}

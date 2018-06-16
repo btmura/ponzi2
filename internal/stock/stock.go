@@ -90,7 +90,7 @@ func (a *AlphaVantage) GetHistory(req *HistoryRequest) (*History, error) {
 			return nil, fmt.Errorf("stock: rec length should be 6, got %d", len(rec))
 		}
 
-		date, err := time.Parse("2006-01-02", rec[0])
+		date, err := parseDate(rec[0])
 		if err != nil {
 			return nil, fmt.Errorf("stock: can't parse timestamp: %v", err)
 		}
@@ -138,13 +138,15 @@ func (a *AlphaVantage) GetHistory(req *HistoryRequest) (*History, error) {
 	return &History{TradingSessions: ts}, nil
 }
 
-// parseFloat parses a string into a float32.
+func parseDate(dstr string) (time.Time, error) {
+	return time.Parse("2006-01-02", dstr)
+}
+
 func parseFloat(value string) (float32, error) {
 	f64, err := strconv.ParseFloat(value, 32)
 	return float32(f64), err
 }
 
-// parseInt parses a string into an int.
 func parseInt(value string) (int, error) {
 	i64, err := strconv.ParseInt(value, 10, 64)
 	return int(i64), err

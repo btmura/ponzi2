@@ -79,7 +79,7 @@ func decodeStochastics(r io.Reader) (*Stochastics, error) {
 
 	var vs []*StochasticValue
 	for dstr, pt := range data.TechnicalAnalysis {
-		date, err := time.Parse("2006-01-02", dstr)
+		date, err := parseDate(dstr)
 		if err != nil {
 			return nil, fmt.Errorf("stock: parsing stoch time (%v) failed: %v", dstr, err)
 		}
