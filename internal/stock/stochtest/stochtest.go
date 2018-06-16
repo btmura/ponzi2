@@ -7,8 +7,6 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/golang/glog"
-
 	"github.com/btmura/ponzi2/internal/stock"
 )
 
@@ -20,7 +18,7 @@ func main() {
 	av := stock.NewAlphaVantage(*alphaVantageAPIKey)
 	resp, err := av.GetStochastics(&stock.GetStochasticsRequest{Symbol: "SPY"})
 	if err != nil {
-		glog.Exit(err)
+		logger.Fatal(err)
 	}
 
 	for i, v := range resp.Values {

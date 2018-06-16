@@ -4,7 +4,6 @@ import (
 	"image"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
-	"github.com/golang/glog"
 )
 
 // VAO is a Vertex Array Object for one element type (lines, triangles, etc).
@@ -62,7 +61,7 @@ type VAOVertexData struct {
 // Since NewVAO defers the creation of the actual OpenGL VAO till the first
 // rendering, callers may call NewVAO at the package scope to simplify code.
 func NewVAO(mode VAODrawMode, data *VAOVertexData) *VAO {
-	glog.V(1).Infof("NewVAO: v(%d) tc(%d) c(%d) i(%d)", len(data.Vertices), len(data.TexCoords), len(data.Colors), len(data.Indices))
+	logger.Printf("NewVAO: v(%d) tc(%d) c(%d) i(%d)", len(data.Vertices), len(data.TexCoords), len(data.Colors), len(data.Indices))
 	if len(data.Indices) == 0 {
 		return &VAO{} // OpenGL doesn't allow empty buffer objects. Return VAO with zero count.
 	}
@@ -75,7 +74,7 @@ func NewVAO(mode VAODrawMode, data *VAOVertexData) *VAO {
 	case Lines:
 		glMode = gl.LINES
 	default:
-		glog.Fatalf("NewVAO: unsupported mode: %v", mode)
+		logger.Fatalf("NewVAO: unsupported mode: %v", mode)
 	}
 
 	return &VAO{
@@ -154,7 +153,7 @@ func createVAO(data *VAOVertexData) (array uint32, count int32) {
 
 // Delete deletes the VAO. Don't call Render after calling this.
 func (v *VAO) Delete() {
-	glog.V(1).Infof("Delete: array(%d) mode(%v) count(%d) texture(%d) hasTexture(%t)", v.array, v.mode, v.count, v.texture, v.hasTexture)
+	logger.Printf("Delete: array(%d) mode(%v) count(%d) texture(%d) hasTexture(%t)", v.array, v.mode, v.count, v.texture, v.hasTexture)
 	defer func() {
 		v.initData = nil
 		v.array = 0

@@ -7,12 +7,13 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"sort"
 	"strconv"
 	"time"
-
-	"github.com/golang/glog"
 )
+
+var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 
 // HistoryRequest is a request for a stock's trading history.
 type HistoryRequest struct {
@@ -58,11 +59,11 @@ func (a *AlphaVantage) GetHistory(req *HistoryRequest) (*History, error) {
 
 	u, err := url.Parse("https://www.alphavantage.co/query")
 	if err != nil {
-		log.Fatalf("can't parse url")
+		logger.Fatalf("can't parse url")
 	}
 	u.RawQuery = v.Encode()
 
-	glog.Infof("GET %s", u)
+	logger.Printf("GET %s", u)
 	resp, err := http.Get(u.String())
 	if err != nil {
 		return nil, fmt.Errorf("stock: can't get data: %v", err)

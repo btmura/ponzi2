@@ -4,13 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"sort"
 	"time"
-
-	"github.com/golang/glog"
 )
 
 // GetStochasticsRequest is a request for a stock's stochastics.
@@ -47,11 +44,11 @@ func (a *AlphaVantage) GetStochastics(req *GetStochasticsRequest) (*Stochastics,
 
 	u, err := url.Parse("https://www.alphavantage.co/query")
 	if err != nil {
-		log.Fatalf("can't parse url")
+		logger.Fatalf("can't parse url")
 	}
 	u.RawQuery = v.Encode()
 
-	glog.Info(u)
+	logger.Print(u)
 	resp, err := http.Get(u.String())
 	if err != nil {
 		return nil, fmt.Errorf("stock: http get for stoch failed: %v", err)

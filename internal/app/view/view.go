@@ -2,6 +2,8 @@ package view
 
 import (
 	"image"
+	"log"
+	"os"
 
 	"golang.org/x/image/font/gofont/goregular"
 
@@ -10,6 +12,8 @@ import (
 
 // Get go-bindata from github.com/jteeuwen/go-bindata. It's used to embed resources into the binary.
 //go:generate go-bindata -pkg view -prefix data -nometadata -ignore ".*blend.*" -ignore ".*proto" -ignore ".*xcf" data
+
+var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 
 // Frames per second.
 // TODO(btmura): remove duplicate fps constant in controller

@@ -1,7 +1,6 @@
 package stock
 
 import (
-	"log"
 	"strings"
 	"testing"
 	"time"
@@ -84,7 +83,7 @@ func TestDecodeStochastics(t *testing.T) {
 func mustParseDate(dstr string) time.Time {
 	date, err := parseDate(dstr)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	return date
 }
