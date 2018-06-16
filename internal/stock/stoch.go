@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"sort"
 	"time"
 
 	"github.com/golang/glog"
@@ -126,7 +127,9 @@ func (a *AlphaVantage) GetStochastics(req *StochasticRequest) (*Stochastics, err
 		})
 	}
 
-	// TODO(btmura): sort values by date
+	sort.Slice(vs, func(i, j int) bool {
+		return vs[i].Date.Before(vs[j].Date)
+	})
 
 	// TODO(btmura): add test
 
