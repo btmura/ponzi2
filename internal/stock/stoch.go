@@ -3,6 +3,7 @@ package stock
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -57,37 +58,10 @@ func (a *AlphaVantage) GetStochastics(req *GetStochasticsRequest) (*Stochastics,
 	}
 	defer resp.Body.Close()
 
-	// https://www.alphavantage.co/query?function=STOCH&symbol=MSFT&interval=daily&apikey=demo
-	//
-	// {
-	//     "Meta Data": {
-	//         "1: Symbol": "MSFT",
-	//         "2: Indicator": "Stochastic (STOCH)",
-	//         "3: Last Refreshed": "2018-06-13",
-	//         "4: Interval": "daily",
-	//         "5.1: FastK Period": 5,
-	//         "5.2: SlowK Period": 3,
-	//         "5.3: SlowK MA Type": 0,
-	//         "5.4: SlowD Period": 3,
-	//         "5.5: SlowD MA Type": 0,
-	//         "6: Time Zone": "US/Eastern Time"
-	//     },
-	//     "Technical Analysis: STOCH": {
-	//         "2018-06-13": {
-	//             "SlowK": "29.8701",
-	//             "SlowD": "38.2982"
-	//         },
-	//         "2018-06-12": {
-	//             "SlowK": "41.1255",
-	//             "SlowD": "50.5565"
-	//         },
-	//         "2018-06-11": {
-	//             "SlowK": "43.8988",
-	//             "SlowD": "63.8097"
-	//         }
-	//     }
-	// }
+	return decodeStochastics(resp.Body)
+}
 
+func decodeStochastics(r io.Reader) (*Stochastics, error) {
 	type DataPoint struct {
 		SlowK string
 		SlowD string
@@ -98,16 +72,16 @@ func (a *AlphaVantage) GetStochastics(req *GetStochasticsRequest) (*Stochastics,
 	}
 
 	var data Data
-	dec := json.NewDecoder(resp.Body)
+	dec := json.NewDecoder(r)
 	if err := dec.Decode(&data); err != nil {
 		return nil, fmt.Errorf("stock: decoding stoch json failed: %v", err)
 	}
 
 	var vs []*StochasticValue
-	for dt, pt := range data.TechnicalAnalysis {
-		date, err := time.Parse("2006-01-02", dt)
+	for dstr, pt := range data.TechnicalAnalysis {
+		date, err := time.Parse("2006-01-02", dstr)
 		if err != nil {
-			return nil, fmt.Errorf("stock: parsing stoch time (%v) failed: %v", dt, err)
+			return nil, fmt.Errorf("stock: parsing stoch time (%v) failed: %v", dstr, err)
 		}
 
 		k, err := parseFloat(pt.SlowK)
