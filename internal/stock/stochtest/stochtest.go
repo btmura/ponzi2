@@ -1,4 +1,4 @@
-// Binary stochktest exercises the stock.GetStochastics function.
+// Binary stochtest exercises the stock.GetStochastics function.
 //
 // go run internal/stock/stochtest/stochtest.go
 package main
@@ -22,5 +22,6 @@ func main() {
 	if err != nil {
 		glog.Exit(err)
 	}
+	// TODO(btmura): print out response properly
 	fmt.Println(resp)
 }

@@ -1,6 +1,15 @@
 package stock
 
-import "time"
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"net/url"
+	"time"
+
+	"github.com/golang/glog"
+)
 
 // StochasticRequest is a request for a stock's stochastics.
 type StochasticRequest struct {
@@ -28,5 +37,98 @@ type StochasticValue struct {
 
 // GetStochastics returns Stochastics or an error.
 func (a *AlphaVantage) GetStochastics(req *StochasticRequest) (*Stochastics, error) {
-	return &Stochastics{}, nil
+	v := url.Values{}
+	v.Set("function", "STOCH")
+	v.Set("symbol", req.Symbol)
+	v.Set("interval", "daily")
+	v.Set("apikey", a.apiKey)
+
+	u, err := url.Parse("https://www.alphavantage.co/query")
+	if err != nil {
+		log.Fatalf("can't parse url")
+	}
+	u.RawQuery = v.Encode()
+
+	glog.Info(u)
+	resp, err := http.Get(u.String())
+	if err != nil {
+		return nil, fmt.Errorf("stock: http getting stoch failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// https://www.alphavantage.co/query?function=STOCH&symbol=MSFT&interval=daily&apikey=demo
+	//
+	// {
+	//     "Meta Data": {
+	//         "1: Symbol": "MSFT",
+	//         "2: Indicator": "Stochastic (STOCH)",
+	//         "3: Last Refreshed": "2018-06-13",
+	//         "4: Interval": "daily",
+	//         "5.1: FastK Period": 5,
+	//         "5.2: SlowK Period": 3,
+	//         "5.3: SlowK MA Type": 0,
+	//         "5.4: SlowD Period": 3,
+	//         "5.5: SlowD MA Type": 0,
+	//         "6: Time Zone": "US/Eastern Time"
+	//     },
+	//     "Technical Analysis: STOCH": {
+	//         "2018-06-13": {
+	//             "SlowK": "29.8701",
+	//             "SlowD": "38.2982"
+	//         },
+	//         "2018-06-12": {
+	//             "SlowK": "41.1255",
+	//             "SlowD": "50.5565"
+	//         },
+	//         "2018-06-11": {
+	//             "SlowK": "43.8988",
+	//             "SlowD": "63.8097"
+	//         }
+	//     }
+	// }
+
+	type DataPoint struct {
+		SlowK string
+		SlowD string
+	}
+
+	type Data struct {
+		TechnicalAnalysis map[string]DataPoint `json:"Technical Analysis: STOCH"`
+	}
+
+	var data Data
+	dec := json.NewDecoder(resp.Body)
+	if err := dec.Decode(&data); err != nil {
+		return nil, fmt.Errorf("stock: decoding stoch json failed: %v", err)
+	}
+
+	var vs []*StochasticValue
+	for dt, pt := range data.TechnicalAnalysis {
+		date, err := time.Parse("2006-01-02", dt)
+		if err != nil {
+			return nil, fmt.Errorf("stock: parsing stock time failed: %v", err)
+		}
+
+		k, err := parseFloat(pt.SlowK)
+		if err != nil {
+			return nil, fmt.Errorf("stock: parsing stoch k failed: %v", err)
+		}
+
+		d, err := parseFloat(pt.SlowD)
+		if err != nil {
+			return nil, fmt.Errorf("stock: parsing stoch d failed: %v", err)
+		}
+
+		vs = append(vs, &StochasticValue{
+			Date: date,
+			K:    k,
+			D:    d,
+		})
+	}
+
+	// TODO(btmura): sort values by date
+
+	// TODO(btmura): add test
+
+	return &Stochastics{Values: vs}, nil
 }
