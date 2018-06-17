@@ -6,6 +6,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 
 	"github.com/btmura/ponzi2/internal/stock"
 )
@@ -18,7 +19,7 @@ func main() {
 	av := stock.NewAlphaVantage(*alphaVantageAPIKey)
 	resp, err := av.GetStochastics(&stock.GetStochasticsRequest{Symbol: "SPY"})
 	if err != nil {
-		logger.Fatal(err)
+		log.Fatal(err)
 	}
 
 	for i, v := range resp.Values {
