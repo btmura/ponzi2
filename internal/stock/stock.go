@@ -27,6 +27,7 @@ func NewAlphaVantage(apiKey string) *AlphaVantage {
 
 func (av *AlphaVantage) httpGet(url string) (*http.Response, error) {
 	av.wait(time.Second) // Alpha Vantage suggests 1 second delay.
+	logger.Print(url)
 	return http.Get(url)
 }
 

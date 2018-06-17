@@ -23,10 +23,10 @@ type Stochastics struct {
 
 // StochasticValue are the stochastic values for some date.
 type StochasticValue struct {
-	// Date is the start date for a daily or weekly time span.
+	// Date is the start date of the time span covered by this value.
 	Date time.Time
 
-	// K tries to measure the momentum.
+	// K measures the stock's momentum.
 	K float32
 
 	// D is some moving average of K.
@@ -47,17 +47,16 @@ func (a *AlphaVantage) GetStochastics(req *GetStochasticsRequest) (*Stochastics,
 	}
 	u.RawQuery = v.Encode()
 
-	logger.Print(u)
 	resp, err := a.httpGet(u.String())
 	if err != nil {
 		return nil, fmt.Errorf("stock: http get for stoch failed: %v", err)
 	}
 	defer resp.Body.Close()
 
-	return decodeStochastics(resp.Body)
+	return decodeStochasticsResponse(resp.Body)
 }
 
-func decodeStochastics(r io.Reader) (*Stochastics, error) {
+func decodeStochasticsResponse(r io.Reader) (*Stochastics, error) {
 	type DataPoint struct {
 		SlowK string
 		SlowD string
@@ -82,12 +81,12 @@ func decodeStochastics(r io.Reader) (*Stochastics, error) {
 
 		k, err := parseFloat(pt.SlowK)
 		if err != nil {
-			return nil, fmt.Errorf("stock: parsing stoch k (%f) failed: %v", k, err)
+			return nil, fmt.Errorf("stock: parsing stoch k (%s) failed: %v", pt.SlowK, err)
 		}
 
 		d, err := parseFloat(pt.SlowD)
 		if err != nil {
-			return nil, fmt.Errorf("stock: parsing stoch d (%f) failed: %v", d, err)
+			return nil, fmt.Errorf("stock: parsing stoch d (%s) failed: %v", pt.SlowD, err)
 		}
 
 		vs = append(vs, &StochasticValue{
