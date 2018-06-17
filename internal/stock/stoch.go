@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"net/url"
 	"sort"
 	"time"
@@ -49,7 +48,7 @@ func (a *AlphaVantage) GetStochastics(req *GetStochasticsRequest) (*Stochastics,
 	u.RawQuery = v.Encode()
 
 	logger.Print(u)
-	resp, err := http.Get(u.String())
+	resp, err := a.httpGet(u.String())
 	if err != nil {
 		return nil, fmt.Errorf("stock: http get for stoch failed: %v", err)
 	}
@@ -101,8 +100,6 @@ func decodeStochastics(r io.Reader) (*Stochastics, error) {
 	sort.Slice(vs, func(i, j int) bool {
 		return vs[i].Date.Before(vs[j].Date)
 	})
-
-	// TODO(btmura): add test
 
 	return &Stochastics{Values: vs}, nil
 }

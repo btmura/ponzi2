@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"net/http"
 	"net/url"
 	"sort"
 	"time"
@@ -49,7 +48,7 @@ func (a *AlphaVantage) GetHistory(req *HistoryRequest) (*History, error) {
 	u.RawQuery = v.Encode()
 
 	logger.Printf("GET %s", u)
-	resp, err := http.Get(u.String())
+	resp, err := a.httpGet(u.String())
 	if err != nil {
 		return nil, fmt.Errorf("stock: can't get data: %v", err)
 	}
