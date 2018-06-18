@@ -373,7 +373,7 @@ func (c *Controller) refreshStock(symbol string) {
 		th.SetError(false)
 	}
 	go func() {
-		h, err := c.stockDataFetcher.GetHistory(&stock.HistoryRequest{Symbol: symbol})
+		h, err := c.stockDataFetcher.GetHistory(&stock.GetHistoryRequest{Symbol: symbol})
 		if err != nil {
 			c.pendingStockUpdates <- controllerStockUpdate{
 				symbol:    symbol,

@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-// HistoryRequest is a request for a stock's trading history.
-type HistoryRequest struct {
+// GetHistoryRequest is a request for a stock's trading history.
+type GetHistoryRequest struct {
 	// Symbol is the stock's symbol like "SPY".
 	Symbol string
 }
@@ -33,7 +33,7 @@ type TradingSession struct {
 }
 
 // GetHistory returns stock data or an error.
-func (a *AlphaVantage) GetHistory(req *HistoryRequest) (*History, error) {
+func (a *AlphaVantage) GetHistory(req *GetHistoryRequest) (*History, error) {
 	v := url.Values{}
 	v.Set("function", "TIME_SERIES_DAILY")
 	v.Set("symbol", req.Symbol)
