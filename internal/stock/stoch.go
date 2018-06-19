@@ -35,6 +35,10 @@ type StochasticValue struct {
 
 // GetStochastics returns Stochastics or an error.
 func (a *AlphaVantage) GetStochastics(req *GetStochasticsRequest) (*Stochastics, error) {
+	if req.Symbol == "" {
+		return nil, fmt.Errorf("stock: stoch request missing symbol: %v", req)
+	}
+
 	v := url.Values{}
 	v.Set("function", "STOCH")
 	v.Set("symbol", req.Symbol)

@@ -17,7 +17,10 @@ func main() {
 	flag.Parse()
 
 	av := stock.NewAlphaVantage(*alphaVantageAPIKey)
-	resp, err := av.GetMovingAverage(&stock.GetMovingAverageRequest{Symbol: "SPY"})
+	resp, err := av.GetMovingAverage(&stock.GetMovingAverageRequest{
+		Symbol:     "SPY",
+		TimePeriod: 50,
+	})
 	if err != nil {
 		log.Fatal(err)
 	}

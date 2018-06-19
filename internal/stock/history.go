@@ -34,6 +34,10 @@ type TradingSession struct {
 
 // GetHistory returns stock data or an error.
 func (a *AlphaVantage) GetHistory(req *GetHistoryRequest) (*History, error) {
+	if req.Symbol == "" {
+		return nil, fmt.Errorf("stock: history request missing symbol: %v", req)
+	}
+
 	v := url.Values{}
 	v.Set("function", "TIME_SERIES_DAILY")
 	v.Set("symbol", req.Symbol)

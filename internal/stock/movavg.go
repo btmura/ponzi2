@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/url"
 	"sort"
+	"strconv"
 	"time"
 )
 
@@ -13,6 +14,9 @@ import (
 type GetMovingAverageRequest struct {
 	// Symbol is the stock's symbol like "SPY".
 	Symbol string
+
+	// TimePeriod is the number of data points to calculate each value.
+	TimePeriod int
 }
 
 // MovingAverage is a time series of moving average values.
@@ -32,11 +36,19 @@ type MovingAverageValue struct {
 
 // GetMovingAverage returns MovingAverage data or an error.
 func (a *AlphaVantage) GetMovingAverage(req *GetMovingAverageRequest) (*MovingAverage, error) {
+	if req.Symbol == "" {
+		return nil, fmt.Errorf("stock: movavg request missing symbol: %v", req)
+	}
+
+	if req.TimePeriod == 0 {
+		return nil, fmt.Errorf("stock: movavg request missing time period: %v", req)
+	}
+
 	v := url.Values{}
 	v.Set("function", "SMA")
 	v.Set("symbol", req.Symbol)
 	v.Set("interval", "daily")
-	v.Set("time_period", "50")
+	v.Set("time_period", strconv.Itoa(req.TimePeriod))
 	v.Set("series_type", "close")
 	v.Set("apikey", a.apiKey)
 
