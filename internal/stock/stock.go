@@ -1,6 +1,7 @@
 package stock
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -22,13 +23,19 @@ type AlphaVantage struct {
 
 // NewAlphaVantage returns a new AlphaVantage.
 func NewAlphaVantage(apiKey string) *AlphaVantage {
-	return &AlphaVantage{apiKey: apiKey}
+	return &AlphaVantage{
+		apiKey: apiKey,
+	}
 }
 
-func (av *AlphaVantage) httpGet(url string) (*http.Response, error) {
+func (av *AlphaVantage) httpGet(ctx context.Context, url string) (*http.Response, error) {
 	av.wait(time.Second) // Alpha Vantage suggests 1 second delay.
 	logger.Print(url)
-	return http.Get(url)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	return http.DefaultClient.Do(req.WithContext(ctx))
 }
 
 type waiter struct {

@@ -1,6 +1,7 @@
 package stock
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -33,7 +34,7 @@ type TradingSession struct {
 }
 
 // GetHistory returns stock data or an error.
-func (a *AlphaVantage) GetHistory(req *GetHistoryRequest) (*History, error) {
+func (a *AlphaVantage) GetHistory(ctx context.Context, req *GetHistoryRequest) (*History, error) {
 	if req.Symbol == "" {
 		return nil, fmt.Errorf("stock: history request missing symbol: %v", req)
 	}
@@ -51,7 +52,7 @@ func (a *AlphaVantage) GetHistory(req *GetHistoryRequest) (*History, error) {
 	}
 	u.RawQuery = v.Encode()
 
-	resp, err := a.httpGet(u.String())
+	resp, err := a.httpGet(ctx, u.String())
 	if err != nil {
 		return nil, fmt.Errorf("stock: can't get data: %v", err)
 	}

@@ -4,6 +4,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -17,7 +18,7 @@ func main() {
 	flag.Parse()
 
 	av := stock.NewAlphaVantage(*alphaVantageAPIKey)
-	resp, err := av.GetMovingAverage(&stock.GetMovingAverageRequest{
+	resp, err := av.GetMovingAverage(context.Background(), &stock.GetMovingAverageRequest{
 		Symbol:     "SPY",
 		TimePeriod: 50,
 	})

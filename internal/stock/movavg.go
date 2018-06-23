@@ -1,6 +1,7 @@
 package stock
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -35,7 +36,7 @@ type MovingAverageValue struct {
 }
 
 // GetMovingAverage returns MovingAverage data or an error.
-func (a *AlphaVantage) GetMovingAverage(req *GetMovingAverageRequest) (*MovingAverage, error) {
+func (a *AlphaVantage) GetMovingAverage(ctx context.Context, req *GetMovingAverageRequest) (*MovingAverage, error) {
 	if req.Symbol == "" {
 		return nil, fmt.Errorf("stock: movavg request missing symbol: %v", req)
 	}
@@ -58,7 +59,7 @@ func (a *AlphaVantage) GetMovingAverage(req *GetMovingAverageRequest) (*MovingAv
 	}
 	u.RawQuery = v.Encode()
 
-	resp, err := a.httpGet(u.String())
+	resp, err := a.httpGet(ctx, u.String())
 	if err != nil {
 		return nil, fmt.Errorf("stock: http get for movavg failed: %v", err)
 	}

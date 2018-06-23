@@ -1,6 +1,7 @@
 package stock
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -34,7 +35,7 @@ type StochasticValue struct {
 }
 
 // GetStochastics returns Stochastics or an error.
-func (a *AlphaVantage) GetStochastics(req *GetStochasticsRequest) (*Stochastics, error) {
+func (a *AlphaVantage) GetStochastics(ctx context.Context, req *GetStochasticsRequest) (*Stochastics, error) {
 	if req.Symbol == "" {
 		return nil, fmt.Errorf("stock: stoch request missing symbol: %v", req)
 	}
@@ -51,7 +52,7 @@ func (a *AlphaVantage) GetStochastics(req *GetStochasticsRequest) (*Stochastics,
 	}
 	u.RawQuery = v.Encode()
 
-	resp, err := a.httpGet(u.String())
+	resp, err := a.httpGet(ctx, u.String())
 	if err != nil {
 		return nil, fmt.Errorf("stock: http get for stoch failed: %v", err)
 	}

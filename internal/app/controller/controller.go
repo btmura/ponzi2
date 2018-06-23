@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	"image"
 	"log"
@@ -114,6 +115,8 @@ func NewController(stockDataFetcher *stock.AlphaVantage) *Controller {
 
 // Run initializes and runs the "game loop".
 func (c *Controller) Run() {
+	ctx := context.Background()
+
 	if err := glfw.Init(); err != nil {
 		logger.Fatalf("Run: failed to init glfw: %v", err)
 	}
@@ -152,12 +155,12 @@ func (c *Controller) Run() {
 	}
 
 	if s := cfg.GetCurrentStock().GetSymbol(); s != "" {
-		c.setChart(s)
+		c.setChart(ctx, s)
 	}
 
 	for _, cs := range cfg.GetStocks() {
 		if s := cs.GetSymbol(); s != "" {
-			c.addChartThumb(s)
+			c.addChartThumb(ctx, s)
 		}
 	}
 
@@ -186,7 +189,7 @@ func (c *Controller) Run() {
 	})
 
 	win.SetKeyCallback(func(_ *glfw.Window, key glfw.Key, _ int, action glfw.Action, _ glfw.ModifierKey) {
-		c.setKey(key, action)
+		c.setKey(ctx, key, action)
 	})
 
 	win.SetCursorPosCallback(func(_ *glfw.Window, x, y float64) {
@@ -289,7 +292,7 @@ func (c *Controller) render(fudge float32) {
 	c.mouseLeftButtonClicked = false
 }
 
-func (c *Controller) setChart(symbol string) {
+func (c *Controller) setChart(ctx context.Context, symbol string) {
 	if symbol == "" {
 		return
 	}
@@ -309,18 +312,18 @@ func (c *Controller) setChart(symbol string) {
 
 	ch.SetStock(st)
 	ch.SetRefreshButtonClickCallback(func() {
-		c.refreshStock(symbol)
+		c.refreshStock(ctx, symbol)
 	})
 	ch.SetAddButtonClickCallback(func() {
-		c.addChartThumb(symbol)
+		c.addChartThumb(ctx, symbol)
 	})
 
 	c.view.SetChart(ch)
-	c.refreshStock(symbol)
+	c.refreshStock(ctx, symbol)
 	c.saveConfig()
 }
 
-func (c *Controller) addChartThumb(symbol string) {
+func (c *Controller) addChartThumb(ctx context.Context, symbol string) {
 	if symbol == "" {
 		return
 	}
@@ -338,11 +341,11 @@ func (c *Controller) addChartThumb(symbol string) {
 		c.removeChartThumb(symbol)
 	})
 	th.SetThumbClickCallback(func() {
-		c.setChart(symbol)
+		c.setChart(ctx, symbol)
 	})
 
 	c.view.AddChartThumb(th)
-	c.refreshStock(symbol)
+	c.refreshStock(ctx, symbol)
 	c.saveConfig()
 }
 
@@ -363,7 +366,7 @@ func (c *Controller) removeChartThumb(symbol string) {
 	c.saveConfig()
 }
 
-func (c *Controller) refreshStock(symbol string) {
+func (c *Controller) refreshStock(ctx context.Context, symbol string) {
 	if ch, ok := c.symbolToChartMap[symbol]; ok {
 		ch.SetLoading(true)
 		ch.SetError(false)
@@ -373,7 +376,7 @@ func (c *Controller) refreshStock(symbol string) {
 		th.SetError(false)
 	}
 	go func() {
-		h, err := c.stockDataFetcher.GetHistory(&stock.GetHistoryRequest{Symbol: symbol})
+		h, err := c.stockDataFetcher.GetHistory(ctx, &stock.GetHistoryRequest{Symbol: symbol})
 		if err != nil {
 			c.pendingStockUpdates <- controllerStockUpdate{
 				symbol:    symbol,
@@ -432,7 +435,7 @@ func (c *Controller) setChar(char rune) {
 	}
 }
 
-func (c *Controller) setKey(key glfw.Key, action glfw.Action) {
+func (c *Controller) setKey(ctx context.Context, key glfw.Key, action glfw.Action) {
 	if action != glfw.Release {
 		return
 	}
@@ -445,7 +448,7 @@ func (c *Controller) setKey(key glfw.Key, action glfw.Action) {
 		c.view.PopInputSymbolChar()
 
 	case glfw.KeyEnter:
-		c.setChart(c.view.InputSymbol())
+		c.setChart(ctx, c.view.InputSymbol())
 		c.view.ClearInputSymbol()
 	}
 }

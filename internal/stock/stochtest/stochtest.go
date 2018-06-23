@@ -4,6 +4,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -17,7 +18,7 @@ func main() {
 	flag.Parse()
 
 	av := stock.NewAlphaVantage(*alphaVantageAPIKey)
-	resp, err := av.GetStochastics(&stock.GetStochasticsRequest{Symbol: "SPY"})
+	resp, err := av.GetStochastics(context.Background(), &stock.GetStochasticsRequest{Symbol: "SPY"})
 	if err != nil {
 		log.Fatal(err)
 	}
