@@ -376,19 +376,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbol string) {
 		th.SetError(false)
 	}
 	go func() {
-		h, err := c.stockDataFetcher.GetHistory(ctx, &stock.GetHistoryRequest{Symbol: symbol})
-		if err != nil {
-			c.pendingStockUpdates <- controllerStockUpdate{
-				symbol:    symbol,
-				updateErr: err,
-			}
-			return
-		}
-
-		c.pendingStockUpdates <- controllerStockUpdate{
-			symbol: symbol,
-			update: model.NewStockUpdate(symbol, h.TradingSessions),
-		}
+		c.pendingStockUpdates <- c.stockUpdate(ctx, symbol)
 	}()
 }
 
