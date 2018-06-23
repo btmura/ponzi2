@@ -18,7 +18,11 @@ func main() {
 	flag.Parse()
 
 	av := stock.NewAlphaVantage(*alphaVantageAPIKey)
-	resp, err := av.GetStochastics(context.Background(), &stock.GetStochasticsRequest{Symbol: "SPY"})
+	req := &stock.GetStochasticsRequest{
+		Symbol:   "SPY",
+		Interval: stock.Daily,
+	}
+	resp, err := av.GetStochastics(context.Background(), req)
 	if err != nil {
 		log.Fatal(err)
 	}

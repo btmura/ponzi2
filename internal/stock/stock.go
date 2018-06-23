@@ -12,6 +12,27 @@ import (
 
 var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 
+// Interval specifies an interval on requests to get stock data.
+type Interval int
+
+// Values for Interval.
+const (
+	Daily Interval = iota
+	Weekly
+)
+
+// reqParam returns request parameter value for the Interval to use in queries.
+func (i Interval) reqParam() string {
+	switch i {
+	case Daily:
+		return "daily"
+	case Weekly:
+		return "weekly"
+	default:
+		return ""
+	}
+}
+
 // AlphaVantage uses AlphaVantage to get stock data.
 type AlphaVantage struct {
 	// apiKey is the API key registered on the Alpha Vantage site.

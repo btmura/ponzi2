@@ -10,20 +10,97 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+type stockUpdateData struct {
+	hist  *stock.History
+	ds    *stock.Stochastics
+	ws    *stock.Stochastics
+	ma25  *stock.MovingAverage
+	ma50  *stock.MovingAverage
+	ma250 *stock.MovingAverage
+}
+
 func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerStockUpdate {
 	g, gCtx := errgroup.WithContext(ctx)
 
-	var hist *stock.History
+	var data stockUpdateData
+
 	g.Go(func() error {
-		h, err := c.stockDataFetcher.GetHistory(gCtx, &stock.GetHistoryRequest{Symbol: symbol})
+		req := &stock.GetHistoryRequest{Symbol: symbol}
+		h, err := c.stockDataFetcher.GetHistory(gCtx, req)
 		if err != nil {
 			return err
 		}
-		hist = h
+		data.hist = h
+		return nil
+	})
+
+	g.Go(func() error {
+		req := &stock.GetStochasticsRequest{
+			Symbol:   symbol,
+			Interval: stock.Daily,
+		}
+		s, err := c.stockDataFetcher.GetStochastics(gCtx, req)
+		if err != nil {
+			return err
+		}
+		data.ds = s
+		return nil
+	})
+
+	g.Go(func() error {
+		req := &stock.GetStochasticsRequest{
+			Symbol:   symbol,
+			Interval: stock.Weekly,
+		}
+		s, err := c.stockDataFetcher.GetStochastics(gCtx, req)
+		if err != nil {
+			return err
+		}
+		data.ws = s
+		return nil
+	})
+
+	g.Go(func() error {
+		req := &stock.GetMovingAverageRequest{
+			Symbol:     symbol,
+			TimePeriod: 25,
+		}
+		m, err := c.stockDataFetcher.GetMovingAverage(gCtx, req)
+		if err != nil {
+			return err
+		}
+		data.ma25 = m
+		return nil
+	})
+
+	g.Go(func() error {
+		req := &stock.GetMovingAverageRequest{
+			Symbol:     symbol,
+			TimePeriod: 50,
+		}
+		m, err := c.stockDataFetcher.GetMovingAverage(gCtx, req)
+		if err != nil {
+			return err
+		}
+		data.ma50 = m
+		return nil
+	})
+
+	g.Go(func() error {
+		req := &stock.GetMovingAverageRequest{
+			Symbol:     symbol,
+			TimePeriod: 250,
+		}
+		m, err := c.stockDataFetcher.GetMovingAverage(gCtx, req)
+		if err != nil {
+			return err
+		}
+		data.ma250 = m
 		return nil
 	})
 
 	if err := g.Wait(); err != nil {
+		logger.Printf("failed to get update data: %v", err)
 		return controllerStockUpdate{
 			symbol:    symbol,
 			updateErr: err,
@@ -32,12 +109,12 @@ func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerS
 
 	return controllerStockUpdate{
 		symbol: symbol,
-		update: makeStockUpdate(symbol, hist.TradingSessions),
+		update: makeStockUpdate(symbol, data),
 	}
 }
 
-func makeStockUpdate(symbol string, ts []*stock.TradingSession) *model.StockUpdate {
-	ds := dailySessions(ts)
+func makeStockUpdate(symbol string, data stockUpdateData) *model.StockUpdate {
+	ds := dailySessions(data.hist.TradingSessions)
 	ws := weeklySessions(ds)
 
 	fillChangeValues(ds)
