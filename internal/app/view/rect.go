@@ -12,13 +12,13 @@ import (
 var (
 	horizLine   = gfx.HorizColoredLineVAO(white, white)
 	vertLine    = gfx.VertColoredLineVAO(white, white)
-	squarePlane = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("squarePlane.ply")))
+	squarePlane = gfx.ReadPLYVAO(bytes.NewReader(_escFSMustByte(false, "/data/squarePlane.ply")))
 )
 
 // Rounded corner VAOs used to render the rounded rectangle corners.
 var (
-	roundedCornerNWFaces = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNWFaces.ply")))
-	roundedCornerNWEdges = gfx.ReadPLYVAO(bytes.NewReader(MustAsset("roundedCornerNWEdges.ply")))
+	roundedCornerNWFaces = gfx.ReadPLYVAO(bytes.NewReader(_escFSMustByte(false, "/data/roundedCornerNWFaces.ply")))
+	roundedCornerNWEdges = gfx.ReadPLYVAO(bytes.NewReader(_escFSMustByte(false, "/data/roundedCornerNWEdges.ply")))
 )
 
 // gapFudge is how much to extend the borders to close gaps in OpenGL rendering.

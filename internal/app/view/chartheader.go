@@ -9,10 +9,10 @@ import (
 )
 
 var (
-	chartAddButtonVAO     = gfx.SquareImageVAO(bytes.NewReader(MustAsset("addButton.png")))
-	chartRefreshButtonVAO = gfx.SquareImageVAO(bytes.NewReader(MustAsset("refreshButton.png")))
-	chartRemoveButtonVAO  = gfx.SquareImageVAO(bytes.NewReader(MustAsset("removeButton.png")))
-	chartErrorIconVAO     = gfx.SquareImageVAO(bytes.NewReader(MustAsset("errorIcon.png")))
+	chartAddButtonVAO     = gfx.SquareImageVAO(bytes.NewReader(_escFSMustByte(false, "/data/addButton.png")))
+	chartRefreshButtonVAO = gfx.SquareImageVAO(bytes.NewReader(_escFSMustByte(false, "/data/refreshButton.png")))
+	chartRemoveButtonVAO  = gfx.SquareImageVAO(bytes.NewReader(_escFSMustByte(false, "/data/removeButton.png")))
+	chartErrorIconVAO     = gfx.SquareImageVAO(bytes.NewReader(_escFSMustByte(false, "/data/errorIcon.png")))
 )
 
 // ChartHeader shows a header for charts and thumbnails with a clickable button.

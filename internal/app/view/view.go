@@ -10,8 +10,8 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
-// Get go-bindata from github.com/jteeuwen/go-bindata. It's used to embed resources into the binary.
-//go:generate go-bindata -pkg view -prefix data -nometadata -ignore ".*blend.*" -ignore ".*proto" -ignore ".*xcf" data
+// Get esc from github.com/mjibson/esc. It's used to embed resources into the binary.
+//go:generate esc -o bindata.go -pkg view -include ".*(ply|png)" -private data
 
 var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 

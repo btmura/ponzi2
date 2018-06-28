@@ -150,7 +150,7 @@ func (r *runeRenderer) render(pt image.Point) {
 	}()
 
 	if runePlaneObject == nil {
-		runePlaneObject = ReadPLYVAO(bytes.NewReader(MustAsset("textPlane.ply")))
+		runePlaneObject = ReadPLYVAO(bytes.NewReader(_escFSMustByte(false, "/data/textPlane.ply")))
 	}
 	runePlaneObject.Render()
 }
