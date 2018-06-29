@@ -73,8 +73,15 @@ func (w *waiter) wait(d time.Duration) {
 	w.Unlock()
 }
 
-func parseDate(dstr string) (time.Time, error) {
-	return time.Parse("2006-01-02", dstr)
+func parseDate(s string) (time.Time, error) {
+	// All except one value will be a historical date without a timestamp.
+	t, err := time.Parse("2006-01-02", s)
+	if err == nil {
+		return t, nil
+	}
+
+	// One value may have a timestamp if the market is open.
+	return time.Parse("2006-01-02 15:04:05", s)
 }
 
 func parseFloat(value string) (float32, error) {

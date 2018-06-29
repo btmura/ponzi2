@@ -56,41 +56,6 @@ func TestDecodeMovingAverageResponse(t *testing.T) {
 				},
 			},
 		},
-		{
-			desc: "both timestamp and date",
-			input: `
-			{
-				"Meta Data": {
-					"1: Symbol": "SPY",
-					"2: Indicator": "Simple Moving Average (SMA)",
-					"3: Last Refreshed": "2018-06-29 10:48:47",
-					"4: Interval": "daily",
-					"5: Time Period": 50,
-					"6: Series Type": "close",
-					"7: Time Zone": "US/Eastern"
-				},
-				"Technical Analysis: SMA": {
-					"2018-06-29 10:48:47": {
-						"SMA": "271.5930"
-					},
-					"2018-06-28": {
-						"SMA": "271.5078"
-					}
-				}
-			}`,
-			want: &MovingAverage{
-				Values: []*MovingAverageValue{
-					{
-						Date:    mustParseDate("2018-06-29"),
-						Average: 271.5930,
-					},
-					{
-						Date:    mustParseDate("2018-06-28"),
-						Average: 271.5078,
-					},
-				},
-			},
-		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
 			got, gotErr := decodeMovingAverageResponse(strings.NewReader(tt.input))

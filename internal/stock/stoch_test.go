@@ -66,48 +66,6 @@ func TestDecodeStochasticsResponse(t *testing.T) {
 				},
 			},
 		},
-		{
-			desc: "both timestamp and date",
-			input: `
-			{
-				"Meta Data": {
-					"1: Symbol": "SPY",
-					"2: Indicator": "Stochastic (STOCH)",
-					"3: Last Refreshed": "2018-06-27 11:43:18",
-					"4: Interval": "daily",
-					"5.1: FastK Period": 5,
-					"5.2: SlowK Period": 3,
-					"5.3: SlowK MA Type": 0,
-					"5.4: SlowD Period": 3,
-					"5.5: SlowD MA Type": 0,
-					"6: Time Zone": "US/Eastern Time"
-				},
-				"Technical Analysis: STOCH": {
-					"2018-06-27 11:43:18": {
-						"SlowK": "35.5751",
-						"SlowD": "31.4560"
-					},
-					"2018-06-26": {
-						"SlowK": "31.8913",
-						"SlowD": "30.4686"
-					}
-				}
-			}`,
-			want: &Stochastics{
-				Values: []*StochasticValue{
-					{
-						Date: mustParseDate("2018-06-26"),
-						K:    31.8913,
-						D:    30.4686,
-					},
-					{
-						Date: mustParseDate("2018-06-17"),
-						K:    35.5751,
-						D:    31.4560,
-					},
-				},
-			},
-		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
 			got, gotErr := decodeStochasticsResponse(strings.NewReader(tt.input))
