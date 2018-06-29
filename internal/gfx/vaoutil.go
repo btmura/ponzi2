@@ -61,7 +61,7 @@ func ReadPLYVAO(r io.Reader) *VAO {
 
 // SquareImageVAO returns a VAO that renders a square image.
 func SquareImageVAO(r io.Reader) *VAO {
-	return readTexturedPLYVAO(bytes.NewReader(MustAsset("squarePlane.ply")), r)
+	return readTexturedPLYVAO(bytes.NewReader(_escFSMustByte(false, "/data/squarePlane.ply")), r)
 }
 
 // readTexturedPLYVAO returns a VAO decoded from PLY reader.

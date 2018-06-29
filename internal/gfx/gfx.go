@@ -10,8 +10,8 @@ import (
 	math2 "github.com/btmura/ponzi2/internal/math"
 )
 
-// Get go-bindata from github.com/jteeuwen/go-bindata. It's used to embed resources into the binary.
-//go:generate go-bindata -pkg gfx -prefix data -nometadata -ignore ".*blend.*" data
+// Get esc from github.com/mjibson/esc. It's used to embed resources into the binary.
+//go:generate esc -o bindata.go -pkg gfx -include ".*(frag|ply|vert)" -private data
 
 var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 
@@ -39,7 +39,7 @@ const (
 
 // InitProgram loads and uses the shader program.
 func InitProgram() error {
-	p, err := program(string(MustAsset("shader.vert")), string(MustAsset("shader.frag")))
+	p, err := program(_escFSMustString(false, "/data/shader.vert"), _escFSMustString(false, "/data/shader.frag"))
 	if err != nil {
 		return err
 	}
