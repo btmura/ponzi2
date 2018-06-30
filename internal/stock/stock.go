@@ -16,6 +16,9 @@ import (
 
 var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 
+// loc is the timezone to set on parsed dates.
+var loc = mustLoadLocation("America/New_York")
+
 // Interval specifies an interval on requests to get stock data.
 type Interval int
 
@@ -83,13 +86,13 @@ func (w *waiter) wait(d time.Duration) {
 
 func parseDate(s string) (time.Time, error) {
 	// All except one value will be a historical date without a timestamp.
-	t, err := time.Parse("2006-01-02", s)
+	t, err := time.ParseInLocation("2006-01-02", s, loc)
 	if err == nil {
 		return t, nil
 	}
 
 	// One value may have a timestamp if the market is open.
-	return time.Parse("2006-01-02 15:04:05", s)
+	return time.ParseInLocation("2006-01-02 15:04:05", s, loc)
 }
 
 func parseFloat(value string) (float32, error) {
@@ -116,4 +119,12 @@ func dumpResponse(fileName string, r io.Reader) (io.ReadCloser, error) {
 	fmt.Fprintf(file, "%s", b)
 
 	return ioutil.NopCloser(bytes.NewBuffer(b)), nil
+}
+
+func mustLoadLocation(name string) *time.Location {
+	loc, err := time.LoadLocation(name)
+	if err != nil {
+		log.Fatalf("time.LoadLocation(%s) failed: %v", name, err)
+	}
+	return loc
 }

@@ -16,12 +16,12 @@ func TestParseDate(t *testing.T) {
 		{
 			desc:  "date with time",
 			input: "2018-06-29 10:48:47",
-			want:  time.Date(2018, 6, 29, 10, 48, 47, 0, time.UTC),
+			want:  time.Date(2018, 6, 29, 10, 48, 47, 0, loc),
 		},
 		{
 			desc:  "date without time",
 			input: "2018-06-28",
-			want:  time.Date(2018, 6, 28, 0, 0, 0, 0, time.UTC),
+			want:  time.Date(2018, 6, 28, 0, 0, 0, 0, loc),
 		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
