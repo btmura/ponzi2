@@ -65,7 +65,15 @@ func (a *AlphaVantage) GetMovingAverage(ctx context.Context, req *GetMovingAvera
 	}
 	defer resp.Body.Close()
 
-	return decodeMovingAverageResponse(resp.Body)
+	r := resp.Body
+	if a.dumpAPIResponses {
+		rr, err := dumpResponse(fmt.Sprintf("debug-movavg-%s-%d.txt", req.Symbol, req.TimePeriod), r)
+		if err != nil {
+			return nil, fmt.Errorf("stock: dumping movavg resp failed: %v", err)
+		}
+		r = rr
+	}
+	return decodeMovingAverageResponse(r)
 }
 
 func decodeMovingAverageResponse(r io.Reader) (*MovingAverage, error) {

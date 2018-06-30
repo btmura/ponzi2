@@ -1,7 +1,11 @@
 package stock
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -38,14 +42,18 @@ type AlphaVantage struct {
 	// apiKey is the API key registered on the Alpha Vantage site.
 	apiKey string
 
+	// dumpAPIResponses dumps API responses into text files.
+	dumpAPIResponses bool
+
 	// waiter is used to wait a second between API requests.
 	waiter
 }
 
 // NewAlphaVantage returns a new AlphaVantage.
-func NewAlphaVantage(apiKey string) *AlphaVantage {
+func NewAlphaVantage(apiKey string, dumpAPIResponses bool) *AlphaVantage {
 	return &AlphaVantage{
-		apiKey: apiKey,
+		apiKey:           apiKey,
+		dumpAPIResponses: dumpAPIResponses,
 	}
 }
 
@@ -92,4 +100,20 @@ func parseFloat(value string) (float32, error) {
 func parseInt(value string) (int, error) {
 	i64, err := strconv.ParseInt(value, 10, 64)
 	return int(i64), err
+}
+
+func dumpResponse(fileName string, r io.Reader) (io.ReadCloser, error) {
+	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0660)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Fprintf(file, "%s", b)
+
+	return ioutil.NopCloser(bytes.NewBuffer(b)), nil
 }

@@ -10,7 +10,7 @@ import (
 //go:generate go generate github.com/btmura/ponzi2/internal/app/view
 
 // Run runs the stock chart viewer in a window.
-func Run(alphaVantageAPIKey string) {
-	av := stock.NewAlphaVantage(alphaVantageAPIKey)
+func Run(alphaVantageAPIKey string, dumpAPIResponses bool) {
+	av := stock.NewAlphaVantage(alphaVantageAPIKey, dumpAPIResponses)
 	controller.NewController(av).Run()
 }

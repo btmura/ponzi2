@@ -61,7 +61,15 @@ func (a *AlphaVantage) GetStochastics(ctx context.Context, req *GetStochasticsRe
 	}
 	defer resp.Body.Close()
 
-	return decodeStochasticsResponse(resp.Body)
+	r := resp.Body
+	if a.dumpAPIResponses {
+		rr, err := dumpResponse(fmt.Sprintf("debug-stoch-%s-%v.txt", req.Symbol, req.Interval), r)
+		if err != nil {
+			return nil, fmt.Errorf("stock: dumping stoch resp failed: %v", err)
+		}
+		r = rr
+	}
+	return decodeStochasticsResponse(r)
 }
 
 func decodeStochasticsResponse(r io.Reader) (*Stochastics, error) {

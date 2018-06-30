@@ -12,12 +12,15 @@ import (
 	"github.com/btmura/ponzi2/internal/stock"
 )
 
-var alphaVantageAPIKey = flag.String("alpha_vantage_api_key", "", "Alpha Vantage API Key")
+var (
+	alphaVantageAPIKey = flag.String("alpha_vantage_api_key", "", "Alpha Vantage API Key")
+	dumpAPIResponses   = flag.Bool("dump_api_responses", false, "Dump API responses to txt files.")
+)
 
 func main() {
 	flag.Parse()
 
-	av := stock.NewAlphaVantage(*alphaVantageAPIKey)
+	av := stock.NewAlphaVantage(*alphaVantageAPIKey, *dumpAPIResponses)
 	req := &stock.GetStochasticsRequest{
 		Symbol:   "SPY",
 		Interval: stock.Daily,
