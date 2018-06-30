@@ -7,35 +7,7 @@ import (
 	"io"
 	"net/url"
 	"sort"
-	"time"
 )
-
-// GetStochasticsRequest is a request for a stock's stochastics.
-type GetStochasticsRequest struct {
-	// Symbol is the stock's symbol like "SPY".
-	Symbol string
-
-	// Interval is the interval like "daily" or "weekly".
-	Interval Interval
-}
-
-// Stochastics is a time series of stochastic values.
-type Stochastics struct {
-	// Values are the stochastic values with earlier values in front.
-	Values []*StochasticValue
-}
-
-// StochasticValue are the stochastic values for some date.
-type StochasticValue struct {
-	// Date is the start date of the time span covered by this value.
-	Date time.Time
-
-	// K measures the stock's momentum.
-	K float32
-
-	// D is some moving average of K.
-	D float32
-}
 
 // GetStochastics returns Stochastics or an error.
 func (a *AlphaVantage) GetStochastics(ctx context.Context, req *GetStochasticsRequest) (*Stochastics, error) {
@@ -46,7 +18,7 @@ func (a *AlphaVantage) GetStochastics(ctx context.Context, req *GetStochasticsRe
 	v := url.Values{}
 	v.Set("function", "STOCH")
 	v.Set("symbol", req.Symbol)
-	v.Set("interval", req.Interval.reqParam())
+	v.Set("interval", intervalReqParam(req.Interval))
 	v.Set("apikey", a.apiKey)
 
 	u, err := url.Parse("https://www.alphavantage.co/query")

@@ -8,32 +8,7 @@ import (
 	"net/url"
 	"sort"
 	"strconv"
-	"time"
 )
-
-// GetMovingAverageRequest is a request for a stock's moving average.
-type GetMovingAverageRequest struct {
-	// Symbol is the stock's symbol like "SPY".
-	Symbol string
-
-	// TimePeriod is the number of data points to calculate each value.
-	TimePeriod int
-}
-
-// MovingAverage is a time series of moving average values.
-type MovingAverage struct {
-	// Values are the moving average values with earlier values in front.
-	Values []*MovingAverageValue
-}
-
-// MovingAverageValue is a moving average data value for some date.
-type MovingAverageValue struct {
-	// Date is the start date of the time span covered by this value.
-	Date time.Time
-
-	// Average is the average value.
-	Average float32
-}
 
 // GetMovingAverage returns MovingAverage data or an error.
 func (a *AlphaVantage) GetMovingAverage(ctx context.Context, req *GetMovingAverageRequest) (*MovingAverage, error) {

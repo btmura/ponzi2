@@ -7,31 +7,7 @@ import (
 	"io"
 	"net/url"
 	"sort"
-	"time"
 )
-
-// GetHistoryRequest is a request for a stock's trading history.
-type GetHistoryRequest struct {
-	// Symbol is the stock's symbol like "SPY".
-	Symbol string
-}
-
-// History is a stock's trading history.
-type History struct {
-	// TradingSessions is a sorted slice of trading sessions spanning some time.
-	TradingSessions []*TradingSession
-}
-
-// TradingSession contains stats from a single trading session.
-// It often spans a day, but it could span any time period.
-type TradingSession struct {
-	Date   time.Time
-	Open   float32
-	High   float32
-	Low    float32
-	Close  float32
-	Volume int
-}
 
 // GetHistory returns stock data or an error.
 func (a *AlphaVantage) GetHistory(ctx context.Context, req *GetHistoryRequest) (*History, error) {

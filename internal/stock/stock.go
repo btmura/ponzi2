@@ -2,14 +2,11 @@ package stock
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -33,46 +30,78 @@ const (
 	Weekly
 )
 
-// reqParam returns request parameter value for the Interval to use in queries.
-func (i Interval) reqParam() string {
-	switch i {
-	case Daily:
-		return "daily"
-	case Weekly:
-		return "weekly"
-	default:
-		return ""
-	}
+// GetHistoryRequest is a request for a stock's trading history.
+type GetHistoryRequest struct {
+	// Symbol is the stock's symbol like "SPY".
+	Symbol string
 }
 
-// AlphaVantage uses AlphaVantage to get stock data.
-type AlphaVantage struct {
-	// apiKey is the API key registered on the Alpha Vantage site.
-	apiKey string
-
-	// dumpAPIResponses dumps API responses into text files.
-	dumpAPIResponses bool
-
-	// waiter is used to wait a second between API requests.
-	waiter
+// History is a stock's trading history.
+type History struct {
+	// TradingSessions is a sorted slice of trading sessions spanning some time.
+	TradingSessions []*TradingSession
 }
 
-// NewAlphaVantage returns a new AlphaVantage.
-func NewAlphaVantage(apiKey string, dumpAPIResponses bool) *AlphaVantage {
-	return &AlphaVantage{
-		apiKey:           apiKey,
-		dumpAPIResponses: dumpAPIResponses,
-	}
+// TradingSession contains stats from a single trading session.
+// It often spans a day, but it could span any time period.
+type TradingSession struct {
+	Date   time.Time
+	Open   float32
+	High   float32
+	Low    float32
+	Close  float32
+	Volume int
 }
 
-func (av *AlphaVantage) httpGet(ctx context.Context, url string) (*http.Response, error) {
-	av.wait(time.Second) // Alpha Vantage suggests 1 second delay.
-	logger.Print(url)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-	return http.DefaultClient.Do(req.WithContext(ctx))
+// GetMovingAverageRequest is a request for a stock's moving average.
+type GetMovingAverageRequest struct {
+	// Symbol is the stock's symbol like "SPY".
+	Symbol string
+
+	// TimePeriod is the number of data points to calculate each value.
+	TimePeriod int
+}
+
+// MovingAverage is a time series of moving average values.
+type MovingAverage struct {
+	// Values are the moving average values with earlier values in front.
+	Values []*MovingAverageValue
+}
+
+// MovingAverageValue is a moving average data value for some date.
+type MovingAverageValue struct {
+	// Date is the start date of the time span covered by this value.
+	Date time.Time
+
+	// Average is the average value.
+	Average float32
+}
+
+// GetStochasticsRequest is a request for a stock's stochastics.
+type GetStochasticsRequest struct {
+	// Symbol is the stock's symbol like "SPY".
+	Symbol string
+
+	// Interval is the interval like "daily" or "weekly".
+	Interval Interval
+}
+
+// Stochastics is a time series of stochastic values.
+type Stochastics struct {
+	// Values are the stochastic values with earlier values in front.
+	Values []*StochasticValue
+}
+
+// StochasticValue are the stochastic values for some date.
+type StochasticValue struct {
+	// Date is the start date of the time span covered by this value.
+	Date time.Time
+
+	// K measures the stock's momentum.
+	K float32
+
+	// D is some moving average of K.
+	D float32
 }
 
 type waiter struct {
@@ -87,27 +116,6 @@ func (w *waiter) wait(d time.Duration) {
 	}
 	w.Time = time.Now()
 	w.Unlock()
-}
-
-func parseDate(s string) (time.Time, error) {
-	// All except one value will be a historical date without a timestamp.
-	t, err := time.ParseInLocation("2006-01-02", s, loc)
-	if err == nil {
-		return t, nil
-	}
-
-	// One value may have a timestamp if the market is open.
-	return time.ParseInLocation("2006-01-02 15:04:05", s, loc)
-}
-
-func parseFloat(value string) (float32, error) {
-	f64, err := strconv.ParseFloat(value, 32)
-	return float32(f64), err
-}
-
-func parseInt(value string) (int, error) {
-	i64, err := strconv.ParseInt(value, 10, 64)
-	return int(i64), err
 }
 
 func dumpResponse(fileName string, r io.Reader) (io.ReadCloser, error) {
