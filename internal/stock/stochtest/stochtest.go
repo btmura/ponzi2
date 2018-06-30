@@ -20,12 +20,23 @@ var (
 func main() {
 	flag.Parse()
 
-	av := stock.NewAlphaVantage(*alphaVantageAPIKey, *dumpAPIResponses)
+	ctx := context.Background()
+
 	req := &stock.GetStochasticsRequest{
 		Symbol:   "SPY",
 		Interval: stock.Daily,
 	}
-	resp, err := av.GetStochastics(context.Background(), req)
+
+	var resp *stock.Stochastics
+	var err error
+	if *alphaVantageAPIKey != "" {
+		av := stock.NewAlphaVantage(*alphaVantageAPIKey, *dumpAPIResponses)
+		resp, err = av.GetStochastics(ctx, req)
+	} else {
+		d := stock.NewDemo()
+		resp, err = d.GetStochastics(ctx, req)
+	}
+
 	if err != nil {
 		log.Fatal(err)
 	}

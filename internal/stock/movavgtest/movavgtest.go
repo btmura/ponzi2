@@ -20,12 +20,23 @@ var (
 func main() {
 	flag.Parse()
 
-	av := stock.NewAlphaVantage(*alphaVantageAPIKey, *dumpAPIResponses)
+	ctx := context.Background()
+
 	req := &stock.GetMovingAverageRequest{
 		Symbol:     "SPY",
 		TimePeriod: 50,
 	}
-	resp, err := av.GetMovingAverage(context.Background(), req)
+
+	var resp *stock.MovingAverage
+	var err error
+	if *alphaVantageAPIKey != "" {
+		av := stock.NewAlphaVantage(*alphaVantageAPIKey, *dumpAPIResponses)
+		resp, err = av.GetMovingAverage(ctx, req)
+	} else {
+		d := stock.NewDemo()
+		resp, err = d.GetMovingAverage(ctx, req)
+	}
+
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -20,9 +20,20 @@ var (
 func main() {
 	flag.Parse()
 
-	av := stock.NewAlphaVantage(*alphaVantageAPIKey, *dumpAPIResponses)
+	ctx := context.Background()
+
 	req := &stock.GetHistoryRequest{Symbol: "SPY"}
-	resp, err := av.GetHistory(context.Background(), req)
+
+	var resp *stock.History
+	var err error
+	if *alphaVantageAPIKey != "" {
+		av := stock.NewAlphaVantage(*alphaVantageAPIKey, *dumpAPIResponses)
+		resp, err = av.GetHistory(ctx, req)
+	} else {
+		d := stock.NewDemo()
+		resp, err = d.GetHistory(ctx, req)
+	}
+
 	if err != nil {
 		log.Fatal(err)
 	}
