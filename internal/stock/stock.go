@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+//go:generate stringer -type=Interval
+
 var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 
 // loc is the timezone to set on parsed dates.
