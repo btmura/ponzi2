@@ -14,6 +14,9 @@ import (
 	"time"
 )
 
+// Get esc from github.com/mjibson/esc. It's used to embed resources into the binary.
+//go:generate esc -o bindata.go -pkg stock -include ".*(txt)" -modtime 1337 -private data
+
 //go:generate stringer -type=Interval
 
 var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
