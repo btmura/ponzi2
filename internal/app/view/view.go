@@ -11,7 +11,7 @@ import (
 )
 
 // Get esc from github.com/mjibson/esc. It's used to embed resources into the binary.
-//go:generate esc -o bindata.go -pkg view -include ".*(ply|png)" -private data
+//go:generate esc -o bindata.go -pkg view -include ".*(ply|png)" -modtime 1337 -private data
 
 var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 
