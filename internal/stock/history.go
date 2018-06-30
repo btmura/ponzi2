@@ -58,11 +58,23 @@ func (a *AlphaVantage) GetHistory(ctx context.Context, req *GetHistoryRequest) (
 	}
 	defer resp.Body.Close()
 
+	r := resp.Body
+	if a.dumpAPIResponses {
+		rr, err := dumpResponse(fmt.Sprintf("debug-hist-%s.txt", req.Symbol), r)
+		if err != nil {
+			return nil, fmt.Errorf("stock: dumping hist resp failed: %v", err)
+		}
+		r = rr
+	}
+	return decodeHistoryResponse(r)
+}
+
+func decodeHistoryResponse(r io.Reader) (*History, error) {
 	var ts []*TradingSession
 
-	r := csv.NewReader(resp.Body)
+	cr := csv.NewReader(r)
 	for i := 0; ; i++ {
-		rec, err := r.Read()
+		rec, err := cr.Read()
 		if err == io.EOF {
 			break
 		}

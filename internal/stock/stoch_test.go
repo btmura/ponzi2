@@ -3,7 +3,6 @@ package stock
 import (
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -78,12 +77,4 @@ func TestDecodeStochasticsResponse(t *testing.T) {
 			}
 		})
 	}
-}
-
-func mustParseDate(dstr string) time.Time {
-	date, err := parseDate(dstr)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	return date
 }
