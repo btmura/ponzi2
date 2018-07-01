@@ -115,10 +115,8 @@ func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerS
 
 func makeStockUpdate(symbol string, data stockUpdateData) *model.StockUpdate {
 	ds := dailySessions(data.hist.TradingSessions)
-	ws := weeklySessions(ds)
 
 	fillChangeValues(ds)
-	fillChangeValues(ws)
 
 	dsto := &model.Stochastics{}
 	for _, v := range data.ds.Values {
@@ -141,14 +139,10 @@ func makeStockUpdate(symbol string, data stockUpdateData) *model.StockUpdate {
 	}
 
 	fillMovingAverages(ds)
-	fillMovingAverages(ws)
-
-	ds, ws = trimSessions(ds, ws)
 
 	return &model.StockUpdate{
 		Symbol:            symbol,
 		DailySessions:     ds,
-		WeeklySessions:    ws,
 		DailyStochastics:  dsto,
 		WeeklyStochastics: wsto,
 	}
@@ -169,33 +163,6 @@ func dailySessions(ts []*stock.TradingSession) (ds []*model.TradingSession) {
 		return ds[i].Date.Before(ds[j].Date)
 	})
 	return ds
-}
-
-func weeklySessions(ds []*model.TradingSession) (ws []*model.TradingSession) {
-	for _, s := range ds {
-		diffWeek := ws == nil
-		if !diffWeek {
-			_, week := s.Date.ISOWeek()
-			_, prevWeek := ws[len(ws)-1].Date.ISOWeek()
-			diffWeek = week != prevWeek
-		}
-
-		if diffWeek {
-			sc := *s
-			ws = append(ws, &sc)
-		} else {
-			ls := ws[len(ws)-1]
-			if ls.High < s.High {
-				ls.High = s.High
-			}
-			if ls.Low > s.Low {
-				ls.Low = s.Low
-			}
-			ls.Close = s.Close
-			ls.Volume += s.Volume
-		}
-	}
-	return ws
 }
 
 func fillChangeValues(ss []*model.TradingSession) {
@@ -224,18 +191,4 @@ func fillMovingAverages(ss []*model.TradingSession) {
 		ss[i].MovingAverage50 = average(i, 50)
 		ss[i].MovingAverage200 = average(i, 200)
 	}
-}
-
-func trimSessions(ds, ws []*model.TradingSession) (trimDs, trimWs []*model.TradingSession) {
-	const sixMonthWeeks = 4 /* weeks */ * 6 /* months */
-	if len(ws) >= sixMonthWeeks {
-		ws = ws[len(ws)-sixMonthWeeks:]
-		for i := range ds {
-			if ds[i].Date == ws[0].Date {
-				ds = ds[i:]
-				return ds, ws
-			}
-		}
-	}
-	return ds, ws
 }

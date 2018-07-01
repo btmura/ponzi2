@@ -25,9 +25,6 @@ type Stock struct {
 	// DailySessions are trading sessions that span a single day.
 	DailySessions []*TradingSession
 
-	// WeeklySessions are trading sessions that span a single week.
-	WeeklySessions []*TradingSession
-
 	// DailyStochastics is the daily stochastics series.
 	DailyStochastics *Stochastics
 
@@ -80,9 +77,6 @@ type StockUpdate struct {
 
 	// DailySessions are trading sessions that span a single day.
 	DailySessions []*TradingSession
-
-	// WeeklySessions are trading sessions that span a single week.
-	WeeklySessions []*TradingSession
 
 	// DailyStochastics is the daily stochastics series.
 	DailyStochastics *Stochastics
@@ -154,7 +148,6 @@ func (m *Model) UpdateStock(update *StockUpdate) (st *Stock, updated bool) {
 		return nil, false
 	}
 	st.DailySessions = update.DailySessions
-	st.WeeklySessions = update.WeeklySessions
 	st.DailyStochastics = update.DailyStochastics
 	st.WeeklyStochastics = update.WeeklyStochastics
 	st.LastUpdateTime = time.Now()
