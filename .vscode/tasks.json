@@ -20,21 +20,6 @@
             ]
         },
         {
-            "label": "run all tests",
-            "type": "shell", 
-            "group": {
-                "kind": "test", 
-                "isDefault": true 
-            }, 
-            "command": "go test ./...",
-            "options": {
-                "cwd": "${workspaceRoot}"
-            },
-            "problemMatcher": [
-                "$go"
-            ]
-        },
-        {
             "label": "clean install",
             "type": "shell",
             "command": "go clean -i -x; if ($?) { go install -ldflags='-H=windowsgui' }",
