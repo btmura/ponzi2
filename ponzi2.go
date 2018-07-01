@@ -11,7 +11,7 @@ import (
 //go:generate go generate github.com/btmura/ponzi2/internal/stock
 
 var (
-	alphaVantageAPIKey = flag.String("alpha_vantage_api_key", "", "Alpha Vantage API Key")
+	alphaVantageAPIKey = flag.String("alpha_vantage_api_key", "", "Alpha Vantage API Key. Leave blank to use predefined data.")
 	dumpAPIResponses   = flag.Bool("dump_api_responses", false, "Dump API responses to txt files.")
 )
 
