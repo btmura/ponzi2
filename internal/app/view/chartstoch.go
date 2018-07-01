@@ -58,13 +58,13 @@ func (ch *ChartStochastics) SetStock(st *model.Stock) {
 		makeChartStochasticLabel(.3),
 	}
 
-	var ss []*model.TradingSession
+	var ss *model.Stochastics
 	var dColor [3]float32
 	switch ch.interval {
 	case DailyInterval:
-		ss, dColor = st.DailySessions, yellow
+		ss, dColor = st.DailyStochastics, yellow
 	case WeeklyInterval:
-		ss, dColor = st.WeeklySessions, purple
+		ss, dColor = st.WeeklyStochastics, purple
 	default:
 		logger.Fatalf("SetStock: unsupported interval: %v", ch.interval)
 	}
@@ -156,11 +156,11 @@ func makeChartStochasticLabel(perc float32) chartStochasticLabel {
 	}
 }
 
-func chartStochasticVAO(ss []*model.TradingSession, dColor [3]float32) *gfx.VAO {
+func chartStochasticVAO(ss *model.Stochastics, dColor [3]float32) *gfx.VAO {
 	data := &gfx.VAOVertexData{}
 	var v uint16 // vertex index
 
-	dx := 2.0 / float32(len(ss)) // (-1 to 1) on X-axis
+	dx := 2.0 / float32(len(ss.Values)) // (-1 to 1) on X-axis
 	calcX := func(i int) float32 {
 		return -1.0 + dx*float32(i) + dx*0.5
 	}
@@ -170,7 +170,7 @@ func chartStochasticVAO(ss []*model.TradingSession, dColor [3]float32) *gfx.VAO 
 
 	// Add vertices and indices for k percent lines.
 	first := true
-	for i, s := range ss {
+	for i, s := range ss.Values {
 		if s.K == 0 {
 			continue
 		}
@@ -186,7 +186,7 @@ func chartStochasticVAO(ss []*model.TradingSession, dColor [3]float32) *gfx.VAO 
 
 	// Add vertices and indices for d percent lines.
 	first = true
-	for i, s := range ss {
+	for i, s := range ss.Values {
 		if s.D == 0 {
 			continue
 		}

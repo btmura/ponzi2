@@ -28,6 +28,12 @@ type Stock struct {
 	// WeeklySessions are trading sessions that span a single week.
 	WeeklySessions []*TradingSession
 
+	// DailyStochastics is the daily stochastics series.
+	DailyStochastics *Stochastics
+
+	// WeeklyStochastics is the weekly stochastic series.
+	WeeklyStochastics *Stochastics
+
 	// LastUpdateTime is when the ModelStock was last updated.
 	LastUpdateTime time.Time
 }
@@ -44,12 +50,27 @@ type TradingSession struct {
 	Change        float32
 	PercentChange float32
 
-	K float32
-	D float32
-
 	MovingAverage25  float32
 	MovingAverage50  float32
 	MovingAverage200 float32
+}
+
+// Stochastics is a time series of stochastic values.
+type Stochastics struct {
+	// Values are the stochastic values with earlier values in front.
+	Values []*StochasticValue
+}
+
+// StochasticValue are the stochastic values for some date.
+type StochasticValue struct {
+	// Date is the start date of the time span covered by this value.
+	Date time.Time
+
+	// K measures the stock's momentum.
+	K float32
+
+	// D is some moving average of K.
+	D float32
 }
 
 // StockUpdate is an update that can be applied to the model.
@@ -62,6 +83,12 @@ type StockUpdate struct {
 
 	// WeeklySessions are trading sessions that span a single week.
 	WeeklySessions []*TradingSession
+
+	// DailyStochastics is the daily stochastics series.
+	DailyStochastics *Stochastics
+
+	// WeeklyStochastics is the weekly stochastic series.
+	WeeklyStochastics *Stochastics
 }
 
 // NewModel creates a new Model.
@@ -128,6 +155,8 @@ func (m *Model) UpdateStock(update *StockUpdate) (st *Stock, updated bool) {
 	}
 	st.DailySessions = update.DailySessions
 	st.WeeklySessions = update.WeeklySessions
+	st.DailyStochastics = update.DailyStochastics
+	st.WeeklyStochastics = update.WeeklyStochastics
 	st.LastUpdateTime = time.Now()
 	return st, true
 }

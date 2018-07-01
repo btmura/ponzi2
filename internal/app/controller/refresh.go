@@ -100,7 +100,7 @@ func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerS
 	})
 
 	if err := g.Wait(); err != nil {
-		logger.Printf("failed to get update data: %v", err)
+		logger.Printf("getting data failed: %v", err)
 		return controllerStockUpdate{
 			symbol:    symbol,
 			updateErr: err,
@@ -120,8 +120,25 @@ func makeStockUpdate(symbol string, data stockUpdateData) *model.StockUpdate {
 	fillChangeValues(ds)
 	fillChangeValues(ws)
 
-	fillStochastics(ds)
-	fillStochastics(ws)
+	dsto := &model.Stochastics{}
+	for _, v := range data.ds.Values {
+		sv := &model.StochasticValue{
+			Date: v.Date,
+			K:    v.K / 100,
+			D:    v.D / 100,
+		}
+		dsto.Values = append(dsto.Values, sv)
+	}
+
+	wsto := &model.Stochastics{}
+	for _, v := range data.ws.Values {
+		sv := &model.StochasticValue{
+			Date: v.Date,
+			K:    v.K / 100,
+			D:    v.D / 100,
+		}
+		wsto.Values = append(wsto.Values, sv)
+	}
 
 	fillMovingAverages(ds)
 	fillMovingAverages(ws)
@@ -129,9 +146,11 @@ func makeStockUpdate(symbol string, data stockUpdateData) *model.StockUpdate {
 	ds, ws = trimSessions(ds, ws)
 
 	return &model.StockUpdate{
-		Symbol:         symbol,
-		DailySessions:  ds,
-		WeeklySessions: ws,
+		Symbol:            symbol,
+		DailySessions:     ds,
+		WeeklySessions:    ws,
+		DailyStochastics:  dsto,
+		WeeklyStochastics: wsto,
 	}
 }
 
@@ -185,48 +204,6 @@ func fillChangeValues(ss []*model.TradingSession) {
 			ss[i].Change = ss[i].Close - ss[i-1].Close
 			ss[i].PercentChange = ss[i].Change / ss[i-1].Close
 		}
-	}
-}
-
-func fillStochastics(ss []*model.TradingSession) {
-	const (
-		k = 10
-		d = 3
-	)
-
-	// Calculate fast %K for stochastics.
-	fastK := make([]float32, len(ss))
-	for i := range ss {
-		if i+1 < k {
-			continue
-		}
-
-		highestHigh, lowestLow := ss[i].High, ss[i].Low
-		for j := 0; j < k; j++ {
-			if highestHigh < ss[i-j].High {
-				highestHigh = ss[i-j].High
-			}
-			if lowestLow > ss[i-j].Low {
-				lowestLow = ss[i-j].Low
-			}
-		}
-		fastK[i] = (ss[i].Close - lowestLow) / (highestHigh - lowestLow)
-	}
-
-	// Calculate fast %D (slow %K) for stochastics.
-	for i := range ss {
-		if i+1 < k+d {
-			continue
-		}
-		ss[i].K = (fastK[i] + fastK[i-1] + fastK[i-2]) / 3
-	}
-
-	// Calculate slow %D for stochastics.
-	for i := range ss {
-		if i+1 < k+d+d {
-			continue
-		}
-		ss[i].D = (ss[i].K + ss[i-1].K + ss[i-2].K) / 3
 	}
 }
 
