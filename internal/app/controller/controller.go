@@ -57,7 +57,7 @@ type Controller struct {
 	view *view.View
 
 	// stockDataFetcher fetches stock data.
-	stockDataFetcher *stock.AlphaVantage
+	stockDataFetcher StockDataFetcher
 
 	// symbolToChartMap maps symbol to Chart. Only one entry right now.
 	symbolToChartMap map[string]*view.Chart
@@ -87,6 +87,13 @@ type Controller struct {
 	winSize image.Point
 }
 
+// StockDataFetcher gets stock data.
+type StockDataFetcher interface {
+	GetHistory(context.Context, *stock.GetHistoryRequest) (*stock.History, error)
+	GetMovingAverage(context.Context, *stock.GetMovingAverageRequest) (*stock.MovingAverage, error)
+	GetStochastics(context.Context, *stock.GetStochasticsRequest) (*stock.Stochastics, error)
+}
+
 // controllerStockUpdate bundles a stock and new data for that stock.
 type controllerStockUpdate struct {
 	// symbol is the stock's symbol.
@@ -100,7 +107,7 @@ type controllerStockUpdate struct {
 }
 
 // NewController creates a new Controller.
-func NewController(stockDataFetcher *stock.AlphaVantage) *Controller {
+func NewController(stockDataFetcher StockDataFetcher) *Controller {
 	return &Controller{
 		model:                 model.NewModel(),
 		view:                  view.NewView(),

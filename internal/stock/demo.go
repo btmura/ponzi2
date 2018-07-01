@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
 )
 
 // Demo returns predefined offline data.
@@ -21,30 +22,12 @@ func (d *Demo) GetHistory(ctx context.Context, req *GetHistoryRequest) (*History
 
 // GetMovingAverage returns MovingAverage data or an error.
 func (d *Demo) GetMovingAverage(ctx context.Context, req *GetMovingAverageRequest) (*MovingAverage, error) {
-	var fpath string
-	switch req.TimePeriod {
-	case 25:
-		fpath = "/data/demo-movavg-25.txt"
-	case 50:
-		fpath = "/data/demo-movavg-50.txt"
-	case 250:
-		fpath = "/data/demo-movang-250.txt"
-	default:
-		return nil, fmt.Errorf("stock: unsupported demo movavg time period: %d", req.TimePeriod)
-	}
+	fpath := fmt.Sprintf("/data/demo-movavg-%d.txt", req.TimePeriod)
 	return decodeMovingAverageResponse(bytes.NewReader(_escFSMustByte(false, fpath)))
 }
 
 // GetStochastics returns Stochastics or an error.
 func (d *Demo) GetStochastics(ctx context.Context, req *GetStochasticsRequest) (*Stochastics, error) {
-	var fpath string
-	switch req.Interval {
-	case Daily:
-		fpath = "/data/demo-stoch-daily.txt"
-	case Weekly:
-		fpath = "/data/demo-stoch-weekly.txt"
-	default:
-		return nil, fmt.Errorf("stock: unsupported demo stoch interval: %d", req.Interval)
-	}
+	fpath := fmt.Sprintf("/data/demo-stoch-%s.txt", strings.ToLower(req.Interval.String()))
 	return decodeStochasticsResponse(bytes.NewReader(_escFSMustByte(false, fpath)))
 }

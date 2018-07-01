@@ -11,6 +11,11 @@ import (
 
 // Run runs the stock chart viewer in a window.
 func Run(alphaVantageAPIKey string, dumpAPIResponses bool) {
-	av := stock.NewAlphaVantage(alphaVantageAPIKey, dumpAPIResponses)
-	controller.NewController(av).Run()
+	var sdf controller.StockDataFetcher
+	if alphaVantageAPIKey != "" {
+		sdf = stock.NewAlphaVantage(alphaVantageAPIKey, dumpAPIResponses)
+	} else {
+		sdf = stock.NewDemo()
+	}
+	controller.NewController(sdf).Run()
 }
