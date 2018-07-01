@@ -10,13 +10,25 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// controllerStockUpdate bundles a stock and new data for that stock.
+type controllerStockUpdate struct {
+	// symbol is the stock's symbol.
+	symbol string
+
+	// update is the new data for the stock. Nil if an error happened.
+	update *model.StockUpdate
+
+	// updateErr is the error getting the update. Nil if no error happened.
+	updateErr error
+}
+
 type stockUpdateData struct {
 	hist  *stock.History
-	ds    *stock.Stochastics
-	ws    *stock.Stochastics
 	ma25  *stock.MovingAverage
 	ma50  *stock.MovingAverage
-	ma250 *stock.MovingAverage
+	ma200 *stock.MovingAverage
+	dsto  *stock.Stochastics
+	wsto  *stock.Stochastics
 }
 
 func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerStockUpdate {
@@ -43,7 +55,7 @@ func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerS
 		if err != nil {
 			return err
 		}
-		data.ds = s
+		data.dsto = s
 		return nil
 	})
 
@@ -56,7 +68,7 @@ func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerS
 		if err != nil {
 			return err
 		}
-		data.ws = s
+		data.wsto = s
 		return nil
 	})
 
@@ -89,13 +101,13 @@ func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerS
 	g.Go(func() error {
 		req := &stock.GetMovingAverageRequest{
 			Symbol:     symbol,
-			TimePeriod: 250,
+			TimePeriod: 200,
 		}
 		m, err := c.stockDataFetcher.GetMovingAverage(gCtx, req)
 		if err != nil {
 			return err
 		}
-		data.ma250 = m
+		data.ma200 = m
 		return nil
 	})
 
@@ -118,31 +130,44 @@ func makeStockUpdate(symbol string, data stockUpdateData) *model.StockUpdate {
 
 	fillChangeValues(ds)
 
-	dsto := &model.Stochastics{}
-	for _, v := range data.ds.Values {
-		sv := &model.StochasticValue{
-			Date: v.Date,
-			K:    v.K / 100,
-			D:    v.D / 100,
+	convertMovingAverage := func(src *stock.MovingAverage) *model.MovingAverage {
+		dst := &model.MovingAverage{}
+		for _, v := range src.Values {
+			mv := &model.MovingAverageValue{
+				Date:    v.Date,
+				Average: v.Average,
+			}
+			dst.Values = append(dst.Values, mv)
 		}
-		dsto.Values = append(dsto.Values, sv)
+		return dst
 	}
 
-	wsto := &model.Stochastics{}
-	for _, v := range data.ws.Values {
-		sv := &model.StochasticValue{
-			Date: v.Date,
-			K:    v.K / 100,
-			D:    v.D / 100,
+	ma25 := convertMovingAverage(data.ma25)
+	ma50 := convertMovingAverage(data.ma50)
+	ma200 := convertMovingAverage(data.ma200)
+
+	convertStochastics := func(src *stock.Stochastics) *model.Stochastics {
+		dst := &model.Stochastics{}
+		for _, v := range src.Values {
+			sv := &model.StochasticValue{
+				Date: v.Date,
+				K:    v.K / 100,
+				D:    v.D / 100,
+			}
+			dst.Values = append(dst.Values, sv)
 		}
-		wsto.Values = append(wsto.Values, sv)
+		return dst
 	}
 
-	fillMovingAverages(ds)
+	dsto := convertStochastics(data.dsto)
+	wsto := convertStochastics(data.wsto)
 
 	return &model.StockUpdate{
 		Symbol:            symbol,
 		DailySessions:     ds,
+		MovingAverage25:   ma25,
+		MovingAverage50:   ma50,
+		MovingAverage200:  ma200,
 		DailyStochastics:  dsto,
 		WeeklyStochastics: wsto,
 	}
@@ -171,24 +196,5 @@ func fillChangeValues(ss []*model.TradingSession) {
 			ss[i].Change = ss[i].Close - ss[i-1].Close
 			ss[i].PercentChange = ss[i].Change / ss[i-1].Close
 		}
-	}
-}
-
-func fillMovingAverages(ss []*model.TradingSession) {
-	average := func(i, n int) (avg float32) {
-		if i+1-n < 0 {
-			return 0 // Not enough data
-		}
-		var sum float32
-		for j := 0; j < n; j++ {
-			sum += ss[i-j].Close
-		}
-		return sum / float32(n)
-	}
-
-	for i := range ss {
-		ss[i].MovingAverage25 = average(i, 25)
-		ss[i].MovingAverage50 = average(i, 50)
-		ss[i].MovingAverage200 = average(i, 200)
 	}
 }

@@ -25,6 +25,15 @@ type Stock struct {
 	// DailySessions are trading sessions that span a single day.
 	DailySessions []*TradingSession
 
+	// MovingAverage25 is the 25 day moving average series.
+	MovingAverage25 *MovingAverage
+
+	// MovingAverage50 is the 50 day moving average series.
+	MovingAverage50 *MovingAverage
+
+	// MovingAverage200 is the 200 day moving average series.
+	MovingAverage200 *MovingAverage
+
 	// DailyStochastics is the daily stochastics series.
 	DailyStochastics *Stochastics
 
@@ -46,10 +55,21 @@ type TradingSession struct {
 
 	Change        float32
 	PercentChange float32
+}
 
-	MovingAverage25  float32
-	MovingAverage50  float32
-	MovingAverage200 float32
+// MovingAverage is a time series of moving average values.
+type MovingAverage struct {
+	// Values are the moving average values with earlier values in front.
+	Values []*MovingAverageValue
+}
+
+// MovingAverageValue is a moving average data value for some date.
+type MovingAverageValue struct {
+	// Date is the start date of the time span covered by this value.
+	Date time.Time
+
+	// Average is the average value.
+	Average float32
 }
 
 // Stochastics is a time series of stochastic values.
@@ -77,6 +97,15 @@ type StockUpdate struct {
 
 	// DailySessions are trading sessions that span a single day.
 	DailySessions []*TradingSession
+
+	// MovingAverage25 is the 25 day moving average series.
+	MovingAverage25 *MovingAverage
+
+	// MovingAverage50 is the 50 day moving average series.
+	MovingAverage50 *MovingAverage
+
+	// MovingAverage200 is the 200 day moving average series.
+	MovingAverage200 *MovingAverage
 
 	// DailyStochastics is the daily stochastics series.
 	DailyStochastics *Stochastics
@@ -150,6 +179,9 @@ func (m *Model) UpdateStock(update *StockUpdate) (st *Stock, updated bool) {
 	st.DailySessions = update.DailySessions
 	st.DailyStochastics = update.DailyStochastics
 	st.WeeklyStochastics = update.WeeklyStochastics
+	st.MovingAverage25 = update.MovingAverage25
+	st.MovingAverage50 = update.MovingAverage50
+	st.MovingAverage200 = update.MovingAverage200
 	st.LastUpdateTime = time.Now()
 	return st, true
 }

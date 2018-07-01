@@ -94,18 +94,6 @@ type StockDataFetcher interface {
 	GetStochastics(context.Context, *stock.GetStochasticsRequest) (*stock.Stochastics, error)
 }
 
-// controllerStockUpdate bundles a stock and new data for that stock.
-type controllerStockUpdate struct {
-	// symbol is the stock's symbol.
-	symbol string
-
-	// update is the new data for the stock. Nil if an error happened.
-	update *model.StockUpdate
-
-	// updateErr is the error getting the update. Nil if no error happened.
-	updateErr error
-}
-
 // NewController creates a new Controller.
 func NewController(stockDataFetcher StockDataFetcher) *Controller {
 	return &Controller{

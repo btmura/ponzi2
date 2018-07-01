@@ -29,14 +29,14 @@ func (ch *ChartAvgLines) SetStock(st *model.Stock) {
 		return // Stock has no data yet.
 	}
 
-	ch.lines = createChartAvgLinesVAO(st.DailySessions)
+	ch.lines = createChartAvgLinesVAO(st)
 	ch.renderable = true
 }
 
-func createChartAvgLinesVAO(ds []*model.TradingSession) *gfx.VAO {
+func createChartAvgLinesVAO(st *model.Stock) *gfx.VAO {
 	minPrice := float32(math.MaxFloat32)
 	maxPrice := float32(0)
-	for _, s := range ds {
+	for _, s := range st.DailySessions {
 		if minPrice > s.Low {
 			minPrice = s.Low
 		}
@@ -48,57 +48,33 @@ func createChartAvgLinesVAO(ds []*model.TradingSession) *gfx.VAO {
 	data := &gfx.VAOVertexData{}
 	var v uint16 // vertex index
 
-	dx := 2.0 / float32(len(ds)) // (-1 to 1) on X-axis
-	calcX := func(i int) float32 {
-		return -1.0 + dx*float32(i) + dx*0.5
-	}
-	calcY := func(v float32) float32 {
-		return 2.0*(v-minPrice)/(maxPrice-minPrice) - 1.0
-	}
-
-	first := true
-	for i, s := range ds {
-		if s.MovingAverage25 < minPrice || s.MovingAverage25 > maxPrice {
-			continue
+	add := func(ma *model.MovingAverage, color [3]float32) {
+		dx := 2.0 / float32(len(ma.Values)) // (-1 to 1) on X-axis
+		calcX := func(i int) float32 {
+			return -1.0 + dx*float32(i) + dx*0.5
 		}
-		data.Vertices = append(data.Vertices, calcX(i), calcY(s.MovingAverage25), 0)
-		data.Colors = append(data.Colors, purple[0], purple[1], purple[2])
-		if !first {
-			data.Indices = append(data.Indices, v, v-1)
-		}
-		v++
-		first = false
-	}
-
-	first = true
-	for i, s := range ds {
-		if s.MovingAverage50 < minPrice || s.MovingAverage50 > maxPrice {
-			continue
+		calcY := func(v float32) float32 {
+			return 2.0*(v-minPrice)/(maxPrice-minPrice) - 1.0
 		}
 
-		data.Vertices = append(data.Vertices, calcX(i), calcY(s.MovingAverage50), 0)
-		data.Colors = append(data.Colors, yellow[0], yellow[1], yellow[2])
-		if !first {
-			data.Indices = append(data.Indices, v, v-1)
+		first := true
+		for i, mv := range ma.Values {
+			if mv.Average < minPrice || mv.Average > maxPrice {
+				continue
+			}
+			data.Vertices = append(data.Vertices, calcX(i), calcY(mv.Average), 0)
+			data.Colors = append(data.Colors, color[0], color[1], color[2])
+			if !first {
+				data.Indices = append(data.Indices, v, v-1)
+			}
+			v++
+			first = false
 		}
-		v++
-		first = false
 	}
 
-	first = true
-	for i, s := range ds {
-		if s.MovingAverage200 <= minPrice || s.MovingAverage200 > maxPrice {
-			continue
-		}
-
-		data.Vertices = append(data.Vertices, calcX(i), calcY(s.MovingAverage200), 0)
-		data.Colors = append(data.Colors, white[0], white[1], white[2])
-		if !first {
-			data.Indices = append(data.Indices, v, v-1)
-		}
-		v++
-		first = false
-	}
+	add(st.MovingAverage25, purple)
+	add(st.MovingAverage50, yellow)
+	add(st.MovingAverage200, white)
 
 	return gfx.NewVAO(gfx.Lines, data)
 }
