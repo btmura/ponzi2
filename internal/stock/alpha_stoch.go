@@ -19,6 +19,9 @@ func (a *AlphaVantage) GetStochastics(ctx context.Context, req *GetStochasticsRe
 	v.Set("function", "STOCH")
 	v.Set("symbol", req.Symbol)
 	v.Set("interval", intervalReqParam(req.Interval))
+	v.Set("fastkperiod", "14")
+	v.Set("slowkperiod", "3")
+	v.Set("slowdperiod", "3")
 	v.Set("apikey", a.apiKey)
 
 	u, err := url.Parse("https://www.alphavantage.co/query")

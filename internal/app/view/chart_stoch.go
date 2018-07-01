@@ -54,8 +54,8 @@ func (ch *ChartStochastics) SetStock(st *model.Stock) {
 
 	// Create Y-axis labels for key percentages.
 	ch.labels = []chartStochasticLabel{
-		makeChartStochasticLabel(.7),
-		makeChartStochasticLabel(.3),
+		makeChartStochasticLabel(.8),
+		makeChartStochasticLabel(.2),
 	}
 
 	var ss *model.Stochastics
@@ -80,8 +80,8 @@ func (ch *ChartStochastics) Render(r image.Rectangle) {
 		return
 	}
 
-	// Render lines for the 30% and 70% levels.
-	renderSlicedRectDividers(r, chartGridHorizLine, 0.3, 0.4)
+	// Render lines for the 20% and 80% levels.
+	renderSlicedRectDividers(r, chartGridHorizLine, 0.2, 0.6)
 
 	// Render the stochastic lines.
 	gfx.SetModelMatrixRect(r)
