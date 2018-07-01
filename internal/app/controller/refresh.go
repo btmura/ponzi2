@@ -126,56 +126,20 @@ func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerS
 }
 
 func makeStockUpdate(symbol string, data stockUpdateData) *model.StockUpdate {
-	ds := dailySessions(data.hist.TradingSessions)
-
-	fillChangeValues(ds)
-
-	convertMovingAverage := func(src *stock.MovingAverage) *model.MovingAverage {
-		dst := &model.MovingAverage{}
-		for _, v := range src.Values {
-			mv := &model.MovingAverageValue{
-				Date:    v.Date,
-				Average: v.Average,
-			}
-			dst.Values = append(dst.Values, mv)
-		}
-		return dst
-	}
-
-	ma25 := convertMovingAverage(data.ma25)
-	ma50 := convertMovingAverage(data.ma50)
-	ma200 := convertMovingAverage(data.ma200)
-
-	convertStochastics := func(src *stock.Stochastics) *model.Stochastics {
-		dst := &model.Stochastics{}
-		for _, v := range src.Values {
-			sv := &model.StochasticValue{
-				Date: v.Date,
-				K:    v.K / 100,
-				D:    v.D / 100,
-			}
-			dst.Values = append(dst.Values, sv)
-		}
-		return dst
-	}
-
-	dsto := convertStochastics(data.dsto)
-	wsto := convertStochastics(data.wsto)
-
-	return &model.StockUpdate{
+	return trim(&model.StockUpdate{
 		Symbol:            symbol,
-		DailySessions:     ds,
-		MovingAverage25:   ma25,
-		MovingAverage50:   ma50,
-		MovingAverage200:  ma200,
-		DailyStochastics:  dsto,
-		WeeklyStochastics: wsto,
-	}
+		DailySessions:     convertHistory(data.hist),
+		MovingAverage25:   convertMovingAverage(data.ma25),
+		MovingAverage50:   convertMovingAverage(data.ma50),
+		MovingAverage200:  convertMovingAverage(data.ma200),
+		DailyStochastics:  convertStochastics(data.dsto),
+		WeeklyStochastics: convertStochastics(data.wsto),
+	})
 }
 
-func dailySessions(ts []*stock.TradingSession) (ds []*model.TradingSession) {
-	for _, s := range ts {
-		ds = append(ds, &model.TradingSession{
+func convertHistory(hist *stock.History) (ts []*model.TradingSession) {
+	for _, s := range hist.TradingSessions {
+		ts = append(ts, &model.TradingSession{
 			Date:   s.Date,
 			Open:   s.Open,
 			High:   s.High,
@@ -184,17 +148,91 @@ func dailySessions(ts []*stock.TradingSession) (ds []*model.TradingSession) {
 			Volume: s.Volume,
 		})
 	}
-	sort.Slice(ds, func(i, j int) bool {
-		return ds[i].Date.Before(ds[j].Date)
+	sort.Slice(ts, func(i, j int) bool {
+		return ts[i].Date.Before(ts[j].Date)
 	})
-	return ds
-}
 
-func fillChangeValues(ss []*model.TradingSession) {
-	for i := range ss {
+	for i := range ts {
 		if i > 0 {
-			ss[i].Change = ss[i].Close - ss[i-1].Close
-			ss[i].PercentChange = ss[i].Change / ss[i-1].Close
+			ts[i].Change = ts[i].Close - ts[i-1].Close
+			ts[i].PercentChange = ts[i].Change / ts[i-1].Close
 		}
 	}
+
+	return ts
+}
+
+func convertMovingAverage(src *stock.MovingAverage) *model.MovingAverage {
+	dst := &model.MovingAverage{}
+	for _, v := range src.Values {
+		mv := &model.MovingAverageValue{
+			Date:    v.Date,
+			Average: v.Average,
+		}
+		dst.Values = append(dst.Values, mv)
+	}
+	sort.Slice(dst.Values, func(i, j int) bool {
+		return dst.Values[i].Date.Before(dst.Values[j].Date)
+	})
+	return dst
+}
+
+func convertStochastics(src *stock.Stochastics) *model.Stochastics {
+	dst := &model.Stochastics{}
+	for _, v := range src.Values {
+		sv := &model.StochasticValue{
+			Date: v.Date,
+			K:    v.K / 100,
+			D:    v.D / 100,
+		}
+		dst.Values = append(dst.Values, sv)
+	}
+	sort.Slice(dst.Values, func(i, j int) bool {
+		return dst.Values[i].Date.Before(dst.Values[j].Date)
+	})
+	return dst
+}
+
+func trim(u *model.StockUpdate) *model.StockUpdate {
+	if len(u.DailySessions) == 0 {
+		return &model.StockUpdate{
+			Symbol:            u.Symbol,
+			MovingAverage25:   &model.MovingAverage{},
+			MovingAverage50:   &model.MovingAverage{},
+			MovingAverage200:  &model.MovingAverage{},
+			DailyStochastics:  &model.Stochastics{},
+			WeeklyStochastics: &model.Stochastics{},
+		}
+	}
+
+	start := u.DailySessions[0].Date
+
+	trimMovingAverage := func(ma *model.MovingAverage) {
+		i := 0
+		for ; i < len(ma.Values); i++ {
+			if d := ma.Values[i].Date; d.Equal(start) || d.After(start) {
+				break
+			}
+		}
+		ma.Values = ma.Values[i:]
+	}
+
+	trimMovingAverage(u.MovingAverage25)
+	trimMovingAverage(u.MovingAverage50)
+	trimMovingAverage(u.MovingAverage200)
+
+	trimStochastics := func(sto *model.Stochastics) {
+		i := 0
+		for ; i < len(sto.Values); i++ {
+			if d := sto.Values[i].Date; d.Equal(start) || d.After(start) {
+				break
+			}
+		}
+		sto.Values = sto.Values[i:]
+	}
+
+	trimStochastics(u.DailyStochastics)
+	trimStochastics(u.WeeklyStochastics)
+
+	return u
 }
