@@ -1,8 +1,12 @@
 # ponzi2
 
-go get -u github.com/mjibson/esc
-go get -u golang.org/x/tools/cmd/stringer
+ponzi2 is go-gettable:
 
-Setup protoc compiler.
+`go get -u github.com/btmura/ponzi2`
 
-go generate
+## Development Environment Setup
+
+* `go get -u github.com/mjibson/esc`
+* `go get -u golang.org/x/tools/cmd/stringer`
+* Setup `protoc` compiler.
+* `go generate ./...`
