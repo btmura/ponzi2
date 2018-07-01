@@ -14,14 +14,13 @@ import (
 // Get esc from github.com/mjibson/esc. It's used to embed resources into the binary.
 //go:generate esc -o bindata.go -pkg stock -include ".*(txt)" -modtime 1337 -private data
 
-//go:generate stringer -type=Interval
-
 var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 
 // loc is the timezone to set on parsed dates.
 var loc = mustLoadLocation("America/New_York")
 
 // Interval specifies an interval on requests to get stock data.
+//go:generate stringer -type=Interval stock.go
 type Interval int
 
 // Values for Interval.
