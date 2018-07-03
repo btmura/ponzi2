@@ -1,6 +1,8 @@
 package stock
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -9,9 +11,10 @@ import (
 
 func TestDecodeMovingAverageResponse(t *testing.T) {
 	for _, tt := range []struct {
-		desc  string
-		input string
-		want  *MovingAverage
+		desc    string
+		input   string
+		want    *MovingAverage
+		wantErr error
 	}{
 		{
 			desc: "demo",
@@ -56,15 +59,24 @@ func TestDecodeMovingAverageResponse(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "info",
+			input: `
+			{
+				"Information": "Please consider optimizing your API call frequency."
+			}`,
+			wantErr: errors.New(`stock: movavg call returned info: "Please consider optimizing your API call frequency."`),
+		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
 			got, gotErr := decodeMovingAverageResponse(strings.NewReader(tt.input))
-			if gotErr != nil {
-				t.Fatalf("decodeMovingAverageResponse returned an error (%v), want success", gotErr)
-			}
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("differs:\n%s", diff)
+				t.Errorf("resp differs:\n%s", diff)
+			}
+
+			if diff := cmp.Diff(fmt.Sprint(tt.wantErr), fmt.Sprint(gotErr)); diff != "" {
+				t.Errorf("error differs:\n%s", diff)
 			}
 		})
 	}

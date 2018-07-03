@@ -54,6 +54,7 @@ func decodeStochasticsResponse(r io.Reader) (*Stochastics, error) {
 	}
 
 	type Data struct {
+		Information       string               `json:"Information"`
 		TechnicalAnalysis map[string]DataPoint `json:"Technical Analysis: STOCH"`
 	}
 
@@ -61,6 +62,10 @@ func decodeStochasticsResponse(r io.Reader) (*Stochastics, error) {
 	dec := json.NewDecoder(r)
 	if err := dec.Decode(&data); err != nil {
 		return nil, fmt.Errorf("stock: decoding stoch json failed: %v", err)
+	}
+
+	if data.Information != "" {
+		return nil, fmt.Errorf("stock: stoch call returned info: %q", data.Information)
 	}
 
 	var vs []*StochasticValue

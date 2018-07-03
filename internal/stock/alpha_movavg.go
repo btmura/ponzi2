@@ -57,25 +57,30 @@ func decodeMovingAverageResponse(r io.Reader) (*MovingAverage, error) {
 	}
 
 	type Data struct {
+		Information       string               `json:"Information"`
 		TechnicalAnalysis map[string]DataPoint `json:"Technical Analysis: SMA"`
 	}
 
 	var data Data
 	dec := json.NewDecoder(r)
 	if err := dec.Decode(&data); err != nil {
-		return nil, fmt.Errorf("stock: decoding moving avg json failed: %v", err)
+		return nil, fmt.Errorf("stock: decoding movavg json failed: %v", err)
+	}
+
+	if data.Information != "" {
+		return nil, fmt.Errorf("stock: movavg call returned info: %q", data.Information)
 	}
 
 	var vs []*MovingAverageValue
 	for dstr, pt := range data.TechnicalAnalysis {
 		date, err := parseDate(dstr)
 		if err != nil {
-			return nil, fmt.Errorf("stock: parsing moving avg time (%v) failed: %v", dstr, err)
+			return nil, fmt.Errorf("stock: parsing movavg time (%v) failed: %v", dstr, err)
 		}
 
 		avg, err := parseFloat(pt.SMA)
 		if err != nil {
-			return nil, fmt.Errorf("stock: parsing moving avg value (%s) failed: %v", pt.SMA, err)
+			return nil, fmt.Errorf("stock: parsing movavg value (%s) failed: %v", pt.SMA, err)
 		}
 
 		vs = append(vs, &MovingAverageValue{

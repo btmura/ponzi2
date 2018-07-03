@@ -30,7 +30,7 @@ func (a *AlphaVantage) GetHistory(ctx context.Context, req *GetHistoryRequest) (
 
 	resp, err := a.httpGet(ctx, u.String())
 	if err != nil {
-		return nil, fmt.Errorf("stock: can't get data: %v", err)
+		return nil, fmt.Errorf("stock: http get for hist failed: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -55,7 +55,7 @@ func decodeHistoryResponse(r io.Reader) (*History, error) {
 			break
 		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("stock: reading csv failed: %v", err)
 		}
 
 		// Skip the header row: timestamp, open, high, low, close, volume
