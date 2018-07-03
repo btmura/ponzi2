@@ -1,13 +1,8 @@
 package stock
 
 import (
-	"bytes"
-	"fmt"
-	"io"
-	"io/ioutil"
 	"log"
 	"os"
-	"sync"
 	"time"
 )
 
@@ -15,9 +10,6 @@ import (
 //go:generate esc -o bindata.go -pkg stock -include ".*(txt)" -modtime 1337 -private data
 
 var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
-
-// loc is the timezone to set on parsed dates.
-var loc = mustLoadLocation("America/New_York")
 
 // Interval specifies an interval on requests to get stock data.
 //go:generate stringer -type=Interval stock.go
@@ -101,42 +93,4 @@ type StochasticValue struct {
 
 	// D is some moving average of K.
 	D float32
-}
-
-type waiter struct {
-	time.Time
-	sync.Mutex
-}
-
-func (w *waiter) wait(d time.Duration) {
-	w.Lock()
-	if elapsed := time.Since(w.Time); elapsed < d {
-		time.Sleep(d - elapsed)
-	}
-	w.Time = time.Now()
-	w.Unlock()
-}
-
-func dumpResponse(fileName string, r io.Reader) (io.ReadCloser, error) {
-	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0660)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	b, err := ioutil.ReadAll(r)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Fprintf(file, "%s", b)
-
-	return ioutil.NopCloser(bytes.NewBuffer(b)), nil
-}
-
-func mustLoadLocation(name string) *time.Location {
-	loc, err := time.LoadLocation(name)
-	if err != nil {
-		log.Fatalf("time.LoadLocation(%s) failed: %v", name, err)
-	}
-	return loc
 }

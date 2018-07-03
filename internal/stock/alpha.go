@@ -1,11 +1,21 @@
 package stock
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 	"strconv"
+	"sync"
 	"time"
 )
+
+// loc is the timezone to set on parsed dates.
+var loc = mustLoadLocation("America/New_York")
 
 // AlphaVantage uses AlphaVantage to get stock data.
 type AlphaVantage struct {
@@ -29,11 +39,26 @@ func NewAlphaVantage(apiKey string, dumpAPIResponses bool) *AlphaVantage {
 
 func (av *AlphaVantage) httpGet(ctx context.Context, url string) (*http.Response, error) {
 	av.wait(time.Second) // Alpha Vantage suggests 1 second delay.
+	logger.Printf("get url")
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
 	return http.DefaultClient.Do(req.WithContext(ctx))
+}
+
+type waiter struct {
+	time.Time
+	sync.Mutex
+}
+
+func (w *waiter) wait(d time.Duration) {
+	w.Lock()
+	if elapsed := time.Since(w.Time); elapsed < d {
+		time.Sleep(d - elapsed)
+	}
+	w.Time = time.Now()
+	w.Unlock()
 }
 
 func intervalReqParam(i Interval) string {
@@ -66,4 +91,28 @@ func parseFloat(value string) (float32, error) {
 func parseInt(value string) (int, error) {
 	i64, err := strconv.ParseInt(value, 10, 64)
 	return int(i64), err
+}
+
+func dumpResponse(fileName string, r io.Reader) (io.ReadCloser, error) {
+	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0660)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Fprintf(file, "%s", b)
+
+	return ioutil.NopCloser(bytes.NewBuffer(b)), nil
+}
+
+func mustLoadLocation(name string) *time.Location {
+	loc, err := time.LoadLocation(name)
+	if err != nil {
+		log.Fatalf("time.LoadLocation(%s) failed: %v", name, err)
+	}
+	return loc
 }
