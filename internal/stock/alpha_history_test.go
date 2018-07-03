@@ -1,6 +1,8 @@
 package stock
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -9,55 +11,93 @@ import (
 
 func TestDecodeHistoryResponse(t *testing.T) {
 	for _, tt := range []struct {
-		desc  string
-		input string
-		want  *History
+		desc    string
+		input   string
+		want    *History
+		wantErr error
 	}{
 		{
 			desc: "demo",
-			input: `timestamp,open,high,low,close,volume
-2018-06-29,272.1200,273.6600,271.1495,271.2800,97332077
-2018-06-28,269.2900,271.7500,268.4900,270.8900,76650517
-2018-06-27,272.2600,273.8650,269.1800,269.3500,104960655
-`,
+			input: `
+			{
+				"Meta Data": {
+					"1. Information": "Daily Prices (open, high, low, close) and Volumes",
+					"2. Symbol": "MSFT",
+					"3. Last Refreshed": "2018-07-02",
+					"4. Output Size": "Compact",
+					"5. Time Zone": "US/Eastern"
+				},
+				"Time Series (Daily)": {
+					"2018-07-02": {
+						"1. open": "98.1000",
+						"2. high": "100.0600",
+						"3. low": "98.0000",
+						"4. close": "100.0100",
+						"5. volume": "18850112"
+					},
+					"2018-06-29": {
+						"1. open": "98.9300",
+						"2. high": "99.9100",
+						"3. low": "98.3300",
+						"4. close": "98.6100",
+						"5. volume": "28053214"
+					},
+					"2018-06-28": {
+						"1. open": "97.3800",
+						"2. high": "99.1100",
+						"3. low": "97.2600",
+						"4. close": "98.6300",
+						"5. volume": "26650671"
+					}
+				}
+			}`,
 			want: &History{
 				TradingSessions: []*TradingSession{
 					{
-						Date:   mustParseDate("2018-06-27"),
-						Open:   272.2600,
-						High:   273.8650,
-						Low:    269.1800,
-						Close:  269.3500,
-						Volume: 104960655,
-					},
-					{
 						Date:   mustParseDate("2018-06-28"),
-						Open:   269.2900,
-						High:   271.7500,
-						Low:    268.4900,
-						Close:  270.8900,
-						Volume: 76650517,
+						Open:   97.3800,
+						High:   99.1100,
+						Low:    97.2600,
+						Close:  98.6300,
+						Volume: 26650671,
 					},
 					{
 						Date:   mustParseDate("2018-06-29"),
-						Open:   272.1200,
-						High:   273.6600,
-						Low:    271.1495,
-						Close:  271.2800,
-						Volume: 97332077,
+						Open:   98.9300,
+						High:   99.9100,
+						Low:    98.3300,
+						Close:  98.6100,
+						Volume: 28053214,
+					},
+					{
+						Date:   mustParseDate("2018-07-02"),
+						Open:   98.1000,
+						High:   100.0600,
+						Low:    98.0000,
+						Close:  100.0100,
+						Volume: 18850112,
 					},
 				},
 			},
 		},
+		{
+			desc: "info",
+			input: `
+			{
+				"Information": "Please consider optimizing your API call frequency."
+			}`,
+			wantErr: errors.New(`stock: hist call returned info: "Please consider optimizing your API call frequency."`),
+		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
 			got, gotErr := decodeHistoryResponse(strings.NewReader(tt.input))
-			if gotErr != nil {
-				t.Fatalf("decodeHistoryResponse returned an error (%v), want success", gotErr)
-			}
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("differs:\n%s", diff)
+				t.Errorf("resp differs:\n%s", diff)
+			}
+
+			if diff := cmp.Diff(fmt.Sprint(tt.wantErr), fmt.Sprint(gotErr)); diff != "" {
+				t.Errorf("error differs:\n%s", diff)
 			}
 		})
 	}

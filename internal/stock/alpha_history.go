@@ -2,7 +2,7 @@ package stock
 
 import (
 	"context"
-	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/url"
@@ -19,7 +19,7 @@ func (a *AlphaVantage) GetHistory(ctx context.Context, req *GetHistoryRequest) (
 	v.Set("function", "TIME_SERIES_DAILY")
 	v.Set("symbol", req.Symbol)
 	v.Set("outputsize", "compact")
-	v.Set("datatype", "csv")
+	v.Set("datatype", "json")
 	v.Set("apikey", a.apiKey)
 
 	u, err := url.Parse("https://www.alphavantage.co/query")
@@ -46,53 +46,57 @@ func (a *AlphaVantage) GetHistory(ctx context.Context, req *GetHistoryRequest) (
 }
 
 func decodeHistoryResponse(r io.Reader) (*History, error) {
+	type DataPoint struct {
+		Open   string `json:"1. open"`
+		High   string `json:"2. high"`
+		Low    string `json:"3. low"`
+		Close  string `json:"4. close"`
+		Volume string `json:"5. volume"`
+	}
+
+	type Data struct {
+		Information string               `json:"Information"`
+		TimeSeries  map[string]DataPoint `json:"Time Series (Daily)"`
+	}
+
+	var data Data
+	dec := json.NewDecoder(r)
+	if err := dec.Decode(&data); err != nil {
+		return nil, fmt.Errorf("stock: decoding hist json failed: %v", err)
+	}
+
+	if data.Information != "" {
+		return nil, fmt.Errorf("stock: hist call returned info: %q", data.Information)
+	}
+
 	var ts []*TradingSession
-
-	cr := csv.NewReader(r)
-	for i := 0; ; i++ {
-		rec, err := cr.Read()
-		if err == io.EOF {
-			break
-		}
+	for dstr, pt := range data.TimeSeries {
+		date, err := parseDate(dstr)
 		if err != nil {
-			return nil, fmt.Errorf("stock: reading csv failed: %v", err)
+			return nil, fmt.Errorf("stock: parsing hist time (%v) failed: %v", dstr, err)
 		}
 
-		// Skip the header row: timestamp, open, high, low, close, volume
-		if i == 0 {
-			continue
-		}
-
-		if len(rec) != 6 {
-			return nil, fmt.Errorf("stock: rec length should be 6, got %d", len(rec))
-		}
-
-		date, err := parseDate(rec[0])
-		if err != nil {
-			return nil, fmt.Errorf("stock: can't parse timestamp: %v", err)
-		}
-
-		open, err := parseFloat(rec[1])
+		open, err := parseFloat(pt.Open)
 		if err != nil {
 			return nil, fmt.Errorf("stock: can't parse open: %v", err)
 		}
 
-		high, err := parseFloat(rec[2])
+		high, err := parseFloat(pt.High)
 		if err != nil {
 			return nil, fmt.Errorf("stock: can't parse high: %v", err)
 		}
 
-		low, err := parseFloat(rec[3])
+		low, err := parseFloat(pt.Low)
 		if err != nil {
 			return nil, fmt.Errorf("stock: can't parse low: %v", err)
 		}
 
-		close, err := parseFloat(rec[4])
+		close, err := parseFloat(pt.Close)
 		if err != nil {
 			return nil, fmt.Errorf("stock: can't parse close: %v", err)
 		}
 
-		volume, err := parseInt(rec[5])
+		volume, err := parseInt(pt.Volume)
 		if err != nil {
 			return nil, fmt.Errorf("stock: can't parse volume: %v", err)
 		}
@@ -107,7 +111,6 @@ func decodeHistoryResponse(r io.Reader) (*History, error) {
 		})
 	}
 
-	// Most recent trading sessions at the back.
 	sort.Slice(ts, func(i, j int) bool {
 		return ts[i].Date.Before(ts[j].Date)
 	})
