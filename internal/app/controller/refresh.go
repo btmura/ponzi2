@@ -32,12 +32,13 @@ func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerS
 	return controllerStockUpdate{
 		symbol: symbol,
 		update: &model.StockUpdate{
-			Symbol:           symbol,
-			DailySessions:    convertTradingSessions(resp.TradingSessions),
-			MovingAverage25:  makeMovingAverage(resp.TradingSessions, 25),
-			MovingAverage50:  makeMovingAverage(resp.TradingSessions, 50),
-			MovingAverage200: makeMovingAverage(resp.TradingSessions, 200),
-			DailyStochastics: makeStochastics(resp.TradingSessions),
+			Symbol:            symbol,
+			DailySessions:     convertTradingSessions(resp.TradingSessions),
+			MovingAverage25:   makeMovingAverage(resp.TradingSessions, 25),
+			MovingAverage50:   makeMovingAverage(resp.TradingSessions, 50),
+			MovingAverage200:  makeMovingAverage(resp.TradingSessions, 200),
+			DailyStochastics:  makeStochastics(resp.TradingSessions),
+			WeeklyStochastics: makeStochastics(weeklySessions(resp.TradingSessions)),
 		},
 	}
 }
@@ -132,4 +133,31 @@ func makeStochastics(ss []*iex.TradingSession) *model.Stochastics {
 	}
 
 	return &model.Stochastics{Values: vs}
+}
+
+func weeklySessions(ds []*iex.TradingSession) (ws []*iex.TradingSession) {
+	for _, s := range ds {
+		diffWeek := ws == nil
+		if !diffWeek {
+			_, week := s.Date.ISOWeek()
+			_, prevWeek := ws[len(ws)-1].Date.ISOWeek()
+			diffWeek = week != prevWeek
+		}
+
+		if diffWeek {
+			sc := *s
+			ws = append(ws, &sc)
+		} else {
+			ls := ws[len(ws)-1]
+			if ls.High < s.High {
+				ls.High = s.High
+			}
+			if ls.Low > s.Low {
+				ls.Low = s.Low
+			}
+			ls.Close = s.Close
+			ls.Volume += s.Volume
+		}
+	}
+	return ws
 }
