@@ -5,9 +5,7 @@ import (
 	"sort"
 
 	"github.com/btmura/ponzi2/internal/app/model"
-	"github.com/btmura/ponzi2/internal/stock/alpha"
-
-	"golang.org/x/sync/errgroup"
+	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
 // controllerStockUpdate bundles a stock and new data for that stock.
@@ -22,217 +20,40 @@ type controllerStockUpdate struct {
 	updateErr error
 }
 
-type stockUpdateData struct {
-	hist  *alpha.History
-	ma25  *alpha.MovingAverage
-	ma50  *alpha.MovingAverage
-	ma200 *alpha.MovingAverage
-	dsto  *alpha.Stochastics
-	wsto  *alpha.Stochastics
-}
-
 func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerStockUpdate {
-	g, gCtx := errgroup.WithContext(ctx)
-
-	var data stockUpdateData
-
-	g.Go(func() error {
-		req := &alpha.GetHistoryRequest{Symbol: symbol}
-		h, err := c.stockDataFetcher.GetHistory(gCtx, req)
-		if err != nil {
-			return err
-		}
-		data.hist = h
-		return nil
-	})
-
-	g.Go(func() error {
-		req := &alpha.GetStochasticsRequest{
-			Symbol:   symbol,
-			Interval: alpha.Daily,
-		}
-		s, err := c.stockDataFetcher.GetStochastics(gCtx, req)
-		if err != nil {
-			return err
-		}
-		data.dsto = s
-		return nil
-	})
-
-	g.Go(func() error {
-		req := &alpha.GetStochasticsRequest{
-			Symbol:   symbol,
-			Interval: alpha.Weekly,
-		}
-		s, err := c.stockDataFetcher.GetStochastics(gCtx, req)
-		if err != nil {
-			return err
-		}
-		data.wsto = s
-		return nil
-	})
-
-	g.Go(func() error {
-		req := &alpha.GetMovingAverageRequest{
-			Symbol:     symbol,
-			TimePeriod: 25,
-		}
-		m, err := c.stockDataFetcher.GetMovingAverage(gCtx, req)
-		if err != nil {
-			return err
-		}
-		data.ma25 = m
-		return nil
-	})
-
-	g.Go(func() error {
-		req := &alpha.GetMovingAverageRequest{
-			Symbol:     symbol,
-			TimePeriod: 50,
-		}
-		m, err := c.stockDataFetcher.GetMovingAverage(gCtx, req)
-		if err != nil {
-			return err
-		}
-		data.ma50 = m
-		return nil
-	})
-
-	g.Go(func() error {
-		req := &alpha.GetMovingAverageRequest{
-			Symbol:     symbol,
-			TimePeriod: 200,
-		}
-		m, err := c.stockDataFetcher.GetMovingAverage(gCtx, req)
-		if err != nil {
-			return err
-		}
-		data.ma200 = m
-		return nil
-	})
-
-	if err := g.Wait(); err != nil {
-		logger.Printf("getting data failed: %v", err)
+	req := &iex.ListTradingSessionsRequest{Symbol: symbol}
+	resp, err := c.stockDataFetcher.ListTradingSessions(ctx, req)
+	if err != nil {
 		return controllerStockUpdate{
 			symbol:    symbol,
 			updateErr: err,
 		}
 	}
-
 	return controllerStockUpdate{
 		symbol: symbol,
-		update: makeStockUpdate(symbol, data),
+		update: &model.StockUpdate{
+			Symbol:        symbol,
+			DailySessions: convertTradingSessions(resp.TradingSessions),
+		},
 	}
 }
 
-func makeStockUpdate(symbol string, data stockUpdateData) *model.StockUpdate {
-	return trim(&model.StockUpdate{
-		Symbol:            symbol,
-		DailySessions:     convertHistory(data.hist),
-		MovingAverage25:   convertMovingAverage(data.ma25),
-		MovingAverage50:   convertMovingAverage(data.ma50),
-		MovingAverage200:  convertMovingAverage(data.ma200),
-		DailyStochastics:  convertStochastics(data.dsto),
-		WeeklyStochastics: convertStochastics(data.wsto),
-	})
-}
-
-func convertHistory(hist *alpha.History) (ts []*model.TradingSession) {
-	for _, s := range hist.TradingSessions {
-		ts = append(ts, &model.TradingSession{
-			Date:   s.Date,
-			Open:   s.Open,
-			High:   s.High,
-			Low:    s.Low,
-			Close:  s.Close,
-			Volume: s.Volume,
+func convertTradingSessions(ts []*iex.TradingSession) []*model.TradingSession {
+	var ms []*model.TradingSession
+	for _, t := range ts {
+		ms = append(ms, &model.TradingSession{
+			Date:          t.Date,
+			Open:          t.Open,
+			High:          t.High,
+			Low:           t.Low,
+			Close:         t.Close,
+			Volume:        t.Volume,
+			Change:        t.Change,
+			PercentChange: t.ChangePercent,
 		})
 	}
-	sort.Slice(ts, func(i, j int) bool {
-		return ts[i].Date.Before(ts[j].Date)
+	sort.Slice(ms, func(i, j int) bool {
+		return ms[i].Date.Before(ms[j].Date)
 	})
-
-	for i := range ts {
-		if i > 0 {
-			ts[i].Change = ts[i].Close - ts[i-1].Close
-			ts[i].PercentChange = ts[i].Change / ts[i-1].Close
-		}
-	}
-
-	return ts
-}
-
-func convertMovingAverage(src *alpha.MovingAverage) *model.MovingAverage {
-	dst := &model.MovingAverage{}
-	for _, v := range src.Values {
-		mv := &model.MovingAverageValue{
-			Date:    v.Date,
-			Average: v.Average,
-		}
-		dst.Values = append(dst.Values, mv)
-	}
-	sort.Slice(dst.Values, func(i, j int) bool {
-		return dst.Values[i].Date.Before(dst.Values[j].Date)
-	})
-	return dst
-}
-
-func convertStochastics(src *alpha.Stochastics) *model.Stochastics {
-	dst := &model.Stochastics{}
-	for _, v := range src.Values {
-		sv := &model.StochasticValue{
-			Date: v.Date,
-			K:    v.K / 100,
-			D:    v.D / 100,
-		}
-		dst.Values = append(dst.Values, sv)
-	}
-	sort.Slice(dst.Values, func(i, j int) bool {
-		return dst.Values[i].Date.Before(dst.Values[j].Date)
-	})
-	return dst
-}
-
-func trim(u *model.StockUpdate) *model.StockUpdate {
-	if len(u.DailySessions) == 0 {
-		return &model.StockUpdate{
-			Symbol:            u.Symbol,
-			MovingAverage25:   &model.MovingAverage{},
-			MovingAverage50:   &model.MovingAverage{},
-			MovingAverage200:  &model.MovingAverage{},
-			DailyStochastics:  &model.Stochastics{},
-			WeeklyStochastics: &model.Stochastics{},
-		}
-	}
-
-	start := u.DailySessions[0].Date
-
-	trimMovingAverage := func(ma *model.MovingAverage) {
-		i := 0
-		for ; i < len(ma.Values); i++ {
-			if d := ma.Values[i].Date; d.Equal(start) || d.After(start) {
-				break
-			}
-		}
-		ma.Values = ma.Values[i:]
-	}
-
-	trimMovingAverage(u.MovingAverage25)
-	trimMovingAverage(u.MovingAverage50)
-	trimMovingAverage(u.MovingAverage200)
-
-	trimStochastics := func(sto *model.Stochastics) {
-		i := 0
-		for ; i < len(sto.Values); i++ {
-			if d := sto.Values[i].Date; d.Equal(start) || d.After(start) {
-				break
-			}
-		}
-		sto.Values = sto.Values[i:]
-	}
-
-	trimStochastics(u.DailyStochastics)
-	trimStochastics(u.WeeklyStochastics)
-
-	return u
+	return ms
 }

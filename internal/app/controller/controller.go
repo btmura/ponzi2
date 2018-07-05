@@ -17,7 +17,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/gfx"
 	math2 "github.com/btmura/ponzi2/internal/math"
-	"github.com/btmura/ponzi2/internal/stock/alpha"
+	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
 var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
@@ -57,7 +57,7 @@ type Controller struct {
 	view *view.View
 
 	// stockDataFetcher fetches stock data.
-	stockDataFetcher StockDataFetcher
+	stockDataFetcher *iex.Client
 
 	// symbolToChartMap maps symbol to Chart. Only one entry right now.
 	symbolToChartMap map[string]*view.Chart
@@ -87,15 +87,8 @@ type Controller struct {
 	winSize image.Point
 }
 
-// StockDataFetcher gets stock data.
-type StockDataFetcher interface {
-	GetHistory(context.Context, *alpha.GetHistoryRequest) (*alpha.History, error)
-	GetMovingAverage(context.Context, *alpha.GetMovingAverageRequest) (*alpha.MovingAverage, error)
-	GetStochastics(context.Context, *alpha.GetStochasticsRequest) (*alpha.Stochastics, error)
-}
-
 // NewController creates a new Controller.
-func NewController(stockDataFetcher StockDataFetcher) *Controller {
+func NewController(stockDataFetcher *iex.Client) *Controller {
 	return &Controller{
 		model:                 model.NewModel(),
 		view:                  view.NewView(),

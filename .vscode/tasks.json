@@ -8,9 +8,9 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "command": "go generate ./... ; if ($?) { go build -v -x }; if ($?) { ./ponzi2.exe -alpha_vantage_api_key=${config:ponzi2.alphaVantageApiKey} }",
+            "command": "go generate ./... ; if ($?) { go build -v -x }; if ($?) { ./ponzi2.exe ${config:ponzi2.flags} }",
             "linux": {
-                "command": "go generate ./... && go build -v -x && ./ponzi2 -alpha_vantage_api_key=${config:ponzi2.alphaVantageApiKey}"
+                "command": "go generate ./... && go build -v -x && ./ponzi2 ${config:ponzi2.flags}"
             },
             "options": {
                 "cwd": "${workspaceRoot}"

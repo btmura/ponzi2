@@ -25,7 +25,7 @@ func (ch *ChartAvgLines) SetStock(st *model.Stock) {
 	ch.Close()
 
 	// Bail out if there is no data yet.
-	if st.LastUpdateTime.IsZero() {
+	if st.MovingAverage25 == nil || st.MovingAverage50 == nil || st.MovingAverage200 == nil {
 		return // Stock has no data yet.
 	}
 

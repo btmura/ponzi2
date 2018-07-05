@@ -45,7 +45,7 @@ func (ch *ChartStochastics) SetStock(st *model.Stock) {
 	ch.Close()
 
 	// Bail out if there is no data yet.
-	if st.LastUpdateTime.IsZero() {
+	if st.DailyStochastics == nil || st.WeeklyStochastics == nil {
 		return // Stock has no data yet.
 	}
 
