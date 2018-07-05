@@ -37,6 +37,7 @@ func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerS
 			MovingAverage25:  makeMovingAverage(resp.TradingSessions, 25),
 			MovingAverage50:  makeMovingAverage(resp.TradingSessions, 50),
 			MovingAverage200: makeMovingAverage(resp.TradingSessions, 200),
+			DailyStochastics: makeStochastics(resp.TradingSessions),
 		},
 	}
 }
@@ -82,4 +83,53 @@ func makeMovingAverage(ts []*iex.TradingSession, n int) *model.MovingAverage {
 	}
 
 	return &model.MovingAverage{Values: vs}
+}
+
+func makeStochastics(ss []*iex.TradingSession) *model.Stochastics {
+	const (
+		k = 10
+		d = 3
+	)
+
+	// Calculate fast %K for stochastics.
+	fastK := make([]float32, len(ss))
+	for i := range ss {
+		if i+1 < k {
+			continue
+		}
+
+		highestHigh, lowestLow := ss[i].High, ss[i].Low
+		for j := 0; j < k; j++ {
+			if highestHigh < ss[i-j].High {
+				highestHigh = ss[i-j].High
+			}
+			if lowestLow > ss[i-j].Low {
+				lowestLow = ss[i-j].Low
+			}
+		}
+		fastK[i] = (ss[i].Close - lowestLow) / (highestHigh - lowestLow)
+	}
+
+	var vs []*model.StochasticValue
+	for i := range ss {
+		vs = append(vs, &model.StochasticValue{Date: ss[i].Date})
+	}
+
+	// Calculate fast %D (slow %K) for stochastics.
+	for i := range ss {
+		if i+1 < k+d {
+			continue
+		}
+		vs[i].K = (fastK[i] + fastK[i-1] + fastK[i-2]) / 3
+	}
+
+	// Calculate slow %D for stochastics.
+	for i := range ss {
+		if i+1 < k+d+d {
+			continue
+		}
+		vs[i].D = (vs[i].K + vs[i-1].K + vs[i-2].K) / 3
+	}
+
+	return &model.Stochastics{Values: vs}
 }
