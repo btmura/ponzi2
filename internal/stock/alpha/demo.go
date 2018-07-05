@@ -1,4 +1,4 @@
-package stock
+package alpha
 
 import (
 	"bytes"

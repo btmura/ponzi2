@@ -1,4 +1,4 @@
-package stock
+package alpha
 
 import (
 	"log"
@@ -7,7 +7,7 @@ import (
 )
 
 // Get esc from github.com/mjibson/esc. It's used to embed resources into the binary.
-//go:generate esc -o bindata.go -pkg stock -include ".*(txt)" -modtime 1337 -private data
+//go:generate esc -o bindata.go -pkg alpha -include ".*(txt)" -modtime 1337 -private data
 
 var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 

@@ -5,7 +5,7 @@ import (
 	"sort"
 
 	"github.com/btmura/ponzi2/internal/app/model"
-	"github.com/btmura/ponzi2/internal/stock"
+	"github.com/btmura/ponzi2/internal/stock/alpha"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -23,12 +23,12 @@ type controllerStockUpdate struct {
 }
 
 type stockUpdateData struct {
-	hist  *stock.History
-	ma25  *stock.MovingAverage
-	ma50  *stock.MovingAverage
-	ma200 *stock.MovingAverage
-	dsto  *stock.Stochastics
-	wsto  *stock.Stochastics
+	hist  *alpha.History
+	ma25  *alpha.MovingAverage
+	ma50  *alpha.MovingAverage
+	ma200 *alpha.MovingAverage
+	dsto  *alpha.Stochastics
+	wsto  *alpha.Stochastics
 }
 
 func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerStockUpdate {
@@ -37,7 +37,7 @@ func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerS
 	var data stockUpdateData
 
 	g.Go(func() error {
-		req := &stock.GetHistoryRequest{Symbol: symbol}
+		req := &alpha.GetHistoryRequest{Symbol: symbol}
 		h, err := c.stockDataFetcher.GetHistory(gCtx, req)
 		if err != nil {
 			return err
@@ -47,9 +47,9 @@ func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerS
 	})
 
 	g.Go(func() error {
-		req := &stock.GetStochasticsRequest{
+		req := &alpha.GetStochasticsRequest{
 			Symbol:   symbol,
-			Interval: stock.Daily,
+			Interval: alpha.Daily,
 		}
 		s, err := c.stockDataFetcher.GetStochastics(gCtx, req)
 		if err != nil {
@@ -60,9 +60,9 @@ func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerS
 	})
 
 	g.Go(func() error {
-		req := &stock.GetStochasticsRequest{
+		req := &alpha.GetStochasticsRequest{
 			Symbol:   symbol,
-			Interval: stock.Weekly,
+			Interval: alpha.Weekly,
 		}
 		s, err := c.stockDataFetcher.GetStochastics(gCtx, req)
 		if err != nil {
@@ -73,7 +73,7 @@ func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerS
 	})
 
 	g.Go(func() error {
-		req := &stock.GetMovingAverageRequest{
+		req := &alpha.GetMovingAverageRequest{
 			Symbol:     symbol,
 			TimePeriod: 25,
 		}
@@ -86,7 +86,7 @@ func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerS
 	})
 
 	g.Go(func() error {
-		req := &stock.GetMovingAverageRequest{
+		req := &alpha.GetMovingAverageRequest{
 			Symbol:     symbol,
 			TimePeriod: 50,
 		}
@@ -99,7 +99,7 @@ func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerS
 	})
 
 	g.Go(func() error {
-		req := &stock.GetMovingAverageRequest{
+		req := &alpha.GetMovingAverageRequest{
 			Symbol:     symbol,
 			TimePeriod: 200,
 		}
@@ -137,7 +137,7 @@ func makeStockUpdate(symbol string, data stockUpdateData) *model.StockUpdate {
 	})
 }
 
-func convertHistory(hist *stock.History) (ts []*model.TradingSession) {
+func convertHistory(hist *alpha.History) (ts []*model.TradingSession) {
 	for _, s := range hist.TradingSessions {
 		ts = append(ts, &model.TradingSession{
 			Date:   s.Date,
@@ -162,7 +162,7 @@ func convertHistory(hist *stock.History) (ts []*model.TradingSession) {
 	return ts
 }
 
-func convertMovingAverage(src *stock.MovingAverage) *model.MovingAverage {
+func convertMovingAverage(src *alpha.MovingAverage) *model.MovingAverage {
 	dst := &model.MovingAverage{}
 	for _, v := range src.Values {
 		mv := &model.MovingAverageValue{
@@ -177,7 +177,7 @@ func convertMovingAverage(src *stock.MovingAverage) *model.MovingAverage {
 	return dst
 }
 
-func convertStochastics(src *stock.Stochastics) *model.Stochastics {
+func convertStochastics(src *alpha.Stochastics) *model.Stochastics {
 	dst := &model.Stochastics{}
 	for _, v := range src.Values {
 		sv := &model.StochasticValue{

@@ -17,7 +17,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/gfx"
 	math2 "github.com/btmura/ponzi2/internal/math"
-	"github.com/btmura/ponzi2/internal/stock"
+	"github.com/btmura/ponzi2/internal/stock/alpha"
 )
 
 var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
@@ -89,9 +89,9 @@ type Controller struct {
 
 // StockDataFetcher gets stock data.
 type StockDataFetcher interface {
-	GetHistory(context.Context, *stock.GetHistoryRequest) (*stock.History, error)
-	GetMovingAverage(context.Context, *stock.GetMovingAverageRequest) (*stock.MovingAverage, error)
-	GetStochastics(context.Context, *stock.GetStochasticsRequest) (*stock.Stochastics, error)
+	GetHistory(context.Context, *alpha.GetHistoryRequest) (*alpha.History, error)
+	GetMovingAverage(context.Context, *alpha.GetMovingAverageRequest) (*alpha.MovingAverage, error)
+	GetStochastics(context.Context, *alpha.GetStochasticsRequest) (*alpha.Stochastics, error)
 }
 
 // NewController creates a new Controller.
