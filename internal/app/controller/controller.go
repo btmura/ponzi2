@@ -460,7 +460,7 @@ func (c *Controller) windowTitle() string {
 		st.Symbol,
 		st.Price(),
 		st.Change(),
-		st.PercentChange()*100.0,
+		st.PercentChange(),
 		st.Date().Format("1/2/06"),
 		appName)
 }

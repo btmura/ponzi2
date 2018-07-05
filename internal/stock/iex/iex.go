@@ -58,7 +58,7 @@ func (c *Client) ListTradingSessions(ctx context.Context, req *ListTradingSessio
 		return nil, errors.New("iex: missing symbol for ts req")
 	}
 
-	u, err := url.Parse(fmt.Sprintf("https://api.iextrading.com/1.0/stock/%s/chart/1y", req.Symbol))
+	u, err := url.Parse(fmt.Sprintf("https://api.iextrading.com/1.0/stock/%s/chart/2y", req.Symbol))
 	if err != nil {
 		return nil, err
 	}

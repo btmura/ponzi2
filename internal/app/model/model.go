@@ -46,13 +46,12 @@ type Stock struct {
 
 // TradingSession models a single trading session.
 type TradingSession struct {
-	Date   time.Time
-	Open   float32
-	High   float32
-	Low    float32
-	Close  float32
-	Volume int
-
+	Date          time.Time
+	Open          float32
+	High          float32
+	Low           float32
+	Close         float32
+	Volume        int
 	Change        float32
 	PercentChange float32
 }
