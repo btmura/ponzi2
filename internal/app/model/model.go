@@ -26,13 +26,13 @@ type Stock struct {
 	DailySessions []*TradingSession
 
 	// MovingAverage25 is the 25 day moving average series.
-	MovingAverage25 *MovingAverage
+	MovingAverage25 *MovingAverages
 
 	// MovingAverage50 is the 50 day moving average series.
-	MovingAverage50 *MovingAverage
+	MovingAverage50 *MovingAverages
 
 	// MovingAverage200 is the 200 day moving average series.
-	MovingAverage200 *MovingAverage
+	MovingAverage200 *MovingAverages
 
 	// DailyStochastics is the daily stochastics series.
 	DailyStochastics *Stochastics
@@ -57,8 +57,8 @@ type TradingSession struct {
 	PercentChange float32
 }
 
-// MovingAverage is a time series of moving average values.
-type MovingAverage struct {
+// MovingAverages is a time series of moving average values.
+type MovingAverages struct {
 	// Values are the moving average values with earlier values in front.
 	Values []*MovingAverageValue
 }
@@ -99,13 +99,13 @@ type StockUpdate struct {
 	DailySessions []*TradingSession
 
 	// MovingAverage25 is the 25 day moving average series.
-	MovingAverage25 *MovingAverage
+	MovingAverage25 *MovingAverages
 
 	// MovingAverage50 is the 50 day moving average series.
-	MovingAverage50 *MovingAverage
+	MovingAverage50 *MovingAverages
 
 	// MovingAverage200 is the 200 day moving average series.
-	MovingAverage200 *MovingAverage
+	MovingAverage200 *MovingAverages
 
 	// DailyStochastics is the daily stochastics series.
 	DailyStochastics *Stochastics

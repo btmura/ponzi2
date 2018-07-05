@@ -63,7 +63,7 @@ func convertTradingSessions(ts []*iex.TradingSession) []*model.TradingSession {
 	return ms
 }
 
-func makeMovingAverage(ts []*iex.TradingSession, n int) *model.MovingAverage {
+func makeMovingAverage(ts []*iex.TradingSession, n int) *model.MovingAverages {
 	average := func(i, n int) (avg float32) {
 		if i+1-n < 0 {
 			return 0 // Not enough data
@@ -83,7 +83,7 @@ func makeMovingAverage(ts []*iex.TradingSession, n int) *model.MovingAverage {
 		})
 	}
 
-	return &model.MovingAverage{Values: vs}
+	return &model.MovingAverages{Values: vs}
 }
 
 func makeStochastics(ss []*iex.TradingSession) *model.Stochastics {
