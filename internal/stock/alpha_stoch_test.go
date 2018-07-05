@@ -1,7 +1,6 @@
 package stock
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -74,7 +73,7 @@ func TestDecodeStochasticsResponse(t *testing.T) {
 			{
 				"Information": "Please consider optimizing your API call frequency."
 			}`,
-			wantErr: errors.New(`stock: stoch call returned info: "Please consider optimizing your API call frequency."`),
+			wantErr: errCallFrequencyInfo,
 		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {

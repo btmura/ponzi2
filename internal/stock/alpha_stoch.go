@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/url"
 	"sort"
+	"strings"
 )
 
 // GetStochastics returns Stochastics or an error.
@@ -24,27 +25,21 @@ func (a *AlphaVantage) GetStochastics(ctx context.Context, req *GetStochasticsRe
 	v.Set("slowdperiod", "3")
 	v.Set("apikey", a.apiKey)
 
-	u, err := url.Parse("https://www.alphavantage.co/query")
-	if err != nil {
-		logger.Fatalf("can't parse url")
-	}
-	u.RawQuery = v.Encode()
+	debugID := fmt.Sprintf("debug-stoch-%s-%v", req.Symbol, req.Interval)
 
-	resp, err := a.httpGet(ctx, u.String())
-	if err != nil {
-		return nil, fmt.Errorf("stock: http get for stoch failed: %v", err)
-	}
-	defer resp.Body.Close()
-
-	r := resp.Body
-	if a.dumpAPIResponses {
-		rr, err := dumpResponse(fmt.Sprintf("debug-stoch-%s-%v.txt", req.Symbol, req.Interval), r)
+	var stoch *Stochastics
+	if err := a.query(ctx, v, debugID, func(r io.Reader) error {
+		s, err := decodeStochasticsResponse(r)
 		if err != nil {
-			return nil, fmt.Errorf("stock: dumping stoch resp failed: %v", err)
+			return err
 		}
-		r = rr
+		stoch = s
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("stock: querying stoch failed: %v", err)
 	}
-	return decodeStochasticsResponse(r)
+
+	return stoch, nil
 }
 
 func decodeStochasticsResponse(r io.Reader) (*Stochastics, error) {
@@ -62,6 +57,10 @@ func decodeStochasticsResponse(r io.Reader) (*Stochastics, error) {
 	dec := json.NewDecoder(r)
 	if err := dec.Decode(&data); err != nil {
 		return nil, fmt.Errorf("stock: decoding stoch json failed: %v", err)
+	}
+
+	if strings.Contains(data.Information, callFrequencyInfo) {
+		return nil, errCallFrequencyInfo
 	}
 
 	if data.Information != "" {

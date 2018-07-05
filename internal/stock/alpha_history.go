@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/url"
 	"sort"
+	"strings"
 )
 
 // GetHistory returns stock data or an error.
@@ -22,27 +23,21 @@ func (a *AlphaVantage) GetHistory(ctx context.Context, req *GetHistoryRequest) (
 	v.Set("datatype", "json")
 	v.Set("apikey", a.apiKey)
 
-	u, err := url.Parse("https://www.alphavantage.co/query")
-	if err != nil {
-		logger.Fatalf("can't parse url")
-	}
-	u.RawQuery = v.Encode()
+	debugID := fmt.Sprintf("debug-hist-%s", req.Symbol)
 
-	resp, err := a.httpGet(ctx, u.String())
-	if err != nil {
-		return nil, fmt.Errorf("stock: http get for hist failed: %v", err)
-	}
-	defer resp.Body.Close()
-
-	r := resp.Body
-	if a.dumpAPIResponses {
-		rr, err := dumpResponse(fmt.Sprintf("debug-hist-%s.txt", req.Symbol), r)
+	var hist *History
+	if err := a.query(ctx, v, debugID, func(r io.Reader) error {
+		h, err := decodeHistoryResponse(r)
 		if err != nil {
-			return nil, fmt.Errorf("stock: dumping hist resp failed: %v", err)
+			return err
 		}
-		r = rr
+		hist = h
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("stock: querying hist failed: %v", err)
 	}
-	return decodeHistoryResponse(r)
+
+	return hist, nil
 }
 
 func decodeHistoryResponse(r io.Reader) (*History, error) {
@@ -63,6 +58,10 @@ func decodeHistoryResponse(r io.Reader) (*History, error) {
 	dec := json.NewDecoder(r)
 	if err := dec.Decode(&data); err != nil {
 		return nil, fmt.Errorf("stock: decoding hist json failed: %v", err)
+	}
+
+	if strings.Contains(data.Information, callFrequencyInfo) {
+		return nil, errCallFrequencyInfo
 	}
 
 	if data.Information != "" {

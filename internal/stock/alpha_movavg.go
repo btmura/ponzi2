@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"sort"
 	"strconv"
+	"strings"
 )
 
 // GetMovingAverage returns MovingAverage data or an error.
@@ -28,27 +29,21 @@ func (a *AlphaVantage) GetMovingAverage(ctx context.Context, req *GetMovingAvera
 	v.Set("series_type", "close")
 	v.Set("apikey", a.apiKey)
 
-	u, err := url.Parse("https://www.alphavantage.co/query")
-	if err != nil {
-		logger.Fatalf("can't parse url")
-	}
-	u.RawQuery = v.Encode()
+	debugID := fmt.Sprintf("debug-movavg-%s-%d", req.Symbol, req.TimePeriod)
 
-	resp, err := a.httpGet(ctx, u.String())
-	if err != nil {
-		return nil, fmt.Errorf("stock: http get for movavg failed: %v", err)
-	}
-	defer resp.Body.Close()
-
-	r := resp.Body
-	if a.dumpAPIResponses {
-		rr, err := dumpResponse(fmt.Sprintf("debug-movavg-%s-%d.txt", req.Symbol, req.TimePeriod), r)
+	var ma *MovingAverage
+	if err := a.query(ctx, v, debugID, func(r io.Reader) error {
+		m, err := decodeMovingAverageResponse(r)
 		if err != nil {
-			return nil, fmt.Errorf("stock: dumping movavg resp failed: %v", err)
+			return err
 		}
-		r = rr
+		ma = m
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("stock: querying movavg failed: %v", err)
 	}
-	return decodeMovingAverageResponse(r)
+
+	return ma, nil
 }
 
 func decodeMovingAverageResponse(r io.Reader) (*MovingAverage, error) {
@@ -65,6 +60,10 @@ func decodeMovingAverageResponse(r io.Reader) (*MovingAverage, error) {
 	dec := json.NewDecoder(r)
 	if err := dec.Decode(&data); err != nil {
 		return nil, fmt.Errorf("stock: decoding movavg json failed: %v", err)
+	}
+
+	if strings.Contains(data.Information, callFrequencyInfo) {
+		return nil, errCallFrequencyInfo
 	}
 
 	if data.Information != "" {

@@ -3,11 +3,13 @@ package stock
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"sync"
@@ -16,6 +18,15 @@ import (
 
 // loc is the timezone to set on parsed dates.
 var loc = mustLoadLocation("America/New_York")
+
+// callFrequencyInfo is the info message returned by Alpha Vantage when the API is overloaded.
+const callFrequencyInfo = "Please consider optimizing your API call frequency."
+
+// errCallFrequencyInfo is used internally to decide whether to retry.
+var errCallFrequencyInfo = errors.New("stock: api returned call frequency info message")
+
+// maxRetries is the number of retries if getting errCallFrequencyInfo.
+const maxRetries = 3
 
 // AlphaVantage uses AlphaVantage to get stock data.
 type AlphaVantage struct {
@@ -37,13 +48,56 @@ func NewAlphaVantage(apiKey string, dumpAPIResponses bool) *AlphaVantage {
 	}
 }
 
-func (av *AlphaVantage) httpGet(ctx context.Context, url string) (*http.Response, error) {
-	av.wait(time.Second) // Alpha Vantage suggests 1 second delay.
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+func (av *AlphaVantage) query(ctx context.Context, v url.Values, debugID string, decodeFunc func(io.Reader) error) error {
+	u, err := url.Parse("https://www.alphavantage.co/query")
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return http.DefaultClient.Do(req.WithContext(ctx))
+	u.RawQuery = v.Encode()
+
+	for i := 0; i < maxRetries; i++ {
+		av.wait(time.Duration(i+1) * time.Second)
+
+		req, err := http.NewRequest(http.MethodGet, u.String(), nil)
+		if err != nil {
+			return err
+		}
+
+		logger.Printf("[%s] %d: querying", debugID, i)
+		resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+		if err != nil {
+			return fmt.Errorf("http get failed: %v", err)
+		}
+		defer resp.Body.Close()
+
+		r := resp.Body
+		if av.dumpAPIResponses {
+			fileName := fmt.Sprintf("%s.txt", debugID)
+			rr, err := dumpResponse(fileName, r)
+			if err != nil {
+				return fmt.Errorf("dumping resp to %q failed: %v", fileName, err)
+			}
+			r = rr
+		}
+
+		err = decodeFunc(r)
+
+		if err == errCallFrequencyInfo {
+			if i+1 == maxRetries {
+				return err
+			}
+			logger.Printf("[%s] %d: retrying", debugID, i)
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return err
 }
 
 type waiter struct {
