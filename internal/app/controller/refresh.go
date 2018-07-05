@@ -32,8 +32,11 @@ func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerS
 	return controllerStockUpdate{
 		symbol: symbol,
 		update: &model.StockUpdate{
-			Symbol:        symbol,
-			DailySessions: convertTradingSessions(resp.TradingSessions),
+			Symbol:           symbol,
+			DailySessions:    convertTradingSessions(resp.TradingSessions),
+			MovingAverage25:  makeMovingAverage(resp.TradingSessions, 25),
+			MovingAverage50:  makeMovingAverage(resp.TradingSessions, 50),
+			MovingAverage200: makeMovingAverage(resp.TradingSessions, 200),
 		},
 	}
 }
@@ -56,4 +59,27 @@ func convertTradingSessions(ts []*iex.TradingSession) []*model.TradingSession {
 		return ms[i].Date.Before(ms[j].Date)
 	})
 	return ms
+}
+
+func makeMovingAverage(ts []*iex.TradingSession, n int) *model.MovingAverage {
+	average := func(i, n int) (avg float32) {
+		if i+1-n < 0 {
+			return 0 // Not enough data
+		}
+		var sum float32
+		for j := 0; j < n; j++ {
+			sum += ts[i-j].Close
+		}
+		return sum / float32(n)
+	}
+
+	var vs []*model.MovingAverageValue
+	for i, t := range ts {
+		vs = append(vs, &model.MovingAverageValue{
+			Date:    t.Date,
+			Average: average(i, n),
+		})
+	}
+
+	return &model.MovingAverage{Values: vs}
 }
