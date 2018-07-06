@@ -45,8 +45,8 @@ func (ch *ChartStochastics) SetStock(st *model.Stock) {
 	ch.Close()
 
 	// Bail out if there is no data yet.
-	if ch.interval == DailyInterval && st.DailyStochastics == nil ||
-		ch.interval == WeeklyInterval && st.WeeklyStochastics == nil {
+	if ch.interval == DailyInterval && st.DailyStochasticSeries == nil ||
+		ch.interval == WeeklyInterval && st.WeeklyStochasticSeries == nil {
 		return // Stock has no data yet.
 	}
 
@@ -59,13 +59,13 @@ func (ch *ChartStochastics) SetStock(st *model.Stock) {
 		makeChartStochasticLabel(.2),
 	}
 
-	var ss *model.Stochastics
+	var ss *model.StochasticSeries
 	var dColor [3]float32
 	switch ch.interval {
 	case DailyInterval:
-		ss, dColor = st.DailyStochastics, yellow
+		ss, dColor = st.DailyStochasticSeries, yellow
 	case WeeklyInterval:
-		ss, dColor = st.WeeklyStochastics, purple
+		ss, dColor = st.WeeklyStochasticSeries, purple
 	default:
 		logger.Fatalf("SetStock: unsupported interval: %v", ch.interval)
 	}
@@ -157,11 +157,11 @@ func makeChartStochasticLabel(perc float32) chartStochasticLabel {
 	}
 }
 
-func chartStochasticVAO(ss *model.Stochastics, dColor [3]float32) *gfx.VAO {
+func chartStochasticVAO(ss *model.StochasticSeries, dColor [3]float32) *gfx.VAO {
 	data := &gfx.VAOVertexData{}
 	var v uint16 // vertex index
 
-	dx := 2.0 / float32(len(ss.Values)) // (-1 to 1) on X-axis
+	dx := 2.0 / float32(len(ss.Stochastics)) // (-1 to 1) on X-axis
 	calcX := func(i int) float32 {
 		return -1.0 + dx*float32(i) + dx*0.5
 	}
@@ -171,7 +171,7 @@ func chartStochasticVAO(ss *model.Stochastics, dColor [3]float32) *gfx.VAO {
 
 	// Add vertices and indices for k percent lines.
 	first := true
-	for i, s := range ss.Values {
+	for i, s := range ss.Stochastics {
 		if s.K == 0 {
 			continue
 		}
@@ -187,7 +187,7 @@ func chartStochasticVAO(ss *model.Stochastics, dColor [3]float32) *gfx.VAO {
 
 	// Add vertices and indices for d percent lines.
 	first = true
-	for i, s := range ss.Values {
+	for i, s := range ss.Stochastics {
 		if s.D == 0 {
 			continue
 		}

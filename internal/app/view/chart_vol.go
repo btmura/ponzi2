@@ -38,13 +38,13 @@ func (ch *ChartVolume) SetStock(st *model.Stock) {
 	ch.Close()
 
 	// Bail out if there is no data yet.
-	if st.LastUpdateTime.IsZero() {
+	if st.DailyTradingSessionSeries == nil {
 		return // Stock has no data yet.
 	}
 
 	// Find the maximum volume.
 	ch.maxVolume = 0
-	for _, s := range st.DailySessions {
+	for _, s := range st.DailyTradingSessionSeries.TradingSessions {
 		if ch.maxVolume < s.Volume {
 			ch.maxVolume = s.Volume
 		}
@@ -59,7 +59,7 @@ func (ch *ChartVolume) SetStock(st *model.Stock) {
 		makeChartVolumeLabel(ch.maxVolume, .3),
 	}
 
-	ch.volBars = chartVolumeBarsVAO(st.DailySessions, ch.maxVolume)
+	ch.volBars = chartVolumeBarsVAO(st.DailyTradingSessionSeries.TradingSessions, ch.maxVolume)
 
 	ch.renderable = true
 }

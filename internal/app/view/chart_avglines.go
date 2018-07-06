@@ -25,7 +25,7 @@ func (ch *ChartAvgLines) SetStock(st *model.Stock) {
 	ch.Close()
 
 	// Bail out if there is no data yet.
-	if st.MovingAverage25 == nil || st.MovingAverage50 == nil || st.MovingAverage200 == nil {
+	if st.DailyTradingSessionSeries == nil || st.DailyMovingAverageSeries25 == nil || st.DailyMovingAverageSeries50 == nil || st.DailyMovingAverageSeries200 == nil {
 		return // Stock has no data yet.
 	}
 
@@ -36,7 +36,7 @@ func (ch *ChartAvgLines) SetStock(st *model.Stock) {
 func createChartAvgLinesVAO(st *model.Stock) *gfx.VAO {
 	minPrice := float32(math.MaxFloat32)
 	maxPrice := float32(0)
-	for _, s := range st.DailySessions {
+	for _, s := range st.DailyTradingSessionSeries.TradingSessions {
 		if minPrice > s.Low {
 			minPrice = s.Low
 		}
@@ -48,8 +48,8 @@ func createChartAvgLinesVAO(st *model.Stock) *gfx.VAO {
 	data := &gfx.VAOVertexData{}
 	var v uint16 // vertex index
 
-	add := func(ma *model.MovingAverages, color [3]float32) {
-		dx := 2.0 / float32(len(ma.Values)) // (-1 to 1) on X-axis
+	add := func(ma *model.MovingAverageSeries, color [3]float32) {
+		dx := 2.0 / float32(len(ma.MovingAverages)) // (-1 to 1) on X-axis
 		calcX := func(i int) float32 {
 			return -1.0 + dx*float32(i) + dx*0.5
 		}
@@ -58,11 +58,11 @@ func createChartAvgLinesVAO(st *model.Stock) *gfx.VAO {
 		}
 
 		first := true
-		for i, mv := range ma.Values {
-			if mv.Average < minPrice || mv.Average > maxPrice {
+		for i, mv := range ma.MovingAverages {
+			if mv.Value < minPrice || mv.Value > maxPrice {
 				continue
 			}
-			data.Vertices = append(data.Vertices, calcX(i), calcY(mv.Average), 0)
+			data.Vertices = append(data.Vertices, calcX(i), calcY(mv.Value), 0)
 			data.Colors = append(data.Colors, color[0], color[1], color[2])
 			if !first {
 				data.Indices = append(data.Indices, v, v-1)
@@ -72,9 +72,9 @@ func createChartAvgLinesVAO(st *model.Stock) *gfx.VAO {
 		}
 	}
 
-	add(st.MovingAverage25, purple)
-	add(st.MovingAverage50, yellow)
-	add(st.MovingAverage200, white)
+	add(st.DailyMovingAverageSeries25, purple)
+	add(st.DailyMovingAverageSeries50, yellow)
+	add(st.DailyMovingAverageSeries200, white)
 
 	return gfx.NewVAO(gfx.Lines, data)
 }

@@ -38,13 +38,13 @@ func (ch *ChartPrices) SetStock(st *model.Stock) {
 	ch.Close()
 
 	// Bail out if there is no data yet.
-	if st.LastUpdateTime.IsZero() {
+	if st.DailyTradingSessionSeries == nil {
 		return // Stock has no data yet.
 	}
 
 	// Find the min and max price.
 	ch.priceRange = [2]float32{math.MaxFloat32, 0}
-	for _, s := range st.DailySessions {
+	for _, s := range st.DailyTradingSessionSeries.TradingSessions {
 		if ch.priceRange[0] > s.Low {
 			ch.priceRange[0] = s.Low
 		}
@@ -56,7 +56,7 @@ func (ch *ChartPrices) SetStock(st *model.Stock) {
 	// Measure the max label size by creating a label with the max value.
 	ch.MaxLabelSize = makeChartPriceLabel(ch.priceRange[1]).size
 
-	ch.stickLines, ch.stickRects = chartPriceCandlestickVAOs(st.DailySessions, ch.priceRange)
+	ch.stickLines, ch.stickRects = chartPriceCandlestickVAOs(st.DailyTradingSessionSeries.TradingSessions, ch.priceRange)
 
 	ch.renderable = true
 }

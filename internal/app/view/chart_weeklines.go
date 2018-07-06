@@ -24,11 +24,11 @@ func (ch *ChartWeekLines) SetStock(st *model.Stock) {
 	ch.Close()
 
 	// Bail out if there is no data yet.
-	if st.LastUpdateTime.IsZero() {
+	if st.DailyTradingSessionSeries == nil {
 		return // Stock has no data yet.
 	}
 
-	ch.lines = createChartWeekLinesVAO(st.DailySessions)
+	ch.lines = createChartWeekLinesVAO(st.DailyTradingSessionSeries.TradingSessions)
 	ch.renderable = true
 }
 

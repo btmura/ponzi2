@@ -34,16 +34,16 @@ func (ch *ChartTimeLabels) SetStock(st *model.Stock) {
 	ch.Close()
 
 	// Bail out if there is no data yet.
-	if st.LastUpdateTime.IsZero() {
+	if st.DailyTradingSessionSeries == nil {
 		return // Stock has no data yet.
 	}
 
 	ch.MaxLabelSize = chartAxisLabelTextRenderer.Measure(chartTimeLabelText(time.December))
 
-	ch.labels = chartTimeLabels(st.DailySessions)
+	ch.labels = chartTimeLabels(st.DailyTradingSessionSeries.TradingSessions)
 
 	ch.dates = nil
-	for _, s := range st.DailySessions {
+	for _, s := range st.DailyTradingSessionSeries.TradingSessions {
 		ch.dates = append(ch.dates, s.Date)
 	}
 

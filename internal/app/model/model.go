@@ -8,40 +8,28 @@ import (
 
 var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 
-// Model keeps track of the user's stocks.
+// Model models the app's state.
 type Model struct {
-	// CurrentStock is the stock currently being viewed.
 	CurrentStock *Stock
-
-	// SavedStocks is the user's saved stocks.
-	SavedStocks []*Stock
+	SavedStocks  []*Stock
 }
 
-// Stock models a single stock.
+// Stock models a single stock's data.
 type Stock struct {
-	// Symbol is the symbol of the stock.
-	Symbol string
+	Symbol                      string
+	DailyTradingSessionSeries   *TradingSessionSeries
+	DailyMovingAverageSeries25  *MovingAverageSeries
+	DailyMovingAverageSeries50  *MovingAverageSeries
+	DailyMovingAverageSeries200 *MovingAverageSeries
+	DailyStochasticSeries       *StochasticSeries
+	WeeklyStochasticSeries      *StochasticSeries
+	LastUpdateTime              time.Time
+}
 
-	// DailySessions are trading sessions that span a single day.
-	DailySessions []*TradingSession
-
-	// MovingAverage25 is the 25 day moving average series.
-	MovingAverage25 *MovingAverages
-
-	// MovingAverage50 is the 50 day moving average series.
-	MovingAverage50 *MovingAverages
-
-	// MovingAverage200 is the 200 day moving average series.
-	MovingAverage200 *MovingAverages
-
-	// DailyStochastics is the daily stochastics series.
-	DailyStochastics *Stochastics
-
-	// WeeklyStochastics is the weekly stochastic series.
-	WeeklyStochastics *Stochastics
-
-	// LastUpdateTime is when the ModelStock was last updated.
-	LastUpdateTime time.Time
+// TradingSessionSeries is a time series of trading sessions.
+type TradingSessionSeries struct {
+	// TradingSessions are sorted by date in ascending order.
+	TradingSessions []*TradingSession
 }
 
 // TradingSession models a single trading session.
@@ -56,30 +44,30 @@ type TradingSession struct {
 	PercentChange float32
 }
 
-// MovingAverages is a time series of moving average values.
-type MovingAverages struct {
-	// Values are the moving average values with earlier values in front.
-	Values []*MovingAverageValue
+// MovingAverageSeries is a time series of moving average values.
+type MovingAverageSeries struct {
+	// MovingAverages are sorted by date in ascending order.
+	MovingAverages []*MovingAverage
 }
 
-// MovingAverageValue is a moving average data value for some date.
-type MovingAverageValue struct {
-	// Date is the start date of the time span covered by this value.
+// MovingAverage is a single data point in a MovingAverageSeries.
+type MovingAverage struct {
+	// Date is the start date of the data point.
 	Date time.Time
 
-	// Average is the average value.
-	Average float32
+	// Value is the moving average value.
+	Value float32
 }
 
-// Stochastics is a time series of stochastic values.
-type Stochastics struct {
-	// Values are the stochastic values with earlier values in front.
-	Values []*StochasticValue
+// StochasticSeries is a time series of stochastic values.
+type StochasticSeries struct {
+	// Stochastics are sorted by date in ascending order.
+	Stochastics []*Stochastic
 }
 
-// StochasticValue are the stochastic values for some date.
-type StochasticValue struct {
-	// Date is the start date of the time span covered by this value.
+// Stochastic is a single data point in a StochasticSeries.
+type Stochastic struct {
+	// Date is the start date of the data point.
 	Date time.Time
 
 	// K measures the stock's momentum.
@@ -89,28 +77,15 @@ type StochasticValue struct {
 	D float32
 }
 
-// StockUpdate is an update that can be applied to the model.
+// StockUpdate is an update that can be applied to a single stock.
 type StockUpdate struct {
-	// Symbol is the symbol of the stock.
-	Symbol string
-
-	// DailySessions are trading sessions that span a single day.
-	DailySessions []*TradingSession
-
-	// MovingAverage25 is the 25 day moving average series.
-	MovingAverage25 *MovingAverages
-
-	// MovingAverage50 is the 50 day moving average series.
-	MovingAverage50 *MovingAverages
-
-	// MovingAverage200 is the 200 day moving average series.
-	MovingAverage200 *MovingAverages
-
-	// DailyStochastics is the daily stochastics series.
-	DailyStochastics *Stochastics
-
-	// WeeklyStochastics is the weekly stochastic series.
-	WeeklyStochastics *Stochastics
+	Symbol                      string
+	DailyTradingSessionSeries   *TradingSessionSeries
+	DailyMovingAverageSeries25  *MovingAverageSeries
+	DailyMovingAverageSeries50  *MovingAverageSeries
+	DailyMovingAverageSeries200 *MovingAverageSeries
+	DailyStochasticSeries       *StochasticSeries
+	WeeklyStochasticSeries      *StochasticSeries
 }
 
 // NewModel creates a new Model.
@@ -118,8 +93,8 @@ func NewModel() *Model {
 	return &Model{}
 }
 
-// SetCurrentStock sets the current stock by symbol. It returns the
-// corresponding ModelStock and true if the current stock changed.
+// SetCurrentStock sets the current stock by symbol.
+// It returns the corresponding Stock and true if the current stock changed.
 func (m *Model) SetCurrentStock(symbol string) (st *Stock, changed bool) {
 	if symbol == "" {
 		logger.Print("SetCurrentStock: cannot set current stock to empty symbol")
@@ -135,8 +110,8 @@ func (m *Model) SetCurrentStock(symbol string) (st *Stock, changed bool) {
 	return m.CurrentStock, true
 }
 
-// AddSavedStock adds the stock by symbol. It returns the corresponding
-// ModelStock and true if the stock was newly added.
+// AddSavedStock adds the stock by symbol.
+// It returns the corresponding Stock and true if the stock was newly added.
 func (m *Model) AddSavedStock(symbol string) (st *Stock, added bool) {
 	if symbol == "" {
 		logger.Print("AddSavedStock: cannot add empty symbol")
@@ -171,16 +146,16 @@ func (m *Model) RemoveSavedStock(symbol string) (removed bool) {
 }
 
 // UpdateStock updates a stock with the update if it is in the model.
-func (m *Model) UpdateStock(update *StockUpdate) (st *Stock, updated bool) {
-	if st = m.stock(update.Symbol); st == nil {
+func (m *Model) UpdateStock(u *StockUpdate) (st *Stock, updated bool) {
+	if st = m.stock(u.Symbol); st == nil {
 		return nil, false
 	}
-	st.DailySessions = update.DailySessions
-	st.DailyStochastics = update.DailyStochastics
-	st.WeeklyStochastics = update.WeeklyStochastics
-	st.MovingAverage25 = update.MovingAverage25
-	st.MovingAverage50 = update.MovingAverage50
-	st.MovingAverage200 = update.MovingAverage200
+	st.DailyTradingSessionSeries = u.DailyTradingSessionSeries
+	st.DailyStochasticSeries = u.DailyStochasticSeries
+	st.WeeklyStochasticSeries = u.WeeklyStochasticSeries
+	st.DailyMovingAverageSeries25 = u.DailyMovingAverageSeries25
+	st.DailyMovingAverageSeries50 = u.DailyMovingAverageSeries50
+	st.DailyMovingAverageSeries200 = u.DailyMovingAverageSeries200
 	st.LastUpdateTime = time.Now()
 	return st, true
 }
@@ -201,32 +176,46 @@ func (m *Model) stock(symbol string) *Stock {
 
 // Price returns the most recent price or 0 if no data.
 func (m *Stock) Price() float32 {
-	if len(m.DailySessions) == 0 {
+	if m.DailyTradingSessionSeries == nil || len(m.DailyTradingSessionSeries.TradingSessions) == 0 {
 		return 0
 	}
-	return m.DailySessions[len(m.DailySessions)-1].Close
+	return m.DailyTradingSessionSeries.TradingSessions[len(m.DailyTradingSessionSeries.TradingSessions)-1].Close
 }
 
 // Change returns the most recent change or 0 if no data.
 func (m *Stock) Change() float32 {
-	if len(m.DailySessions) == 0 {
-		return 0
+	if ts := m.recentSession(); ts != nil {
+		return ts.Change
 	}
-	return m.DailySessions[len(m.DailySessions)-1].Change
+	return 0
 }
 
 // PercentChange returns the most recent percent change or 0 if no data.
 func (m *Stock) PercentChange() float32 {
-	if len(m.DailySessions) == 0 {
-		return 0
+	if ts := m.recentSession(); ts != nil {
+		return ts.PercentChange
 	}
-	return m.DailySessions[len(m.DailySessions)-1].PercentChange
+	return 0
 }
 
 // Date returns the most recent date or zero time if no data.
 func (m *Stock) Date() time.Time {
-	if len(m.DailySessions) == 0 {
-		return time.Time{}
+	if ts := m.recentSession(); ts != nil {
+		return ts.Date
 	}
-	return m.DailySessions[len(m.DailySessions)-1].Date
+	return time.Time{}
+}
+
+func (m *Stock) recentSession() *TradingSession {
+	sr := m.DailyTradingSessionSeries
+	if sr == nil {
+		return nil
+	}
+
+	ts := sr.TradingSessions
+	if len(ts) == 0 {
+		return nil
+	}
+
+	return ts[len(ts)-1]
 }
