@@ -8,14 +8,14 @@ import (
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
-func ExampleClient_ListTradingSessions() {
+func ExampleClient_GetTradingSessionSeries() {
 	ctx := context.Background()
 
 	c := iex.NewClient(false)
 
-	req := &iex.ListTradingSessionsRequest{Symbol: "MSFT"}
+	req := &iex.GetTradingSessionSeriesRequest{Symbol: "MSFT"}
 
-	resp, err := c.ListTradingSessions(ctx, req)
+	resp, err := c.GetTradingSessionSeries(ctx, req)
 	if err != nil {
 		log.Fatal(err)
 	}

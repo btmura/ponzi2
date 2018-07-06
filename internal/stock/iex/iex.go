@@ -19,13 +19,13 @@ import (
 // loc is the timezone to set on parsed dates.
 var loc = mustLoadLocation("America/New_York")
 
-// ListTradingSessionsRequest is the request passed to ListTradingSessions.
-type ListTradingSessionsRequest struct {
+// GetTradingSessionSeriesRequest is the request passed to ListTradingSessions.
+type GetTradingSessionSeriesRequest struct {
 	Symbol string
 }
 
-// ListTradingSessionsResponse is the response returned by ListTradingSessions
-type ListTradingSessionsResponse struct {
+// TradingSessionSeries is the response returned by ListTradingSessions
+type TradingSessionSeries struct {
 	TradingSessions []*TradingSession
 }
 
@@ -52,8 +52,8 @@ func NewClient(dumpAPIResponses bool) *Client {
 	return &Client{dumpAPIResponses: dumpAPIResponses}
 }
 
-// ListTradingSessions lists trading sessions for a stock symbol.
-func (c *Client) ListTradingSessions(ctx context.Context, req *ListTradingSessionsRequest) (*ListTradingSessionsResponse, error) {
+// GetTradingSessionSeries gets a series of trading sessions for a stock symbol.
+func (c *Client) GetTradingSessionSeries(ctx context.Context, req *GetTradingSessionSeriesRequest) (*TradingSessionSeries, error) {
 	if req.Symbol == "" {
 		return nil, errors.New("iex: missing symbol for ts req")
 	}
@@ -88,7 +88,7 @@ func (c *Client) ListTradingSessions(ctx context.Context, req *ListTradingSessio
 		r = rr
 	}
 
-	resp, err := decodeTradingSessions(r)
+	resp, err := decodeTradingSessionSeries(r)
 	if err != nil {
 		return nil, fmt.Errorf("iex: failed to decode resp: %v", err)
 	}
@@ -96,7 +96,7 @@ func (c *Client) ListTradingSessions(ctx context.Context, req *ListTradingSessio
 	return resp, nil
 }
 
-func decodeTradingSessions(r io.Reader) (*ListTradingSessionsResponse, error) {
+func decodeTradingSessionSeries(r io.Reader) (*TradingSessionSeries, error) {
 	type DataPoint struct {
 		Date          string  `json:"date"`
 		Open          float64 `json:"open"`
@@ -137,7 +137,7 @@ func decodeTradingSessions(r io.Reader) (*ListTradingSessionsResponse, error) {
 		return ts[i].Date.Before(ts[j].Date)
 	})
 
-	return &ListTradingSessionsResponse{TradingSessions: ts}, nil
+	return &TradingSessionSeries{TradingSessions: ts}, nil
 }
 
 func parseDate(s string) (time.Time, error) {

@@ -27,8 +27,8 @@ type controllerStockUpdate struct {
 }
 
 func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerStockUpdate {
-	req := &iex.ListTradingSessionsRequest{Symbol: symbol}
-	resp, err := c.stockDataFetcher.ListTradingSessions(ctx, req)
+	req := &iex.GetTradingSessionSeriesRequest{Symbol: symbol}
+	resp, err := c.stockDataFetcher.GetTradingSessionSeries(ctx, req)
 	if err != nil {
 		return controllerStockUpdate{
 			symbol:    symbol,
@@ -41,7 +41,7 @@ func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerS
 	}
 }
 
-func modelStockUpdate(symbol string, resp *iex.ListTradingSessionsResponse) *model.StockUpdate {
+func modelStockUpdate(symbol string, resp *iex.TradingSessionSeries) *model.StockUpdate {
 	ds := modelTradingSessions(resp.TradingSessions)
 	ws := modelTradingSessions(weeklyTradingSessions(resp.TradingSessions))
 

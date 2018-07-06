@@ -10,11 +10,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestDecodeTradingSessions(t *testing.T) {
+func TestDecodeTradingSessionSeries(t *testing.T) {
 	for _, tt := range []struct {
 		desc    string
 		input   string
-		want    *ListTradingSessionsResponse
+		want    *TradingSessionSeries
 		wantErr error
 	}{
 		{
@@ -24,7 +24,7 @@ func TestDecodeTradingSessions(t *testing.T) {
 				{"date":"2017-07-06","open":66.9627,"high":67.4629,"low":66.8156,"close":67.2569,"volume":21117572,"change":-0.500233,"changePercent":-0.738},
 				{"date":"2017-07-07","open":67.3845,"high":68.5026,"low":67.3845,"close":68.1299,"volume":16878317,"change":0.872957,"changePercent":1.298}
 			]`,
-			want: &ListTradingSessionsResponse{
+			want: &TradingSessionSeries{
 				TradingSessions: []*TradingSession{
 					{
 						Date:          mustParseDate("2017-07-05"),
@@ -61,7 +61,7 @@ func TestDecodeTradingSessions(t *testing.T) {
 		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
-			got, gotErr := decodeTradingSessions(strings.NewReader(tt.input))
+			got, gotErr := decodeTradingSessionSeries(strings.NewReader(tt.input))
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("resp differs:\n%s", diff)
