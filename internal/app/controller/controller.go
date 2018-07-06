@@ -480,11 +480,12 @@ func (c *Controller) windowTitle() string {
 		return fmt.Sprintf("%s - %s", st.Symbol, appName)
 	}
 
-	return fmt.Sprintf("%s %.2f %+5.2f %+5.2f%% %s - %s",
+	return fmt.Sprintf("%s %.2f %+5.2f %+5.2f%% %s (Updated: %s) - %s",
 		st.Symbol,
 		st.Price(),
 		st.Change(),
 		st.PercentChange(),
 		st.Date().Format("1/2/06"),
+		st.LastUpdateTime.Format("1/2/06 15:04"),
 		appName)
 }
