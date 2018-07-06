@@ -1,49 +1,24 @@
 package controller
 
 import (
-	"context"
 	"sort"
 
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
+// maxDataWeeks is maximum number of weeks of data to retain.
+const maxDataWeeks = 12 /* months */ * 4 /* weeks = 1 year */
+
+// Stochastic parameters.
 const (
-	maxDataWeeks = 12 /* months */ * 4 /* weeks = 1 year */
-	k            = 10
-	d            = 3
+	k = 10
+	d = 3
 )
 
-// controllerStockUpdate bundles a stock and new data for that stock.
-type controllerStockUpdate struct {
-	// symbol is the stock's symbol.
-	symbol string
-
-	// update is the new data for the stock. Nil if an error happened.
-	update *model.StockUpdate
-
-	// updateErr is the error getting the update. Nil if no error happened.
-	updateErr error
-}
-
-func (c *Controller) stockUpdate(ctx context.Context, symbol string) controllerStockUpdate {
-	req := &iex.GetTradingSessionSeriesRequest{Symbol: symbol}
-	resp, err := c.stockDataFetcher.GetTradingSessionSeries(ctx, req)
-	if err != nil {
-		return controllerStockUpdate{
-			symbol:    symbol,
-			updateErr: err,
-		}
-	}
-	return controllerStockUpdate{
-		symbol: symbol,
-		update: modelStockUpdate(symbol, resp),
-	}
-}
-
-func modelStockUpdate(symbol string, resp *iex.TradingSessionSeries) *model.StockUpdate {
-	ds := modelTradingSessions(resp.TradingSessions)
-	ws := modelTradingSessions(weeklyTradingSessions(resp.TradingSessions))
+func modelStockUpdate(symbol string, sr *iex.TradingSessionSeries) *model.StockUpdate {
+	ds := modelTradingSessions(sr.TradingSessions)
+	ws := modelTradingSessions(weeklyTradingSessions(sr.TradingSessions))
 
 	m25 := modelMovingAverages(ds, 25)
 	m50 := modelMovingAverages(ds, 50)

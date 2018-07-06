@@ -50,14 +50,14 @@ func init() {
 
 // Controller runs the program in a "game loop".
 type Controller struct {
+	// iexClient fetches stock data.
+	iexClient *iex.Client
+
 	// model is the data that the Controller connects to the View.
 	model *model.Model
 
 	// view is the UI that the Controller updates.
 	view *view.View
-
-	// stockDataFetcher fetches stock data.
-	stockDataFetcher *iex.Client
 
 	// symbolToChartMap maps symbol to Chart. Only one entry right now.
 	symbolToChartMap map[string]*view.Chart
@@ -87,12 +87,24 @@ type Controller struct {
 	winSize image.Point
 }
 
+// controllerStockUpdate bundles a stock and new data for that stock.
+type controllerStockUpdate struct {
+	// symbol is the stock's symbol.
+	symbol string
+
+	// update is the new data for the stock. Nil if an error happened.
+	update *model.StockUpdate
+
+	// updateErr is the error getting the update. Nil if no error happened.
+	updateErr error
+}
+
 // NewController creates a new Controller.
-func NewController(stockDataFetcher *iex.Client) *Controller {
+func NewController(iexClient *iex.Client) *Controller {
 	return &Controller{
+		iexClient:             iexClient,
 		model:                 model.NewModel(),
 		view:                  view.NewView(),
-		stockDataFetcher:      stockDataFetcher,
 		symbolToChartMap:      map[string]*view.Chart{},
 		symbolToChartThumbMap: map[string]*view.ChartThumb{},
 		pendingStockUpdates:   make(chan controllerStockUpdate),
@@ -364,7 +376,19 @@ func (c *Controller) refreshStock(ctx context.Context, symbol string) {
 		th.SetError(false)
 	}
 	go func() {
-		c.pendingStockUpdates <- c.stockUpdate(ctx, symbol)
+		req := &iex.GetTradingSessionSeriesRequest{Symbol: symbol}
+		sr, err := c.iexClient.GetTradingSessionSeries(ctx, req)
+		if err != nil {
+			c.pendingStockUpdates <- controllerStockUpdate{
+				symbol:    symbol,
+				updateErr: err,
+			}
+			return
+		}
+		c.pendingStockUpdates <- controllerStockUpdate{
+			symbol: symbol,
+			update: modelStockUpdate(symbol, sr),
+		}
 	}()
 }
 
