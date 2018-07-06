@@ -387,7 +387,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbol string) {
 		}
 		c.pendingStockUpdates <- controllerStockUpdate{
 			symbol: symbol,
-			update: modelStockUpdate(symbol, sr),
+			update: modelStockUpdate(sr),
 		}
 	}()
 }

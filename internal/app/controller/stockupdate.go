@@ -16,7 +16,7 @@ const (
 	d = 3
 )
 
-func modelStockUpdate(symbol string, sr *iex.TradingSessionSeries) *model.StockUpdate {
+func modelStockUpdate(sr *iex.TradingSessionSeries) *model.StockUpdate {
 	ds := modelTradingSessions(sr.TradingSessions)
 	ws := modelTradingSessions(weeklyTradingSessions(sr.TradingSessions))
 
@@ -66,7 +66,7 @@ func modelStockUpdate(symbol string, sr *iex.TradingSessionSeries) *model.StockU
 	}
 
 	return &model.StockUpdate{
-		Symbol: symbol,
+		Symbol: sr.Symbol,
 		DailyTradingSessionSeries:   &model.TradingSessionSeries{TradingSessions: ds},
 		DailyMovingAverageSeries25:  &model.MovingAverageSeries{MovingAverages: m25},
 		DailyMovingAverageSeries50:  &model.MovingAverageSeries{MovingAverages: m50},

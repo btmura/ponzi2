@@ -13,18 +13,21 @@ import (
 func TestDecodeTradingSessionSeries(t *testing.T) {
 	for _, tt := range []struct {
 		desc    string
-		input   string
+		symbol  string
+		data    string
 		want    *TradingSessionSeries
 		wantErr error
 	}{
 		{
-			desc: "demo",
-			input: `[
+			desc:   "demo",
+			symbol: "MSFT",
+			data: `[
 				{"date":"2017-07-05","open":66.948,"high":68.1103,"low":66.9136,"close":67.7572,"volume":21176272,"change":0.892575,"changePercent":1.335},
 				{"date":"2017-07-06","open":66.9627,"high":67.4629,"low":66.8156,"close":67.2569,"volume":21117572,"change":-0.500233,"changePercent":-0.738},
 				{"date":"2017-07-07","open":67.3845,"high":68.5026,"low":67.3845,"close":68.1299,"volume":16878317,"change":0.872957,"changePercent":1.298}
 			]`,
 			want: &TradingSessionSeries{
+				Symbol: "MSFT",
 				TradingSessions: []*TradingSession{
 					{
 						Date:          mustParseDate("2017-07-05"),
@@ -61,7 +64,7 @@ func TestDecodeTradingSessionSeries(t *testing.T) {
 		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
-			got, gotErr := decodeTradingSessionSeries(strings.NewReader(tt.input))
+			got, gotErr := decodeTradingSessionSeries(tt.symbol, strings.NewReader(tt.data))
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("resp differs:\n%s", diff)

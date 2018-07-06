@@ -26,6 +26,7 @@ type GetTradingSessionSeriesRequest struct {
 
 // TradingSessionSeries is the response returned by ListTradingSessions
 type TradingSessionSeries struct {
+	Symbol          string
 	TradingSessions []*TradingSession
 }
 
@@ -88,7 +89,7 @@ func (c *Client) GetTradingSessionSeries(ctx context.Context, req *GetTradingSes
 		r = rr
 	}
 
-	resp, err := decodeTradingSessionSeries(r)
+	resp, err := decodeTradingSessionSeries(req.Symbol, r)
 	if err != nil {
 		return nil, fmt.Errorf("iex: failed to decode resp: %v", err)
 	}
@@ -96,7 +97,7 @@ func (c *Client) GetTradingSessionSeries(ctx context.Context, req *GetTradingSes
 	return resp, nil
 }
 
-func decodeTradingSessionSeries(r io.Reader) (*TradingSessionSeries, error) {
+func decodeTradingSessionSeries(symbol string, r io.Reader) (*TradingSessionSeries, error) {
 	type DataPoint struct {
 		Date          string  `json:"date"`
 		Open          float64 `json:"open"`
@@ -137,7 +138,7 @@ func decodeTradingSessionSeries(r io.Reader) (*TradingSessionSeries, error) {
 		return ts[i].Date.Before(ts[j].Date)
 	})
 
-	return &TradingSessionSeries{TradingSessions: ts}, nil
+	return &TradingSessionSeries{Symbol: symbol, TradingSessions: ts}, nil
 }
 
 func parseDate(s string) (time.Time, error) {
