@@ -2,18 +2,16 @@ package config
 
 import (
 	"io/ioutil"
-	"log"
 	"os"
 	"os/user"
 	"path"
 
+	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 )
 
 // Generate config.pb.go. Follow setup instructions @ github.com/golang/protobuf.
 //go:generate protoc -I=data --go_out=. config.proto
-
-var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 
 // Load loads the user's config from disk.
 func Load() (*Config, error) {
@@ -22,7 +20,7 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
-	logger.Printf("config.Load: loading config from %s", cfgPath)
+	glog.Infof("config.Load: loading config from %s", cfgPath)
 
 	file, err := os.Open(cfgPath)
 	if err != nil && !os.IsNotExist(err) {
@@ -53,7 +51,7 @@ func Save(cfg *Config) error {
 		return err
 	}
 
-	logger.Printf("config.Save: saving config to %s", cfgPath)
+	glog.Infof("config.Save: saving config to %s", cfgPath)
 
 	file, err := os.OpenFile(cfgPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0660)
 	if err != nil {

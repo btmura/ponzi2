@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"image"
 
+	"github.com/golang/glog"
+
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/gfx"
 )
@@ -67,7 +69,7 @@ func (ch *ChartStochastics) SetStock(st *model.Stock) {
 	case WeeklyInterval:
 		ss, dColor = st.WeeklyStochasticSeries, purple
 	default:
-		logger.Fatalf("SetStock: unsupported interval: %v", ch.interval)
+		glog.Fatalf("SetStock: unsupported interval: %v", ch.interval)
 	}
 
 	ch.stoLines = chartStochasticVAO(ss, dColor)

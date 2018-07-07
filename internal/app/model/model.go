@@ -1,12 +1,10 @@
 package model
 
 import (
-	"log"
-	"os"
 	"time"
-)
 
-var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
+	"github.com/golang/glog"
+)
 
 // Model models the app's state.
 type Model struct {
@@ -97,7 +95,7 @@ func NewModel() *Model {
 // It returns the corresponding Stock and true if the current stock changed.
 func (m *Model) SetCurrentStock(symbol string) (st *Stock, changed bool) {
 	if symbol == "" {
-		logger.Print("SetCurrentStock: cannot set current stock to empty symbol")
+		glog.Info("SetCurrentStock: cannot set current stock to empty symbol")
 	}
 
 	if m.CurrentStock != nil && m.CurrentStock.Symbol == symbol {
@@ -114,7 +112,7 @@ func (m *Model) SetCurrentStock(symbol string) (st *Stock, changed bool) {
 // It returns the corresponding Stock and true if the stock was newly added.
 func (m *Model) AddSavedStock(symbol string) (st *Stock, added bool) {
 	if symbol == "" {
-		logger.Print("AddSavedStock: cannot add empty symbol")
+		glog.Info("AddSavedStock: cannot add empty symbol")
 	}
 
 	for _, st := range m.SavedStocks {
@@ -133,7 +131,7 @@ func (m *Model) AddSavedStock(symbol string) (st *Stock, added bool) {
 // RemoveSavedStock removes the stock by symbol and returns true if removed.
 func (m *Model) RemoveSavedStock(symbol string) (removed bool) {
 	if symbol == "" {
-		logger.Print("RemovedSavedStock: cannot remove empty symbol")
+		glog.Info("RemovedSavedStock: cannot remove empty symbol")
 	}
 
 	for i, st := range m.SavedStocks {

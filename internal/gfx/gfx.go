@@ -2,8 +2,6 @@ package gfx
 
 import (
 	"image"
-	"log"
-	"os"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 
@@ -12,8 +10,6 @@ import (
 
 // Get esc from github.com/mjibson/esc. It's used to embed resources into the binary.
 //go:generate esc -o bindata.go -pkg gfx -include ".*(frag|ply|vert)" -modtime 1337 -private data
-
-var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 
 // Locations for the vertex and fragment shaders.
 const (

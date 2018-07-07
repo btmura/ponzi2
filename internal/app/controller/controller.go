@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 	"image"
-	"log"
-	"os"
 	"runtime"
 	"unicode"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/golang/glog"
 
 	"github.com/btmura/ponzi2/internal/app/config"
 	"github.com/btmura/ponzi2/internal/app/model"
@@ -19,8 +18,6 @@ import (
 	math2 "github.com/btmura/ponzi2/internal/math"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
-
-var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 
 // Application name for the window title.
 const appName = "ponzi"
@@ -118,7 +115,7 @@ func (c *Controller) Run() {
 	ctx := context.Background()
 
 	if err := glfw.Init(); err != nil {
-		logger.Fatalf("Run: failed to init glfw: %v", err)
+		glog.Fatalf("Run: failed to init glfw: %v", err)
 	}
 	defer glfw.Terminate()
 
@@ -130,28 +127,28 @@ func (c *Controller) Run() {
 
 	win, err := glfw.CreateWindow(800, 600, appName, nil, nil)
 	if err != nil {
-		logger.Fatalf("Run: failed to create window: %v", err)
+		glog.Fatalf("Run: failed to create window: %v", err)
 	}
 
 	win.MakeContextCurrent()
 
 	if err := gl.Init(); err != nil {
-		logger.Fatalf("Run: failed to init OpenGL: %v", err)
+		glog.Fatalf("Run: failed to init OpenGL: %v", err)
 	}
-	logger.Printf("OpenGL version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
+	glog.Infof("OpenGL version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
 
 	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 	gl.ClearColor(0, 0, 0, 0)
 
 	if err := gfx.InitProgram(); err != nil {
-		logger.Fatalf("Run: failed to init gfx: %v", err)
+		glog.Fatalf("Run: failed to init gfx: %v", err)
 	}
 
 	// Load the config and setup the initial UI.
 	cfg, err := config.Load()
 	if err != nil {
-		logger.Fatalf("Run: failed to load config: %v", err)
+		glog.Fatalf("Run: failed to load config: %v", err)
 	}
 
 	if s := cfg.GetCurrentStock().GetSymbol(); s != "" {
@@ -168,7 +165,7 @@ func (c *Controller) Run() {
 	go func() {
 		for cfg := range c.pendingConfigSaves {
 			if err := config.Save(cfg); err != nil {
-				logger.Printf("Run: failed to save config: %v", err)
+				glog.Infof("Run: failed to save config: %v", err)
 			}
 		}
 		c.doneSavingConfigs <- true
@@ -394,7 +391,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbol string) {
 
 func (c *Controller) saveConfig() {
 	if !c.enableSavingConfigs {
-		logger.Printf("saveConfig: ignoring save request, saving disabled")
+		glog.Infof("saveConfig: ignoring save request, saving disabled")
 		return
 	}
 
@@ -460,7 +457,7 @@ func (c *Controller) setCursorPos(x, y float64) {
 
 func (c *Controller) setMouseButton(button glfw.MouseButton, action glfw.Action) {
 	if button != glfw.MouseButtonLeft {
-		logger.Printf("setMouseButton: ignoring mouse button(%v) and action(%v)", button, action)
+		glog.Infof("setMouseButton: ignoring mouse button(%v) and action(%v)", button, action)
 		return // Only interested in left clicks right now.
 	}
 	c.mouseLeftButtonClicked = action == glfw.Release

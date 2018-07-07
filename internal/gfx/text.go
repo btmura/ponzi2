@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/golang/freetype/truetype"
+	"github.com/golang/glog"
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
 )
@@ -36,7 +37,7 @@ func NewTextRenderer(ttfBytes []byte, size int) *TextRenderer {
 	// Parse the TTF font bytes and create a face out of it.
 	ttFont, err := truetype.Parse(ttfBytes)
 	if err != nil {
-		logger.Fatalf("NewTextRenderer: parsing TTF bytes failed: %v", err)
+		glog.Fatalf("NewTextRenderer: parsing TTF bytes failed: %v", err)
 	}
 	face := truetype.NewFace(ttFont, &truetype.Options{
 		Size:    float64(size),
@@ -48,7 +49,7 @@ func NewTextRenderer(ttfBytes []byte, size int) *TextRenderer {
 	// https://developer.apple.com/library/content/documentation/TextFonts/Conceptual/CocoaTextArchitecture/Art/glyph_metrics_2x.png
 	bnds, _, ok := face.GlyphBounds('M') // Bounds for a square that mimics most cap letters.
 	if !ok {
-		logger.Print("NewTextRenderer: getting bounds for M failed")
+		glog.Info("NewTextRenderer: getting bounds for M failed")
 	}
 	a := bnds.Max.Y - bnds.Min.Y // Height of M is the ascent.
 	d := face.Metrics().Descent  // Some descent for Q and J.

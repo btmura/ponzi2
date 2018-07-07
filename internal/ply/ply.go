@@ -5,13 +5,11 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"log"
-	"os"
 	"strconv"
 	"strings"
-)
 
-var logger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
+	"github.com/golang/glog"
+)
 
 // PLY has the elements parsed from a file in the Polygon File Format (PLY).
 // More details: http://paulbourke.net/dataformats/ply/
@@ -66,7 +64,7 @@ processHeader:
 		line := sc.Text()
 		switch { // Don't care about checking for ply and format lines.
 		case strings.HasPrefix(line, "comment "):
-			logger.Printf("Decode: %s", line)
+			glog.Infof("Decode: %s", line)
 
 		case strings.HasPrefix(line, "element "):
 			ed = &elementDescriptor{}
