@@ -45,7 +45,7 @@ func createChartAvgLinesVAO(st *model.Stock) *gfx.VAO {
 		}
 	}
 
-	data := &gfx.VAOVertexData{}
+	data := &gfx.VAOVertexData{Mode: gfx.Lines}
 	var v uint16 // vertex index
 
 	add := func(ma *model.MovingAverageSeries, color [3]float32) {
@@ -76,7 +76,7 @@ func createChartAvgLinesVAO(st *model.Stock) *gfx.VAO {
 	add(st.DailyMovingAverageSeries50, yellow)
 	add(st.DailyMovingAverageSeries200, white)
 
-	return gfx.NewVAO(gfx.Lines, data)
+	return gfx.NewVAO(data)
 }
 
 // Render renders the ChartAvgLine.

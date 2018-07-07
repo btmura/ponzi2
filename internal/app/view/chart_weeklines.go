@@ -33,7 +33,7 @@ func (ch *ChartWeekLines) SetStock(st *model.Stock) {
 }
 
 func createChartWeekLinesVAO(ds []*model.TradingSession) *gfx.VAO {
-	data := &gfx.VAOVertexData{}
+	data := &gfx.VAOVertexData{Mode: gfx.Lines}
 	var v uint16 // vertex index
 
 	dx := 2.0 / float32(len(ds)) // (-1 to 1) on X-axis
@@ -65,7 +65,7 @@ func createChartWeekLinesVAO(ds []*model.TradingSession) *gfx.VAO {
 		v += 2
 	}
 
-	return gfx.NewVAO(gfx.Lines, data)
+	return gfx.NewVAO(data)
 }
 
 // Render renders the chart lines.

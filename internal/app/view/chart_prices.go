@@ -268,8 +268,8 @@ func chartPriceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32
 	}
 
 	lineVAO := gfx.NewVAO(
-		gfx.Lines,
 		&gfx.VAOVertexData{
+			Mode:     gfx.Lines,
 			Vertices: vertices,
 			Colors:   colors,
 			Indices:  lineIndices,
@@ -277,8 +277,8 @@ func chartPriceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32
 	)
 
 	triangleVAO := gfx.NewVAO(
-		gfx.Triangles,
 		&gfx.VAOVertexData{
+			Mode:     gfx.Triangles,
 			Vertices: vertices,
 			Colors:   colors,
 			Indices:  triangleIndices,

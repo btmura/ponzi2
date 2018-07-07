@@ -160,7 +160,7 @@ func makeChartStochasticLabel(perc float32) chartStochasticLabel {
 }
 
 func chartStochasticVAO(ss *model.StochasticSeries, dColor [3]float32) *gfx.VAO {
-	data := &gfx.VAOVertexData{}
+	data := &gfx.VAOVertexData{Mode: gfx.Lines}
 	var v uint16 // vertex index
 
 	dx := 2.0 / float32(len(ss.Stochastics)) // (-1 to 1) on X-axis
@@ -203,5 +203,5 @@ func chartStochasticVAO(ss *model.StochasticSeries, dColor [3]float32) *gfx.VAO 
 		first = false
 	}
 
-	return gfx.NewVAO(gfx.Lines, data)
+	return gfx.NewVAO(data)
 }

@@ -18,8 +18,8 @@ type VAOColor [3]float32
 // from (-1, 0) to (1, 0).
 func HorizColoredLineVAO(leftColor, rightColor VAOColor) *VAO {
 	return NewVAO(
-		Lines,
 		&VAOVertexData{
+			Mode: Lines,
 			Vertices: []float32{
 				-1, 0, 0,
 				+1, 0, 0,
@@ -39,8 +39,8 @@ func HorizColoredLineVAO(leftColor, rightColor VAOColor) *VAO {
 // from (0, -1) to (0, 1).
 func VertColoredLineVAO(topColor, botColor VAOColor) *VAO {
 	return NewVAO(
-		Lines,
 		&VAOVertexData{
+			Mode: Lines,
 			Vertices: []float32{
 				0, -1, 0,
 				0, +1, 0,
@@ -58,21 +58,24 @@ func VertColoredLineVAO(topColor, botColor VAOColor) *VAO {
 
 // ReadPLYVAO returns a VAO decoded from a PLY reader.
 func ReadPLYVAO(r io.Reader) *VAO {
-	return readTexturedPLYVAO(r, nil)
+	return NewVAOLoadData(func() *VAOVertexData {
+		return readTexturedPLYVAO(r, nil)
+	})
 }
 
 // SquareImageVAO returns a VAO that renders a square image.
 func SquareImageVAO(r io.Reader) *VAO {
-	return readTexturedPLYVAO(bytes.NewReader(_escFSMustByte(false, "/data/squarePlane.ply")), r)
+	return NewVAOLoadData(func() *VAOVertexData {
+		return readTexturedPLYVAO(bytes.NewReader(_escFSMustByte(false, "/data/squarePlane.ply")), r)
+	})
 }
 
 // readTexturedPLYVAO returns a VAO decoded from PLY reader.
-func readTexturedPLYVAO(r, textureReader io.Reader) *VAO {
+func readTexturedPLYVAO(r, textureReader io.Reader) *VAOVertexData {
 	p, err := ply.Decode(r)
 	if err != nil {
 		glog.Fatalf("readTexturedPLYVAO: decoding PLY failed: %v", err)
 	}
-
 	data := &VAOVertexData{}
 
 	for _, e := range p.Elements["vertex"] {
@@ -127,12 +130,14 @@ func readTexturedPLYVAO(r, textureReader io.Reader) *VAO {
 		glog.Fatalf("readTexturedPLYVAO: both triangles and lines is unsupported")
 
 	case len(triangleIndices) > 0:
+		data.Mode = Triangles
 		data.Indices = triangleIndices
-		return NewVAO(Triangles, data)
+		return data
 
 	case len(lineIndices) > 0:
+		data.Mode = Lines
 		data.Indices = lineIndices
-		return NewVAO(Lines, data)
+		return data
 	}
 
 	glog.Info("readTexturedPLYVAO: missing indices")

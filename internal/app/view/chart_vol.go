@@ -150,7 +150,7 @@ func makeChartVolumeLabel(maxVolume int, perc float32) chartVolumeLabel {
 }
 
 func chartVolumeBarsVAO(ds []*model.TradingSession, maxVolume int) *gfx.VAO {
-	data := &gfx.VAOVertexData{}
+	data := &gfx.VAOVertexData{Mode: gfx.Triangles}
 
 	dx := 2.0 / float32(len(ds)) // (-1 to 1) on X-axis
 	calcX := func(i int) (leftX, rightX float32) {
@@ -212,5 +212,5 @@ func chartVolumeBarsVAO(ds []*model.TradingSession, maxVolume int) *gfx.VAO {
 		)
 	}
 
-	return gfx.NewVAO(gfx.Triangles, data)
+	return gfx.NewVAO(data)
 }
