@@ -45,10 +45,12 @@ func (b *Button) StopSpinning() {
 }
 
 // Update updates the Button.
-func (b *Button) Update() {
+func (b *Button) Update() (animating bool) {
 	if b.spinning || b.spinFrameIndex != 0 {
 		b.spinFrameIndex = (b.spinFrameIndex + 1) % buttonSpinFrames
+		return true
 	}
+	return false
 }
 
 // Render renders the Button and detects clicks.

@@ -134,10 +134,17 @@ func (ch *ChartHeader) SetStock(st *model.Stock) {
 }
 
 // Update updates the ChartHeader.
-func (ch *ChartHeader) Update() {
-	ch.refreshButton.Update()
-	ch.addButton.Update()
-	ch.removeButton.Update()
+func (ch *ChartHeader) Update() (animating bool) {
+	if ch.refreshButton.Update() {
+		animating = true
+	}
+	if ch.addButton.Update() {
+		animating = true
+	}
+	if ch.removeButton.Update() {
+		animating = true
+	}
+	return animating
 }
 
 // ChartHeaderClicks reports what buttons were clicked.

@@ -133,8 +133,8 @@ func (ch *Chart) SetStock(st *model.Stock) {
 }
 
 // Update updates the Chart.
-func (ch *Chart) Update() {
-	ch.header.Update()
+func (ch *Chart) Update() (animating bool) {
+	return ch.header.Update()
 }
 
 // Render renders the Chart.

@@ -210,16 +210,27 @@ func (c *Controller) Run() {
 		prevTime = currTime
 		lag += elapsed
 
+		// Set animating to true to keep looping when update isn't called.
+		animating := true
 		for i := 0; lag >= secPerUpdate && i < maxUpdates; i++ {
-			c.update()
+			if !c.update() {
+				animating = false
+			}
 			lag -= secPerUpdate
 		}
 
 		fudge := float32(lag / secPerUpdate)
 		c.render(fudge)
-
 		win.SwapBuffers()
-		glfw.PollEvents()
+
+		if animating {
+			glog.V(2).Info("poll events")
+			glfw.PollEvents()
+		} else {
+			// Wake up to handle non-GLFW events like network updates.
+			glog.V(2).Infof("wait events")
+			glfw.WaitEventsTimeout(1 /* second */)
+		}
 	}
 
 	// Disable config changes to start shutting down save processor.
@@ -228,7 +239,7 @@ func (c *Controller) Run() {
 	<-c.doneSavingConfigs
 }
 
-func (c *Controller) update() {
+func (c *Controller) update() (animating bool) {
 	// Process any stock updates.
 loop:
 	for {
@@ -265,7 +276,7 @@ loop:
 	}
 
 	c.refreshWindowTitle()
-	c.view.Update()
+	return c.view.Update()
 }
 
 func (c *Controller) render(fudge float32) {

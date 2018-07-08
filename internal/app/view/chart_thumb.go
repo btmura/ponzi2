@@ -92,8 +92,8 @@ func (ch *ChartThumb) SetStock(st *model.Stock) {
 }
 
 // Update updates the ChartThumb.
-func (ch *ChartThumb) Update() {
-	ch.header.Update()
+func (ch *ChartThumb) Update() (animating bool) {
+	return ch.header.Update()
 }
 
 // Render renders the ChartThumb.

@@ -81,14 +81,19 @@ func NewView() *View {
 	}
 }
 
-// Update updates the View.
-func (v *View) Update() {
+// Update updates the View and returns whether Update should be called again.
+func (v *View) Update() (animating bool) {
 	if v.chart != nil {
-		v.chart.Update()
+		if v.chart.Update() {
+			animating = true
+		}
 	}
 	for _, th := range v.chartThumbs {
-		th.Update()
+		if th.Update() {
+			animating = true
+		}
 	}
+	return animating
 }
 
 // Render renders the View.
