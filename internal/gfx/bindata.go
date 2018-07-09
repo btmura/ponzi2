@@ -214,19 +214,6 @@ jwvifNihWmahzXmrfdpSzPF+/wIAAP//bRPYZJEBAAA=
 `,
 	},
 
-	"/data/squarePlane.ply": {
-		local:   "data/squarePlane.ply",
-		size:    644,
-		modtime: 1337,
-		compressed: `
-H4sIAAAAAAAC/5yPUU7DMBBE/32K+StINHJSJAifcAFuUDn2hlpy7LC2ScPpkRLUlgQkVP94NLvztNO7
-UbSBO5WgorYWZSGFDl1HPuGFSSUyaEY8O/KGGFXx8IibmBvIW2wxDEPRzKMi8NsdYsisCa119IRNfM+K
-6dUpT/PaRpCjif1BnOiIe9Fz6InTiNYFlXBcGuPS+FwafpXxq5BfpeLSSKfbWqUJ1XnubEzI+qAY2Z5u
-31tvrKYoyJv9gZQhFtuykNPDWcm/xc+d8kKIq0F1Xde/gq7lzOKi2hq0/V+1b9IOEiWq6a+wE18BAAD/
-/+U+DeaEAgAA
-`,
-	},
-
 	"/data/textPlane.ply": {
 		local:   "data/textPlane.ply",
 		size:    641,

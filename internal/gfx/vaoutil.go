@@ -1,7 +1,6 @@
 package gfx
 
 import (
-	"bytes"
 	"image"
 	"image/draw"
 	"io"
@@ -11,17 +10,18 @@ import (
 	"github.com/btmura/ponzi2/internal/ply"
 )
 
-// ReadPLYVAO returns a VAO decoded from a PLY reader.
-func ReadPLYVAO(r io.Reader) *VAO {
+// PLYVAO returns a VAO decoded from a PLY Reader.
+func PLYVAO(plyReader io.Reader) *VAO {
 	return NewVAOLoadData(func() *VAOVertexData {
-		return readTexturedPLYVAO(r, nil)
+		return readTexturedPLYVAO(plyReader, nil)
 	})
 }
 
-// SquareImageVAO returns a VAO that renders a square image.
-func SquareImageVAO(r io.Reader) *VAO {
+// TexturedPLYVAO returns a VAO decoded from a PLY Reader
+// and a texture from another Reader.
+func TexturedPLYVAO(plyReader, texturedReader io.Reader) *VAO {
 	return NewVAOLoadData(func() *VAOVertexData {
-		return readTexturedPLYVAO(bytes.NewReader(_escFSMustByte(false, "/data/squarePlane.ply")), r)
+		return readTexturedPLYVAO(plyReader, texturedReader)
 	})
 }
 

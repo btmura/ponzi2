@@ -1,6 +1,11 @@
 package view
 
-import "github.com/btmura/ponzi2/internal/gfx"
+import (
+	"bytes"
+	"io"
+
+	"github.com/btmura/ponzi2/internal/gfx"
+)
 
 // horizColoredLineVAO returns a horizontal colored line segment
 // from (-1, 0) to (1, 0).
@@ -42,4 +47,9 @@ func vertColoredLineVAO(topColor, botColor [3]float32) *gfx.VAO {
 			},
 		},
 	)
+}
+
+// squareImageVAO returns a VAO that renders a square image.
+func squareImageVAO(textureReader io.Reader) *gfx.VAO {
+	return gfx.TexturedPLYVAO(bytes.NewReader(_escFSMustByte(false, "/data/squarePlane.ply")), textureReader)
 }
