@@ -41,12 +41,12 @@ var chartAxisLabelBubbleSpec = bubbleSpec{
 // Shared variables used by multiple chart components.
 var (
 	chartAxisLabelTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
-	chartGridHorizLine         = gfx.HorizColoredLineVAO(gray, gray)
+	chartGridHorizLine         = horizColoredLineVAO(gray, gray)
 )
 
 var (
-	chartCursorHorizLine = gfx.HorizColoredLineVAO(lightGray, lightGray)
-	chartCursorVertLine  = gfx.VertColoredLineVAO(lightGray, lightGray)
+	chartCursorHorizLine = horizColoredLineVAO(lightGray, lightGray)
+	chartCursorVertLine  = vertColoredLineVAO(lightGray, lightGray)
 )
 
 // Chart shows a stock chart for a single stock.
