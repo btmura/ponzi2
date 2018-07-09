@@ -298,6 +298,19 @@ cQIAAA==
 `,
 	},
 
+	"/data/texturedSquarePlane.ply": {
+		local:   "data/texturedSquarePlane.ply",
+		size:    671,
+		modtime: 1337,
+		compressed: `
+H4sIAAAAAAAC/5yQ0UrDMBiF7wN5h3M3BVfaTdB6qS8g+AAjS/66QJbMP4ltfXrZiq4SBVmvDqfnfMnJ
+wY1SdIH3KkFFbS2aqpZCh/2efMITk0pksB3x6MgbYqyqu3tcxbxFfY0l+r6vttOvKvDrDWLIrAmddfSA
+RaIhZSbz8pYV07NTnqb4QgpydDrknTjRgFspDhwOxGlE54JKGApnLJyPwvFlzZc9XxZj4aTzJTulCatZ
+wtmYkPVOMbL9XrGx3lhNUQryZrMjZYilWDZVffpwVvXf4memmQkpLia1bdv+TroUNIn5upK0/N+6L9Qa
+NZrjMx/FCuvPAAAA///WoFsjnwIAAA==
+`,
+	},
+
 	"/": {
 		isDir: true,
 		local: "",
