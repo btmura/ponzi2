@@ -1,6 +1,6 @@
 ply
 format ascii 1.0
-comment Created by Blender 2.78 (sub 0) - www.blender.org, source file: 'texturedSquarePlane.blend'
+comment Created by Blender 2.78 (sub 0) - www.blender.org, source file: 'texturedsquareplane.blend'
 element vertex 4
 property float x
 property float y

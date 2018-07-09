@@ -9,10 +9,10 @@ import (
 )
 
 var (
-	chartAddButtonVAO     = squareImageVAO(bytes.NewReader(_escFSMustByte(false, "/data/addButton.png")))
-	chartRefreshButtonVAO = squareImageVAO(bytes.NewReader(_escFSMustByte(false, "/data/refreshButton.png")))
-	chartRemoveButtonVAO  = squareImageVAO(bytes.NewReader(_escFSMustByte(false, "/data/removeButton.png")))
-	chartErrorIconVAO     = squareImageVAO(bytes.NewReader(_escFSMustByte(false, "/data/errorIcon.png")))
+	chartAddButtonVAO     = squareImageVAO(bytes.NewReader(_escFSMustByte(false, "/data/addbutton.png")))
+	chartRefreshButtonVAO = squareImageVAO(bytes.NewReader(_escFSMustByte(false, "/data/refreshbutton.png")))
+	chartRemoveButtonVAO  = squareImageVAO(bytes.NewReader(_escFSMustByte(false, "/data/removebutton.png")))
+	chartErrorIconVAO     = squareImageVAO(bytes.NewReader(_escFSMustByte(false, "/data/erroricon.png")))
 )
 
 // ChartHeader shows a header for charts and thumbnails with a clickable button.

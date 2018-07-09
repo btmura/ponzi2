@@ -1,6 +1,6 @@
 ply
 format ascii 1.0
-comment roundedCornerNW.ply
+comment roundedcorner_edges.ply
 element vertex 5
 property float x
 property float y

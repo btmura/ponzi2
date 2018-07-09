@@ -51,5 +51,5 @@ func vertColoredLineVAO(topColor, botColor [3]float32) *gfx.VAO {
 
 // squareImageVAO returns a VAO that renders a square image.
 func squareImageVAO(textureReader io.Reader) *gfx.VAO {
-	return gfx.TexturedPLYVAO(bytes.NewReader(_escFSMustByte(false, "/data/texturedSquarePlane.ply")), textureReader)
+	return gfx.TexturedPLYVAO(bytes.NewReader(_escFSMustByte(false, "/data/texturedsquareplane.ply")), textureReader)
 }
