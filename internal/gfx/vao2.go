@@ -5,7 +5,7 @@ import (
 	"github.com/golang/glog"
 )
 
-// vao is Vertex Array Object (VAO) that can be rendered and deleted.
+// vao is a Vertex Array Object (VAO) that can be rendered and deleted.
 type vao struct {
 	// mode is like gl.LINES or gl.TRIANGLES passed to gl.DrawElements.
 	mode uint32
