@@ -300,14 +300,14 @@ AgAA
 
 	"/data/texturedsquareplane.ply": {
 		local:   "data/texturedsquareplane.ply",
-		size:    671,
+		size:    651,
 		modtime: 1337,
 		compressed: `
-H4sIAAAAAAAC/5yQUUvDMBzE3wP5Dvc2BVfaTdD6qB9kZMm/LpAl9Z/Etn562YquEgVZn47r3S+59G6S
-ogt8VAkqamvRVLUUOhyP5BNemFQig/2EZ0feEGNTPTziJuY96lusMQxDtZ9/VYFf7xBDZk3orKMnrBKN
-KTOZ+JYVU++Upzm+koIcnQ95J0404l6KnkNPnCZ0LqiEsXCmwvkoHF/WfNnzZTEWTrpcslOasFkknI0J
-WR8UI9vvFTvrjdUUpSBvdgdShliKdVPV5w8XVf8tfmaahZDialLbtu3vpGtBs1iuK0nr/637Qm1Rozk9
-80lssP0MAAD//xmKY96fAgAA
+H4sIAAAAAAAC/5yPQU+EMBCF7/0V77aaCAHWRPGoP2RT2sFtUlqctgL+ehMwuytostle+vJm3jczvZ1E
+67mTETIoY1DmhVC+68hFvDHJSBrNhFdLThOjyp+ecRdSg+IeGYZhyJullHt+f0DwiRWhNZZesIs0xsSk
+w0eSTL2Vjpb2nSBL84xP4kgjHkXPvieOE1rrZcS4Nqa18bU23CbjNiG3SYW1EU+7tVIRqnPdmhCR1FEy
+kjntfjBOG0VBkNOHI0lNLLIyL+aHsyr+F797ygshbgbVdV3/CbqVs4iL07ag7LrTfkh7FChRzX+F/XcA
+AAD//zAgyZiLAgAA
 `,
 	},
 
