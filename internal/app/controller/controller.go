@@ -177,25 +177,8 @@ func (c *Controller) Run() {
 	// Call the size callback to set the initial viewport.
 	w, h := win.GetSize()
 	c.setSize(w, h)
-	win.SetSizeCallback(func(_ *glfw.Window, width, height int) {
-		c.setSize(width, height)
-	})
 
-	win.SetCharCallback(func(_ *glfw.Window, char rune) {
-		c.setChar(char)
-	})
-
-	win.SetKeyCallback(func(_ *glfw.Window, key glfw.Key, _ int, action glfw.Action, _ glfw.ModifierKey) {
-		c.setKey(ctx, key, action)
-	})
-
-	win.SetCursorPosCallback(func(_ *glfw.Window, x, y float64) {
-		c.setCursorPos(x, y)
-	})
-
-	win.SetMouseButtonCallback(func(_ *glfw.Window, button glfw.MouseButton, action glfw.Action, _ glfw.ModifierKey) {
-		c.setMouseButton(button, action)
-	})
+	c.setEventCallbacks(ctx, win)
 
 	const (
 		secPerUpdate = 1.0 / fps
