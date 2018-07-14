@@ -61,8 +61,14 @@ type Chart struct {
 	// prices renders the candlesticks.
 	prices *ChartPrices
 
-	// avgLines renders the moving average lines.
-	avgLines *ChartAvgLines
+	// movingAverage renders the 25 day moving average.
+	movingAverage25 *chartMovingAverage
+
+	// movingAverage50 renders the 50 day moving average.
+	movingAverage50 *chartMovingAverage
+
+	// movingAverage200 renders the 200 day moving average.
+	movingAverage200 *chartMovingAverage
 
 	// volume renders the volume bars.
 	volume *ChartVolume
@@ -99,7 +105,9 @@ func NewChart() *Chart {
 		}),
 		weekLines:         NewChartWeekLines(),
 		prices:            NewChartPrices(),
-		avgLines:          NewChartAvgLines(),
+		movingAverage25:   newChartMovingAverage(purple),
+		movingAverage50:   newChartMovingAverage(yellow),
+		movingAverage200:  newChartMovingAverage(white),
 		volume:            NewChartVolume(),
 		dailyStochastics:  NewChartStochastics(DailyInterval),
 		weeklyStochastics: NewChartStochastics(WeeklyInterval),
@@ -126,7 +134,9 @@ func (ch *Chart) SetStock(st *model.Stock) {
 	ch.header.SetStock(st)
 	ch.weekLines.SetStock(st)
 	ch.prices.SetStock(st)
-	ch.avgLines.SetStock(st)
+	ch.movingAverage25.SetData(st.DailyTradingSessionSeries, st.DailyMovingAverageSeries25)
+	ch.movingAverage50.SetData(st.DailyTradingSessionSeries, st.DailyMovingAverageSeries50)
+	ch.movingAverage200.SetData(st.DailyTradingSessionSeries, st.DailyMovingAverageSeries200)
 	ch.volume.SetStock(st)
 	ch.dailyStochastics.SetStock(st)
 	ch.weeklyStochastics.SetStock(st)
@@ -222,7 +232,9 @@ func (ch *Chart) Render(vc viewContext) {
 	ch.weekLines.Render(wr)
 
 	ch.prices.Render(pr)
-	ch.avgLines.Render(pr)
+	ch.movingAverage25.Render(pr)
+	ch.movingAverage50.Render(pr)
+	ch.movingAverage200.Render(pr)
 	ch.volume.Render(vr)
 	ch.dailyStochastics.Render(dr)
 	ch.weeklyStochastics.Render(wr)
@@ -265,6 +277,15 @@ func (ch *Chart) Close() {
 	}
 	if ch.prices != nil {
 		ch.prices.Close()
+	}
+	if ch.movingAverage25 != nil {
+		ch.movingAverage25.Close()
+	}
+	if ch.movingAverage50 != nil {
+		ch.movingAverage50.Close()
+	}
+	if ch.movingAverage200 != nil {
+		ch.movingAverage200.Close()
 	}
 	if ch.volume != nil {
 		ch.volume.Close()
