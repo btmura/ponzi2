@@ -22,8 +22,11 @@ import (
 // Application name for the window title.
 const appName = "ponzi"
 
-// Frames per second.
-const fps = 60.0
+const (
+	fps          = 120.0
+	secPerUpdate = 1.0 / fps
+	maxUpdates   = 10
+)
 
 // acceptedChars are the chars the user can enter for a symbol.
 var acceptedChars = map[rune]bool{
@@ -180,12 +183,8 @@ func (c *Controller) Run() {
 
 	c.setEventCallbacks(ctx, win)
 
-	const (
-		secPerUpdate = 1.0 / fps
-		maxUpdates   = 10
-	)
-
 	var lag float64
+	animating := false
 	prevTime := glfw.GetTime()
 	for !win.ShouldClose() {
 		currTime := glfw.GetTime()
@@ -193,26 +192,21 @@ func (c *Controller) Run() {
 		prevTime = currTime
 		lag += elapsed
 
-		// Set animating to true to keep looping when update isn't called.
-		animating := true
-		for i := 0; lag >= secPerUpdate && i < maxUpdates; i++ {
-			if !c.update() {
-				animating = false
-			}
+		i := 0
+		for ; lag >= secPerUpdate && i < maxUpdates; i++ {
+			animating = c.update()
 			lag -= secPerUpdate
 		}
 
-		fudge := float32(lag / secPerUpdate)
-		c.render(fudge)
+		glog.V(2).Infof("updates: %d animating: %t", i, animating)
+
+		c.render(float32(lag / secPerUpdate))
 		win.SwapBuffers()
 
-		if animating {
-			glog.V(2).Info("poll events")
-			glfw.PollEvents()
-		} else {
-			// Wake up to handle non-GLFW events like network updates.
+		glfw.PollEvents()
+		if !animating {
 			glog.V(2).Infof("wait events")
-			glfw.WaitEventsTimeout(1 /* second */)
+			glfw.WaitEventsTimeout(1 /* seconds */)
 		}
 	}
 
