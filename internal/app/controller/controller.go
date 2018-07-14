@@ -15,7 +15,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/gfx"
-	math2 "github.com/btmura/ponzi2/internal/math"
+	"github.com/btmura/ponzi2/internal/matrix"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
@@ -425,7 +425,7 @@ func (c *Controller) setSize(width, height int) {
 
 	// Calculate the new ortho projection view matrix.
 	fw, fh := float32(s.X), float32(s.Y)
-	gfx.SetProjectionViewMatrix(math2.OrthoMatrix(fw, fh, fw /* use width as depth */))
+	gfx.SetProjectionViewMatrix(matrix.Ortho(fw, fh, fw /* use width as depth */))
 
 	c.winSize = s
 }

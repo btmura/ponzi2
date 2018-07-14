@@ -1,5 +1,5 @@
-// Package math has functions to work with matrices.
-package math
+// Package matrix has functions to work with matrices.
+package matrix
 
 import (
 	"fmt"
@@ -9,8 +9,8 @@ import (
 // Matrix4 is a 4x4 matrix.
 type Matrix4 [16]float32
 
-// OrthoMatrix creates a orthographic projection matrix.
-func OrthoMatrix(width, height, depth float32) Matrix4 {
+// Ortho creates a orthographic projection matrix.
+func Ortho(width, height, depth float32) Matrix4 {
 	return Matrix4{
 		2 / float32(width), 0, 0, 0,
 		0, 2 / float32(height), 0, 0,
@@ -19,8 +19,8 @@ func OrthoMatrix(width, height, depth float32) Matrix4 {
 	}
 }
 
-// TranslationMatrix creates a translation matrix.
-func TranslationMatrix(x, y, z float32) Matrix4 {
+// Translation creates a translation matrix.
+func Translation(x, y, z float32) Matrix4 {
 	return Matrix4{
 		1, 0, 0, 0,
 		0, 1, 0, 0,
@@ -29,8 +29,8 @@ func TranslationMatrix(x, y, z float32) Matrix4 {
 	}
 }
 
-// ScaleMatrix creates a scale matrix.
-func ScaleMatrix(sx, sy, sz float32) Matrix4 {
+// Scale creates a scale matrix.
+func Scale(sx, sy, sz float32) Matrix4 {
 	return Matrix4{
 		sx, 0, 0, 0,
 		0, sy, 0, 0,
@@ -39,8 +39,8 @@ func ScaleMatrix(sx, sy, sz float32) Matrix4 {
 	}
 }
 
-// RotationMatrix creates a rotation matrix.
-func RotationMatrix(radians float32) Matrix4 {
+// Rotation creates a rotation matrix.
+func Rotation(radians float32) Matrix4 {
 	c := float32(math.Cos(float64(radians)))
 	s := float32(math.Sin(float64(radians)))
 	return Matrix4{
