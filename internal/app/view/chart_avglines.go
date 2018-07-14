@@ -2,7 +2,6 @@ package view
 
 import (
 	"image"
-	"math"
 
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/gfx"
@@ -34,16 +33,9 @@ func (ch *ChartAvgLines) SetStock(st *model.Stock) {
 }
 
 func createChartAvgLinesVAO(st *model.Stock) *gfx.VAO {
-	minPrice := float32(math.MaxFloat32)
-	maxPrice := float32(0)
-	for _, s := range st.DailyTradingSessionSeries.TradingSessions {
-		if minPrice > s.Low {
-			minPrice = s.Low
-		}
-		if maxPrice < s.High {
-			maxPrice = s.High
-		}
-	}
+	pr := priceRange(st.DailyTradingSessionSeries.TradingSessions)
+	min := pr[0]
+	max := pr[1]
 
 	data := &gfx.VAOVertexData{Mode: gfx.Lines}
 	var v uint16 // vertex index
@@ -54,12 +46,12 @@ func createChartAvgLinesVAO(st *model.Stock) *gfx.VAO {
 			return -1.0 + dx*float32(i) + dx*0.5
 		}
 		calcY := func(v float32) float32 {
-			return 2.0*(v-minPrice)/(maxPrice-minPrice) - 1.0
+			return 2.0*(v-min)/(max-min) - 1.0
 		}
 
 		first := true
 		for i, mv := range ma.MovingAverages {
-			if mv.Value < minPrice || mv.Value > maxPrice {
+			if mv.Value < min || mv.Value > max {
 				continue
 			}
 			data.Vertices = append(data.Vertices, calcX(i), calcY(mv.Value), 0)

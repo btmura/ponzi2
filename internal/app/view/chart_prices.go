@@ -42,16 +42,7 @@ func (ch *ChartPrices) SetStock(st *model.Stock) {
 		return // Stock has no data yet.
 	}
 
-	// Find the min and max price.
-	ch.priceRange = [2]float32{math.MaxFloat32, 0}
-	for _, s := range st.DailyTradingSessionSeries.TradingSessions {
-		if ch.priceRange[0] > s.Low {
-			ch.priceRange[0] = s.Low
-		}
-		if ch.priceRange[1] < s.High {
-			ch.priceRange[1] = s.High
-		}
-	}
+	ch.priceRange = priceRange(st.DailyTradingSessionSeries.TradingSessions)
 
 	// Measure the max label size by creating a label with the max value.
 	ch.MaxLabelSize = makeChartPriceLabel(ch.priceRange[1]).size
@@ -158,6 +149,33 @@ func (ch *ChartPrices) Close() {
 	if ch.stickRects != nil {
 		ch.stickRects.Delete()
 	}
+}
+
+func priceRange(ts []*model.TradingSession) [2]float32 {
+	if len(ts) == 0 {
+		return [2]float32{0, 0}
+	}
+
+	var low float32 = math.MaxFloat32
+	var high float32
+	for _, s := range ts {
+		if s.Low < low {
+			low = s.Low
+		}
+		if s.High > high {
+			high = s.High
+		}
+	}
+
+	if low > high {
+		return [2]float32{0, 0}
+	}
+
+	padding := (high - low) * chartAxisVerticalPaddingPercent
+	low -= padding
+	high += padding
+
+	return [2]float32{low, high}
 }
 
 type chartPriceLabel struct {

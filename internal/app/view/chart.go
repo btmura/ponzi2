@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	chartRounding = 10
-	chartPadding  = 5
+	chartRounding                   = 10
+	chartPadding                    = 5
+	chartAxisVerticalPaddingPercent = .05
 )
 
 var (
