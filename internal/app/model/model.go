@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/golang/glog"
+	"github.com/btmura/ponzi2/internal/logger"
 )
 
 // Model models the app's state.
@@ -95,7 +95,7 @@ func New() *Model {
 // It returns the corresponding Stock and true if the current stock changed.
 func (m *Model) SetCurrentStock(symbol string) (st *Stock, changed bool) {
 	if symbol == "" {
-		glog.Info("SetCurrentStock: cannot set current stock to empty symbol")
+		logger.Info("cannot set current stock to empty symbol")
 	}
 
 	if m.CurrentStock != nil && m.CurrentStock.Symbol == symbol {
@@ -112,7 +112,7 @@ func (m *Model) SetCurrentStock(symbol string) (st *Stock, changed bool) {
 // It returns the corresponding Stock and true if the stock was newly added.
 func (m *Model) AddSavedStock(symbol string) (st *Stock, added bool) {
 	if symbol == "" {
-		glog.Info("AddSavedStock: cannot add empty symbol")
+		logger.Info("cannot add empty symbol")
 	}
 
 	for _, st := range m.SavedStocks {
@@ -131,7 +131,7 @@ func (m *Model) AddSavedStock(symbol string) (st *Stock, added bool) {
 // RemoveSavedStock removes the stock by symbol and returns true if removed.
 func (m *Model) RemoveSavedStock(symbol string) (removed bool) {
 	if symbol == "" {
-		glog.Info("RemovedSavedStock: cannot remove empty symbol")
+		logger.Info("cannot remove empty symbol")
 	}
 
 	for i, st := range m.SavedStocks {

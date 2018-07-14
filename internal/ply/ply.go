@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/golang/glog"
+	"github.com/btmura/ponzi2/internal/logger"
 )
 
 // PLY has the elements parsed from a file in the Polygon File Format (PLY).
@@ -64,7 +64,7 @@ processHeader:
 		line := sc.Text()
 		switch { // Don't care about checking for ply and format lines.
 		case strings.HasPrefix(line, "comment "):
-			glog.Infof("Decode: %s", line)
+			logger.Info(line)
 
 		case strings.HasPrefix(line, "element "):
 			ed = &elementDescriptor{}

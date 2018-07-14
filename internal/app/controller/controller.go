@@ -3,11 +3,10 @@ package controller
 import (
 	"context"
 
-	"github.com/golang/glog"
-
 	"github.com/btmura/ponzi2/internal/app/config"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
+	"github.com/btmura/ponzi2/internal/logger"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
@@ -97,7 +96,7 @@ func (c *Controller) Run() error {
 	go func() {
 		for cfg := range c.pendingConfigSaves {
 			if err := config.Save(cfg); err != nil {
-				glog.Infof("Run: failed to save config: %v", err)
+				logger.Infof("failed to save config: %v", err)
 			}
 		}
 		c.doneSavingConfigs <- true
@@ -261,7 +260,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbol string) {
 
 func (c *Controller) saveConfig() {
 	if !c.enableSavingConfigs {
-		glog.Infof("saveConfig: ignoring save request, saving disabled")
+		logger.Infof("ignoring save request, saving disabled")
 		return
 	}
 

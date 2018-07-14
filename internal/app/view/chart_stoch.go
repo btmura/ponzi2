@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"image"
 
-	"github.com/golang/glog"
-
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/gfx"
+	"github.com/btmura/ponzi2/internal/logger"
 )
 
 // ChartInterval is the data interval like daily or weekly.
@@ -69,7 +68,7 @@ func (ch *ChartStochastics) SetStock(st *model.Stock) {
 	case WeeklyInterval:
 		ss, dColor = st.WeeklyStochasticSeries, purple
 	default:
-		glog.Fatalf("SetStock: unsupported interval: %v", ch.interval)
+		logger.Fatalf("unsupported interval: %v", ch.interval)
 	}
 
 	ch.stoLines = chartStochasticVAO(ss, dColor)

@@ -6,8 +6,9 @@ import (
 	"os/user"
 	"path"
 
-	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
+
+	"github.com/btmura/ponzi2/internal/logger"
 )
 
 // Generate config.pb.go. Follow setup instructions @ github.com/golang/protobuf.
@@ -20,7 +21,7 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
-	glog.Infof("config.Load: loading config from %s", cfgPath)
+	logger.Infof("loading config from %s", cfgPath)
 
 	file, err := os.Open(cfgPath)
 	if err != nil && !os.IsNotExist(err) {
@@ -51,7 +52,7 @@ func Save(cfg *Config) error {
 		return err
 	}
 
-	glog.Infof("config.Save: saving config to %s", cfgPath)
+	logger.Infof("saving config to %s", cfgPath)
 
 	file, err := os.OpenFile(cfgPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0660)
 	if err != nil {
