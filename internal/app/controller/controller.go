@@ -180,8 +180,25 @@ func (c *Controller) Run() {
 	// Call the size callback to set the initial viewport.
 	w, h := win.GetSize()
 	c.setSize(w, h)
+	win.SetSizeCallback(func(win *glfw.Window, width, height int) {
+		c.setSize(width, height)
+	})
 
-	c.setEventCallbacks(ctx, win)
+	win.SetCharCallback(func(win *glfw.Window, char rune) {
+		c.setChar(char)
+	})
+
+	win.SetCursorPosCallback(func(win *glfw.Window, xpos, ypos float64) {
+		c.setCursorPos(xpos, ypos)
+	})
+
+	win.SetKeyCallback(func(win *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+		c.setKey(ctx, key, action)
+	})
+
+	win.SetMouseButtonCallback(func(win *glfw.Window, button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
+		c.setMouseButton(button, action)
+	})
 
 	var lag float64
 	animating := false
