@@ -62,6 +62,11 @@ func NewVAOLoadData(loadData func() *VAOVertexData) *VAO {
 	return &VAO{loadData: loadData}
 }
 
+// EmptyVAO creates an empty VAO that doesn't render anything.
+func EmptyVAO() *VAO {
+	return NewVAO(&VAOVertexData{})
+}
+
 // Render renders the VAO.
 func (v *VAO) Render() {
 	if v.vao == nil {

@@ -30,7 +30,7 @@ func (ch *chartMovingAverage) SetData(ts *model.TradingSessionSeries, ms *model.
 	for _, m := range ms.MovingAverages {
 		values = append(values, m.Value)
 	}
-	ch.vao = graphLineVAO(values, priceRange(ts.TradingSessions), ch.color)
+	ch.vao = dataLineVAO(values, priceRange(ts.TradingSessions), ch.color)
 }
 
 func (ch *chartMovingAverage) Render(r image.Rectangle) {

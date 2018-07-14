@@ -8,6 +8,8 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
+var chartStochasticHorizGridLinesVAO = horizLineSetVAO([]float32{0.2, 0.8}, [2]float32{0, 1}, gray)
+
 type chartStochastics struct {
 	dColor       [3]float32
 	lineKVAO     *gfx.VAO
@@ -45,8 +47,8 @@ func (ch *chartStochastics) SetData(ss *model.StochasticSeries) {
 		dvals = append(dvals, s.D)
 	}
 	valRange := [2]float32{0, 1}
-	ch.lineKVAO = graphLineVAO(kvals, valRange, red)
-	ch.lineDVAO = graphLineVAO(dvals, valRange, ch.dColor)
+	ch.lineKVAO = dataLineVAO(kvals, valRange, red)
+	ch.lineDVAO = dataLineVAO(dvals, valRange, ch.dColor)
 }
 
 func (ch *chartStochastics) Render(r image.Rectangle) {
@@ -54,11 +56,12 @@ func (ch *chartStochastics) Render(r image.Rectangle) {
 		return
 	}
 
+	gfx.SetModelMatrixRect(r)
+
 	// Render lines for the 20% and 80% levels.
-	renderSlicedRectDividers(r, chartGridHorizLine, 0.2, 0.6)
+	chartStochasticHorizGridLinesVAO.Render()
 
 	// Render the stochastic lines.
-	gfx.SetModelMatrixRect(r)
 	ch.lineKVAO.Render()
 	ch.lineDVAO.Render()
 }
