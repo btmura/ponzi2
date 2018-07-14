@@ -44,5 +44,6 @@ func (ch *chartMovingAverage) Render(r image.Rectangle) {
 func (ch *chartMovingAverage) Close() {
 	if ch.vao != nil {
 		ch.vao.Delete()
+		ch.vao = nil
 	}
 }

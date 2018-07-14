@@ -35,10 +35,10 @@ type ChartThumb struct {
 	weekLines *ChartWeekLines
 
 	// dailyStochastics renders the daily stochastics.
-	dailyStochastics *ChartStochastics
+	dailyStochastics *chartStochastics
 
 	// weeklyStochastics renders the weekly stochastics.
-	weeklyStochastics *ChartStochastics
+	weeklyStochastics *chartStochastics
 
 	// thumbClickCallback is the callback to schedule when the thumb is clicked.
 	thumbClickCallback func()
@@ -64,8 +64,8 @@ func NewChartThumb() *ChartThumb {
 			Padding:                 thumbChartPadding,
 		}),
 		weekLines:         NewChartWeekLines(),
-		dailyStochastics:  NewChartStochastics(DailyInterval),
-		weeklyStochastics: NewChartStochastics(WeeklyInterval),
+		dailyStochastics:  newChartStochastics(yellow),
+		weeklyStochastics: newChartStochastics(purple),
 		loading:           true,
 	}
 }
@@ -87,8 +87,8 @@ func (ch *ChartThumb) SetStock(st *model.Stock) {
 	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
 	ch.header.SetStock(st)
 	ch.weekLines.SetStock(st)
-	ch.dailyStochastics.SetStock(st)
-	ch.weeklyStochastics.SetStock(st)
+	ch.dailyStochastics.SetData(st.DailyStochasticSeries)
+	ch.weeklyStochastics.SetData(st.WeeklyStochasticSeries)
 }
 
 // Update updates the ChartThumb.

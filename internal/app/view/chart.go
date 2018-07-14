@@ -74,10 +74,10 @@ type Chart struct {
 	volume *ChartVolume
 
 	// dailyStochastics renders the daily stochastics.
-	dailyStochastics *ChartStochastics
+	dailyStochastics *chartStochastics
 
 	// weeklyStochastics renders the weekly stochastics.
-	weeklyStochastics *ChartStochastics
+	weeklyStochastics *chartStochastics
 
 	// timeLabels renders the time labels.
 	timeLabels *ChartTimeLabels
@@ -109,8 +109,8 @@ func NewChart() *Chart {
 		movingAverage50:   newChartMovingAverage(yellow),
 		movingAverage200:  newChartMovingAverage(white),
 		volume:            NewChartVolume(),
-		dailyStochastics:  NewChartStochastics(DailyInterval),
-		weeklyStochastics: NewChartStochastics(WeeklyInterval),
+		dailyStochastics:  newChartStochastics(yellow),
+		weeklyStochastics: newChartStochastics(purple),
 		timeLabels:        NewChartTimeLabels(),
 		loading:           true,
 	}
@@ -138,8 +138,8 @@ func (ch *Chart) SetStock(st *model.Stock) {
 	ch.movingAverage50.SetData(st.DailyTradingSessionSeries, st.DailyMovingAverageSeries50)
 	ch.movingAverage200.SetData(st.DailyTradingSessionSeries, st.DailyMovingAverageSeries200)
 	ch.volume.SetStock(st)
-	ch.dailyStochastics.SetStock(st)
-	ch.weeklyStochastics.SetStock(st)
+	ch.dailyStochastics.SetData(st.DailyStochasticSeries)
+	ch.weeklyStochastics.SetData(st.WeeklyStochasticSeries)
 	ch.timeLabels.SetStock(st)
 }
 
