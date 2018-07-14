@@ -97,7 +97,7 @@ func (ch *ChartThumb) Update() (animating bool) {
 }
 
 // Render renders the ChartThumb.
-func (ch *ChartThumb) Render(vc ViewContext) {
+func (ch *ChartThumb) Render(vc viewContext) {
 	// Render the border around the chart.
 	strokeRoundedRect(vc.Bounds, thumbChartRounding)
 

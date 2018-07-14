@@ -138,7 +138,7 @@ func (ch *Chart) Update() (animating bool) {
 }
 
 // Render renders the Chart.
-func (ch *Chart) Render(vc ViewContext) {
+func (ch *Chart) Render(vc viewContext) {
 	// Render the border around the chart.
 	strokeRoundedRect(vc.Bounds, chartRounding)
 

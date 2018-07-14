@@ -15,7 +15,7 @@ func TestSetCurrentStock(t *testing.T) {
 		}
 	}
 
-	m := NewModel()
+	m := New()
 
 	// Set initial stock.
 	st, changed := m.SetCurrentStock("SPY")

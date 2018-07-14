@@ -165,7 +165,7 @@ func (c ChartHeaderClicks) HasClicks() bool {
 }
 
 // Render renders the ChartHeader.
-func (ch *ChartHeader) Render(vc ViewContext) (body image.Rectangle, clicks ChartHeaderClicks) {
+func (ch *ChartHeader) Render(vc viewContext) (body image.Rectangle, clicks ChartHeaderClicks) {
 	// Start rendering from the top left. Track position with point.
 	r := vc.Bounds
 	pt := image.Pt(r.Min.X, r.Max.Y)

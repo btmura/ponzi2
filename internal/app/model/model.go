@@ -86,8 +86,8 @@ type StockUpdate struct {
 	WeeklyStochasticSeries      *StochasticSeries
 }
 
-// NewModel creates a new Model.
-func NewModel() *Model {
+// New creates a new Model.
+func New() *Model {
 	return &Model{}
 }
 
