@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	_ "image/png" // Needed to decode PNG images.
+
 	"strings"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
@@ -22,8 +23,13 @@ func program(vertexShaderSrc, fragmentShaderSrc string) (uint32, error) {
 	}
 
 	p := gl.CreateProgram()
+
 	gl.AttachShader(p, vs)
+	defer gl.DeleteShader(vs)
+
 	gl.AttachShader(p, fs)
+	defer gl.DeleteShader(fs)
+
 	gl.LinkProgram(p)
 
 	var status int32
@@ -35,11 +41,8 @@ func program(vertexShaderSrc, fragmentShaderSrc string) (uint32, error) {
 		log := strings.Repeat("\x00", int(logLen)+1)
 		gl.GetProgramInfoLog(p, logLen, nil, gl.Str(log))
 
-		return 0, fmt.Errorf("createProgram: failed to create program: %q", log)
+		return 0, fmt.Errorf("failed to create program: %q", log)
 	}
-
-	gl.DeleteShader(vs)
-	gl.DeleteShader(fs)
 
 	return p, nil
 }
@@ -60,7 +63,7 @@ func shader(shaderSource string, shaderType uint32) (uint32, error) {
 		log := strings.Repeat("\x00", int(logLen)+1)
 		gl.GetShaderInfoLog(sh, logLen, nil, gl.Str(log))
 
-		return 0, fmt.Errorf("createShader: failed to compile shader:\n\ntype: %d\n\nsource: %q\n\nlog: %q", shaderType, shaderSource, log)
+		return 0, fmt.Errorf("failed to compile shader:\n\ntype: %d\n\nsource: %q\n\nlog: %q", shaderType, shaderSource, log)
 	}
 
 	return sh, nil

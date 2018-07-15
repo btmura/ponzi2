@@ -13,24 +13,25 @@ import (
 
 // Locations for the vertex and fragment shaders.
 const (
-	projectionViewMatrixLocation = iota
-	modelMatrixLocation
+	projectionViewMatrixLocation = 0
+	modelMatrixLocation          = 1
 
-	positionLocation
-	colorLocation
-	texCoordLocation
+	positionLocation = 2
+	colorLocation    = 3
+	texCoordLocation = 4
 
-	fragModeLocation
-	textureLocation
-	textColorLocation
+	fragModeLocation  = 5
+	textureLocation   = 6
+	textColorLocation = 7
+	alphaLocation     = 8
 )
 
 type fragMode int32
 
 const (
-	fragColorMode fragMode = iota
-	fragTextureMode
-	fragTextColorMode
+	fragColorMode     fragMode = 0
+	fragTextureMode            = 1
+	fragTextColorMode          = 2
 )
 
 // InitProgram loads and uses the shader program.
@@ -75,4 +76,9 @@ func setFragMode(mode fragMode) {
 
 func setTextColor(color TextColor) {
 	gl.Uniform3fv(textColorLocation, 1, &color[0])
+}
+
+// SetAlpha sets the alpha amount.
+func SetAlpha(alpha float32) {
+	gl.Uniform1f(alphaLocation, alpha)
 }

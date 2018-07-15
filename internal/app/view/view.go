@@ -165,6 +165,8 @@ func (v *View) Init(ctx context.Context) (cleanup func(), err error) {
 		return nil, err
 	}
 
+	gfx.SetAlpha(1.0)
+
 	// Call the size callback to set the initial viewport.
 	w, h := win.GetSize()
 	v.setSize(w, h)
