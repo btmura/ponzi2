@@ -56,7 +56,7 @@ type Chart struct {
 	header *ChartHeader
 
 	// weekLines renders the vertical weekly lines.
-	weekLines *ChartWeekLines
+	weekLines *chartWeekLines
 
 	// prices renders the candlesticks.
 	prices *ChartPrices
@@ -103,7 +103,7 @@ func NewChart() *Chart {
 			Rounding:                chartRounding,
 			Padding:                 chartPadding,
 		}),
-		weekLines:         NewChartWeekLines(),
+		weekLines:         newChartWeekLines(),
 		prices:            NewChartPrices(),
 		movingAverage25:   newChartMovingAverage(purple),
 		movingAverage50:   newChartMovingAverage(yellow),
@@ -132,7 +132,7 @@ func (ch *Chart) SetError(error bool) {
 func (ch *Chart) SetStock(st *model.Stock) {
 	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
 	ch.header.SetStock(st)
-	ch.weekLines.SetStock(st)
+	ch.weekLines.SetData(st.DailyTradingSessionSeries)
 	ch.prices.SetStock(st)
 	ch.movingAverage25.SetData(st.DailyTradingSessionSeries, st.DailyMovingAverageSeries25)
 	ch.movingAverage50.SetData(st.DailyTradingSessionSeries, st.DailyMovingAverageSeries50)

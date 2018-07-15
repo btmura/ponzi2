@@ -7,29 +7,44 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
-// ChartWeekLines renders the weekly lines for a single stock.
-type ChartWeekLines struct {
-	renderable bool
-	lines      *gfx.VAO
+// chartWeekLines renders the weekly lines for a single stock.
+type chartWeekLines struct {
+	vao *gfx.VAO
 }
 
-// NewChartWeekLines creates a new ChartWeekLines.
-func NewChartWeekLines() *ChartWeekLines {
-	return &ChartWeekLines{}
+func newChartWeekLines() *chartWeekLines {
+	return &chartWeekLines{}
 }
 
-// SetStock sets the ChartWeekLines' stock.
-func (ch *ChartWeekLines) SetStock(st *model.Stock) {
+func (ch *chartWeekLines) SetData(ts *model.TradingSessionSeries) {
 	// Reset everything.
 	ch.Close()
 
 	// Bail out if there is no data yet.
-	if st.DailyTradingSessionSeries == nil {
-		return // Stock has no data yet.
+	if ts == nil {
+		return
 	}
 
-	ch.lines = createChartWeekLinesVAO(st.DailyTradingSessionSeries.TradingSessions)
-	ch.renderable = true
+	// Create the line VAO.
+	ch.vao = verticalRuleSetVAO(weeklineXValues(ts.TradingSessions), [2]float32{0, 1}, gray)
+}
+
+func weeklineXValues(ts []*model.TradingSession) []float32 {
+	var values []float32
+	for i := range ts {
+		if i == 0 {
+			continue // Can't check previous week.
+		}
+
+		_, pwk := ts[i-1].Date.ISOWeek()
+		_, wk := ts[i].Date.ISOWeek()
+		if pwk == wk {
+			continue
+		}
+
+		values = append(values, float32(i)/float32(len(ts)))
+	}
+	return values
 }
 
 func createChartWeekLinesVAO(ds []*model.TradingSession) *gfx.VAO {
@@ -69,19 +84,18 @@ func createChartWeekLinesVAO(ds []*model.TradingSession) *gfx.VAO {
 }
 
 // Render renders the chart lines.
-func (ch *ChartWeekLines) Render(r image.Rectangle) {
-	if !ch.renderable {
+func (ch *chartWeekLines) Render(r image.Rectangle) {
+	if ch.vao == nil {
 		return
 	}
-
 	gfx.SetModelMatrixRect(r)
-	ch.lines.Render()
+	ch.vao.Render()
 }
 
 // Close frees the resources backing the chart lines.
-func (ch *ChartWeekLines) Close() {
-	ch.renderable = false
-	if ch.lines != nil {
-		ch.lines.Delete()
+func (ch *chartWeekLines) Close() {
+	if ch.vao != nil {
+		ch.vao.Delete()
+		ch.vao = nil
 	}
 }

@@ -32,7 +32,7 @@ type ChartThumb struct {
 	header *ChartHeader
 
 	// weekLines renders the vertical week lines.
-	weekLines *ChartWeekLines
+	weekLines *chartWeekLines
 
 	// dailyStochastics renders the daily stochastics.
 	dailyStochastics *chartStochastics
@@ -63,7 +63,7 @@ func NewChartThumb() *ChartThumb {
 			Rounding:                thumbChartRounding,
 			Padding:                 thumbChartPadding,
 		}),
-		weekLines:         NewChartWeekLines(),
+		weekLines:         newChartWeekLines(),
 		dailyStochastics:  newChartStochastics(yellow),
 		weeklyStochastics: newChartStochastics(purple),
 		loading:           true,
@@ -86,7 +86,7 @@ func (ch *ChartThumb) SetError(error bool) {
 func (ch *ChartThumb) SetStock(st *model.Stock) {
 	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
 	ch.header.SetStock(st)
-	ch.weekLines.SetStock(st)
+	ch.weekLines.SetData(st.DailyTradingSessionSeries)
 	ch.dailyStochastics.SetData(st.DailyStochasticSeries)
 	ch.weeklyStochastics.SetData(st.WeeklyStochasticSeries)
 }

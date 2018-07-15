@@ -42,7 +42,7 @@ func dataLineVAO(yValues []float32, yRange [2]float32, color [3]float32) *gfx.VA
 	return gfx.NewVAO(data)
 }
 
-func horizLineSetVAO(yValues []float32, yRange [2]float32, color [3]float32) *gfx.VAO {
+func horizontalLineSetVAO(yValues []float32, yRange [2]float32, color [3]float32) *gfx.VAO {
 	if len(yValues) < 2 {
 		return gfx.EmptyVAO()
 	}
@@ -62,6 +62,38 @@ func horizLineSetVAO(yValues []float32, yRange [2]float32, color [3]float32) *gf
 		data.Vertices = append(data.Vertices,
 			-1, yc(val), 0,
 			+1, yc(val), 0,
+		)
+		data.Colors = append(data.Colors,
+			color[0], color[1], color[2],
+			color[0], color[1], color[2],
+		)
+		data.Indices = append(data.Indices, v, v+1)
+		v += 2
+	}
+
+	return gfx.NewVAO(data)
+}
+
+func verticalRuleSetVAO(xValues []float32, xRange [2]float32, color [3]float32) *gfx.VAO {
+	if len(xValues) < 2 {
+		return gfx.EmptyVAO()
+	}
+
+	minX, maxX := xRange[0], xRange[1]
+	xc := func(v float32) float32 {
+		return 2.0*(v-minX)/(maxX-minX) - 1.0
+	}
+
+	data := &gfx.VAOVertexData{Mode: gfx.Lines}
+
+	var v uint16 // vertex index
+	for _, val := range xValues {
+		if val < minX || val > maxX {
+			continue
+		}
+		data.Vertices = append(data.Vertices,
+			xc(val), -1, 0,
+			xc(val), +1, 0,
 		)
 		data.Colors = append(data.Colors,
 			color[0], color[1], color[2],
