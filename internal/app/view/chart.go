@@ -42,12 +42,12 @@ var chartAxisLabelBubbleSpec = bubbleSpec{
 // Shared variables used by multiple chart components.
 var (
 	chartAxisLabelTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
-	chartGridHorizLine         = horizColoredLineVAO(gray, gray)
+	chartGridHorizLine         = horizLineVAO(gray)
 )
 
 var (
-	chartCursorHorizLine = horizColoredLineVAO(lightGray, lightGray)
-	chartCursorVertLine  = vertColoredLineVAO(lightGray, lightGray)
+	chartCursorHorizLine = horizLineVAO(lightGray)
+	chartCursorVertLine  = vertLineVAO(lightGray)
 )
 
 // Chart shows a stock chart for a single stock.
@@ -55,8 +55,8 @@ type Chart struct {
 	// header renders the header with the symbol, quote, and buttons.
 	header *ChartHeader
 
-	// weekLines renders the vertical weekly lines.
-	weekLines *chartWeekLines
+	// timeLines renders the vertical time lines.
+	timeLines *chartTimeLines
 
 	// prices renders the candlesticks.
 	prices *ChartPrices
@@ -103,7 +103,7 @@ func NewChart() *Chart {
 			Rounding:                chartRounding,
 			Padding:                 chartPadding,
 		}),
-		weekLines:         newChartWeekLines(),
+		timeLines:         newChartTimeLines(),
 		prices:            NewChartPrices(),
 		movingAverage25:   newChartMovingAverage(purple),
 		movingAverage50:   newChartMovingAverage(yellow),
@@ -132,7 +132,7 @@ func (ch *Chart) SetError(error bool) {
 func (ch *Chart) SetStock(st *model.Stock) {
 	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
 	ch.header.SetStock(st)
-	ch.weekLines.SetData(st.DailyTradingSessionSeries)
+	ch.timeLines.SetData(st.DailyTradingSessionSeries)
 	ch.prices.SetStock(st)
 	ch.movingAverage25.SetData(st.DailyTradingSessionSeries, st.DailyMovingAverageSeries25)
 	ch.movingAverage50.SetData(st.DailyTradingSessionSeries, st.DailyMovingAverageSeries50)
@@ -226,10 +226,10 @@ func (ch *Chart) Render(vc viewContext) {
 	wlr = wlr.Inset(chartPadding)
 	tlr = tlr.Inset(chartPadding)
 
-	ch.weekLines.Render(pr)
-	ch.weekLines.Render(vr)
-	ch.weekLines.Render(dr)
-	ch.weekLines.Render(wr)
+	ch.timeLines.Render(pr)
+	ch.timeLines.Render(vr)
+	ch.timeLines.Render(dr)
+	ch.timeLines.Render(wr)
 
 	ch.prices.Render(pr)
 	ch.movingAverage25.Render(pr)
@@ -272,8 +272,8 @@ func (ch *Chart) Close() {
 	if ch.header != nil {
 		ch.header.Close()
 	}
-	if ch.weekLines != nil {
-		ch.weekLines.Close()
+	if ch.timeLines != nil {
+		ch.timeLines.Close()
 	}
 	if ch.prices != nil {
 		ch.prices.Close()

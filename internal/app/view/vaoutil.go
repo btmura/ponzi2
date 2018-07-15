@@ -42,7 +42,8 @@ func dataLineVAO(yValues []float32, yRange [2]float32, color [3]float32) *gfx.VA
 	return gfx.NewVAO(data)
 }
 
-func horizontalLineSetVAO(yValues []float32, yRange [2]float32, color [3]float32) *gfx.VAO {
+// horizRuleSetVAO returns a set of horizontal lines at different y values.
+func horizRuleSetVAO(yValues []float32, yRange [2]float32, color [3]float32) *gfx.VAO {
 	if len(yValues) < 2 {
 		return gfx.EmptyVAO()
 	}
@@ -74,7 +75,8 @@ func horizontalLineSetVAO(yValues []float32, yRange [2]float32, color [3]float32
 	return gfx.NewVAO(data)
 }
 
-func verticalRuleSetVAO(xValues []float32, xRange [2]float32, color [3]float32) *gfx.VAO {
+// vertRuleSetVAO returns a set of vertical lines at different x values.
+func vertRuleSetVAO(xValues []float32, xRange [2]float32, color [3]float32) *gfx.VAO {
 	if len(xValues) < 2 {
 		return gfx.EmptyVAO()
 	}
@@ -106,9 +108,8 @@ func verticalRuleSetVAO(xValues []float32, xRange [2]float32, color [3]float32) 
 	return gfx.NewVAO(data)
 }
 
-// horizColoredLineVAO returns a horizontal colored line segment
-// from (-1, 0) to (1, 0).
-func horizColoredLineVAO(leftColor, rightColor [3]float32) *gfx.VAO {
+// horizLineVAO returns a horizontal line from (-1, 0) to (1, 0).
+func horizLineVAO(color [3]float32) *gfx.VAO {
 	return gfx.NewVAO(
 		&gfx.VAOVertexData{
 			Mode: gfx.Lines,
@@ -117,8 +118,8 @@ func horizColoredLineVAO(leftColor, rightColor [3]float32) *gfx.VAO {
 				+1, 0, 0,
 			},
 			Colors: []float32{
-				leftColor[0], leftColor[1], leftColor[2],
-				rightColor[0], rightColor[1], rightColor[2],
+				color[0], color[1], color[2],
+				color[0], color[1], color[2],
 			},
 			Indices: []uint16{
 				0, 1,
@@ -127,9 +128,8 @@ func horizColoredLineVAO(leftColor, rightColor [3]float32) *gfx.VAO {
 	)
 }
 
-// vertColoredLineVAO returns a vertical colored line segment
-// from (0, -1) to (0, 1).
-func vertColoredLineVAO(topColor, botColor [3]float32) *gfx.VAO {
+// vertLineVAO returns a vertical line from (0, -1) to (0, 1).
+func vertLineVAO(color [3]float32) *gfx.VAO {
 	return gfx.NewVAO(
 		&gfx.VAOVertexData{
 			Mode: gfx.Lines,
@@ -138,8 +138,8 @@ func vertColoredLineVAO(topColor, botColor [3]float32) *gfx.VAO {
 				0, +1, 0,
 			},
 			Colors: []float32{
-				topColor[0], topColor[1], topColor[2],
-				botColor[0], botColor[1], botColor[2],
+				color[0], color[1], color[2],
+				color[0], color[1], color[2],
 			},
 			Indices: []uint16{
 				0, 1,
@@ -148,7 +148,7 @@ func vertColoredLineVAO(topColor, botColor [3]float32) *gfx.VAO {
 	)
 }
 
-// squareImageVAO returns a VAO that renders a square image.
-func squareImageVAO(textureReader io.Reader) *gfx.VAO {
+// texturedSquareVAO returns a VAO that renders a square image.
+func texturedSquareVAO(textureReader io.Reader) *gfx.VAO {
 	return gfx.TexturedPLYVAO(bytes.NewReader(_escFSMustByte(false, "/data/texturedsquareplane.ply")), textureReader)
 }

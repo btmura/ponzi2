@@ -8,7 +8,7 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
-var chartStochasticHorizGridLinesVAO = horizontalLineSetVAO([]float32{0.2, 0.8}, [2]float32{0, 1}, gray)
+var chartStochasticHorizGridLinesVAO = horizRuleSetVAO([]float32{0.2, 0.8}, [2]float32{0, 1}, gray)
 
 type chartStochastics struct {
 	dColor       [3]float32

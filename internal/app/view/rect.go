@@ -10,8 +10,8 @@ import (
 
 // White horizontal and vertical line VAOs that can be reused anywhere.
 var (
-	horizLine   = horizColoredLineVAO(white, white)
-	vertLine    = vertColoredLineVAO(white, white)
+	horizLine   = horizLineVAO(white)
+	vertLine    = vertLineVAO(white)
 	squarePlane = gfx.PLYVAO(bytes.NewReader(_escFSMustByte(false, "/data/squareplane.ply")))
 )
 
