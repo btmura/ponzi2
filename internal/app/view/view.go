@@ -10,11 +10,11 @@ import (
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/golang/glog"
 	"golang.org/x/image/font/gofont/goregular"
 
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/gfx"
-	"github.com/btmura/ponzi2/internal/logger"
 	"github.com/btmura/ponzi2/internal/matrix"
 )
 
@@ -157,7 +157,7 @@ func (v *View) Init(ctx context.Context) (cleanup func(), err error) {
 	if err := gl.Init(); err != nil {
 		return nil, err
 	}
-	logger.Infof("OpenGL version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
+	glog.V(2).Infof("OpenGL version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
 
 	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
@@ -244,7 +244,7 @@ func (v *View) setCursorPos(x, y float64) {
 
 func (v *View) setMouseButton(button glfw.MouseButton, action glfw.Action) {
 	if button != glfw.MouseButtonLeft {
-		logger.Infof("ignoring mouse button(%v) and action(%v)", button, action)
+		glog.V(2).Infof("ignoring mouse button(%v) and action(%v)", button, action)
 		return // Only interested in left clicks right now.
 	}
 	v.mouseLeftButtonClicked = action == glfw.Release
@@ -280,11 +280,11 @@ start:
 		now := time.Now()
 		v.render(fudge)
 		v.win.SwapBuffers()
-		logger.Infof("u(%d) l(%f)/%f=f(%f) a(%t) r(%v)", i, lag, updateSec, fudge, animating, time.Since(now).Seconds())
+		glog.V(2).Infof("u(%d) l(%f)/%f=f(%f) a(%t) r(%v)", i, lag, updateSec, fudge, animating, time.Since(now).Seconds())
 
 		glfw.PollEvents()
 		if !animating {
-			logger.Info("wait events")
+			glog.V(2).Info("wait events")
 			glfw.WaitEvents()
 			goto start
 		}

@@ -1,8 +1,9 @@
 package app
 
 import (
+	"github.com/golang/glog"
+
 	"github.com/btmura/ponzi2/internal/app/controller"
-	"github.com/btmura/ponzi2/internal/logger"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
@@ -10,6 +11,6 @@ import (
 func Run(dumpAPIResponses bool) {
 	c := iex.NewClient(dumpAPIResponses)
 	if err := controller.New(c).Run(); err != nil {
-		logger.Fatal(err)
+		glog.Fatal(err)
 	}
 }

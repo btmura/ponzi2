@@ -2,8 +2,7 @@ package gfx
 
 import (
 	"github.com/go-gl/gl/v4.5-core/gl"
-
-	"github.com/btmura/ponzi2/internal/logger"
+	"github.com/golang/glog"
 )
 
 // vao is a Vertex Array Object (VAO) that can be rendered and deleted.
@@ -25,7 +24,7 @@ type vao struct {
 }
 
 func newVAO(data *VAOVertexData) *vao {
-	logger.Infof("creating vao: v(%d) tc(%d) c(%d) i(%d)", len(data.Vertices), len(data.TexCoords), len(data.Colors), len(data.Indices))
+	glog.V(2).Infof("creating vao: v(%d) tc(%d) c(%d) i(%d)", len(data.Vertices), len(data.TexCoords), len(data.Colors), len(data.Indices))
 
 	vbo := arrayBuffer(data.Vertices)
 
@@ -96,7 +95,7 @@ func (v *vao) render() {
 }
 
 func (v *vao) delete() {
-	logger.Infof("deleting vao: array(%d) mode(%v) count(%d) texture(%d) hasTexture(%t)", v.array, v.mode, v.count, v.texture, v.hasTexture)
+	glog.V(2).Infof("deleting vao: array(%d) mode(%v) count(%d) texture(%d) hasTexture(%t)", v.array, v.mode, v.count, v.texture, v.hasTexture)
 	defer func() {
 		v.array = 0
 		v.mode = 0
