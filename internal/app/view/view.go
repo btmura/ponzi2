@@ -196,6 +196,8 @@ func (v *View) Init(ctx context.Context) (cleanup func(), err error) {
 }
 
 func (v *View) setSize(width, height int) {
+	defer v.PostEmptyEvent()
+
 	s := image.Pt(width, height)
 	if v.winSize == s {
 		return
@@ -211,6 +213,8 @@ func (v *View) setSize(width, height int) {
 }
 
 func (v *View) setChar(char rune) {
+	defer v.PostEmptyEvent()
+
 	char = unicode.ToUpper(char)
 	if _, ok := acceptedChars[char]; ok {
 		v.inputSymbol.Text += string(char)
@@ -218,6 +222,8 @@ func (v *View) setChar(char rune) {
 }
 
 func (v *View) setKey(ctx context.Context, key glfw.Key, action glfw.Action) {
+	defer v.PostEmptyEvent()
+
 	if action != glfw.Release {
 		return
 	}
@@ -238,11 +244,15 @@ func (v *View) setKey(ctx context.Context, key glfw.Key, action glfw.Action) {
 }
 
 func (v *View) setCursorPos(x, y float64) {
+	defer v.PostEmptyEvent()
+
 	// Flip Y-axis since the OpenGL coordinate system makes lower left the origin.
 	v.mousePos = image.Pt(int(x), v.winSize.Y-int(y))
 }
 
 func (v *View) setMouseButton(button glfw.MouseButton, action glfw.Action) {
+	defer v.PostEmptyEvent()
+
 	if button != glfw.MouseButtonLeft {
 		glog.V(2).Infof("ignoring mouse button(%v) and action(%v)", button, action)
 		return // Only interested in left clicks right now.
