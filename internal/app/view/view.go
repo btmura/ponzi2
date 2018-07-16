@@ -26,9 +26,10 @@ const appName = "ponzi"
 
 // Constants used by Run for the "game loop".
 const (
-	fps          = 120.0
-	secPerUpdate = 1.0 / fps
-	maxUpdates   = 1000
+	fps        = 120.0
+	updateSec  = 1.0 / fps
+	minUpdates = 1
+	maxUpdates = 1000
 )
 
 // acceptedChars are the chars the user can enter for a symbol.
@@ -251,6 +252,7 @@ func (v *View) setMouseButton(button glfw.MouseButton, action glfw.Action) {
 
 // Run runs the "game loop".
 func (v *View) Run(preupdate func()) {
+start:
 	var lag float64
 	animating := false
 	prevTime := glfw.GetTime()
@@ -261,24 +263,30 @@ func (v *View) Run(preupdate func()) {
 		lag += elapsed
 
 		i := 0
-		for ; lag >= secPerUpdate && i < maxUpdates; i++ {
+		for ; i < minUpdates || i < maxUpdates && lag >= updateSec; i++ {
 			preupdate()
 			animating = v.update()
-			lag -= secPerUpdate
+			lag -= updateSec
+		}
+		if lag < 0 {
+			lag = 0
 		}
 
-		fudge := float32(lag / secPerUpdate)
+		fudge := float32(lag / updateSec)
+		if fudge < 0 || fudge > 1 {
+			fudge = 0
+		}
 
 		now := time.Now()
 		v.render(fudge)
 		v.win.SwapBuffers()
-		logger.Infof("u(%d) l(%f)/%f=f(%f) a(%t) r(%v)", i, lag, secPerUpdate, fudge, animating, time.Since(now).Seconds())
+		logger.Infof("u(%d) l(%f)/%f=f(%f) a(%t) r(%v)", i, lag, updateSec, fudge, animating, time.Since(now).Seconds())
 
 		glfw.PollEvents()
 		if !animating {
 			logger.Info("wait events")
-			glfw.WaitEventsTimeout(1 /* seconds */)
-			lag = 0
+			glfw.WaitEvents()
+			goto start
 		}
 	}
 }
@@ -343,6 +351,11 @@ func (v *View) render(fudge float32) {
 
 	// Reset any flags for the next viewContext.
 	v.mouseLeftButtonClicked = false
+}
+
+// PostEmptyEvent wakes up the Run loop with an event if it is asleep.
+func (v *View) PostEmptyEvent() {
+	glfw.PostEmptyEvent()
 }
 
 // SetInputSymbolSubmittedCallback sets the callback for when a new symbol is entered.

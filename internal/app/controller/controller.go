@@ -249,12 +249,13 @@ func (c *Controller) refreshStock(ctx context.Context, symbol string) {
 				symbol:    symbol,
 				updateErr: err,
 			}
-			return
+		} else {
+			c.pendingStockUpdates <- controllerStockUpdate{
+				symbol: symbol,
+				update: modelStockUpdate(sr),
+			}
 		}
-		c.pendingStockUpdates <- controllerStockUpdate{
-			symbol: symbol,
-			update: modelStockUpdate(sr),
-		}
+		c.view.PostEmptyEvent()
 	}()
 }
 
