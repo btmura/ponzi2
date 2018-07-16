@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"runtime"
+	"time"
 	"unicode"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
@@ -27,7 +28,7 @@ const appName = "ponzi"
 const (
 	fps          = 120.0
 	secPerUpdate = 1.0 / fps
-	maxUpdates   = 10
+	maxUpdates   = 1000
 )
 
 // acceptedChars are the chars the user can enter for a symbol.
@@ -254,7 +255,7 @@ func (v *View) Run(preupdate func()) {
 	animating := false
 	prevTime := glfw.GetTime()
 	for !v.win.ShouldClose() {
-		currTime := glfw.GetTime()
+		currTime := glfw.GetTime() /* seconds */
 		elapsed := currTime - prevTime
 		prevTime = currTime
 		lag += elapsed
@@ -267,14 +268,17 @@ func (v *View) Run(preupdate func()) {
 		}
 
 		fudge := float32(lag / secPerUpdate)
-		logger.Infof("u(%d) l(%f) f(%f) a(%t)", i, lag, fudge, animating)
+
+		now := time.Now()
 		v.render(fudge)
 		v.win.SwapBuffers()
+		logger.Infof("u(%d) l(%f)/%f=f(%f) a(%t) r(%v)", i, lag, secPerUpdate, fudge, animating, time.Since(now).Seconds())
 
 		glfw.PollEvents()
 		if !animating {
 			logger.Info("wait events")
 			glfw.WaitEventsTimeout(1 /* seconds */)
+			lag = 0
 		}
 	}
 }
