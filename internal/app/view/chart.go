@@ -3,6 +3,7 @@ package view
 import (
 	"fmt"
 	"image"
+	"time"
 
 	"golang.org/x/image/font/gofont/goregular"
 
@@ -90,6 +91,9 @@ type Chart struct {
 
 	// hasError is true there was a loading issue.
 	hasError bool
+
+	// fadeIn is fade-in animation.
+	fadeIn *animation
 }
 
 // NewChart creates a new Chart.
@@ -113,6 +117,7 @@ func NewChart() *Chart {
 		weeklyStochastics: newChartStochastics(purple),
 		timeLabels:        NewChartTimeLabels(),
 		loading:           true,
+		fadeIn:            newAnimation(1 * time.Second),
 	}
 }
 
@@ -141,15 +146,24 @@ func (ch *Chart) SetStock(st *model.Stock) {
 	ch.dailyStochastics.SetData(st.DailyStochasticSeries)
 	ch.weeklyStochastics.SetData(st.WeeklyStochasticSeries)
 	ch.timeLabels.SetStock(st)
+	ch.fadeIn.Start()
 }
 
 // Update updates the Chart.
 func (ch *Chart) Update() (animating bool) {
-	return ch.header.Update()
+	if ch.header.Update() {
+		animating = true
+	}
+	if ch.fadeIn.Update() {
+		animating = true
+	}
+	return animating
 }
 
 // Render renders the Chart.
 func (ch *Chart) Render(vc viewContext) {
+	gfx.SetAlpha(1)
+
 	// Render the border around the chart.
 	strokeRoundedRect(vc.Bounds, chartRounding)
 
@@ -169,6 +183,8 @@ func (ch *Chart) Render(vc viewContext) {
 			return
 		}
 	}
+
+	gfx.SetAlpha(ch.fadeIn.Value(vc.Fudge))
 
 	// Calculate percentage needed for the time labels.
 	tperc := float32(ch.timeLabels.MaxLabelSize.Y+chartPadding*2) / float32(r.Dy())

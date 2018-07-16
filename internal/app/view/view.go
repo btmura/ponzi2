@@ -266,9 +266,9 @@ func (v *View) Run(preupdate func()) {
 			lag -= secPerUpdate
 		}
 
-		logger.Infof("updates: %d animating: %t", i, animating)
-
-		v.render(float32(lag / secPerUpdate))
+		fudge := float32(lag / secPerUpdate)
+		logger.Infof("u(%d) l(%f) f(%f) a(%t)", i, lag, fudge, animating)
+		v.render(fudge)
 		v.win.SwapBuffers()
 
 		glfw.PollEvents()

@@ -2,6 +2,7 @@ package view
 
 import (
 	"fmt"
+	"time"
 
 	"golang.org/x/image/font/gofont/goregular"
 
@@ -51,6 +52,9 @@ type ChartThumb struct {
 
 	// hasError is true there was a loading issue.
 	hasError bool
+
+	// fadeIn is fade-in animation.
+	fadeIn *animation
 }
 
 // NewChartThumb creates a ChartThumb.
@@ -67,6 +71,7 @@ func NewChartThumb() *ChartThumb {
 		dailyStochastics:  newChartStochastics(yellow),
 		weeklyStochastics: newChartStochastics(purple),
 		loading:           true,
+		fadeIn:            newAnimation(1 * time.Second),
 	}
 }
 
@@ -89,15 +94,24 @@ func (ch *ChartThumb) SetStock(st *model.Stock) {
 	ch.timeLines.SetData(st.DailyTradingSessionSeries)
 	ch.dailyStochastics.SetData(st.DailyStochasticSeries)
 	ch.weeklyStochastics.SetData(st.WeeklyStochasticSeries)
+	ch.fadeIn.Start()
 }
 
 // Update updates the ChartThumb.
 func (ch *ChartThumb) Update() (animating bool) {
-	return ch.header.Update()
+	if ch.header.Update() {
+		animating = true
+	}
+	if ch.fadeIn.Update() {
+		animating = true
+	}
+	return animating
 }
 
 // Render renders the ChartThumb.
 func (ch *ChartThumb) Render(vc viewContext) {
+	gfx.SetAlpha(1)
+
 	// Render the border around the chart.
 	strokeRoundedRect(vc.Bounds, thumbChartRounding)
 
@@ -121,6 +135,8 @@ func (ch *ChartThumb) Render(vc viewContext) {
 			return
 		}
 	}
+
+	gfx.SetAlpha(ch.fadeIn.Value(vc.Fudge))
 
 	rects := sliceRect(r, 0.5)
 	renderRectTopDivider(rects[0], horizLine)
