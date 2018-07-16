@@ -89,12 +89,15 @@ func (ch *ChartThumb) SetError(error bool) {
 
 // SetStock sets the ChartThumb's stock.
 func (ch *ChartThumb) SetStock(st *model.Stock) {
+	if !ch.hasStockUpdated && !st.LastUpdateTime.IsZero() {
+		ch.fadeIn.Start()
+	}
 	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
+
 	ch.header.SetStock(st)
 	ch.timeLines.SetData(st.DailyTradingSessionSeries)
 	ch.dailyStochastics.SetData(st.DailyStochasticSeries)
 	ch.weeklyStochastics.SetData(st.WeeklyStochasticSeries)
-	ch.fadeIn.Start()
 }
 
 // Update updates the ChartThumb.
