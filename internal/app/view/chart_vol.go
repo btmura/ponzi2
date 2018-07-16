@@ -9,6 +9,8 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
+var chartVolumeHorizRuleSet = horizRuleSetVAO([]float32{0.2, 0.8}, [2]float32{0, 1}, gray)
+
 // ChartVolume renders the volume bars and labels for a single stock.
 type ChartVolume struct {
 	// renderable is whether the ChartVolume can be rendered.
@@ -55,8 +57,8 @@ func (ch *ChartVolume) SetStock(st *model.Stock) {
 
 	// Create Y-axis labels for key percentages.
 	ch.labels = []chartVolumeLabel{
-		makeChartVolumeLabel(ch.maxVolume, .7),
-		makeChartVolumeLabel(ch.maxVolume, .3),
+		makeChartVolumeLabel(ch.maxVolume, .8),
+		makeChartVolumeLabel(ch.maxVolume, .2),
 	}
 
 	ch.volBars = chartVolumeBarsVAO(st.DailyTradingSessionSeries.TradingSessions, ch.maxVolume)
@@ -70,11 +72,12 @@ func (ch *ChartVolume) Render(r image.Rectangle) {
 		return
 	}
 
-	// Render lines for the 30% and 70% levels.
-	renderSlicedRectDividers(r, chartGridHorizLine, 0.3, 0.4)
+	gfx.SetModelMatrixRect(r)
+
+	// Render lines for the 20% and 80% levels.
+	chartVolumeHorizRuleSet.Render()
 
 	// Render the volume bars.
-	gfx.SetModelMatrixRect(r)
 	ch.volBars.Render()
 }
 
