@@ -5,7 +5,7 @@ import (
 )
 
 func TestAnimation_Start_Update_Value(t *testing.T) {
-	a := newAnimation(3)
+	a := newAnimation(3, false)
 
 	checkState := func(wantCurrFrame, wantNumFrames int, wantStarted bool) {
 		t.Helper()
@@ -15,8 +15,8 @@ func TestAnimation_Start_Update_Value(t *testing.T) {
 		if a.numFrames != wantNumFrames {
 			t.Errorf("a.numFrames = %d, want %d", a.numFrames, wantNumFrames)
 		}
-		if a.started != wantStarted {
-			t.Errorf("a.started = %t, want %t", a.started, wantStarted)
+		if a.running != wantStarted {
+			t.Errorf("a.started = %t, want %t", a.running, wantStarted)
 		}
 	}
 
