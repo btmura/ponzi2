@@ -2,7 +2,6 @@ package view
 
 import (
 	"fmt"
-	"time"
 
 	"golang.org/x/image/font/gofont/goregular"
 
@@ -71,7 +70,7 @@ func NewChartThumb() *ChartThumb {
 		dailyStochastics:  newChartStochastics(yellow),
 		weeklyStochastics: newChartStochastics(purple),
 		loading:           true,
-		fadeIn:            newAnimation(1 * time.Second),
+		fadeIn:            newAnimation(1 * fps),
 	}
 }
 

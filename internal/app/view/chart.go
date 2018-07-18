@@ -3,7 +3,6 @@ package view
 import (
 	"fmt"
 	"image"
-	"time"
 
 	"golang.org/x/image/font/gofont/goregular"
 
@@ -117,7 +116,7 @@ func NewChart() *Chart {
 		weeklyStochastics: newChartStochastics(purple),
 		timeLabels:        NewChartTimeLabels(),
 		loading:           true,
-		fadeIn:            newAnimation(1 * time.Second),
+		fadeIn:            newAnimation(1 * fps),
 	}
 }
 
