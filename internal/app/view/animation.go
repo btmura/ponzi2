@@ -21,8 +21,11 @@ func (a *animation) Stop() {
 
 func (a *animation) Update() (animating bool) {
 	if a.loop {
-		if a.running || a.currFrame != 0 {
+		if a.running {
 			a.currFrame = (a.currFrame + 1) % a.numFrames
+			return true
+		} else if a.currFrame+1 < a.numFrames {
+			a.currFrame++
 			return true
 		}
 		return false
