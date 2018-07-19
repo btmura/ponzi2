@@ -59,7 +59,7 @@ type Chart struct {
 	timeLines *chartTimeLines
 
 	// prices renders the candlesticks.
-	prices *ChartPrices
+	prices *chartPrices
 
 	// movingAverage renders the 25 day moving average.
 	movingAverage25 *chartMovingAverage
@@ -107,7 +107,7 @@ func NewChart() *Chart {
 			Padding:                 chartPadding,
 		}),
 		timeLines:         newChartTimeLines(),
-		prices:            NewChartPrices(),
+		prices:            newChartPrices(),
 		movingAverage25:   newChartMovingAverage(purple),
 		movingAverage50:   newChartMovingAverage(yellow),
 		movingAverage200:  newChartMovingAverage(white),

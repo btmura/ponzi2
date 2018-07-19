@@ -9,8 +9,8 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
-// ChartPrices shows the candlesticks and price labels for a single stock.
-type ChartPrices struct {
+// chartPrices shows the candlesticks and price labels for a single stock.
+type chartPrices struct {
 	// renderable is whether the ChartPrices can be rendered.
 	renderable bool
 
@@ -27,13 +27,13 @@ type ChartPrices struct {
 	stickRects *gfx.VAO
 }
 
-// NewChartPrices creates a new ChartPrices.
-func NewChartPrices() *ChartPrices {
-	return &ChartPrices{}
+// newChartPrices creates a new ChartPrices.
+func newChartPrices() *chartPrices {
+	return &chartPrices{}
 }
 
 // SetStock sets the ChartPrices' stock.
-func (ch *ChartPrices) SetStock(st *model.Stock) {
+func (ch *chartPrices) SetStock(st *model.Stock) {
 	// Reset everything.
 	ch.Close()
 
@@ -53,7 +53,7 @@ func (ch *ChartPrices) SetStock(st *model.Stock) {
 }
 
 // Render renders the price candlesticks.
-func (ch *ChartPrices) Render(r image.Rectangle) {
+func (ch *chartPrices) Render(r image.Rectangle) {
 	if !ch.renderable {
 		return
 	}
@@ -80,7 +80,7 @@ func (ch *ChartPrices) Render(r image.Rectangle) {
 }
 
 // RenderAxisLabels renders the price labels.
-func (ch *ChartPrices) RenderAxisLabels(r image.Rectangle) {
+func (ch *chartPrices) RenderAxisLabels(r image.Rectangle) {
 	if !ch.renderable {
 		return
 	}
@@ -118,7 +118,7 @@ func (ch *ChartPrices) RenderAxisLabels(r image.Rectangle) {
 }
 
 // RenderCursorLabels renders a label for the value under the mouse cursor.
-func (ch *ChartPrices) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {
+func (ch *chartPrices) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {
 	if !ch.renderable {
 		return
 	}
@@ -141,7 +141,7 @@ func (ch *ChartPrices) RenderCursorLabels(mainRect, labelRect image.Rectangle, m
 }
 
 // Close frees the resources backing the ChartPrices.
-func (ch *ChartPrices) Close() {
+func (ch *chartPrices) Close() {
 	ch.renderable = false
 	if ch.stickLines != nil {
 		ch.stickLines.Delete()
