@@ -11,8 +11,8 @@ import (
 
 var chartVolumeHorizRuleSet = horizRuleSetVAO([]float32{0.2, 0.8}, [2]float32{0, 1}, gray)
 
-// ChartVolume renders the volume bars and labels for a single stock.
-type ChartVolume struct {
+// chartVolume renders the volume bars and labels for a single stock.
+type chartVolume struct {
 	// renderable is whether the ChartVolume can be rendered.
 	renderable bool
 
@@ -29,13 +29,13 @@ type ChartVolume struct {
 	volBars *gfx.VAO
 }
 
-// NewChartVolume creates a new ChartVolume.
-func NewChartVolume() *ChartVolume {
-	return &ChartVolume{}
+// newChartVolume creates a new ChartVolume.
+func newChartVolume() *chartVolume {
+	return &chartVolume{}
 }
 
 // SetStock sets the ChartVolume's stock.
-func (ch *ChartVolume) SetStock(st *model.Stock) {
+func (ch *chartVolume) SetStock(st *model.Stock) {
 	// Reset everything.
 	ch.Close()
 
@@ -67,7 +67,7 @@ func (ch *ChartVolume) SetStock(st *model.Stock) {
 }
 
 // Render renders the volume bars.
-func (ch *ChartVolume) Render(r image.Rectangle) {
+func (ch *chartVolume) Render(r image.Rectangle) {
 	if !ch.renderable {
 		return
 	}
@@ -82,7 +82,7 @@ func (ch *ChartVolume) Render(r image.Rectangle) {
 }
 
 // RenderAxisLabels renders the Y-axis labels for the volume bars.
-func (ch *ChartVolume) RenderAxisLabels(r image.Rectangle) {
+func (ch *chartVolume) RenderAxisLabels(r image.Rectangle) {
 	if !ch.renderable {
 		return
 	}
@@ -95,7 +95,7 @@ func (ch *ChartVolume) RenderAxisLabels(r image.Rectangle) {
 }
 
 // RenderCursorLabels renders a label for the value under the mouse cursor.
-func (ch *ChartVolume) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {
+func (ch *chartVolume) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {
 	if !ch.renderable {
 		return
 	}
@@ -116,7 +116,7 @@ func (ch *ChartVolume) RenderCursorLabels(mainRect, labelRect image.Rectangle, m
 }
 
 // Close frees the resources backing the ChartVolume.
-func (ch *ChartVolume) Close() {
+func (ch *chartVolume) Close() {
 	ch.renderable = false
 	if ch.volBars != nil {
 		ch.volBars.Delete()

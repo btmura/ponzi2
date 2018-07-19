@@ -71,7 +71,7 @@ type Chart struct {
 	movingAverage200 *chartMovingAverage
 
 	// volume renders the volume bars.
-	volume *ChartVolume
+	volume *chartVolume
 
 	// dailyStochastics renders the daily stochastics.
 	dailyStochastics *chartStochastics
@@ -111,7 +111,7 @@ func NewChart() *Chart {
 		movingAverage25:   newChartMovingAverage(purple),
 		movingAverage50:   newChartMovingAverage(yellow),
 		movingAverage200:  newChartMovingAverage(white),
-		volume:            NewChartVolume(),
+		volume:            newChartVolume(),
 		dailyStochastics:  newChartStochastics(yellow),
 		weeklyStochastics: newChartStochastics(purple),
 		timeLabels:        newChartTimeLabels(),
