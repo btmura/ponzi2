@@ -53,7 +53,7 @@ var (
 // Chart shows a stock chart for a single stock.
 type Chart struct {
 	// header renders the header with the symbol, quote, and buttons.
-	header *ChartHeader
+	header *chartHeader
 
 	// timeLines renders the vertical time lines.
 	timeLines *chartTimeLines
@@ -98,7 +98,7 @@ type Chart struct {
 // NewChart creates a new Chart.
 func NewChart() *Chart {
 	return &Chart{
-		header: NewChartHeader(&ChartHeaderArgs{
+		header: newChartHeader(&chartHeaderArgs{
 			SymbolQuoteTextRenderer: chartSymbolQuoteTextRenderer,
 			QuoteFormatter:          chartFormatQuote,
 			ShowRefreshButton:       true,

@@ -15,8 +15,8 @@ var (
 	chartErrorIconVAO     = texturedSquareVAO(bytes.NewReader(_escFSMustByte(false, "/data/erroricon.png")))
 )
 
-// ChartHeader shows a header for charts and thumbnails with a clickable button.
-type ChartHeader struct {
+// chartHeader shows a header for charts and thumbnails with a clickable button.
+type chartHeader struct {
 	// symbol is the symbol to render.
 	symbol string
 
@@ -63,8 +63,8 @@ type chartHeaderButton struct {
 	enabled bool
 }
 
-// ChartHeaderArgs are passed to NewChartHeader.
-type ChartHeaderArgs struct {
+// chartHeaderArgs are passed to NewChartHeader.
+type chartHeaderArgs struct {
 	SymbolQuoteTextRenderer *gfx.TextRenderer
 	QuoteFormatter          func(*model.Stock) string
 	ShowRefreshButton       bool
@@ -74,9 +74,9 @@ type ChartHeaderArgs struct {
 	Padding                 int
 }
 
-// NewChartHeader creates a new ChartHeader.
-func NewChartHeader(args *ChartHeaderArgs) *ChartHeader {
-	return &ChartHeader{
+// newChartHeader creates a new ChartHeader.
+func newChartHeader(args *chartHeaderArgs) *chartHeader {
+	return &chartHeader{
 		symbolQuoteTextRenderer: args.SymbolQuoteTextRenderer,
 		quoteFormatter:          args.QuoteFormatter,
 		refreshButton: &chartHeaderButton{
@@ -97,7 +97,7 @@ func NewChartHeader(args *ChartHeaderArgs) *ChartHeader {
 }
 
 // SetLoading sets the ChartHeader's loading state.
-func (ch *ChartHeader) SetLoading(loading bool) {
+func (ch *chartHeader) SetLoading(loading bool) {
 	switch {
 	// Not Loading -> Loading
 	case !ch.loading && loading:
@@ -111,12 +111,12 @@ func (ch *ChartHeader) SetLoading(loading bool) {
 }
 
 // SetError sets the ChartHeader's error flag.
-func (ch *ChartHeader) SetError(error bool) {
+func (ch *chartHeader) SetError(error bool) {
 	ch.hasError = error
 }
 
 // SetStock sets the ChartHeader's stock.
-func (ch *ChartHeader) SetStock(st *model.Stock) {
+func (ch *chartHeader) SetStock(st *model.Stock) {
 	ch.symbol = st.Symbol
 	ch.quoteText = ch.quoteFormatter(st)
 
@@ -134,7 +134,7 @@ func (ch *ChartHeader) SetStock(st *model.Stock) {
 }
 
 // Update updates the ChartHeader.
-func (ch *ChartHeader) Update() (animating bool) {
+func (ch *chartHeader) Update() (animating bool) {
 	if ch.refreshButton.Update() {
 		animating = true
 	}
@@ -147,8 +147,8 @@ func (ch *ChartHeader) Update() (animating bool) {
 	return animating
 }
 
-// ChartHeaderClicks reports what buttons were clicked.
-type ChartHeaderClicks struct {
+// chartHeaderClicks reports what buttons were clicked.
+type chartHeaderClicks struct {
 	// AddButtonClicked is true if the add button was clicked.
 	AddButtonClicked bool
 
@@ -160,12 +160,12 @@ type ChartHeaderClicks struct {
 }
 
 // HasClicks returns true if a clickable part of the header was clicked.
-func (c ChartHeaderClicks) HasClicks() bool {
+func (c chartHeaderClicks) HasClicks() bool {
 	return c.AddButtonClicked || c.RefreshButtonClicked || c.RemoveButtonClicked
 }
 
 // Render renders the ChartHeader.
-func (ch *ChartHeader) Render(vc viewContext) (body image.Rectangle, clicks ChartHeaderClicks) {
+func (ch *chartHeader) Render(vc viewContext) (body image.Rectangle, clicks chartHeaderClicks) {
 	// Start rendering from the top left. Track position with point.
 	r := vc.Bounds
 	pt := image.Pt(r.Min.X, r.Max.Y)
@@ -215,19 +215,19 @@ func (ch *ChartHeader) Render(vc viewContext) (body image.Rectangle, clicks Char
 }
 
 // SetRefreshButtonClickCallback sets the callback for refresh button clicks.
-func (ch *ChartHeader) SetRefreshButtonClickCallback(cb func()) {
+func (ch *chartHeader) SetRefreshButtonClickCallback(cb func()) {
 	ch.refreshButton.SetClickCallback(cb)
 }
 
 // SetAddButtonClickCallback sets the callback for add button clicks.
-func (ch *ChartHeader) SetAddButtonClickCallback(cb func()) {
+func (ch *chartHeader) SetAddButtonClickCallback(cb func()) {
 	ch.addButton.SetClickCallback(cb)
 }
 
 // SetRemoveButtonClickCallback sets the callback for remove button clicks.
-func (ch *ChartHeader) SetRemoveButtonClickCallback(cb func()) {
+func (ch *chartHeader) SetRemoveButtonClickCallback(cb func()) {
 	ch.removeButton.SetClickCallback(cb)
 }
 
 // Close frees the resources backing the ChartHeader.
-func (ch *ChartHeader) Close() {}
+func (ch *chartHeader) Close() {}

@@ -29,7 +29,7 @@ var (
 // ChartThumb shows a thumbnail for a stock.
 type ChartThumb struct {
 	// header renders the header with the symbol, quote, and buttons.
-	header *ChartHeader
+	header *chartHeader
 
 	// timeLines renders the vertical time lines.
 	timeLines *chartTimeLines
@@ -59,7 +59,7 @@ type ChartThumb struct {
 // NewChartThumb creates a ChartThumb.
 func NewChartThumb() *ChartThumb {
 	return &ChartThumb{
-		header: NewChartHeader(&ChartHeaderArgs{
+		header: newChartHeader(&chartHeaderArgs{
 			SymbolQuoteTextRenderer: thumbSymbolQuoteTextRenderer,
 			QuoteFormatter:          thumbFormatQuote,
 			ShowRemoveButton:        true,
