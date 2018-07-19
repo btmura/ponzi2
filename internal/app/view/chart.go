@@ -20,7 +20,11 @@ var (
 	chartSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 24)
 	chartFormatQuote             = func(st *model.Stock) string {
 		if st.Price() != 0 {
-			return fmt.Sprintf("%.2f %+5.2f %+5.2f%%", st.Price(), st.Change(), st.PercentChange())
+			return fmt.Sprintf("%.2f %+5.2f %+5.2f%% %s",
+				st.Price(),
+				st.Change(),
+				st.PercentChange(),
+				st.Date().Format("1/2/06"))
 		}
 		return ""
 	}
