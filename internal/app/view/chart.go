@@ -80,7 +80,7 @@ type Chart struct {
 	weeklyStochastics *chartStochastics
 
 	// timeLabels renders the time labels.
-	timeLabels *ChartTimeLabels
+	timeLabels *chartTimeLabels
 
 	// loading is true when data for the stock is being retrieved.
 	loading bool
@@ -114,7 +114,7 @@ func NewChart() *Chart {
 		volume:            NewChartVolume(),
 		dailyStochastics:  newChartStochastics(yellow),
 		weeklyStochastics: newChartStochastics(purple),
-		timeLabels:        NewChartTimeLabels(),
+		timeLabels:        newChartTimeLabels(),
 		loading:           true,
 		fadeIn:            newAnimation(1*fps, false),
 	}

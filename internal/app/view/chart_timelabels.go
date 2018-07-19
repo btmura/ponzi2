@@ -8,8 +8,8 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 )
 
-// ChartTimeLabels renders the time labels for a single stock.
-type ChartTimeLabels struct {
+// chartTimeLabels renders the time labels for a single stock.
+type chartTimeLabels struct {
 	// renderable is whether the ChartTimeLabels can be rendered.
 	renderable bool
 
@@ -23,13 +23,13 @@ type ChartTimeLabels struct {
 	dates []time.Time
 }
 
-// NewChartTimeLabels creates a new ChartTimeLabels.
-func NewChartTimeLabels() *ChartTimeLabels {
-	return &ChartTimeLabels{}
+// newChartTimeLabels creates a new ChartTimeLabels.
+func newChartTimeLabels() *chartTimeLabels {
+	return &chartTimeLabels{}
 }
 
 // SetStock sets the ChartTimeLabels' stock.
-func (ch *ChartTimeLabels) SetStock(st *model.Stock) {
+func (ch *chartTimeLabels) SetStock(st *model.Stock) {
 	// Reset everything.
 	ch.Close()
 
@@ -40,7 +40,7 @@ func (ch *ChartTimeLabels) SetStock(st *model.Stock) {
 
 	ch.MaxLabelSize = chartAxisLabelTextRenderer.Measure(chartTimeLabelText(time.December))
 
-	ch.labels = chartTimeLabels(st.DailyTradingSessionSeries.TradingSessions)
+	ch.labels = makeChartTimeLabels(st.DailyTradingSessionSeries.TradingSessions)
 
 	ch.dates = nil
 	for _, s := range st.DailyTradingSessionSeries.TradingSessions {
@@ -51,7 +51,7 @@ func (ch *ChartTimeLabels) SetStock(st *model.Stock) {
 }
 
 // Render renders the ChartTimeLabels.
-func (ch *ChartTimeLabels) Render(r image.Rectangle) {
+func (ch *chartTimeLabels) Render(r image.Rectangle) {
 	if !ch.renderable {
 		return
 	}
@@ -66,7 +66,7 @@ func (ch *ChartTimeLabels) Render(r image.Rectangle) {
 }
 
 // RenderCursorLabels renders a label for the value under the mouse cursor.
-func (ch *ChartTimeLabels) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {
+func (ch *chartTimeLabels) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {
 	if !ch.renderable {
 		return
 	}
@@ -96,7 +96,7 @@ func (ch *ChartTimeLabels) RenderCursorLabels(mainRect, labelRect image.Rectangl
 }
 
 // Close frees the resources backing the ChartTimeLabels.
-func (ch *ChartTimeLabels) Close() {
+func (ch *chartTimeLabels) Close() {
 	ch.renderable = false
 }
 
@@ -110,7 +110,7 @@ func chartTimeLabelText(month time.Month) string {
 	return string(month.String()[0:3])
 }
 
-func chartTimeLabels(ds []*model.TradingSession) []chartTimeLabel {
+func makeChartTimeLabels(ds []*model.TradingSession) []chartTimeLabel {
 	var ls []chartTimeLabel
 
 	for i, s := range ds {
