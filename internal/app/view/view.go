@@ -2,7 +2,6 @@ package view
 
 import (
 	"context"
-	"fmt"
 	"image"
 	"runtime"
 	"time"
@@ -13,7 +12,6 @@ import (
 	"github.com/golang/glog"
 	"golang.org/x/image/font/gofont/goregular"
 
-	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/gfx"
 	"github.com/btmura/ponzi2/internal/matrix"
 )
@@ -22,7 +20,7 @@ import (
 //go:generate esc -o bindata.go -pkg view -include ".*(ply|png)" -modtime 1337 -private data
 
 // Application name for the window title.
-const appName = "ponzi"
+const appName = "ponzi2"
 
 // Constants used by Run for the "game loop".
 const (
@@ -391,28 +389,4 @@ func (v *View) RemoveChartThumb(th *ChartThumb) {
 			break
 		}
 	}
-}
-
-// SetTitle sets the title to the given stock.
-func (v *View) SetTitle(st *model.Stock) {
-	glfw.GetCurrentContext().SetTitle(v.windowTitle(st))
-}
-
-func (v *View) windowTitle(st *model.Stock) string {
-	if st == nil {
-		return appName
-	}
-
-	if st.Price() == 0 {
-		return fmt.Sprintf("%s - %s", st.Symbol, appName)
-	}
-
-	return fmt.Sprintf("%s %.2f %+5.2f %+5.2f%% %s (Refreshed: %s) - %s",
-		st.Symbol,
-		st.Price(),
-		st.Change(),
-		st.PercentChange(),
-		st.Date().Format("1/2/06"),
-		st.LastUpdateTime.Format("1/2/06 03:04 PM"),
-		appName)
 }

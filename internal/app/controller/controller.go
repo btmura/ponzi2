@@ -155,8 +155,6 @@ loop:
 			break loop
 		}
 	}
-
-	c.view.SetTitle(c.model.CurrentStock)
 }
 
 func (c *Controller) setChart(ctx context.Context, symbol string) {
