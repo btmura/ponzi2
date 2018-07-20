@@ -3,6 +3,7 @@ package view
 import (
 	"fmt"
 	"image"
+	"time"
 
 	"golang.org/x/image/font/gofont/goregular"
 
@@ -20,11 +21,16 @@ var (
 	chartSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 24)
 	chartFormatQuote             = func(st *model.Stock) string {
 		if st.Price() != 0 {
-			return fmt.Sprintf("%.2f %+5.2f %+5.2f%% %s",
+			fresh := ""
+			if time.Now().In(st.Date().Location()).YearDay() == st.Date().YearDay() {
+				fresh = "*"
+			}
+			return fmt.Sprintf("%.2f %+5.2f %+5.2f%% %s%s",
 				st.Price(),
 				st.Change(),
 				st.PercentChange(),
-				st.Date().Format("1/2/06"))
+				st.Date().Format("1/2/06"),
+				fresh)
 		}
 		return ""
 	}
