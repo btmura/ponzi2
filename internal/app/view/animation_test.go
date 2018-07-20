@@ -3,95 +3,139 @@ package view
 import "testing"
 
 func TestAnimation_Start_Stop_Update_Value_NoLoop(t *testing.T) {
-	a := newAnimation(3, false)
-	checkState(t, a, 0, 3, false)
+	a := &animationTest{t, newAnimation(3, false)}
+
+	a.checkCurrFrame(0)
+	a.checkNumFrames(3)
+	a.checkRunning(false)
 
 	a.Start()
-	checkValue(t, a, 0)
-	checkState(t, a, 0, 3, true)
+	a.callValue(0)
+	a.checkCurrFrame(0)
+	a.checkNumFrames(3)
+	a.checkRunning(true)
 
-	checkUpdate(t, a, true)
-	checkValue(t, a, 0.5)
-	checkState(t, a, 1, 3, true)
+	a.callUpdate(true)
+	a.callValue(0.5)
+	a.checkCurrFrame(1)
+	a.checkNumFrames(3)
+	a.checkRunning(true)
 
 	a.Stop()
-	checkValue(t, a, 0.5)
-	checkState(t, a, 1, 3, false)
+	a.callValue(0.5)
+	a.checkCurrFrame(1)
+	a.checkNumFrames(3)
+	a.checkRunning(false)
 
 	// Animation should finish and stop after.
-	checkUpdate(t, a, true)
-	checkValue(t, a, 1.0)
-	checkState(t, a, 2, 3, false)
+	a.callUpdate(true)
+	a.callValue(1.0)
+	a.checkCurrFrame(2)
+	a.checkNumFrames(3)
+	a.checkRunning(false)
 
 	// Animation is finished. Update should have no affect.
-	checkUpdate(t, a, false)
-	checkValue(t, a, 1.0)
-	checkState(t, a, 2, 3, false)
+	a.callUpdate(false)
+	a.callValue(1.0)
+	a.checkCurrFrame(2)
+	a.checkNumFrames(3)
+	a.checkRunning(false)
 }
 
 func TestAnimation_Start_Stop_Update_Value_Loop(t *testing.T) {
-	a := newAnimation(3, true)
-	checkState(t, a, 0, 3, false)
+	a := &animationTest{t, newAnimation(3, true)}
+
+	a.checkCurrFrame(0)
+	a.checkNumFrames(3)
+	a.checkRunning(false)
 
 	a.Start()
-	checkValue(t, a, 0)
-	checkState(t, a, 0, 3, true)
+	a.callValue(0)
+	a.checkCurrFrame(0)
+	a.checkNumFrames(3)
+	a.checkRunning(true)
 
-	checkUpdate(t, a, true)
-	checkValue(t, a, 0.5)
-	checkState(t, a, 1, 3, true)
+	a.callUpdate(true)
+	a.callValue(0.5)
+	a.checkCurrFrame(1)
+	a.checkNumFrames(3)
+	a.checkRunning(true)
 
-	checkUpdate(t, a, true)
-	checkValue(t, a, 1.0)
-	checkState(t, a, 2, 3, true)
+	a.callUpdate(true)
+	a.callValue(1.0)
+	a.checkCurrFrame(2)
+	a.checkNumFrames(3)
+	a.checkRunning(true)
 
 	// Animation should loop around.
-	checkUpdate(t, a, true)
-	checkValue(t, a, 0)
-	checkState(t, a, 0, 3, true)
+	a.callUpdate(true)
+	a.callValue(0)
+	a.checkCurrFrame(0)
+	a.checkNumFrames(3)
+	a.checkRunning(true)
 
-	checkUpdate(t, a, true)
-	checkValue(t, a, 0.5)
-	checkState(t, a, 1, 3, true)
+	a.callUpdate(true)
+	a.callValue(0.5)
+	a.checkCurrFrame(1)
+	a.checkNumFrames(3)
+	a.checkRunning(true)
 
 	a.Stop()
-	checkValue(t, a, 0.5)
-	checkState(t, a, 1, 3, false)
+	a.callValue(0.5)
+	a.checkCurrFrame(1)
+	a.checkNumFrames(3)
+	a.checkRunning(false)
 
 	// Animation should finish and stop after.
-	checkUpdate(t, a, true)
-	checkValue(t, a, 1.0)
-	checkState(t, a, 2, 3, false)
+	a.callUpdate(true)
+	a.callValue(1.0)
+	a.checkCurrFrame(2)
+	a.checkNumFrames(3)
+	a.checkRunning(false)
 
 	// Animation is finished. Update should have no affect.
-	checkUpdate(t, a, false)
-	checkValue(t, a, 1.0)
-	checkState(t, a, 2, 3, false)
+	a.callUpdate(false)
+	a.callValue(1.0)
+	a.checkCurrFrame(2)
+	a.checkNumFrames(3)
+	a.checkRunning(false)
 }
 
-func checkState(t *testing.T, a *animation, wantCurrFrame, wantNumFrames int, wantRunning bool) {
-	t.Helper()
+type animationTest struct {
+	*testing.T
+	*animation
+}
+
+func (a *animationTest) checkCurrFrame(wantCurrFrame int) {
+	a.Helper()
 	if a.currFrame != wantCurrFrame {
-		t.Errorf("a.currFrame = %d, want %d", a.currFrame, wantCurrFrame)
+		a.Errorf("a.currFrame = %d, want %d", a.currFrame, wantCurrFrame)
 	}
+}
+
+func (a *animationTest) checkNumFrames(wantNumFrames int) {
+	a.Helper()
 	if a.numFrames != wantNumFrames {
-		t.Errorf("a.numFrames = %d, want %d", a.numFrames, wantNumFrames)
+		a.Errorf("a.numFrames = %d, want %d", a.numFrames, wantNumFrames)
 	}
+}
+
+func (a *animationTest) checkRunning(wantRunning bool) {
 	if a.running != wantRunning {
-		t.Errorf("a.running = %t, want %t", a.running, wantRunning)
+		a.Errorf("a.running = %t, want %t", a.running, wantRunning)
 	}
 }
 
-func checkUpdate(t *testing.T, a *animation, want bool) {
-	t.Helper()
+func (a *animationTest) callUpdate(want bool) {
+	a.Helper()
 	if got := a.Update(); got != want {
-		t.Errorf("a.Update() = %t, want %t", got, want)
+		a.Errorf("a.Update() = %t, want %t", got, want)
 	}
 }
 
-func checkValue(t *testing.T, a *animation, want float32) {
-	t.Helper()
+func (a *animationTest) callValue(want float32) {
+	a.Helper()
 	if got := a.Value(0); got != want {
-		t.Errorf("a.Value() = %f, want %f", got, want)
+		a.Errorf("a.Value() = %f, want %f", got, want)
 	}
 }
