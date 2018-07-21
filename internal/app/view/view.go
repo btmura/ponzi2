@@ -373,16 +373,19 @@ func (v *View) SetInputSymbolSubmittedCallback(cb func(symbol string)) {
 
 // SetChart sets the View's main chart.
 func (v *View) SetChart(ch *Chart) {
+	defer v.PostEmptyEvent()
 	v.chart = ch
 }
 
 // AddChartThumb adds the ChartThumbnail to the side bar.
 func (v *View) AddChartThumb(th *ChartThumb) {
+	defer v.PostEmptyEvent()
 	v.chartThumbs = append(v.chartThumbs, th)
 }
 
 // RemoveChartThumb removes the ChartThumbnail from the side bar.
 func (v *View) RemoveChartThumb(th *ChartThumb) {
+	defer v.PostEmptyEvent()
 	for i, thumb := range v.chartThumbs {
 		if thumb == th {
 			v.chartThumbs = append(v.chartThumbs[:i], v.chartThumbs[i+1:]...)
