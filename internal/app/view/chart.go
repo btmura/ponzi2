@@ -22,7 +22,7 @@ var (
 	chartFormatQuote             = func(st *model.Stock) string {
 		if st.Price() != 0 {
 			fresh := ""
-			if time.Now().In(st.Date().Location()).YearDay() == st.Date().YearDay() {
+			if time.Now().YearDay() == st.Date().YearDay() {
 				fresh = "*"
 			}
 			return fmt.Sprintf("%.2f %+5.2f %+5.2f%% %s%s",
