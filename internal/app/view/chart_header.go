@@ -57,7 +57,7 @@ type chartHeader struct {
 // chartHeaderButton is a button with an additional enabled flag.
 type chartHeaderButton struct {
 	// Button is the underlying button.
-	*Button
+	*button
 
 	// enabled is whether the button is present and clickable.
 	enabled bool
@@ -80,15 +80,15 @@ func newChartHeader(args *chartHeaderArgs) *chartHeader {
 		symbolQuoteTextRenderer: args.SymbolQuoteTextRenderer,
 		quoteFormatter:          args.QuoteFormatter,
 		refreshButton: &chartHeaderButton{
-			Button:  NewButton(chartRefreshButtonVAO),
+			button:  newButton(chartRefreshButtonVAO),
 			enabled: args.ShowRefreshButton,
 		},
 		addButton: &chartHeaderButton{
-			Button:  NewButton(chartAddButtonVAO),
+			button:  newButton(chartAddButtonVAO),
 			enabled: args.ShowAddButton,
 		},
 		removeButton: &chartHeaderButton{
-			Button:  NewButton(chartRemoveButtonVAO),
+			button:  newButton(chartRemoveButtonVAO),
 			enabled: args.ShowRemoveButton,
 		},
 		rounding: args.Rounding,

@@ -12,8 +12,8 @@ const (
 	buttonSpinRadians = -2 * math.Pi / buttonSpinFrames
 )
 
-// Button is a button that can be rendered and clicked.
-type Button struct {
+// button is a button that can be rendered and clicked.
+type button struct {
 	// iconVAO is the VAO to render.
 	iconVAO *gfx.VAO
 
@@ -27,25 +27,25 @@ type Button struct {
 	spinFrameIndex int
 }
 
-// NewButton creates a new button.
-func NewButton(iconVAO *gfx.VAO) *Button {
-	return &Button{
+// newButton creates a new button.
+func newButton(iconVAO *gfx.VAO) *button {
+	return &button{
 		iconVAO: iconVAO,
 	}
 }
 
 // StartSpinning starts the spinning animation.
-func (b *Button) StartSpinning() {
+func (b *button) StartSpinning() {
 	b.spinning = true
 }
 
 // StopSpinning stops the spinning animation.
-func (b *Button) StopSpinning() {
+func (b *button) StopSpinning() {
 	b.spinning = false
 }
 
 // Update updates the Button.
-func (b *Button) Update() (animating bool) {
+func (b *button) Update() (animating bool) {
 	if b.spinning || b.spinFrameIndex != 0 {
 		b.spinFrameIndex = (b.spinFrameIndex + 1) % buttonSpinFrames
 		return true
@@ -54,7 +54,7 @@ func (b *Button) Update() (animating bool) {
 }
 
 // Render renders the Button and detects clicks.
-func (b *Button) Render(vc viewContext) (clicked bool) {
+func (b *button) Render(vc viewContext) (clicked bool) {
 	if vc.LeftClickInBounds() {
 		*vc.ScheduledCallbacks = append(*vc.ScheduledCallbacks, b.clickCallback)
 		clicked = true
@@ -71,6 +71,6 @@ func (b *Button) Render(vc viewContext) (clicked bool) {
 }
 
 // SetClickCallback sets the callback for when the button is clicked.
-func (b *Button) SetClickCallback(cb func()) {
+func (b *button) SetClickCallback(cb func()) {
 	b.clickCallback = cb
 }

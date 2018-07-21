@@ -34,8 +34,8 @@ var (
 		}
 		return ""
 	}
-	chartLoadingText = NewCenteredText(chartSymbolQuoteTextRenderer, "LOADING...")
-	chartErrorText   = NewCenteredText(chartSymbolQuoteTextRenderer, "ERROR", CenteredTextColor(orange))
+	chartLoadingText = newCenteredText(chartSymbolQuoteTextRenderer, "LOADING...")
+	chartErrorText   = newCenteredText(chartSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange))
 )
 
 // Constants for rendering a bubble behind an axis-label.

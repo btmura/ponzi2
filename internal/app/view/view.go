@@ -61,7 +61,7 @@ var viewChartThumbSize = image.Pt(155, 105)
 
 var (
 	viewInputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
-	viewInstructionsText        = NewCenteredText(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER...")
+	viewInstructionsText        = newCenteredText(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER...")
 )
 
 func init() {
@@ -86,7 +86,7 @@ type View struct {
 	chartThumbs []*ChartThumb
 
 	// inputSymbol stores and renders the symbol being entered by the user.
-	inputSymbol *CenteredText
+	inputSymbol *centeredText
 
 	// inputSymbolSubmittedCallback is called when a new symbol is entered.
 	inputSymbolSubmittedCallback func(symbol string)
@@ -127,7 +127,7 @@ func (vc viewContext) LeftClickInBounds() bool {
 // New creates a new View.
 func New() *View {
 	return &View{
-		inputSymbol:                  NewCenteredText(viewInputSymbolTextRenderer, "", CenteredTextBubble(chartRounding, chartPadding)),
+		inputSymbol:                  newCenteredText(viewInputSymbolTextRenderer, "", centeredTextBubble(chartRounding, chartPadding)),
 		inputSymbolSubmittedCallback: func(symbol string) {},
 	}
 }

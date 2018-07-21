@@ -6,8 +6,8 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
-// CenteredText draws text that is horizontally and vertically centered.
-type CenteredText struct {
+// centeredText draws text that is horizontally and vertically centered.
+type centeredText struct {
 	// textRenderer renders the text.
 	textRenderer *gfx.TextRenderer
 
@@ -21,12 +21,12 @@ type CenteredText struct {
 	bubbleSpec *bubbleSpec
 }
 
-// CenteredTextOpt is an option to pass to NewCenteredText.
-type CenteredTextOpt func(c *CenteredText)
+// centeredTextOpt is an option to pass to NewCenteredText.
+type centeredTextOpt func(c *centeredText)
 
-// NewCenteredText creates a new CenteredText.
-func NewCenteredText(textRenderer *gfx.TextRenderer, text string, opts ...CenteredTextOpt) *CenteredText {
-	c := &CenteredText{
+// newCenteredText creates a new CenteredText.
+func newCenteredText(textRenderer *gfx.TextRenderer, text string, opts ...centeredTextOpt) *centeredText {
+	c := &centeredText{
 		textRenderer: textRenderer,
 		Text:         text,
 		color:        white,
@@ -37,16 +37,16 @@ func NewCenteredText(textRenderer *gfx.TextRenderer, text string, opts ...Center
 	return c
 }
 
-// CenteredTextColor returns an option to set the text color.
-func CenteredTextColor(color [3]float32) CenteredTextOpt {
-	return func(c *CenteredText) {
+// centeredTextColor returns an option to set the text color.
+func centeredTextColor(color [3]float32) centeredTextOpt {
+	return func(c *centeredText) {
 		c.color = color
 	}
 }
 
-// CenteredTextBubble returns an option to configure the background bubble.
-func CenteredTextBubble(rounding, padding int) CenteredTextOpt {
-	return func(c *CenteredText) {
+// centeredTextBubble returns an option to configure the background bubble.
+func centeredTextBubble(rounding, padding int) centeredTextOpt {
+	return func(c *centeredText) {
 		c.bubbleSpec = &bubbleSpec{
 			rounding: rounding,
 			padding:  padding,
@@ -55,7 +55,7 @@ func CenteredTextBubble(rounding, padding int) CenteredTextOpt {
 }
 
 // Render renders the CenteredText.
-func (c *CenteredText) Render(r image.Rectangle) {
+func (c *centeredText) Render(r image.Rectangle) {
 	if c.Text == "" {
 		return
 	}
