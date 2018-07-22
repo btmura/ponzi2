@@ -1,54 +1,70 @@
 package view
 
+//go:generate stringer -type=animationState
+type animationState int
+
+const (
+	aStopped animationState = iota
+	aRunning
+	aFinishing
+)
+
 type animation struct {
+	currFrame int
 	numFrames int
 	loop      bool
-	currFrame int
-	running   bool
+	state     animationState
 }
 
 func newAnimation(numFrames int, loop bool) *animation {
-	return &animation{numFrames: numFrames, loop: loop}
+	return &animation{
+		numFrames: numFrames,
+		loop:      loop,
+	}
 }
 
 func (a *animation) Start() {
-	a.running = true
+	a.state = aRunning
 }
 
 func (a *animation) Stop() {
-	a.running = false
+	a.state = aFinishing
 }
 
 func (a *animation) Update() (animating bool) {
-	if a.loop {
-		if a.running {
+	switch a.state {
+	case aRunning:
+		if a.loop {
 			a.currFrame = (a.currFrame + 1) % a.numFrames
 			return true
-		} else if a.currFrame+1 < a.numFrames {
+		}
+
+		if a.currFrame < a.numFrames-1 {
 			a.currFrame++
 			return true
 		}
+		a.state = aStopped
+		return false
+
+	case aFinishing:
+		if a.currFrame < a.numFrames-1 {
+			a.currFrame++
+			return true
+		}
+		a.state = aStopped
+		return false
+
+	default:
 		return false
 	}
-
-	if !a.running && a.currFrame == 0 {
-		return false
-	}
-
-	if a.currFrame+1 < a.numFrames {
-		a.currFrame++
-		return true
-	}
-
-	return false
 }
 
 func (a *animation) Value(fudge float32) float32 {
-	switch {
-	case a.currFrame == 0:
+	switch a.currFrame {
+	case 0:
 		return 0
 
-	case a.currFrame+1 == a.numFrames:
+	case a.numFrames - 1:
 		return 1
 
 	default:
