@@ -44,5 +44,14 @@ func (a *animation) Update() (animating bool) {
 }
 
 func (a *animation) Value(fudge float32) float32 {
-	return (float32(a.currFrame) + fudge) / float32(a.numFrames-1)
+	switch {
+	case a.currFrame == 0:
+		return 0
+
+	case a.currFrame+1 == a.numFrames:
+		return 1
+
+	default:
+		return (float32(a.currFrame) + fudge) / float32(a.numFrames-1)
+	}
 }
