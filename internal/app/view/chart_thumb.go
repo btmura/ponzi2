@@ -86,8 +86,8 @@ func (ch *ChartThumb) SetError(error bool) {
 	ch.header.SetError(error)
 }
 
-// SetStock sets the ChartThumb's stock.
-func (ch *ChartThumb) SetStock(st *model.Stock) {
+// SetData sets the ChartThumb's stock.
+func (ch *ChartThumb) SetData(st *model.Stock) {
 	if !ch.hasStockUpdated && !st.LastUpdateTime.IsZero() {
 		ch.fadeIn.Start()
 	}

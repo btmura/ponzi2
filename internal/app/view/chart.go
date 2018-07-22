@@ -142,8 +142,8 @@ func (ch *Chart) SetError(error bool) {
 	ch.header.SetError(error)
 }
 
-// SetStock sets the Chart's stock.
-func (ch *Chart) SetStock(st *model.Stock) {
+// SetData sets the Chart's stock.
+func (ch *Chart) SetData(st *model.Stock) {
 	if !ch.hasStockUpdated && !st.LastUpdateTime.IsZero() {
 		ch.fadeIn.Start()
 	}

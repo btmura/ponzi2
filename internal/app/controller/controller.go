@@ -134,11 +134,11 @@ loop:
 				}
 				if ch, ok := c.symbolToChartMap[u.symbol]; ok {
 					ch.SetLoading(false)
-					ch.SetStock(st)
+					ch.SetData(st)
 				}
 				if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
 					th.SetLoading(false)
-					th.SetStock(st)
+					th.SetData(st)
 				}
 
 			case u.updateErr != nil:
@@ -175,7 +175,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) {
 	ch := view.NewChart()
 	c.symbolToChartMap[symbol] = ch
 
-	ch.SetStock(st)
+	ch.SetData(st)
 	ch.SetRefreshButtonClickCallback(func() {
 		c.refreshStock(ctx, symbol)
 	})
@@ -201,7 +201,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) {
 	th := view.NewChartThumb()
 	c.symbolToChartThumbMap[symbol] = th
 
-	th.SetStock(st)
+	th.SetData(st)
 	th.SetRemoveButtonClickCallback(func() {
 		c.removeChartThumb(symbol)
 	})
