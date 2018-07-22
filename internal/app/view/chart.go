@@ -149,16 +149,18 @@ func (ch *Chart) SetStock(st *model.Stock) {
 	}
 	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
 
-	ch.header.SetStock(st)
-	ch.timeLines.SetData(st.DailyTradingSessionSeries)
-	ch.prices.SetStock(st)
-	ch.movingAverage25.SetData(st.DailyTradingSessionSeries, st.DailyMovingAverageSeries25)
-	ch.movingAverage50.SetData(st.DailyTradingSessionSeries, st.DailyMovingAverageSeries50)
-	ch.movingAverage200.SetData(st.DailyTradingSessionSeries, st.DailyMovingAverageSeries200)
-	ch.volume.SetStock(st)
+	ts := st.DailyTradingSessionSeries
+
+	ch.header.SetData(st)
+	ch.timeLines.SetData(ts)
+	ch.prices.SetData(ts)
+	ch.movingAverage25.SetData(ts, st.DailyMovingAverageSeries25)
+	ch.movingAverage50.SetData(ts, st.DailyMovingAverageSeries50)
+	ch.movingAverage200.SetData(ts, st.DailyMovingAverageSeries200)
+	ch.volume.SetData(ts)
 	ch.dailyStochastics.SetData(st.DailyStochasticSeries)
 	ch.weeklyStochastics.SetData(st.WeeklyStochasticSeries)
-	ch.timeLabels.SetStock(st)
+	ch.timeLabels.SetData(ts)
 }
 
 // Update updates the Chart.

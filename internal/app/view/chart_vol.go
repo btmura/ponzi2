@@ -29,24 +29,22 @@ type chartVolume struct {
 	volBars *gfx.VAO
 }
 
-// newChartVolume creates a new ChartVolume.
 func newChartVolume() *chartVolume {
 	return &chartVolume{}
 }
 
-// SetStock sets the ChartVolume's stock.
-func (ch *chartVolume) SetStock(st *model.Stock) {
+func (ch *chartVolume) SetData(ts *model.TradingSessionSeries) {
 	// Reset everything.
 	ch.Close()
 
 	// Bail out if there is no data yet.
-	if st.DailyTradingSessionSeries == nil {
-		return // Stock has no data yet.
+	if ts == nil {
+		return
 	}
 
 	// Find the maximum volume.
 	ch.maxVolume = 0
-	for _, s := range st.DailyTradingSessionSeries.TradingSessions {
+	for _, s := range ts.TradingSessions {
 		if ch.maxVolume < s.Volume {
 			ch.maxVolume = s.Volume
 		}
@@ -61,12 +59,11 @@ func (ch *chartVolume) SetStock(st *model.Stock) {
 		makeChartVolumeLabel(ch.maxVolume, .2),
 	}
 
-	ch.volBars = chartVolumeBarsVAO(st.DailyTradingSessionSeries.TradingSessions, ch.maxVolume)
+	ch.volBars = chartVolumeBarsVAO(ts.TradingSessions, ch.maxVolume)
 
 	ch.renderable = true
 }
 
-// Render renders the volume bars.
 func (ch *chartVolume) Render(r image.Rectangle) {
 	if !ch.renderable {
 		return
@@ -81,7 +78,6 @@ func (ch *chartVolume) Render(r image.Rectangle) {
 	ch.volBars.Render()
 }
 
-// RenderAxisLabels renders the Y-axis labels for the volume bars.
 func (ch *chartVolume) RenderAxisLabels(r image.Rectangle) {
 	if !ch.renderable {
 		return
@@ -94,7 +90,6 @@ func (ch *chartVolume) RenderAxisLabels(r image.Rectangle) {
 	}
 }
 
-// RenderCursorLabels renders a label for the value under the mouse cursor.
 func (ch *chartVolume) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {
 	if !ch.renderable {
 		return
@@ -115,7 +110,6 @@ func (ch *chartVolume) RenderCursorLabels(mainRect, labelRect image.Rectangle, m
 	chartAxisLabelTextRenderer.Render(l.text, tp, white)
 }
 
-// Close frees the resources backing the ChartVolume.
 func (ch *chartVolume) Close() {
 	ch.renderable = false
 	if ch.volBars != nil {

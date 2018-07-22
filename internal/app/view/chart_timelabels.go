@@ -23,34 +23,31 @@ type chartTimeLabels struct {
 	dates []time.Time
 }
 
-// newChartTimeLabels creates a new ChartTimeLabels.
 func newChartTimeLabels() *chartTimeLabels {
 	return &chartTimeLabels{}
 }
 
-// SetStock sets the ChartTimeLabels' stock.
-func (ch *chartTimeLabels) SetStock(st *model.Stock) {
+func (ch *chartTimeLabels) SetData(ts *model.TradingSessionSeries) {
 	// Reset everything.
 	ch.Close()
 
 	// Bail out if there is no data yet.
-	if st.DailyTradingSessionSeries == nil {
-		return // Stock has no data yet.
+	if ts == nil {
+		return
 	}
 
 	ch.MaxLabelSize = chartAxisLabelTextRenderer.Measure(chartTimeLabelText(time.December))
 
-	ch.labels = makeChartTimeLabels(st.DailyTradingSessionSeries.TradingSessions)
+	ch.labels = makeChartTimeLabels(ts.TradingSessions)
 
 	ch.dates = nil
-	for _, s := range st.DailyTradingSessionSeries.TradingSessions {
+	for _, s := range ts.TradingSessions {
 		ch.dates = append(ch.dates, s.Date)
 	}
 
 	ch.renderable = true
 }
 
-// Render renders the ChartTimeLabels.
 func (ch *chartTimeLabels) Render(r image.Rectangle) {
 	if !ch.renderable {
 		return
@@ -65,7 +62,6 @@ func (ch *chartTimeLabels) Render(r image.Rectangle) {
 	}
 }
 
-// RenderCursorLabels renders a label for the value under the mouse cursor.
 func (ch *chartTimeLabels) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {
 	if !ch.renderable {
 		return
@@ -95,7 +91,6 @@ func (ch *chartTimeLabels) RenderCursorLabels(mainRect, labelRect image.Rectangl
 	chartAxisLabelTextRenderer.Render(l.text, tp, white)
 }
 
-// Close frees the resources backing the ChartTimeLabels.
 func (ch *chartTimeLabels) Close() {
 	ch.renderable = false
 }

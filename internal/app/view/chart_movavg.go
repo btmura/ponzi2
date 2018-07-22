@@ -9,7 +9,7 @@ import (
 
 type chartMovingAverage struct {
 	color [3]float32
-	vao   *gfx.VAO
+	line  *gfx.VAO
 }
 
 func newChartMovingAverage(color [3]float32) *chartMovingAverage {
@@ -30,20 +30,20 @@ func (ch *chartMovingAverage) SetData(ts *model.TradingSessionSeries, ms *model.
 	for _, m := range ms.MovingAverages {
 		values = append(values, m.Value)
 	}
-	ch.vao = dataLineVAO(values, priceRange(ts.TradingSessions), ch.color)
+	ch.line = dataLineVAO(values, priceRange(ts.TradingSessions), ch.color)
 }
 
 func (ch *chartMovingAverage) Render(r image.Rectangle) {
-	if ch.vao == nil {
+	if ch.line == nil {
 		return
 	}
 	gfx.SetModelMatrixRect(r)
-	ch.vao.Render()
+	ch.line.Render()
 }
 
 func (ch *chartMovingAverage) Close() {
-	if ch.vao != nil {
-		ch.vao.Delete()
-		ch.vao = nil
+	if ch.line != nil {
+		ch.line.Delete()
+		ch.line = nil
 	}
 }

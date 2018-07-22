@@ -93,7 +93,7 @@ func (ch *ChartThumb) SetStock(st *model.Stock) {
 	}
 	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
 
-	ch.header.SetStock(st)
+	ch.header.SetData(st)
 	ch.timeLines.SetData(st.DailyTradingSessionSeries)
 	ch.dailyStochastics.SetData(st.DailyStochasticSeries)
 	ch.weeklyStochastics.SetData(st.WeeklyStochasticSeries)

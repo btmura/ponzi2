@@ -63,7 +63,7 @@ type chartHeaderButton struct {
 	enabled bool
 }
 
-// chartHeaderArgs are passed to NewChartHeader.
+// chartHeaderArgs are passed to newChartHeader.
 type chartHeaderArgs struct {
 	SymbolQuoteTextRenderer *gfx.TextRenderer
 	QuoteFormatter          func(*model.Stock) string
@@ -74,7 +74,6 @@ type chartHeaderArgs struct {
 	Padding                 int
 }
 
-// newChartHeader creates a new ChartHeader.
 func newChartHeader(args *chartHeaderArgs) *chartHeader {
 	return &chartHeader{
 		symbolQuoteTextRenderer: args.SymbolQuoteTextRenderer,
@@ -96,7 +95,6 @@ func newChartHeader(args *chartHeaderArgs) *chartHeader {
 	}
 }
 
-// SetLoading sets the ChartHeader's loading state.
 func (ch *chartHeader) SetLoading(loading bool) {
 	switch {
 	// Not Loading -> Loading
@@ -110,13 +108,11 @@ func (ch *chartHeader) SetLoading(loading bool) {
 	ch.loading = loading
 }
 
-// SetError sets the ChartHeader's error flag.
 func (ch *chartHeader) SetError(error bool) {
 	ch.hasError = error
 }
 
-// SetStock sets the ChartHeader's stock.
-func (ch *chartHeader) SetStock(st *model.Stock) {
+func (ch *chartHeader) SetData(st *model.Stock) {
 	ch.symbol = st.Symbol
 	ch.quoteText = ch.quoteFormatter(st)
 
@@ -133,7 +129,6 @@ func (ch *chartHeader) SetStock(st *model.Stock) {
 	}
 }
 
-// Update updates the ChartHeader.
 func (ch *chartHeader) Update() (animating bool) {
 	if ch.refreshButton.Update() {
 		animating = true

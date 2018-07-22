@@ -27,32 +27,29 @@ type chartPrices struct {
 	stickRects *gfx.VAO
 }
 
-// newChartPrices creates a new ChartPrices.
 func newChartPrices() *chartPrices {
 	return &chartPrices{}
 }
 
-// SetStock sets the ChartPrices' stock.
-func (ch *chartPrices) SetStock(st *model.Stock) {
+func (ch *chartPrices) SetData(ts *model.TradingSessionSeries) {
 	// Reset everything.
 	ch.Close()
 
 	// Bail out if there is no data yet.
-	if st.DailyTradingSessionSeries == nil {
-		return // Stock has no data yet.
+	if ts == nil {
+		return
 	}
 
-	ch.priceRange = priceRange(st.DailyTradingSessionSeries.TradingSessions)
+	ch.priceRange = priceRange(ts.TradingSessions)
 
 	// Measure the max label size by creating a label with the max value.
 	ch.MaxLabelSize = makeChartPriceLabel(ch.priceRange[1]).size
 
-	ch.stickLines, ch.stickRects = chartPriceCandlestickVAOs(st.DailyTradingSessionSeries.TradingSessions, ch.priceRange)
+	ch.stickLines, ch.stickRects = chartPriceCandlestickVAOs(ts.TradingSessions, ch.priceRange)
 
 	ch.renderable = true
 }
 
-// Render renders the price candlesticks.
 func (ch *chartPrices) Render(r image.Rectangle) {
 	if !ch.renderable {
 		return
@@ -79,7 +76,6 @@ func (ch *chartPrices) Render(r image.Rectangle) {
 	ch.stickRects.Render()
 }
 
-// RenderAxisLabels renders the price labels.
 func (ch *chartPrices) RenderAxisLabels(r image.Rectangle) {
 	if !ch.renderable {
 		return
@@ -117,7 +113,6 @@ func (ch *chartPrices) RenderAxisLabels(r image.Rectangle) {
 	}
 }
 
-// RenderCursorLabels renders a label for the value under the mouse cursor.
 func (ch *chartPrices) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {
 	if !ch.renderable {
 		return
@@ -140,7 +135,6 @@ func (ch *chartPrices) RenderCursorLabels(mainRect, labelRect image.Rectangle, m
 	chartAxisLabelTextRenderer.Render(l.text, tp, white)
 }
 
-// Close frees the resources backing the ChartPrices.
 func (ch *chartPrices) Close() {
 	ch.renderable = false
 	if ch.stickLines != nil {
