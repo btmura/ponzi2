@@ -50,8 +50,14 @@ type chartHeader struct {
 	// loading is whether the data for the symbol is loading.
 	loading bool
 
+	// hasStockUpdated is true if the stock has reported data.
+	hasStockUpdated bool
+
 	// hasError is true there was a loading issue.
 	hasError bool
+
+	// fadeIn fades in the quote text after data loads.
+	fadeIn *animation
 }
 
 // chartHeaderButton is a button with an additional enabled flag.
@@ -92,6 +98,7 @@ func newChartHeader(args *chartHeaderArgs) *chartHeader {
 		},
 		rounding: args.Rounding,
 		padding:  args.Padding,
+		fadeIn:   newAnimation(1*fps, false),
 	}
 }
 
@@ -113,6 +120,11 @@ func (ch *chartHeader) SetError(error bool) {
 }
 
 func (ch *chartHeader) SetData(st *model.Stock) {
+	if !ch.hasStockUpdated && !st.LastUpdateTime.IsZero() {
+		ch.fadeIn.Start()
+	}
+	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
+
 	ch.symbol = st.Symbol
 	ch.quoteText = ch.quoteFormatter(st)
 
@@ -137,6 +149,9 @@ func (ch *chartHeader) Update() (animating bool) {
 		animating = true
 	}
 	if ch.removeButton.Update() {
+		animating = true
+	}
+	if ch.fadeIn.Update() {
 		animating = true
 	}
 	return animating
@@ -170,7 +185,11 @@ func (ch *chartHeader) Render(vc viewContext) (body image.Rectangle, clicks char
 		pt.X += ch.rounding
 		pt.X += ch.symbolQuoteTextRenderer.Render(ch.symbol, pt, white)
 		pt.X += ch.padding
+
+		gfx.SetAlpha(ch.fadeIn.Value(vc.Fudge))
 		pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteText, pt, ch.quoteColor)
+		gfx.SetAlpha(1)
+
 	}
 	pt.Y -= ch.padding
 
