@@ -101,7 +101,7 @@ type Chart struct {
 	// hasError is true there was a loading issue.
 	hasError bool
 
-	// fadeIn is fade-in animation.
+	// fadeIn fades in the data after it loads.
 	fadeIn *animation
 }
 
