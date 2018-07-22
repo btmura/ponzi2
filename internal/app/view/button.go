@@ -6,71 +6,44 @@ import (
 	"github.com/btmura/ponzi2/internal/gfx"
 )
 
-const (
-	buttonSpinTimeSec = 0.5
-	buttonSpinFrames  = buttonSpinTimeSec * fps
-	buttonSpinRadians = -2 * math.Pi / buttonSpinFrames
-)
-
-// button is a button that can be rendered and clicked.
 type button struct {
-	// iconVAO is the VAO to render.
-	iconVAO *gfx.VAO
-
-	// clickCallback is the callback to schedule when the button is clicked.
+	icon          *gfx.VAO
 	clickCallback func()
-
-	// spinning indicates whether to keep rotating the button.
-	spinning bool
-
-	// spinFrameIndex is the index into the animation. Used to finish a spin.
-	spinFrameIndex int
+	spinning      *animation
 }
 
-// newButton creates a new button.
-func newButton(iconVAO *gfx.VAO) *button {
+func newButton(icon *gfx.VAO) *button {
 	return &button{
-		iconVAO: iconVAO,
+		icon:     icon,
+		spinning: newAnimation(0.5*fps, true),
 	}
 }
 
-// StartSpinning starts the spinning animation.
 func (b *button) StartSpinning() {
-	b.spinning = true
+	b.spinning.Start()
 }
 
-// StopSpinning stops the spinning animation.
 func (b *button) StopSpinning() {
-	b.spinning = false
+	b.spinning.Stop()
 }
 
-// Update updates the Button.
 func (b *button) Update() (animating bool) {
-	if b.spinning || b.spinFrameIndex != 0 {
-		b.spinFrameIndex = (b.spinFrameIndex + 1) % buttonSpinFrames
-		return true
-	}
-	return false
+	return b.spinning.Update()
 }
 
-// Render renders the Button and detects clicks.
 func (b *button) Render(vc viewContext) (clicked bool) {
 	if vc.LeftClickInBounds() {
 		*vc.ScheduledCallbacks = append(*vc.ScheduledCallbacks, b.clickCallback)
 		clicked = true
 	}
 
-	var spinRadians float32
-	if b.spinFrameIndex > 0 {
-		spinRadians = (float32(b.spinFrameIndex) + vc.Fudge) * buttonSpinRadians
-	}
+	spinRadians := b.spinning.Value(vc.Fudge) * -2 * math.Pi
 	gfx.SetModelMatrixRotatedRect(vc.Bounds, spinRadians)
-	b.iconVAO.Render()
+	b.icon.Render()
 
 	return clicked
 }
 
-// SetClickCallback sets the callback for when the button is clicked.
 func (b *button) SetClickCallback(cb func()) {
 	b.clickCallback = cb
 }
