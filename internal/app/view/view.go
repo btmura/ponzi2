@@ -96,6 +96,9 @@ type View struct {
 
 	// mouseLeftButtonClicked is whether the left mouse button was clicked.
 	mouseLeftButtonClicked bool
+
+	// sidebarOffset stores the Y offset change due to scroll wheel events.
+	sidebarOffset image.Point
 }
 
 // viewContext is passed down the view hierarchy providing drawing hints and
@@ -169,31 +172,36 @@ func (v *View) Init(ctx context.Context) (cleanup func(), err error) {
 
 	// Call the size callback to set the initial viewport.
 	w, h := win.GetSize()
-	v.setSize(w, h)
+	v.handleSizeEvent(w, h)
 	win.SetSizeCallback(func(win *glfw.Window, width, height int) {
-		v.setSize(width, height)
+		v.handleSizeEvent(width, height)
 	})
 
 	win.SetCharCallback(func(win *glfw.Window, char rune) {
-		v.setChar(char)
+		v.handleCharEvent(char)
 	})
 
 	win.SetKeyCallback(func(win *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-		v.setKey(ctx, key, action)
+		v.handleKeyEvent(key, action)
 	})
 
 	win.SetCursorPosCallback(func(win *glfw.Window, xpos, ypos float64) {
-		v.setCursorPos(xpos, ypos)
+		v.handleCursorPosEvent(xpos, ypos)
 	})
 
 	win.SetMouseButtonCallback(func(win *glfw.Window, button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
-		v.setMouseButton(button, action)
+		v.handleMouseButtonEvent(button, action)
+	})
+
+	win.SetScrollCallback(func(win *glfw.Window, xoff, yoff float64) {
+		v.handleScrollEvent(xoff, yoff)
 	})
 
 	return func() { glfw.Terminate() }, nil
 }
 
-func (v *View) setSize(width, height int) {
+func (v *View) handleSizeEvent(width, height int) {
+	glog.V(2).Infof("width:%d height:%d", width, height)
 	defer v.PostEmptyEvent()
 
 	s := image.Pt(width, height)
@@ -210,7 +218,8 @@ func (v *View) setSize(width, height int) {
 	v.winSize = s
 }
 
-func (v *View) setChar(char rune) {
+func (v *View) handleCharEvent(char rune) {
+	glog.V(2).Infof("char:%c", char)
 	defer v.PostEmptyEvent()
 
 	char = unicode.ToUpper(char)
@@ -219,7 +228,8 @@ func (v *View) setChar(char rune) {
 	}
 }
 
-func (v *View) setKey(ctx context.Context, key glfw.Key, action glfw.Action) {
+func (v *View) handleKeyEvent(key glfw.Key, action glfw.Action) {
+	glog.V(2).Infof("key:%v action:%v", key, action)
 	defer v.PostEmptyEvent()
 
 	if action != glfw.Release {
@@ -241,21 +251,38 @@ func (v *View) setKey(ctx context.Context, key glfw.Key, action glfw.Action) {
 	}
 }
 
-func (v *View) setCursorPos(x, y float64) {
+func (v *View) handleCursorPosEvent(x, y float64) {
+	glog.V(2).Infof("x:%f y:%f", x, y)
 	defer v.PostEmptyEvent()
 
 	// Flip Y-axis since the OpenGL coordinate system makes lower left the origin.
 	v.mousePos = image.Pt(int(x), v.winSize.Y-int(y))
 }
 
-func (v *View) setMouseButton(button glfw.MouseButton, action glfw.Action) {
+func (v *View) handleMouseButtonEvent(button glfw.MouseButton, action glfw.Action) {
+	glog.V(2).Infof("button:%v action:%v", button, action)
 	defer v.PostEmptyEvent()
 
 	if button != glfw.MouseButtonLeft {
-		glog.V(2).Infof("ignoring mouse button(%v) and action(%v)", button, action)
-		return // Only interested in left clicks right now.
+		return
 	}
+
 	v.mouseLeftButtonClicked = action == glfw.Release
+}
+
+func (v *View) handleScrollEvent(xoff, yoff float64) {
+	glog.V(2).Infof("xoff:%f yoff:%f", xoff, yoff)
+	defer v.PostEmptyEvent()
+
+	if yoff == 0 {
+		return
+	}
+
+	// Scroll wheel down: yoff = -1 up: yoff = +1
+	v.sidebarOffset.Y += int(yoff) * (viewChartThumbSize.Y + viewOuterPadding)
+	if v.sidebarOffset.Y > 0 {
+		v.sidebarOffset.Y = 0
+	}
 }
 
 // Run runs the "game loop".
@@ -288,7 +315,7 @@ start:
 		now := time.Now()
 		v.render(fudge)
 		v.win.SwapBuffers()
-		glog.V(2).Infof("u(%d) l(%f)/%f=f(%f) a(%t) r(%v)", i, lag, updateSec, fudge, animating, time.Since(now).Seconds())
+		glog.V(2).Infof("updates:%d lag(%f)/updateSec(%f)=fudge(%f) animating:%t render:%v", i, lag, updateSec, fudge, animating, time.Since(now).Seconds())
 
 		glfw.PollEvents()
 		if !animating {
@@ -343,13 +370,16 @@ func (v *View) render(fudge float32) {
 	v.inputSymbol.Render(vc.Bounds)
 
 	// Render the sidebar thumbnails.
-	vc.Bounds = image.Rect(
-		viewOuterPadding, ogBnds.Max.Y-viewChartThumbSize.Y,
-		viewOuterPadding+viewChartThumbSize.X, ogBnds.Max.Y,
-	)
-	for _, th := range v.chartThumbs {
-		th.Render(vc)
-		vc.Bounds = vc.Bounds.Sub(image.Pt(0, viewChartThumbSize.Y+viewOuterPadding))
+	if len(v.chartThumbs) != 0 {
+		vc.Bounds = image.Rect(
+			viewOuterPadding, ogBnds.Max.Y-viewChartThumbSize.Y,
+			viewOuterPadding+viewChartThumbSize.X, ogBnds.Max.Y,
+		)
+		vc.Bounds = vc.Bounds.Sub(v.sidebarOffset)
+		for _, th := range v.chartThumbs {
+			th.Render(vc)
+			vc.Bounds = vc.Bounds.Sub(image.Pt(0, viewChartThumbSize.Y+viewOuterPadding))
+		}
 	}
 
 	// Call any callbacks scheduled by views.
