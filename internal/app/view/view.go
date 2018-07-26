@@ -194,7 +194,7 @@ func (v *View) Init(ctx context.Context) (cleanup func(), err error) {
 	})
 
 	win.SetScrollCallback(func(win *glfw.Window, xoff, yoff float64) {
-		v.handleScrollEvent(xoff, yoff)
+		v.handleScrollEvent(yoff)
 	})
 
 	return func() { glfw.Terminate() }, nil
@@ -270,11 +270,25 @@ func (v *View) handleMouseButtonEvent(button glfw.MouseButton, action glfw.Actio
 	v.mouseLeftButtonClicked = action == glfw.Release
 }
 
-func (v *View) handleScrollEvent(xoff, yoff float64) {
-	glog.V(2).Infof("xoff:%f yoff:%f", xoff, yoff)
+func (v *View) handleScrollEvent(yoff float64) {
+	glog.V(2).Infof("yoff:%f", yoff)
 	defer v.PostEmptyEvent()
 
-	if yoff == 0 {
+	if yoff != -1 && yoff != +1 {
+		return
+	}
+
+	if len(v.chartThumbs) == 0 {
+		return
+	}
+
+	sbHeight := (viewOuterPadding+viewChartThumbSize.Y)*len(v.chartThumbs) + viewOuterPadding
+	if sbHeight < v.winSize.Y {
+		return
+	}
+
+	sbRect := image.Rect(viewOuterPadding, 0, viewOuterPadding+viewChartThumbSize.X, v.winSize.Y)
+	if !v.mousePos.In(sbRect) {
 		return
 	}
 
