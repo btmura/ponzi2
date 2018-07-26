@@ -282,19 +282,28 @@ func (v *View) handleScrollEvent(yoff float64) {
 		return
 	}
 
+	sbRegion := image.Rect(viewOuterPadding, 0, viewOuterPadding+viewChartThumbSize.X, v.winSize.Y)
+	if !v.mousePos.In(sbRegion) {
+		return
+	}
+
 	sbHeight := (viewOuterPadding+viewChartThumbSize.Y)*len(v.chartThumbs) + viewOuterPadding
 	if sbHeight < v.winSize.Y {
 		return
 	}
 
-	sbRect := image.Rect(viewOuterPadding, 0, viewOuterPadding+viewChartThumbSize.X, v.winSize.Y)
-	if !v.mousePos.In(sbRect) {
-		return
-	}
+	sbRect := image.Rect(
+		viewOuterPadding, v.winSize.Y-sbHeight,
+		viewOuterPadding+viewChartThumbSize.X, v.winSize.Y,
+	)
 
 	// Scroll wheel down: yoff = -1 up: yoff = +1
-	v.sidebarOffset.Y += int(yoff) * (viewChartThumbSize.Y + viewOuterPadding)
-	if v.sidebarOffset.Y > 0 {
+	v.sidebarOffset.Y += -int(yoff) * (viewChartThumbSize.Y + viewOuterPadding)
+	sbRect = sbRect.Add(v.sidebarOffset)
+	if sbRect.Min.Y > 0 {
+		v.sidebarOffset.Y -= sbRect.Min.Y
+	}
+	if v.sidebarOffset.Y < 0 {
 		v.sidebarOffset.Y = 0
 	}
 }
@@ -389,7 +398,7 @@ func (v *View) render(fudge float32) {
 			viewOuterPadding, ogBnds.Max.Y-viewChartThumbSize.Y,
 			viewOuterPadding+viewChartThumbSize.X, ogBnds.Max.Y,
 		)
-		vc.Bounds = vc.Bounds.Sub(v.sidebarOffset)
+		vc.Bounds = vc.Bounds.Add(v.sidebarOffset)
 		for _, th := range v.chartThumbs {
 			th.Render(vc)
 			vc.Bounds = vc.Bounds.Sub(image.Pt(0, viewChartThumbSize.Y+viewOuterPadding))
