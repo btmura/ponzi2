@@ -55,10 +55,6 @@ var (
 	orange    = [3]float32{1, 0.5, 0}
 )
 
-const viewOuterPadding = 10
-
-var viewChartThumbSize = image.Pt(155, 105)
-
 var (
 	viewInputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
 	viewInstructionsText        = newCenteredText(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER...")
@@ -282,8 +278,9 @@ func (v *View) handleScrollEvent(yoff float64) {
 		return
 	}
 
-	sbRegion := image.Rect(viewOuterPadding, 0, viewOuterPadding+viewChartThumbSize.X, v.winSize.Y)
-	if !v.mousePos.In(sbRegion) {
+	m := v.metrics()
+
+	if !v.mousePos.In(m.sidebarRegion) {
 		return
 	}
 
