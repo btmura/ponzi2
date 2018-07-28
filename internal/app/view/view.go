@@ -220,6 +220,12 @@ func (v *View) handleSizeEvent(width, height int) {
 	gfx.SetProjectionViewMatrix(matrix.Ortho(fw, fh, fw /* use width as depth */))
 
 	v.winSize = s
+
+	// Reset the sidebar scroll offset if the sidebar is shorter than the window.
+	m := v.metrics()
+	if m.sidebarBounds.Dy() < v.winSize.Y {
+		v.sidebarScrollOffset = image.ZP
+	}
 }
 
 func (v *View) handleCharEvent(char rune) {
