@@ -141,20 +141,20 @@ func (ch *chartHeader) SetData(st *model.Stock) {
 	}
 }
 
-func (ch *chartHeader) Update() (animating bool) {
+func (ch *chartHeader) Update() (dirty bool) {
 	if ch.refreshButton.Update() {
-		animating = true
+		dirty = true
 	}
 	if ch.addButton.Update() {
-		animating = true
+		dirty = true
 	}
 	if ch.removeButton.Update() {
-		animating = true
+		dirty = true
 	}
 	if ch.fadeIn.Update() {
-		animating = true
+		dirty = true
 	}
-	return animating
+	return dirty
 }
 
 // chartHeaderClicks reports what buttons were clicked.

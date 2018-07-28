@@ -395,7 +395,7 @@ func (v *View) handleScrollEvent(yoff float64) {
 func (v *View) Run(preupdate func()) {
 start:
 	var lag float64
-	animating := false
+	dirty := false
 	prevTime := glfw.GetTime()
 	for !v.win.ShouldClose() {
 		currTime := glfw.GetTime() /* seconds */
@@ -406,7 +406,7 @@ start:
 		i := 0
 		for ; i < minUpdates || i < maxUpdates && lag >= updateSec; i++ {
 			preupdate()
-			animating = v.update()
+			dirty = v.update()
 			lag -= updateSec
 		}
 		if lag < 0 {
@@ -419,12 +419,14 @@ start:
 		}
 
 		now := time.Now()
-		v.render(fudge)
+		if v.render(fudge) {
+			dirty = true
+		}
 		v.win.SwapBuffers()
-		glog.V(2).Infof("updates:%d lag(%f)/updateSec(%f)=fudge(%f) animating:%t render:%v", i, lag, updateSec, fudge, animating, time.Since(now).Seconds())
+		glog.V(2).Infof("updates:%d lag(%f)/updateSec(%f)=fudge(%f) dirty:%t render:%v", i, lag, updateSec, fudge, dirty, time.Since(now).Seconds())
 
 		glfw.PollEvents()
-		if !animating {
+		if !dirty {
 			glog.V(2).Info("wait events")
 			glfw.WaitEvents()
 			goto start
@@ -432,21 +434,21 @@ start:
 	}
 }
 
-func (v *View) update() (animating bool) {
+func (v *View) update() (dirty bool) {
 	if v.chart != nil {
 		if v.chart.Update() {
-			animating = true
+			dirty = true
 		}
 	}
 	for _, th := range v.chartThumbs {
 		if th.Update() {
-			animating = true
+			dirty = true
 		}
 	}
-	return animating
+	return dirty
 }
 
-func (v *View) render(fudge float32) {
+func (v *View) render(fudge float32) (dirty bool) {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	m := v.metrics()
@@ -485,6 +487,9 @@ func (v *View) render(fudge float32) {
 
 	// Reset any flags for the next viewContext.
 	v.mouseLeftButtonClicked = false
+
+	// Return dirty if some callbacks were scheduled.
+	return len(*vc.ScheduledCallbacks) != 0
 }
 
 // PostEmptyEvent wakes up the Run loop with an event if it is asleep.

@@ -31,7 +31,7 @@ func (a *animation) Stop() {
 	a.state = aFinishing
 }
 
-func (a *animation) Update() (animating bool) {
+func (a *animation) Update() (dirty bool) {
 	switch a.state {
 	case aRunning:
 		if a.loop {

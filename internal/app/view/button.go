@@ -27,7 +27,7 @@ func (b *button) StopSpinning() {
 	b.spinning.Stop()
 }
 
-func (b *button) Update() (animating bool) {
+func (b *button) Update() (dirty bool) {
 	return b.spinning.Update()
 }
 

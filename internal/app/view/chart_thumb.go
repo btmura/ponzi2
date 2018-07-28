@@ -100,14 +100,14 @@ func (ch *ChartThumb) SetData(st *model.Stock) {
 }
 
 // Update updates the ChartThumb.
-func (ch *ChartThumb) Update() (animating bool) {
+func (ch *ChartThumb) Update() (dirty bool) {
 	if ch.header.Update() {
-		animating = true
+		dirty = true
 	}
 	if ch.fadeIn.Update() {
-		animating = true
+		dirty = true
 	}
-	return animating
+	return dirty
 }
 
 // Render renders the ChartThumb.

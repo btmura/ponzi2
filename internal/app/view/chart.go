@@ -164,14 +164,14 @@ func (ch *Chart) SetData(st *model.Stock) {
 }
 
 // Update updates the Chart.
-func (ch *Chart) Update() (animating bool) {
+func (ch *Chart) Update() (dirty bool) {
 	if ch.header.Update() {
-		animating = true
+		dirty = true
 	}
 	if ch.fadeIn.Update() {
-		animating = true
+		dirty = true
 	}
-	return animating
+	return dirty
 }
 
 // Render renders the Chart.
