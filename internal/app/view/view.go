@@ -22,12 +22,16 @@ import (
 // Application name for the window title.
 const appName = "ponzi2"
 
-// Constants used by Run for the "game loop".
-const (
-	fps        = 120.0
-	updateSec  = 1.0 / fps
-	minUpdates = 1
-	maxUpdates = 1000
+// Colors used throughout the UI.
+var (
+	green     = [3]float32{0.25, 1, 0}
+	red       = [3]float32{1, 0.3, 0}
+	yellow    = [3]float32{1, 1, 0}
+	purple    = [3]float32{0.5, 0, 1}
+	white     = [3]float32{1, 1, 1}
+	gray      = [3]float32{0.15, 0.15, 0.15}
+	lightGray = [3]float32{0.35, 0.35, 0.35}
+	orange    = [3]float32{1, 0.5, 0}
 )
 
 // acceptedChars are the chars the user can enter for a symbol.
@@ -43,16 +47,12 @@ var acceptedChars = map[rune]bool{
 	'Y': true, 'Z': true,
 }
 
-// Colors used throughout the UI.
-var (
-	green     = [3]float32{0.25, 1, 0}
-	red       = [3]float32{1, 0.3, 0}
-	yellow    = [3]float32{1, 1, 0}
-	purple    = [3]float32{0.5, 0, 1}
-	white     = [3]float32{1, 1, 1}
-	gray      = [3]float32{0.15, 0.15, 0.15}
-	lightGray = [3]float32{0.35, 0.35, 0.35}
-	orange    = [3]float32{1, 0.5, 0}
+// Constants used by Run for the "game loop".
+const (
+	fps        = 120.0
+	updateSec  = 1.0 / fps
+	minUpdates = 1
+	maxUpdates = 1000
 )
 
 const viewPadding = 10
@@ -60,11 +60,12 @@ const viewPadding = 10
 var (
 	chartThumbSize         = image.Pt(155, 105)
 	chartThumbRenderOffset = image.Pt(0, viewPadding+chartThumbSize.Y)
+	sidebarScrollAmount    = chartThumbRenderOffset
 )
 
 var (
-	viewInputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
-	viewInstructionsText        = newCenteredText(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER...")
+	inputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
+	instructionsText        = newCenteredText(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER...")
 )
 
 func init() {
@@ -134,7 +135,7 @@ func (vc viewContext) LeftClickInBounds() bool {
 // New creates a new View.
 func New() *View {
 	return &View{
-		inputSymbol:                  newCenteredText(viewInputSymbolTextRenderer, "", centeredTextBubble(chartRounding, chartPadding)),
+		inputSymbol:                  newCenteredText(inputSymbolTextRenderer, "", centeredTextBubble(chartRounding, chartPadding)),
 		inputSymbolSubmittedCallback: func(symbol string) {},
 	}
 }
@@ -223,8 +224,83 @@ func (v *View) handleSizeEvent(width, height int) {
 
 	// Reset the sidebar scroll offset if the sidebar is shorter than the window.
 	m := v.metrics()
-	if m.sidebarBounds.Dy() < v.winSize.Y {
+	if m.sidebarBounds.Dy() < m.sidebarRegion.Dy() {
 		v.sidebarScrollOffset = image.ZP
+	}
+}
+
+// viewMetrics has dynamic metrics used to render the view.
+type viewMetrics struct {
+	// chartBounds is where to draw the main chart.
+	chartBounds image.Rectangle
+
+	// sidebarBounds is where to draw the sidebar with thumbnails.
+	sidebarBounds image.Rectangle
+
+	// firstThumbBounds is where to draw the first thumbnail in the sidebar.
+	firstThumbBounds image.Rectangle
+
+	// sidebarRegion is where to detect scroll events for the sidebar.
+	sidebarRegion image.Rectangle
+}
+
+func (v *View) metrics() viewMetrics {
+	// +---+---------+---+
+	// |   | padding |   |
+	// |   +---------+   |
+	// |   |         |   |
+	// |   |         |   |
+	// | p | chart   | p |
+	// |   |         |   |
+	// |   |         |   |
+	// |   +---------+   |
+	// |   | padding |   |
+	// +---+---------+---+
+
+	if len(v.chartThumbs) == 0 {
+		cb := image.Rect(0, 0, v.winSize.X, v.winSize.Y)
+		cb = cb.Inset(viewPadding)
+		return viewMetrics{chartBounds: cb}
+	}
+
+	cb := image.Rect(viewPadding+chartThumbSize.X, 0, v.winSize.X, v.winSize.Y)
+	cb = cb.Inset(viewPadding)
+
+	// +---+---------+---+---------+---+
+	// |   | padding |   | padding |   |
+	// |   +---------+   +---------+   |
+	// |   | thumb   |   |         |   |
+	// |   +---------+   |         |   |
+	// | p | padding | p | chart   | p |
+	// |   +---------+   |         |   |
+	// |   | thumb   |   |         |   |
+	// |   +---------+   +---------+   |
+	// |   | padding |   | padding |   |
+	// +---+---------+---+---------+---+
+
+	sh := (viewPadding+chartThumbSize.Y)*len(v.chartThumbs) + viewPadding
+
+	sb := image.Rect(
+		viewPadding, v.winSize.Y-sh,
+		viewPadding+chartThumbSize.X, v.winSize.Y,
+	)
+	sb = sb.Add(v.sidebarScrollOffset)
+
+	fb := image.Rect(
+		sb.Min.X, sb.Max.Y-viewPadding-chartThumbSize.Y,
+		sb.Max.X, sb.Max.Y-viewPadding,
+	)
+
+	ssb := image.Rect(
+		viewPadding, 0,
+		viewPadding+chartThumbSize.X, v.winSize.Y,
+	)
+
+	return viewMetrics{
+		chartBounds:      cb,
+		sidebarBounds:    sb,
+		firstThumbBounds: fb,
+		sidebarRegion:    ssb,
 	}
 }
 
@@ -294,7 +370,7 @@ func (v *View) handleScrollEvent(yoff float64) {
 
 	m := v.metrics()
 
-	if !v.mousePos.In(m.sidebarScrollBounds) {
+	if !v.mousePos.In(m.sidebarRegion) {
 		return
 	}
 
@@ -303,90 +379,16 @@ func (v *View) handleScrollEvent(yoff float64) {
 	}
 
 	// Scroll wheel down: yoff = -1 up: yoff = +1
-	off := chartThumbRenderOffset.Mul(-int(yoff))
+	off := sidebarScrollAmount.Mul(-int(yoff))
 	tmpRect := m.sidebarBounds.Add(off)
-	if tmpRect.Min.Y > 0 {
-		off.Y -= tmpRect.Min.Y
+	if botGap := tmpRect.Min.Y - m.sidebarRegion.Min.Y; botGap > 0 {
+		off.Y -= botGap
 	}
-	if tmpRect.Max.Y < v.winSize.Y {
-		off.Y += v.winSize.Y - tmpRect.Max.Y
+	if topGap := m.sidebarRegion.Max.Y - tmpRect.Max.Y; topGap > 0 {
+		off.Y += topGap
 	}
 
 	v.sidebarScrollOffset = v.sidebarScrollOffset.Add(off)
-}
-
-type viewMetrics struct {
-	// chartBounds is where to draw the main chart.
-	chartBounds image.Rectangle
-
-	// sidebarBounds is where to draw the sidebar with thumbnails.
-	sidebarBounds image.Rectangle
-
-	// firstThumbBounds is where to draw the first thumbnail in the sidebar.
-	firstThumbBounds image.Rectangle
-
-	// sidebarScrollBounds is where to detect scroll events for the sidebar.
-	sidebarScrollBounds image.Rectangle
-}
-
-func (v *View) metrics() viewMetrics {
-	// +---+---------+---+
-	// |   | padding |   |
-	// |   +---------+   |
-	// |   |         |   |
-	// |   |         |   |
-	// | p | chart   | p |
-	// |   |         |   |
-	// |   |         |   |
-	// |   +---------+   |
-	// |   | padding |   |
-	// +---+---------+---+
-
-	if len(v.chartThumbs) == 0 {
-		cb := image.Rect(0, 0, v.winSize.X, v.winSize.Y)
-		cb = cb.Inset(viewPadding)
-		return viewMetrics{chartBounds: cb}
-	}
-
-	cb := image.Rect(viewPadding+chartThumbSize.X, 0, v.winSize.X, v.winSize.Y)
-	cb = cb.Inset(viewPadding)
-
-	// +---+---------+---+---------+---+
-	// |   | padding |   | padding |   |
-	// |   +---------+   +---------+   |
-	// |   | thumb   |   |         |   |
-	// |   +---------+   |         |   |
-	// | p | padding | p | chart   | p |
-	// |   +---------+   |         |   |
-	// |   | thumb   |   |         |   |
-	// |   +---------+   +---------+   |
-	// |   | padding |   | padding |   |
-	// +---+---------+---+---------+---+
-
-	sh := (viewPadding+chartThumbSize.Y)*len(v.chartThumbs) + viewPadding
-
-	sb := image.Rect(
-		viewPadding, v.winSize.Y-sh,
-		viewPadding+chartThumbSize.X, v.winSize.Y,
-	)
-	sb = sb.Add(v.sidebarScrollOffset)
-
-	fb := image.Rect(
-		sb.Min.X, sb.Max.Y-viewPadding-chartThumbSize.Y,
-		sb.Max.X, sb.Max.Y-viewPadding,
-	)
-
-	ssb := image.Rect(
-		viewPadding, 0,
-		viewPadding+chartThumbSize.X, v.winSize.Y,
-	)
-
-	return viewMetrics{
-		chartBounds:         cb,
-		sidebarBounds:       sb,
-		firstThumbBounds:    fb,
-		sidebarScrollBounds: ssb,
-	}
 }
 
 // Run runs the "game loop".
@@ -461,7 +463,7 @@ func (v *View) render(fudge float32) {
 	if v.chart != nil {
 		v.chart.Render(vc)
 	} else {
-		viewInstructionsText.Render(vc.Bounds)
+		instructionsText.Render(vc.Bounds)
 	}
 
 	// Render the input symbol over the chart.
