@@ -93,8 +93,9 @@ type View struct {
 	// mouseLeftButtonClicked is whether the left mouse button was clicked.
 	mouseLeftButtonClicked bool
 
-	// sidebarOffset stores the Y offset change due to scroll wheel events.
-	sidebarOffset image.Point
+	// sidebarScrollOffset stores the Y offset accumulated from scroll events
+	// that should be used to calculate the sidebar's bounds.
+	sidebarScrollOffset image.Point
 }
 
 // viewContext is passed down the view hierarchy providing drawing hints and
@@ -280,17 +281,17 @@ func (v *View) handleScrollEvent(yoff float64) {
 
 	m := v.metrics()
 
-	if !v.mousePos.In(m.sidebarRegion) {
+	if !v.mousePos.In(m.sidebarScrollBounds) {
 		return
 	}
 
-	if m.sidebarRect.Dy() < v.winSize.Y {
+	if m.sidebarBounds.Dy() < v.winSize.Y {
 		return
 	}
 
 	// Scroll wheel down: yoff = -1 up: yoff = +1
-	off := sidebarScrollAmount.Mul(-int(yoff))
-	tmpRect := m.sidebarRect.Add(off)
+	off := chartThumbRenderOffset.Mul(-int(yoff))
+	tmpRect := m.sidebarBounds.Add(off)
 	if tmpRect.Min.Y > 0 {
 		off.Y -= tmpRect.Min.Y
 	}
@@ -298,7 +299,7 @@ func (v *View) handleScrollEvent(yoff float64) {
 		off.Y += v.winSize.Y - tmpRect.Max.Y
 	}
 
-	v.sidebarOffset = v.sidebarOffset.Add(off)
+	v.sidebarScrollOffset = v.sidebarScrollOffset.Add(off)
 }
 
 // Run runs the "game loop".
@@ -359,20 +360,14 @@ func (v *View) update() (animating bool) {
 func (v *View) render(fudge float32) {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
+	m := v.metrics()
+
 	vc := viewContext{
-		Bounds:                 image.Rectangle{image.ZP, v.winSize},
+		Bounds:                 m.chartBounds,
 		MousePos:               v.mousePos,
 		MouseLeftButtonClicked: v.mouseLeftButtonClicked,
 		Fudge:              fudge,
 		ScheduledCallbacks: new([]func()),
-	}
-
-	ogBnds := vc.Bounds.Inset(viewOuterPadding)
-
-	// Calculate bounds for main area.
-	vc.Bounds = ogBnds
-	if len(v.chartThumbs) > 0 {
-		vc.Bounds.Min.X += viewOuterPadding + viewChartThumbSize.X
 	}
 
 	// Render the the main chart or instructions.
@@ -387,14 +382,10 @@ func (v *View) render(fudge float32) {
 
 	// Render the sidebar thumbnails.
 	if len(v.chartThumbs) != 0 {
-		vc.Bounds = image.Rect(
-			viewOuterPadding, ogBnds.Max.Y-viewChartThumbSize.Y,
-			viewOuterPadding+viewChartThumbSize.X, ogBnds.Max.Y,
-		)
-		vc.Bounds = vc.Bounds.Add(v.sidebarOffset)
+		vc.Bounds = m.firstThumbBounds
 		for _, th := range v.chartThumbs {
 			th.Render(vc)
-			vc.Bounds = vc.Bounds.Sub(image.Pt(0, viewChartThumbSize.Y+viewOuterPadding))
+			vc.Bounds = vc.Bounds.Sub(chartThumbRenderOffset)
 		}
 	}
 

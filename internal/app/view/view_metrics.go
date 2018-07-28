@@ -2,40 +2,83 @@ package view
 
 import "image"
 
-const viewOuterPadding = 10
+const viewPadding = 10
 
-var viewChartThumbSize = image.Pt(155, 105)
-
-var sidebarScrollAmount = image.Pt(0, viewOuterPadding*viewChartThumbSize.Y)
+var (
+	chartThumbSize         = image.Pt(155, 105)
+	chartThumbRenderOffset = image.Pt(0, viewPadding+chartThumbSize.Y)
+)
 
 type viewMetrics struct {
-	// sidebarRegion is the left-hand side of the window used to show the sidebar.
-	sidebarRegion image.Rectangle
+	// chartBounds is where to draw the main chart.
+	chartBounds image.Rectangle
 
-	// sidebarRect is the rectangle to draw the sidebar in.
-	sidebarRect image.Rectangle
+	// sidebarBounds is where to draw the sidebar with thumbnails.
+	sidebarBounds image.Rectangle
+
+	// firstThumbBounds is where to draw the first thumbnail in the sidebar.
+	firstThumbBounds image.Rectangle
+
+	// sidebarScrollBounds is where to detect scroll events for the sidebar.
+	sidebarScrollBounds image.Rectangle
 }
 
 func (v *View) metrics() viewMetrics {
+	// +---+---------+---+
+	// |   | padding |   |
+	// |   +---------+   |
+	// |   |         |   |
+	// |   |         |   |
+	// | p | chart   | p |
+	// |   |         |   |
+	// |   |         |   |
+	// |   +---------+   |
+	// |   | padding |   |
+	// +---+---------+---+
+
 	if len(v.chartThumbs) == 0 {
-		return viewMetrics{}
+		cb := image.Rect(0, 0, v.winSize.X, v.winSize.Y)
+		cb = cb.Inset(viewPadding)
+		return viewMetrics{chartBounds: cb}
 	}
 
-	sbHeight := (viewOuterPadding+viewChartThumbSize.Y)*len(v.chartThumbs) + viewOuterPadding
+	cb := image.Rect(viewPadding+chartThumbSize.X, 0, v.winSize.X, v.winSize.Y)
+	cb = cb.Inset(viewPadding)
 
-	sbRect := image.Rect(
-		viewOuterPadding, v.winSize.Y-sbHeight,
-		viewOuterPadding+viewChartThumbSize.X, v.winSize.Y,
+	// +---+---------+---+---------+---+
+	// |   | padding |   | padding |   |
+	// |   +---------+   +---------+   |
+	// |   | thumb   |   |         |   |
+	// |   +---------+   |         |   |
+	// | p | padding | p | chart   | p |
+	// |   +---------+   |         |   |
+	// |   | thumb   |   |         |   |
+	// |   +---------+   +---------+   |
+	// |   | padding |   | padding |   |
+	// +---+---------+---+---------+---+
+
+	sh := (viewPadding+chartThumbSize.Y)*len(v.chartThumbs) + viewPadding
+
+	sb := image.Rect(
+		viewPadding, v.winSize.Y-sh,
+		viewPadding+chartThumbSize.X, v.winSize.Y,
 	)
-	sbRect = sbRect.Add(v.sidebarOffset)
+	sb = sb.Add(v.sidebarScrollOffset)
 
-	sbReg := image.Rect(
-		viewOuterPadding, 0,
-		viewOuterPadding+viewChartThumbSize.X, v.winSize.Y,
+	fb := image.Rect(
+		sb.Min.X, sb.Max.Y-viewPadding-chartThumbSize.Y,
+		sb.Max.X, sb.Max.Y-viewPadding,
+	)
+
+	ssb := image.Rect(
+		viewPadding, 0,
+		viewPadding+chartThumbSize.X, v.winSize.Y,
 	)
 
 	return viewMetrics{
-		sidebarRegion: sbReg,
-		sidebarRect:   sbRect,
+		chartBounds:         cb,
+		sidebarBounds:       sb,
+		firstThumbBounds:    fb,
+		sidebarScrollBounds: ssb,
 	}
 }
