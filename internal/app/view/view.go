@@ -284,25 +284,21 @@ func (v *View) handleScrollEvent(yoff float64) {
 		return
 	}
 
-	sbHeight := (viewOuterPadding+viewChartThumbSize.Y)*len(v.chartThumbs) + viewOuterPadding
-	if sbHeight < v.winSize.Y {
+	if m.sidebarRect.Dy() < v.winSize.Y {
 		return
 	}
 
-	sbRect := image.Rect(
-		viewOuterPadding, v.winSize.Y-sbHeight,
-		viewOuterPadding+viewChartThumbSize.X, v.winSize.Y,
-	)
-
 	// Scroll wheel down: yoff = -1 up: yoff = +1
-	v.sidebarOffset.Y += -int(yoff) * (viewChartThumbSize.Y + viewOuterPadding)
-	sbRect = sbRect.Add(v.sidebarOffset)
-	if sbRect.Min.Y > 0 {
-		v.sidebarOffset.Y -= sbRect.Min.Y
+	off := sidebarScrollAmount.Mul(-int(yoff))
+	tmpRect := m.sidebarRect.Add(off)
+	if tmpRect.Min.Y > 0 {
+		off.Y -= tmpRect.Min.Y
 	}
-	if v.sidebarOffset.Y < 0 {
-		v.sidebarOffset.Y = 0
+	if tmpRect.Max.Y < v.winSize.Y {
+		off.Y += v.winSize.Y - tmpRect.Max.Y
 	}
+
+	v.sidebarOffset = v.sidebarOffset.Add(off)
 }
 
 // Run runs the "game loop".
