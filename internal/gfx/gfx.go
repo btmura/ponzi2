@@ -1,3 +1,4 @@
+// Package gfx provides APIs for shaders, VAO creation, and text rendering.
 package gfx
 
 import (
