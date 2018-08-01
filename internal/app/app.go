@@ -1,3 +1,4 @@
+// Package app provides a Run function to start the app.
 package app
 
 import (
