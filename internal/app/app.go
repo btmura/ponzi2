@@ -1,4 +1,4 @@
-// Package app provides a Run function to start the app.
+// Package app exports a Run function to start the app. 
 package app
 
 import (
@@ -8,7 +8,7 @@ import (
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
-// Run runs the stock chart viewer in a window.
+// Run runs the app. Should be called from main.
 func Run(dumpAPIResponses bool) {
 	c := iex.NewClient(dumpAPIResponses)
 	if err := controller.New(c).Run(); err != nil {
