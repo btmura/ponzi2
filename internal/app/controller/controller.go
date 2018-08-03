@@ -1,3 +1,4 @@
+// Package controller contains code for the controller in the MVC pattern.
 package controller
 
 import (
