@@ -1,3 +1,4 @@
+// Package model contains code for the model in the MVC pattern.
 package model
 
 import (
