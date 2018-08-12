@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],	
+	"settings": {
+		// Flags passed to ponzi2 in the "build and run" task.
+		"ponzi2.flags": ""
+	}
+}
