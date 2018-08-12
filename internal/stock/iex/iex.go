@@ -1,3 +1,4 @@
+// Package iex provides a client to get stock data using the IEX API.
 package iex
 
 import (
@@ -16,15 +17,15 @@ import (
 	"time"
 )
 
-// loc is the timezone to set on parsed dates.
+// loc is the timezone to use when parsing dates.
 var loc = mustLoadLocation("America/New_York")
 
-// GetTradingSessionSeriesRequest is the request passed to ListTradingSessions.
+// GetTradingSessionSeriesRequest is the request passed to GetTradingSessionSeries.
 type GetTradingSessionSeriesRequest struct {
 	Symbol string
 }
 
-// TradingSessionSeries is the response returned by ListTradingSessions
+// TradingSessionSeries is the response returned by GetTradingSessionSeries.
 type TradingSessionSeries struct {
 	Symbol          string
 	TradingSessions []*TradingSession

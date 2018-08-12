@@ -1,3 +1,4 @@
+// The iextool command prints stock data for a stock symbol.
 package main
 
 import (

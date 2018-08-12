@@ -1,3 +1,4 @@
+// Package config provides functions for loading and saving the user's configuration.
 package config
 
 import (

@@ -1,3 +1,4 @@
+// Package view contains code for the view in the MVC pattern.
 package view
 
 import (
