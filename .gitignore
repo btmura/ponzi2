@@ -28,9 +28,3 @@ ponzi2
 
 # Blender backup files
 *.blend1
-
-# Debug files produced by ponzi2's stock package.
-debug*.txt
-
-# Visual Studio Code Settings
-settings.json
