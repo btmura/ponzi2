@@ -10,14 +10,13 @@ import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
-// program creates a program from vertex and fragment shader source code.
-func program(vertexShaderSrc, fragmentShaderSrc string) (uint32, error) {
-	vs, err := shader(vertexShaderSrc, gl.VERTEX_SHADER)
+func glProgram(vertexShaderSrc, fragmentShaderSrc string) (uint32, error) {
+	vs, err := glShader(vertexShaderSrc, gl.VERTEX_SHADER)
 	if err != nil {
 		return 0, err
 	}
 
-	fs, err := shader(fragmentShaderSrc, gl.FRAGMENT_SHADER)
+	fs, err := glShader(fragmentShaderSrc, gl.FRAGMENT_SHADER)
 	if err != nil {
 		return 0, err
 	}
@@ -47,7 +46,7 @@ func program(vertexShaderSrc, fragmentShaderSrc string) (uint32, error) {
 	return p, nil
 }
 
-func shader(shaderSource string, shaderType uint32) (uint32, error) {
+func glShader(shaderSource string, shaderType uint32) (uint32, error) {
 	sh := gl.CreateShader(shaderType)
 	src, free := gl.Strs(shaderSource + "\x00")
 	defer free()
@@ -69,8 +68,7 @@ func shader(shaderSource string, shaderType uint32) (uint32, error) {
 	return sh, nil
 }
 
-// texture creates a texture from an image.
-func texture(rgba *image.RGBA) uint32 {
+func glTexture(rgba *image.RGBA) uint32 {
 	var tex uint32
 	gl.GenTextures(1, &tex)
 	gl.BindTexture(gl.TEXTURE_2D, tex)
@@ -87,8 +85,7 @@ func texture(rgba *image.RGBA) uint32 {
 	return tex
 }
 
-// arrayBuffer creates an array buffer from a slice of floats.
-func arrayBuffer(data []float32) uint32 {
+func glArrayBuffer(data []float32) uint32 {
 	var name uint32
 	gl.GenBuffers(1, &name)
 	gl.BindBuffer(gl.ARRAY_BUFFER, name)
@@ -97,8 +94,7 @@ func arrayBuffer(data []float32) uint32 {
 	return name
 }
 
-// elementArrayBuffer creates an element array buffer from a slice of floats.
-func elementArrayBuffer(data []uint16) uint32 {
+func glElementArrayBuffer(data []uint16) uint32 {
 	var name uint32
 	gl.GenBuffers(1, &name)
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, name)

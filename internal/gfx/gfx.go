@@ -37,7 +37,7 @@ const (
 
 // InitProgram loads and uses the shader program.
 func InitProgram() error {
-	p, err := program(_escFSMustString(false, "/data/shader.vert"), _escFSMustString(false, "/data/shader.frag"))
+	p, err := glProgram(_escFSMustString(false, "/data/shader.vert"), _escFSMustString(false, "/data/shader.frag"))
 	if err != nil {
 		return err
 	}

@@ -134,7 +134,7 @@ func newRuneRenderer(face font.Face, m font.Metrics, r rune) *runeRenderer {
 	d.DrawString(string(r))
 
 	return &runeRenderer{
-		texture: texture(rgba),
+		texture: glTexture(rgba),
 		size:    rgba.Bounds().Size(),
 	}
 }

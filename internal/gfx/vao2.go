@@ -26,19 +26,19 @@ type vao struct {
 func newVAO(data *VAOVertexData) *vao {
 	glog.V(2).Infof("creating vao: v(%d) tc(%d) c(%d) i(%d)", len(data.Vertices), len(data.TexCoords), len(data.Colors), len(data.Indices))
 
-	vbo := arrayBuffer(data.Vertices)
+	vbo := glArrayBuffer(data.Vertices)
 
 	var tbo uint32
 	if len(data.TexCoords) != 0 {
-		tbo = arrayBuffer(data.TexCoords)
+		tbo = glArrayBuffer(data.TexCoords)
 	}
 
 	var cbo uint32
 	if len(data.Colors) != 0 {
-		cbo = arrayBuffer(data.Colors)
+		cbo = glArrayBuffer(data.Colors)
 	}
 
-	ibo := elementArrayBuffer(data.Indices)
+	ibo := glElementArrayBuffer(data.Indices)
 
 	var array uint32
 	gl.GenVertexArrays(1, &array)
@@ -70,7 +70,7 @@ func newVAO(data *VAOVertexData) *vao {
 		count: int32(len(data.Indices)),
 	}
 	if data.TextureRGBA != nil {
-		v.texture = texture(data.TextureRGBA)
+		v.texture = glTexture(data.TextureRGBA)
 		v.hasTexture = true
 	}
 	return v
