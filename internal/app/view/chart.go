@@ -101,8 +101,11 @@ type Chart struct {
 	// hasError is true there was a loading issue.
 	hasError bool
 
-	// fadeIn fades in the data after it loads.
+	// fadeIn fades in the chart after it is created.
 	fadeIn *animation
+
+	// fadeInData fades in the data after it loads.
+	fadeInData *animation
 }
 
 // NewChart creates a new Chart.
@@ -127,6 +130,7 @@ func NewChart() *Chart {
 		timeLabels:        newChartTimeLabels(),
 		loading:           true,
 		fadeIn:            newAnimation(1*fps, false),
+		fadeInData:        newAnimation(1*fps, false),
 	}
 }
 
@@ -144,8 +148,9 @@ func (ch *Chart) SetError(error bool) {
 
 // SetData sets the Chart's stock.
 func (ch *Chart) SetData(st *model.Stock) {
+	ch.fadeIn.Start()
 	if !ch.hasStockUpdated && !st.LastUpdateTime.IsZero() {
-		ch.fadeIn.Start()
+		ch.fadeInData.Start()
 	}
 	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
 
@@ -171,12 +176,16 @@ func (ch *Chart) Update() (dirty bool) {
 	if ch.fadeIn.Update() {
 		dirty = true
 	}
+	if ch.fadeInData.Update() {
+		dirty = true
+	}
 	return dirty
 }
 
 // Render renders the Chart.
 func (ch *Chart) Render(vc viewContext) {
-	gfx.SetAlpha(1)
+	alpha := ch.fadeIn.Value(vc.Fudge)
+	gfx.SetAlpha(alpha)
 
 	// Render the border around the chart.
 	strokeRoundedRect(vc.Bounds, chartRounding)
@@ -198,7 +207,7 @@ func (ch *Chart) Render(vc viewContext) {
 		}
 	}
 
-	gfx.SetAlpha(ch.fadeIn.Value(vc.Fudge))
+	gfx.SetAlpha(alpha * ch.fadeInData.Value(vc.Fudge))
 
 	// Calculate percentage needed for the time labels.
 	tperc := float32(ch.timeLabels.MaxLabelSize.Y+chartPadding*2) / float32(r.Dy())

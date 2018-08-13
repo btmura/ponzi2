@@ -35,6 +35,8 @@ const (
 	fragTextColorMode          = 2
 )
 
+var program uint32
+
 // InitProgram loads and uses the shader program.
 func InitProgram() error {
 	p, err := glProgram(_escFSMustString(false, "/data/shader.vert"), _escFSMustString(false, "/data/shader.frag"))
@@ -42,6 +44,7 @@ func InitProgram() error {
 		return err
 	}
 	gl.UseProgram(p)
+	program = p
 	return nil
 }
 
@@ -82,4 +85,10 @@ func setTextColor(color TextColor) {
 // SetAlpha sets the alpha amount.
 func SetAlpha(alpha float32) {
 	gl.Uniform1f(alphaLocation, alpha)
+}
+
+// Alpha returns the current alpha amount.
+func Alpha() (alpha float32) {
+	gl.GetUniformfv(program, alphaLocation, &alpha)
+	return alpha
 }

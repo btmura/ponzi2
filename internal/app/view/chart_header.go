@@ -186,9 +186,10 @@ func (ch *chartHeader) Render(vc viewContext) (body image.Rectangle, clicks char
 		pt.X += ch.symbolQuoteTextRenderer.Render(ch.symbol, pt, white)
 		pt.X += ch.padding
 
-		gfx.SetAlpha(ch.fadeIn.Value(vc.Fudge))
+		old := gfx.Alpha()
+		gfx.SetAlpha(old * ch.fadeIn.Value(vc.Fudge))
 		pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteText, pt, ch.quoteColor)
-		gfx.SetAlpha(1)
+		gfx.SetAlpha(old)
 
 	}
 	pt.Y -= ch.padding
