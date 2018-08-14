@@ -208,7 +208,7 @@ func (ch *chartHeader) Render(vc viewContext) (body image.Rectangle, clicks char
 		vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
 	}
 
-	if ch.refreshButton.enabled || ch.loading {
+	if ch.refreshButton.enabled || ch.refreshButton.Spinning() {
 		clicks.RefreshButtonClicked = ch.refreshButton.Render(vc)
 		vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
 	}

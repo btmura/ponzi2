@@ -23,6 +23,10 @@ func (b *button) StartSpinning() {
 	b.spinning.Start()
 }
 
+func (b *button) Spinning() bool {
+	return b.spinning.Animating()
+}
+
 func (b *button) StopSpinning() {
 	b.spinning.Stop()
 }

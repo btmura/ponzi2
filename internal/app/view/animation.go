@@ -27,6 +27,10 @@ func (a *animation) Start() {
 	a.state = aRunning
 }
 
+func (a *animation) Animating() bool {
+	return a.state != aStopped
+}
+
 func (a *animation) Stop() {
 	a.state = aFinishing
 }
