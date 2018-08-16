@@ -85,7 +85,7 @@ type View struct {
 	winSize image.Point
 
 	// chart renders the currently viewed stock.
-	chart *Chart
+	chart *viewChart
 
 	// chartThumbs renders the stocks in the sidebar.
 	chartThumbs []*ChartThumb
@@ -506,7 +506,42 @@ func (v *View) SetInputSymbolSubmittedCallback(cb func(symbol string)) {
 // SetChart sets the View's main chart.
 func (v *View) SetChart(ch *Chart) {
 	defer v.PostEmptyEvent()
-	v.chart = ch
+	v.chart = newViewChart(ch)
+	v.chart.FadeIn()
+}
+
+type viewChart struct {
+	*Chart
+	fadeIn *animation
+}
+
+func newViewChart(ch *Chart) *viewChart {
+	return &viewChart{
+		Chart:  ch,
+		fadeIn: newAnimation(1*fps, false),
+	}
+}
+
+func (v *viewChart) FadeIn() {
+	v.fadeIn.Start()
+}
+
+func (v *viewChart) Update() (dirty bool) {
+	if v.Chart.Update() {
+		dirty = true
+	}
+	if v.fadeIn.Update() {
+		dirty = true
+	}
+	return dirty
+}
+
+func (v *viewChart) Render(vc viewContext) {
+	old := gfx.Alpha()
+	defer gfx.SetAlpha(old)
+
+	gfx.SetAlpha(v.fadeIn.Value(vc.Fudge))
+	v.Chart.Render(vc)
 }
 
 // AddChartThumb adds the ChartThumbnail to the side bar.
