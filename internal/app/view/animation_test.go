@@ -49,58 +49,58 @@ func TestAnimation_Start_Stop_Update_Value_Loop(t *testing.T) {
 	a.callValueReturns(0.2, 0) // Fudge has no effect on first frame.
 	a.checkCurrFrame(0)
 	a.checkNumFrames(3)
-	// a.checkState(false)
+	a.checkState(aStopped)
 
 	a.Start()
 	a.callValueReturns(0.1, 0) // Fudge still has no effect on first frame.
 	a.checkCurrFrame(0)
 	a.checkNumFrames(3)
-	// a.checkState(true)
+	a.checkState(aRunning)
 
 	a.callUpdateReturns(true)
 	a.callValueReturns(0.1, 0.55) // Fudge takes affect.
 	a.checkCurrFrame(1)
 	a.checkNumFrames(3)
-	// a.checkState(true)
+	a.checkState(aRunning)
 
 	a.callUpdateReturns(true)
 	a.callValueReturns(0, 1.0)
 	a.checkCurrFrame(2)
 	a.checkNumFrames(3)
-	// a.checkState(true)
+	a.checkState(aRunning)
 
 	// Animation should loop around.
 	a.callUpdateReturns(true)
 	a.callValueReturns(0, 0)
 	a.checkCurrFrame(0)
 	a.checkNumFrames(3)
-	// a.checkState(true)
+	a.checkState(aRunning)
 
 	a.callUpdateReturns(true)
 	a.callValueReturns(0, 0.5)
 	a.checkCurrFrame(1)
 	a.checkNumFrames(3)
-	// a.checkState(true)
+	a.checkState(aRunning)
 
 	a.Stop()
 	a.callValueReturns(0, 0.5)
 	a.checkCurrFrame(1)
 	a.checkNumFrames(3)
-	// a.checkState(false)
+	a.checkState(aFinishing)
 
 	// Animation should finish and stop after.
 	a.callUpdateReturns(true)
 	a.callValueReturns(0, 1.0)
 	a.checkCurrFrame(2)
 	a.checkNumFrames(3)
-	// a.checkState(false)
+	a.checkState(aFinishing)
 
 	// Animation is finished. Update should have no affect.
 	a.callUpdateReturns(false)
 	a.callValueReturns(0, 1.0)
 	a.checkCurrFrame(2)
 	a.checkNumFrames(3)
-	// a.checkState(false)
+	a.checkState(aStopped)
 }
 
 type animationTest struct {
