@@ -16,10 +16,19 @@ type animation struct {
 	state     animationState
 }
 
-func newAnimation(numFrames int, loop bool) *animation {
-	return &animation{
-		numFrames: numFrames,
-		loop:      loop,
+type animationOpt func(a *animation)
+
+func newAnimation(numFrames int, opts ...animationOpt) *animation {
+	a := &animation{numFrames: numFrames}
+	for _, o := range opts {
+		o(a)
+	}
+	return a
+}
+
+func animationLoop() animationOpt {
+	return func(a *animation) {
+		a.loop = true
 	}
 }
 

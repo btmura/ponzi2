@@ -15,7 +15,7 @@ type button struct {
 func newButton(icon *gfx.VAO) *button {
 	return &button{
 		icon:     icon,
-		spinning: newAnimation(0.5*fps, true),
+		spinning: newAnimation(0.5*fps, animationLoop()),
 	}
 }
 

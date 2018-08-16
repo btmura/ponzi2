@@ -3,7 +3,7 @@ package view
 import "testing"
 
 func TestAnimation_Start_Stop_Update_Value_NoLoop(t *testing.T) {
-	a := &animationTest{t, newAnimation(3, false)}
+	a := &animationTest{t, newAnimation(3)}
 
 	a.callValueReturns(0.2, 0) // Fudge has no effect on first frame.
 	a.checkCurrFrame(0)
@@ -44,7 +44,7 @@ func TestAnimation_Start_Stop_Update_Value_NoLoop(t *testing.T) {
 }
 
 func TestAnimation_Start_Stop_Update_Value_Loop(t *testing.T) {
-	a := &animationTest{t, newAnimation(3, true)}
+	a := &animationTest{t, newAnimation(3, animationLoop())}
 
 	a.callValueReturns(0.2, 0) // Fudge has no effect on first frame.
 	a.checkCurrFrame(0)

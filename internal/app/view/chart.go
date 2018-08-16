@@ -126,7 +126,7 @@ func NewChart() *Chart {
 		weeklyStochastics: newChartStochastics(purple),
 		timeLabels:        newChartTimeLabels(),
 		loading:           true,
-		fadeIn:            newAnimation(1*fps, false),
+		fadeIn:            newAnimation(1 * fps),
 	}
 }
 

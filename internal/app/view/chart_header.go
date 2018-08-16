@@ -98,7 +98,7 @@ func newChartHeader(args *chartHeaderArgs) *chartHeader {
 		},
 		rounding: args.Rounding,
 		padding:  args.Padding,
-		fadeIn:   newAnimation(1*fps, false),
+		fadeIn:   newAnimation(1 * fps),
 	}
 }
 

@@ -31,8 +31,8 @@ func newCenteredText(textRenderer *gfx.TextRenderer, text string, opts ...center
 		Text:         text,
 		color:        white,
 	}
-	for _, opt := range opts {
-		opt(c)
+	for _, o := range opts {
+		o(c)
 	}
 	return c
 }

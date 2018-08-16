@@ -518,7 +518,7 @@ type viewChart struct {
 func newViewChart(ch *Chart) *viewChart {
 	return &viewChart{
 		Chart:  ch,
-		fadeIn: newAnimation(1*fps, false),
+		fadeIn: newAnimation(1 * fps),
 	}
 }
 

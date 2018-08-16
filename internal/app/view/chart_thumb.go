@@ -73,8 +73,8 @@ func NewChartThumb() *ChartThumb {
 		dailyStochastics:  newChartStochastics(yellow),
 		weeklyStochastics: newChartStochastics(purple),
 		loading:           true,
-		fadeIn:            newAnimation(1*fps, false),
-		fadeInData:        newAnimation(1*fps, false),
+		fadeIn:            newAnimation(1 * fps),
+		fadeInData:        newAnimation(1 * fps),
 	}
 }
 
