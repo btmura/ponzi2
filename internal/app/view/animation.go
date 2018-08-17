@@ -10,6 +10,8 @@ const (
 )
 
 type animation struct {
+	start     float32
+	end       float32
 	currFrame int
 	numFrames int
 	loop      bool
@@ -19,7 +21,10 @@ type animation struct {
 type animationOpt func(a *animation)
 
 func newAnimation(numFrames int, opts ...animationOpt) *animation {
-	a := &animation{numFrames: numFrames}
+	a := &animation{
+		end:       1,
+		numFrames: numFrames,
+	}
 	for _, o := range opts {
 		o(a)
 	}
@@ -32,16 +37,28 @@ func animationLoop() animationOpt {
 	}
 }
 
+// TODO(btmura): add test for Reverse and start and end values
+func (a *animation) Reverse() *animation {
+	return &animation{
+		start:     a.Value(0),
+		end:       a.start,
+		currFrame: a.numFrames - 1 - a.currFrame,
+		numFrames: a.currFrame + 1,
+		loop:      a.loop,
+		state:     a.state,
+	}
+}
+
 func (a *animation) Start() {
 	a.state = aRunning
 }
 
-func (a *animation) Animating() bool {
-	return a.state != aStopped
-}
-
 func (a *animation) Stop() {
 	a.state = aFinishing
+}
+
+func (a *animation) Animating() bool {
+	return a.state != aStopped
 }
 
 func (a *animation) Update() (dirty bool) {
@@ -73,6 +90,10 @@ func (a *animation) Update() (dirty bool) {
 }
 
 func (a *animation) Value(fudge float32) float32 {
+	return a.start + (a.end-a.start)*a.percent(fudge)
+}
+
+func (a *animation) percent(fudge float32) float32 {
 	switch a.currFrame {
 	case 0:
 		return 0
