@@ -8,9 +8,9 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "command": "go generate ./... ; if ($?) { go build -v -x }; if ($?) { ./ponzi2.exe }",
+            "command": "go generate ./... ; if ($?) { go build -v -x }; if ($?) { ./ponzi2.exe -alsologtostderr}",
             "linux": {
-                "command": "go generate ./... && go build -v -x && ./ponzi2"
+                "command": "go generate ./... && go build -v -x && ./ponzi2 -alsologtostderr"
             },
             "options": {
                 "cwd": "${workspaceRoot}"
