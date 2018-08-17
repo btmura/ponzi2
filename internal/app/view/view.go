@@ -87,6 +87,9 @@ type View struct {
 	// chart renders the currently viewed stock.
 	chart *viewChart
 
+	// removedCharts are charts that are being removed.
+	removedCharts []*viewChart
+
 	// chartThumbs renders the stocks in the sidebar.
 	chartThumbs []*ChartThumb
 
@@ -441,6 +444,18 @@ func (v *View) update() (dirty bool) {
 			dirty = true
 		}
 	}
+
+	var rcs []*viewChart
+	for _, rc := range v.removedCharts {
+		if rc.Update() {
+			dirty = true
+		}
+		if rc.Animating() {
+			rcs = append(rcs, rc)
+		}
+	}
+	v.removedCharts = rcs
+
 	for _, th := range v.chartThumbs {
 		if th.Update() {
 			dirty = true
@@ -467,6 +482,11 @@ func (v *View) render(fudge float32) (dirty bool) {
 		v.chart.Render(vc)
 	} else {
 		instructionsText.Render(vc.Bounds)
+	}
+
+	// Render any removed charts that are fading out.
+	for _, ch := range v.removedCharts {
+		ch.Render(vc)
 	}
 
 	// Render the input symbol over the chart.
@@ -506,31 +526,46 @@ func (v *View) SetInputSymbolSubmittedCallback(cb func(symbol string)) {
 // SetChart sets the View's main chart.
 func (v *View) SetChart(ch *Chart) {
 	defer v.PostEmptyEvent()
+
+	if v.chart != nil {
+		v.chart.FadeOut()
+		v.removedCharts = append(v.removedCharts, v.chart)
+	}
+
 	v.chart = newViewChart(ch)
 	v.chart.FadeIn()
 }
 
 type viewChart struct {
 	*Chart
-	fadeIn *animation
+	fade *animation
 }
 
 func newViewChart(ch *Chart) *viewChart {
 	return &viewChart{
-		Chart:  ch,
-		fadeIn: newAnimation(1 * fps),
+		Chart: ch,
+		fade:  newAnimation(1 * fps),
 	}
 }
 
 func (v *viewChart) FadeIn() {
-	v.fadeIn.Start()
+	v.fade.Start()
+}
+
+func (v *viewChart) FadeOut() {
+	v.fade = v.fade.Reverse()
+	v.fade.Start()
+}
+
+func (v *viewChart) Animating() bool {
+	return v.fade.Animating()
 }
 
 func (v *viewChart) Update() (dirty bool) {
 	if v.Chart.Update() {
 		dirty = true
 	}
-	if v.fadeIn.Update() {
+	if v.fade.Update() {
 		dirty = true
 	}
 	return dirty
@@ -540,7 +575,7 @@ func (v *viewChart) Render(vc viewContext) {
 	old := gfx.Alpha()
 	defer gfx.SetAlpha(old)
 
-	gfx.SetAlpha(v.fadeIn.Value(vc.Fudge))
+	gfx.SetAlpha(v.fade.Value(vc.Fudge))
 	v.Chart.Render(vc)
 }
 
