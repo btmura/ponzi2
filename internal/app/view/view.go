@@ -91,7 +91,7 @@ type View struct {
 	removedCharts []*viewChart
 
 	// chartThumbs renders the stocks in the sidebar.
-	chartThumbs []*ChartThumb
+	chartThumbs []*viewChartThumb
 
 	// inputSymbol stores and renders the symbol being entered by the user.
 	inputSymbol *centeredText
@@ -582,16 +582,61 @@ func (v *viewChart) Render(vc viewContext) {
 // AddChartThumb adds the ChartThumbnail to the side bar.
 func (v *View) AddChartThumb(th *ChartThumb) {
 	defer v.PostEmptyEvent()
-	v.chartThumbs = append(v.chartThumbs, th)
+	ct := newViewChartThumb(th)
+	ct.FadeIn()
+	v.chartThumbs = append(v.chartThumbs, ct)
 }
 
 // RemoveChartThumb removes the ChartThumbnail from the side bar.
 func (v *View) RemoveChartThumb(th *ChartThumb) {
 	defer v.PostEmptyEvent()
 	for i, thumb := range v.chartThumbs {
-		if thumb == th {
+		if thumb.ChartThumb == th {
 			v.chartThumbs = append(v.chartThumbs[:i], v.chartThumbs[i+1:]...)
 			break
 		}
 	}
+}
+
+type viewChartThumb struct {
+	*ChartThumb
+	fade *animation
+}
+
+func newViewChartThumb(ch *ChartThumb) *viewChartThumb {
+	return &viewChartThumb{
+		ChartThumb: ch,
+		fade:       newAnimation(1 * fps),
+	}
+}
+
+func (v *viewChartThumb) FadeIn() {
+	v.fade.Start()
+}
+
+func (v *viewChartThumb) FadeOut() {
+	v.fade = v.fade.Reverse()
+	v.fade.Start()
+}
+
+func (v *viewChartThumb) Animating() bool {
+	return v.fade.Animating()
+}
+
+func (v *viewChartThumb) Update() (dirty bool) {
+	if v.ChartThumb.Update() {
+		dirty = true
+	}
+	if v.fade.Update() {
+		dirty = true
+	}
+	return dirty
+}
+
+func (v *viewChartThumb) Render(vc viewContext) {
+	old := gfx.Alpha()
+	defer gfx.SetAlpha(old)
+
+	gfx.SetAlpha(v.fade.Value(vc.Fudge))
+	v.ChartThumb.Render(vc)
 }

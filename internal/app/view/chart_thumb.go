@@ -52,11 +52,8 @@ type ChartThumb struct {
 	// hasError is true there was a loading issue.
 	hasError bool
 
-	// fadeIn fades in the chart after it is created.
+	// fadeIn fades in the data after it loads.
 	fadeIn *animation
-
-	// fadeInData fades in the data after it loads.
-	fadeInData *animation
 }
 
 // NewChartThumb creates a ChartThumb.
@@ -74,7 +71,6 @@ func NewChartThumb() *ChartThumb {
 		weeklyStochastics: newChartStochastics(purple),
 		loading:           true,
 		fadeIn:            newAnimation(1 * fps),
-		fadeInData:        newAnimation(1 * fps),
 	}
 }
 
@@ -92,9 +88,8 @@ func (ch *ChartThumb) SetError(error bool) {
 
 // SetData sets the ChartThumb's stock.
 func (ch *ChartThumb) SetData(st *model.Stock) {
-	ch.fadeIn.Start()
 	if !ch.hasStockUpdated && !st.LastUpdateTime.IsZero() {
-		ch.fadeInData.Start()
+		ch.fadeIn.Start()
 	}
 	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
 
@@ -112,17 +107,11 @@ func (ch *ChartThumb) Update() (dirty bool) {
 	if ch.fadeIn.Update() {
 		dirty = true
 	}
-	if ch.fadeInData.Update() {
-		dirty = true
-	}
 	return dirty
 }
 
 // Render renders the ChartThumb.
 func (ch *ChartThumb) Render(vc viewContext) {
-	alpha := ch.fadeIn.Value(vc.Fudge)
-	gfx.SetAlpha(alpha)
-
 	// Render the border around the chart.
 	strokeRoundedRect(vc.Bounds, thumbChartRounding)
 
@@ -147,7 +136,9 @@ func (ch *ChartThumb) Render(vc viewContext) {
 		}
 	}
 
-	gfx.SetAlpha(alpha * ch.fadeInData.Value(vc.Fudge))
+	old := gfx.Alpha()
+	gfx.SetAlpha(old * ch.fadeIn.Value(vc.Fudge))
+	defer gfx.SetAlpha(old)
 
 	rects := sliceRect(r, 0.5)
 	renderRectTopDivider(rects[0], horizLine)
