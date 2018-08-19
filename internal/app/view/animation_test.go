@@ -3,142 +3,144 @@ package view
 import "testing"
 
 func TestAnimation_Start_Stop_Update_Value_NoLoop(t *testing.T) {
-	a := &animationTest{t, newAnimation(3)}
+	at := &animationTester{t}
 
-	a.callValueReturns(0.2, 0) // Fudge has no effect on first frame.
-	a.checkCurrFrame(0)
-	a.checkNumFrames(3)
-	a.checkState(aStopped)
+	a := newAnimation(3)
+
+	at.callValueReturns(a, 0.2, 0) // Fudge has no effect on first frame.
+	at.checkCurrFrame(a, 0)
+	at.checkNumFrames(a, 3)
+	at.checkState(a, aStopped)
 
 	a.Start()
-	a.callValueReturns(0.1, 0) // Fudge still has no effect on first frame.
-	a.checkCurrFrame(0)
-	a.checkNumFrames(3)
-	a.checkState(aRunning)
+	at.callValueReturns(a, 0.1, 0) // Fudge still has no effect on first frame.
+	at.checkCurrFrame(a, 0)
+	at.checkNumFrames(a, 3)
+	at.checkState(a, aRunning)
 
-	a.callUpdateReturns(true)
-	a.callValueReturns(0.1, 0.55) // Fudge takes affect.
-	a.checkCurrFrame(1)
-	a.checkNumFrames(3)
-	a.checkState(aRunning)
+	at.callUpdateReturns(a, true)
+	at.callValueReturns(a, 0.1, 0.55) // Fudge takes affect.
+	at.checkCurrFrame(a, 1)
+	at.checkNumFrames(a, 3)
+	at.checkState(a, aRunning)
 
 	a.Stop()
-	a.callValueReturns(0, 0.5)
-	a.checkCurrFrame(1)
-	a.checkNumFrames(3)
-	a.checkState(aFinishing)
+	at.callValueReturns(a, 0, 0.5)
+	at.checkCurrFrame(a, 1)
+	at.checkNumFrames(a, 3)
+	at.checkState(a, aFinishing)
 
 	// Animation should finish and stop after.
-	a.callUpdateReturns(true)
-	a.callValueReturns(0, 1.0)
-	a.checkCurrFrame(2)
-	a.checkNumFrames(3)
-	a.checkState(aFinishing)
+	at.callUpdateReturns(a, true)
+	at.callValueReturns(a, 0, 1.0)
+	at.checkCurrFrame(a, 2)
+	at.checkNumFrames(a, 3)
+	at.checkState(a, aFinishing)
 
 	// Animation is finished. Update should have no affect.
-	a.callUpdateReturns(false)
-	a.callValueReturns(0.5, 1.0) // Fudge has no effect on last frame.
-	a.checkCurrFrame(2)
-	a.checkNumFrames(3)
-	a.checkState(aStopped)
+	at.callUpdateReturns(a, false)
+	at.callValueReturns(a, 0.5, 1.0) // Fudge has no effect on last frame.
+	at.checkCurrFrame(a, 2)
+	at.checkNumFrames(a, 3)
+	at.checkState(a, aStopped)
 }
 
 func TestAnimation_Start_Stop_Update_Value_Loop(t *testing.T) {
-	a := &animationTest{t, newAnimation(3, animationLoop())}
+	at := &animationTester{t}
+	a := newAnimation(3, animationLoop())
 
-	a.callValueReturns(0.2, 0) // Fudge has no effect on first frame.
-	a.checkCurrFrame(0)
-	a.checkNumFrames(3)
-	a.checkState(aStopped)
+	at.callValueReturns(a, 0.2, 0) // Fudge has no effect on first frame.
+	at.checkCurrFrame(a, 0)
+	at.checkNumFrames(a, 3)
+	at.checkState(a, aStopped)
 
 	a.Start()
-	a.callValueReturns(0.1, 0) // Fudge still has no effect on first frame.
-	a.checkCurrFrame(0)
-	a.checkNumFrames(3)
-	a.checkState(aRunning)
+	at.callValueReturns(a, 0.1, 0) // Fudge still has no effect on first frame.
+	at.checkCurrFrame(a, 0)
+	at.checkNumFrames(a, 3)
+	at.checkState(a, aRunning)
 
-	a.callUpdateReturns(true)
-	a.callValueReturns(0.1, 0.55) // Fudge takes affect.
-	a.checkCurrFrame(1)
-	a.checkNumFrames(3)
-	a.checkState(aRunning)
+	at.callUpdateReturns(a, true)
+	at.callValueReturns(a, 0.1, 0.55) // Fudge takes affect.
+	at.checkCurrFrame(a, 1)
+	at.checkNumFrames(a, 3)
+	at.checkState(a, aRunning)
 
-	a.callUpdateReturns(true)
-	a.callValueReturns(0, 1.0)
-	a.checkCurrFrame(2)
-	a.checkNumFrames(3)
-	a.checkState(aRunning)
+	at.callUpdateReturns(a, true)
+	at.callValueReturns(a, 0, 1.0)
+	at.checkCurrFrame(a, 2)
+	at.checkNumFrames(a, 3)
+	at.checkState(a, aRunning)
 
 	// Animation should loop around.
-	a.callUpdateReturns(true)
-	a.callValueReturns(0, 0)
-	a.checkCurrFrame(0)
-	a.checkNumFrames(3)
-	a.checkState(aRunning)
+	at.callUpdateReturns(a, true)
+	at.callValueReturns(a, 0, 0)
+	at.checkCurrFrame(a, 0)
+	at.checkNumFrames(a, 3)
+	at.checkState(a, aRunning)
 
-	a.callUpdateReturns(true)
-	a.callValueReturns(0, 0.5)
-	a.checkCurrFrame(1)
-	a.checkNumFrames(3)
-	a.checkState(aRunning)
+	at.callUpdateReturns(a, true)
+	at.callValueReturns(a, 0, 0.5)
+	at.checkCurrFrame(a, 1)
+	at.checkNumFrames(a, 3)
+	at.checkState(a, aRunning)
 
 	a.Stop()
-	a.callValueReturns(0, 0.5)
-	a.checkCurrFrame(1)
-	a.checkNumFrames(3)
-	a.checkState(aFinishing)
+	at.callValueReturns(a, 0, 0.5)
+	at.checkCurrFrame(a, 1)
+	at.checkNumFrames(a, 3)
+	at.checkState(a, aFinishing)
 
 	// Animation should finish and stop after.
-	a.callUpdateReturns(true)
-	a.callValueReturns(0, 1.0)
-	a.checkCurrFrame(2)
-	a.checkNumFrames(3)
-	a.checkState(aFinishing)
+	at.callUpdateReturns(a, true)
+	at.callValueReturns(a, 0, 1.0)
+	at.checkCurrFrame(a, 2)
+	at.checkNumFrames(a, 3)
+	at.checkState(a, aFinishing)
 
 	// Animation is finished. Update should have no affect.
-	a.callUpdateReturns(false)
-	a.callValueReturns(0, 1.0)
-	a.checkCurrFrame(2)
-	a.checkNumFrames(3)
-	a.checkState(aStopped)
+	at.callUpdateReturns(a, false)
+	at.callValueReturns(a, 0, 1.0)
+	at.checkCurrFrame(a, 2)
+	at.checkNumFrames(a, 3)
+	at.checkState(a, aStopped)
 }
 
-type animationTest struct {
+type animationTester struct {
 	*testing.T
-	*animation
 }
 
-func (a *animationTest) checkCurrFrame(want int) {
-	a.Helper()
+func (at *animationTester) checkCurrFrame(a *animation, want int) {
+	at.Helper()
 	if a.currFrame != want {
-		a.Errorf("a.currFrame = %d, want %d", a.currFrame, want)
+		at.Errorf("a.currFrame = %d, want %d", a.currFrame, want)
 	}
 }
 
-func (a *animationTest) checkNumFrames(want int) {
-	a.Helper()
+func (at *animationTester) checkNumFrames(a *animation, want int) {
+	at.Helper()
 	if a.numFrames != want {
-		a.Errorf("a.numFrames = %d, want %d", a.numFrames, want)
+		at.Errorf("a.numFrames = %d, want %d", a.numFrames, want)
 	}
 }
 
-func (a *animationTest) checkState(want animationState) {
-	a.Helper()
+func (at *animationTester) checkState(a *animation, want animationState) {
+	at.Helper()
 	if a.state != want {
-		a.Errorf("a.state = %v, want %v", a.state, want)
+		at.Errorf("a.state = %v, want %v", a.state, want)
 	}
 }
 
-func (a *animationTest) callUpdateReturns(want bool) {
-	a.Helper()
+func (at *animationTester) callUpdateReturns(a *animation, want bool) {
+	at.Helper()
 	if got := a.Update(); got != want {
-		a.Errorf("a.Update() = %t, want %t", got, want)
+		at.Errorf("a.Update() = %t, want %t", got, want)
 	}
 }
 
-func (a *animationTest) callValueReturns(fudge, want float32) {
-	a.Helper()
+func (at *animationTester) callValueReturns(a *animation, fudge, want float32) {
+	at.Helper()
 	if got := a.Value(fudge); got != want {
-		a.Errorf("a.Value(%f) = %f, want %f", fudge, got, want)
+		at.Errorf("a.Value(%f) = %f, want %f", fudge, got, want)
 	}
 }
