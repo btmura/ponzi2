@@ -42,7 +42,6 @@ func (a *animation) Reverse() *animation {
 	return &animation{
 		start:     a.Value(0),
 		end:       a.start,
-		currFrame: a.numFrames - 1 - a.currFrame,
 		numFrames: a.currFrame + 1,
 		loop:      a.loop,
 		state:     a.state,

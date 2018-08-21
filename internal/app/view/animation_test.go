@@ -106,6 +106,18 @@ func TestAnimation_Start_Stop_Update_Value_Loop(t *testing.T) {
 	at.checkState(a, aStopped)
 }
 
+func TestReverse(t *testing.T) {
+	at := &animationTester{t}
+
+	a := newAnimation(3)
+
+	b := a.Reverse()
+	at.callValueReturns(b, 0.2, 0) // Fudge has no effect on first frame.
+	at.checkCurrFrame(b, 0)
+	at.checkNumFrames(b, 1)
+	at.checkState(b, aStopped)
+}
+
 type animationTester struct {
 	*testing.T
 }
