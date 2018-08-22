@@ -37,8 +37,8 @@ func animationLoop() animationOpt {
 	}
 }
 
-// TODO(btmura): add test for Reverse and start and end values
-func (a *animation) Reverse() *animation {
+// TODO(btmura): add test for Rewinded and start and end values
+func (a *animation) Rewinded() *animation {
 	return &animation{
 		start:     a.Value(0),
 		end:       a.start,

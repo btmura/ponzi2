@@ -553,7 +553,7 @@ func (v *viewChart) FadeIn() {
 }
 
 func (v *viewChart) FadeOut() {
-	v.fade = v.fade.Reverse()
+	v.fade = v.fade.Rewinded()
 	v.fade.Start()
 }
 
@@ -615,7 +615,7 @@ func (v *viewChartThumb) FadeIn() {
 }
 
 func (v *viewChartThumb) FadeOut() {
-	v.fade = v.fade.Reverse()
+	v.fade = v.fade.Rewinded()
 	v.fade.Start()
 }
 
