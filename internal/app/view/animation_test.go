@@ -110,16 +110,62 @@ func TestAnimation_Rewinded(t *testing.T) {
 	at := &animationTester{t}
 
 	a := newAnimation(3)
-
 	b := a.Rewinded()
-	at.callValueReturns(b, 0.2, 0) // Fudge has no effect on first frame.
+
+	at.checkStart(b, 0)
+	at.checkEnd(b, 0)
 	at.checkCurrFrame(b, 0)
 	at.checkNumFrames(b, 1)
 	at.checkState(b, aStopped)
+	at.callValueReturns(b, 0, 0)
+
+	a.Start()
+	b = a.Rewinded()
+
+	at.checkStart(b, 0)
+	at.checkEnd(b, 0)
+	at.checkCurrFrame(b, 0)
+	at.checkNumFrames(b, 1)
+	at.checkState(b, aRunning)
+	at.callValueReturns(b, 0, 0)
+
+	at.callUpdateReturns(a, true)
+	b = a.Rewinded()
+
+	at.checkStart(b, 0.5)
+	at.checkEnd(b, 0)
+	at.checkCurrFrame(b, 0)
+	at.checkNumFrames(b, 2)
+	at.checkState(b, aRunning)
+	at.callValueReturns(b, 0, 0.5)
+
+	at.callUpdateReturns(a, true)
+	b = a.Rewinded()
+
+	at.checkStart(b, 1.0)
+	at.checkEnd(b, 0)
+	at.checkCurrFrame(b, 0)
+	at.checkNumFrames(b, 3)
+	at.checkState(b, aRunning)
+	at.callValueReturns(b, 0, 1.0)
 }
 
 type animationTester struct {
 	*testing.T
+}
+
+func (at *animationTester) checkStart(a *animation, want float32) {
+	at.Helper()
+	if a.start != want {
+		at.Errorf("a.start = %f, want %f", a.start, want)
+	}
+}
+
+func (at *animationTester) checkEnd(a *animation, want float32) {
+	at.Helper()
+	if a.end != want {
+		at.Errorf("a.end = %f, want %f", a.end, want)
+	}
 }
 
 func (at *animationTester) checkCurrFrame(a *animation, want int) {
