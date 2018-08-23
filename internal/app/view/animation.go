@@ -37,6 +37,13 @@ func animationLoop() animationOpt {
 	}
 }
 
+func animationStartEnd(start, end float32) animationOpt {
+	return func(a *animation) {
+		a.start = start
+		a.end = end
+	}
+}
+
 // TODO(btmura): add test for Rewinded and start and end values
 func (a *animation) Rewinded() *animation {
 	return &animation{
