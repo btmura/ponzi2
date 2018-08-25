@@ -113,31 +113,31 @@ type View struct {
 type viewChart struct {
 	*Chart
 	fade  *animation
-	scale *animation
+	inset *animation
 }
 
 func newViewChart(ch *Chart) *viewChart {
 	return &viewChart{
 		Chart: ch,
 		fade:  newAnimation(1 * fps),
-		scale: newAnimation(1*fps, animationStartEnd(1.05, 1)),
+		inset: newAnimation(1*fps, animationStartEnd(10, 0)),
 	}
 }
 
 func (v *viewChart) FadeIn() {
 	v.fade.Start()
-	v.scale.Start()
+	v.inset.Start()
 }
 
 func (v *viewChart) FadeOut() {
 	v.fade = v.fade.Rewinded()
 	v.fade.Start()
-	v.scale = v.scale.Rewinded()
-	v.scale.Start()
+	v.inset = v.inset.Rewinded()
+	v.inset.Start()
 }
 
 func (v *viewChart) Animating() bool {
-	return v.fade.Animating() || v.scale.Animating()
+	return v.fade.Animating() || v.inset.Animating()
 }
 
 func (v *viewChart) Update() (dirty bool) {
@@ -147,7 +147,7 @@ func (v *viewChart) Update() (dirty bool) {
 	if v.fade.Update() {
 		dirty = true
 	}
-	if v.scale.Update() {
+	if v.inset.Update() {
 		dirty = true
 	}
 	return dirty
@@ -158,38 +158,38 @@ func (v *viewChart) Render(vc viewContext) {
 	defer gfx.SetAlpha(old)
 
 	gfx.SetAlpha(v.fade.Value(vc.Fudge))
-	vc.Bounds = scaledRect(vc.Bounds, v.scale.Value(vc.Fudge))
+	vc.Bounds = vc.Bounds.Inset(int(v.inset.Value(vc.Fudge)))
 	v.Chart.Render(vc)
 }
 
 type viewChartThumb struct {
 	*ChartThumb
 	fade  *animation
-	scale *animation
+	inset *animation
 }
 
 func newViewChartThumb(ch *ChartThumb) *viewChartThumb {
 	return &viewChartThumb{
 		ChartThumb: ch,
 		fade:       newAnimation(1 * fps),
-		scale:      newAnimation(1*fps, animationStartEnd(1.05, 1)),
+		inset:      newAnimation(1*fps, animationStartEnd(10, 0)),
 	}
 }
 
 func (v *viewChartThumb) FadeIn() {
 	v.fade.Start()
-	v.scale.Start()
+	v.inset.Start()
 }
 
 func (v *viewChartThumb) FadeOut() {
 	v.fade = v.fade.Rewinded()
 	v.fade.Start()
-	v.scale = v.scale.Rewinded()
-	v.scale.Start()
+	v.inset = v.inset.Rewinded()
+	v.inset.Start()
 }
 
 func (v *viewChartThumb) Animating() bool {
-	return v.fade.Animating() || v.scale.Animating()
+	return v.fade.Animating() || v.inset.Animating()
 }
 
 func (v *viewChartThumb) Update() (dirty bool) {
@@ -199,7 +199,7 @@ func (v *viewChartThumb) Update() (dirty bool) {
 	if v.fade.Update() {
 		dirty = true
 	}
-	if v.scale.Update() {
+	if v.inset.Update() {
 		dirty = true
 	}
 	return dirty
@@ -210,7 +210,7 @@ func (v *viewChartThumb) Render(vc viewContext) {
 	defer gfx.SetAlpha(old)
 
 	gfx.SetAlpha(v.fade.Value(vc.Fudge))
-	vc.Bounds = scaledRect(vc.Bounds, v.scale.Value(vc.Fudge))
+	vc.Bounds = vc.Bounds.Inset(int(v.inset.Value(vc.Fudge)))
 	v.ChartThumb.Render(vc)
 }
 

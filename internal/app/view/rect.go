@@ -138,23 +138,6 @@ func sliceRect(r image.Rectangle, percentages ...float32) []image.Rectangle {
 	return rs
 }
 
-func scaledRect(r image.Rectangle, scale float32) image.Rectangle {
-	inset := func(dim int) int {
-		return int((float32(dim) - float32(dim)*scale) / 2)
-	}
-
-	ix := inset(r.Dx())
-	iy := inset(r.Dy())
-
-	r.Min.X += ix
-	r.Max.X -= ix
-
-	r.Min.Y += iy
-	r.Max.Y -= iy
-
-	return image.Rect(r.Min.X, r.Min.Y, r.Max.X, r.Max.Y)
-}
-
 // transRect returns a rectangle translated by the dx and dy amounts.
 func transRect(r image.Rectangle, dx, dy int) image.Rectangle {
 	return r.Add(image.Pt(dx, dy))
