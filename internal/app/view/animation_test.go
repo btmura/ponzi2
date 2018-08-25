@@ -1,204 +1,279 @@
 package view
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/google/go-cmp/cmp"
+)
 
 func TestAnimation_Start_Stop_Update_Value_NoLoop(t *testing.T) {
-	at := &animationTester{t}
-
 	a := newAnimation(3)
 
-	at.callValueReturns(a, 0.2, 0) // Fudge has no effect on first frame.
-	at.checkCurrFrame(a, 0)
-	at.checkNumFrames(a, 3)
-	at.checkState(a, aStopped)
+	want := &animation{
+		start:     0,
+		end:       1,
+		currFrame: 0,
+		numFrames: 3,
+		state:     aStopped,
+	}
+	checkFields(t, want, a)
+	checkValue(t, 0, a, 0.2) // Fudge has no effect on first frame.
 
 	a.Start()
-	at.callValueReturns(a, 0.1, 0) // Fudge still has no effect on first frame.
-	at.checkCurrFrame(a, 0)
-	at.checkNumFrames(a, 3)
-	at.checkState(a, aRunning)
 
-	at.callUpdateReturns(a, true)
-	at.callValueReturns(a, 0.1, 0.55) // Fudge takes affect.
-	at.checkCurrFrame(a, 1)
-	at.checkNumFrames(a, 3)
-	at.checkState(a, aRunning)
+	want = &animation{
+		start:     0,
+		end:       1,
+		currFrame: 0,
+		numFrames: 3,
+		state:     aRunning,
+	}
+	checkFields(t, want, a)
+	checkValue(t, 0, a, 0.1) // Fudge still has no effect on first frame.
+
+	checkUpdate(t, true, a)
+
+	want = &animation{
+		start:     0,
+		end:       1,
+		currFrame: 1,
+		numFrames: 3,
+		state:     aRunning,
+	}
+	checkFields(t, want, a)
+	checkValue(t, 0.55, a, 0.1) // Fudge takes affect.
 
 	a.Stop()
-	at.callValueReturns(a, 0, 0.5)
-	at.checkCurrFrame(a, 1)
-	at.checkNumFrames(a, 3)
-	at.checkState(a, aFinishing)
+
+	want = &animation{
+		start:     0,
+		end:       1,
+		currFrame: 1,
+		numFrames: 3,
+		state:     aFinishing,
+	}
+	checkFields(t, want, a)
+	checkValue(t, 0.5, a, 0)
 
 	// Animation should finish and stop after.
-	at.callUpdateReturns(a, true)
-	at.callValueReturns(a, 0, 1.0)
-	at.checkCurrFrame(a, 2)
-	at.checkNumFrames(a, 3)
-	at.checkState(a, aFinishing)
+	checkUpdate(t, true, a)
+
+	want = &animation{
+		start:     0,
+		end:       1,
+		currFrame: 2,
+		numFrames: 3,
+		state:     aFinishing,
+	}
+	checkFields(t, want, a)
+	checkValue(t, 1.0, a, 0)
 
 	// Animation is finished. Update should have no affect.
-	at.callUpdateReturns(a, false)
-	at.callValueReturns(a, 0.5, 1.0) // Fudge has no effect on last frame.
-	at.checkCurrFrame(a, 2)
-	at.checkNumFrames(a, 3)
-	at.checkState(a, aStopped)
+	checkUpdate(t, false, a)
+
+	want = &animation{
+		start:     0,
+		end:       1,
+		currFrame: 2,
+		numFrames: 3,
+		state:     aStopped,
+	}
+	checkFields(t, want, a)
+	checkValue(t, 1.0, a, 0.5) // Fudge has no effect on last frame.
 }
 
 func TestAnimation_Start_Stop_Update_Value_Loop(t *testing.T) {
-	at := &animationTester{t}
 	a := newAnimation(3, animationLoop())
 
-	at.callValueReturns(a, 0.2, 0) // Fudge has no effect on first frame.
-	at.checkCurrFrame(a, 0)
-	at.checkNumFrames(a, 3)
-	at.checkState(a, aStopped)
+	want := &animation{
+		start:     0,
+		end:       1,
+		currFrame: 0,
+		numFrames: 3,
+		state:     aStopped,
+		loop:      true,
+	}
+	checkFields(t, want, a)
+	checkValue(t, 0, a, 0.2) // Fudge has no effect on first frame.
 
 	a.Start()
-	at.callValueReturns(a, 0.1, 0) // Fudge still has no effect on first frame.
-	at.checkCurrFrame(a, 0)
-	at.checkNumFrames(a, 3)
-	at.checkState(a, aRunning)
 
-	at.callUpdateReturns(a, true)
-	at.callValueReturns(a, 0.1, 0.55) // Fudge takes affect.
-	at.checkCurrFrame(a, 1)
-	at.checkNumFrames(a, 3)
-	at.checkState(a, aRunning)
+	want = &animation{
+		start:     0,
+		end:       1,
+		currFrame: 0,
+		numFrames: 3,
+		state:     aRunning,
+		loop:      true,
+	}
+	checkFields(t, want, a)
+	checkValue(t, 0, a, 0.1) // Fudge still has no effect on first frame.
 
-	at.callUpdateReturns(a, true)
-	at.callValueReturns(a, 0, 1.0)
-	at.checkCurrFrame(a, 2)
-	at.checkNumFrames(a, 3)
-	at.checkState(a, aRunning)
+	checkUpdate(t, true, a)
+
+	want = &animation{
+		start:     0,
+		end:       1,
+		currFrame: 1,
+		numFrames: 3,
+		state:     aRunning,
+		loop:      true,
+	}
+	checkFields(t, want, a)
+	checkValue(t, 0.55, a, 0.1) // Fudge takes affect.
+
+	checkUpdate(t, true, a)
+
+	want = &animation{
+		start:     0,
+		end:       1,
+		currFrame: 2,
+		numFrames: 3,
+		state:     aRunning,
+		loop:      true,
+	}
+	checkFields(t, want, a)
+	checkValue(t, 1.0, a, 0)
 
 	// Animation should loop around.
-	at.callUpdateReturns(a, true)
-	at.callValueReturns(a, 0, 0)
-	at.checkCurrFrame(a, 0)
-	at.checkNumFrames(a, 3)
-	at.checkState(a, aRunning)
+	checkUpdate(t, true, a)
 
-	at.callUpdateReturns(a, true)
-	at.callValueReturns(a, 0, 0.5)
-	at.checkCurrFrame(a, 1)
-	at.checkNumFrames(a, 3)
-	at.checkState(a, aRunning)
+	want = &animation{
+		start:     0,
+		end:       1,
+		currFrame: 0,
+		numFrames: 3,
+		state:     aRunning,
+		loop:      true,
+	}
+	checkFields(t, want, a)
+	checkValue(t, 0, a, 0)
+
+	checkUpdate(t, true, a)
+
+	want = &animation{
+		start:     0,
+		end:       1,
+		currFrame: 1,
+		numFrames: 3,
+		state:     aRunning,
+		loop:      true,
+	}
+	checkFields(t, want, a)
+	checkValue(t, 0.5, a, 0)
 
 	a.Stop()
-	at.callValueReturns(a, 0, 0.5)
-	at.checkCurrFrame(a, 1)
-	at.checkNumFrames(a, 3)
-	at.checkState(a, aFinishing)
+
+	want = &animation{
+		start:     0,
+		end:       1,
+		currFrame: 1,
+		numFrames: 3,
+		state:     aFinishing,
+		loop:      true,
+	}
+	checkFields(t, want, a)
+	checkValue(t, 0.5, a, 0)
 
 	// Animation should finish and stop after.
-	at.callUpdateReturns(a, true)
-	at.callValueReturns(a, 0, 1.0)
-	at.checkCurrFrame(a, 2)
-	at.checkNumFrames(a, 3)
-	at.checkState(a, aFinishing)
+	checkUpdate(t, true, a)
+
+	want = &animation{
+		start:     0,
+		end:       1,
+		currFrame: 2,
+		numFrames: 3,
+		state:     aFinishing,
+		loop:      true,
+	}
+	checkFields(t, want, a)
+	checkValue(t, 1.0, a, 0)
 
 	// Animation is finished. Update should have no affect.
-	at.callUpdateReturns(a, false)
-	at.callValueReturns(a, 0, 1.0)
-	at.checkCurrFrame(a, 2)
-	at.checkNumFrames(a, 3)
-	at.checkState(a, aStopped)
+	checkUpdate(t, false, a)
+
+	want = &animation{
+		start:     0,
+		end:       1,
+		currFrame: 2,
+		numFrames: 3,
+		state:     aStopped,
+		loop:      true,
+	}
+	checkFields(t, want, a)
+	checkValue(t, 1.0, a, 0)
 }
 
 func TestAnimation_Rewinded(t *testing.T) {
-	at := &animationTester{t}
-
 	a := newAnimation(3)
 	b := a.Rewinded()
 
-	at.checkStart(b, 0)
-	at.checkEnd(b, 0)
-	at.checkCurrFrame(b, 0)
-	at.checkNumFrames(b, 1)
-	at.checkState(b, aStopped)
-	at.callValueReturns(b, 0, 0)
+	want := &animation{
+		start:     0,
+		end:       0,
+		currFrame: 0,
+		numFrames: 1,
+		state:     aStopped,
+	}
+	checkFields(t, want, b)
+	checkValue(t, 0, b, 0)
 
 	a.Start()
 	b = a.Rewinded()
 
-	at.checkStart(b, 0)
-	at.checkEnd(b, 0)
-	at.checkCurrFrame(b, 0)
-	at.checkNumFrames(b, 1)
-	at.checkState(b, aRunning)
-	at.callValueReturns(b, 0, 0)
+	want = &animation{
+		start:     0,
+		end:       0,
+		currFrame: 0,
+		numFrames: 1,
+		state:     aRunning,
+	}
+	checkFields(t, want, b)
+	checkValue(t, 0, b, 0)
 
-	at.callUpdateReturns(a, true)
+	checkUpdate(t, true, a)
 	b = a.Rewinded()
 
-	at.checkStart(b, 0.5)
-	at.checkEnd(b, 0)
-	at.checkCurrFrame(b, 0)
-	at.checkNumFrames(b, 2)
-	at.checkState(b, aRunning)
-	at.callValueReturns(b, 0, 0.5)
+	want = &animation{
+		start:     0.5,
+		end:       0,
+		currFrame: 0,
+		numFrames: 2,
+		state:     aRunning,
+	}
+	checkFields(t, want, b)
+	checkValue(t, 0.5, b, 0)
 
-	at.callUpdateReturns(a, true)
+	checkUpdate(t, true, a)
 	b = a.Rewinded()
 
-	at.checkStart(b, 1.0)
-	at.checkEnd(b, 0)
-	at.checkCurrFrame(b, 0)
-	at.checkNumFrames(b, 3)
-	at.checkState(b, aRunning)
-	at.callValueReturns(b, 0, 1.0)
+	want = &animation{
+		start:     1,
+		end:       0,
+		currFrame: 0,
+		numFrames: 3,
+		state:     aRunning,
+	}
+	checkValue(t, 1.0, b, 0)
 }
 
-type animationTester struct {
-	*testing.T
-}
-
-func (at *animationTester) checkStart(a *animation, want float32) {
-	at.Helper()
-	if a.start != want {
-		at.Errorf("a.start = %f, want %f", a.start, want)
+func checkFields(t *testing.T, a, b *animation) {
+	t.Helper()
+	if diff := cmp.Diff(a, b, cmp.AllowUnexported(animation{})); diff != "" {
+		t.Errorf("differs (-want, +got):\n%s", diff)
 	}
 }
 
-func (at *animationTester) checkEnd(a *animation, want float32) {
-	at.Helper()
-	if a.end != want {
-		at.Errorf("a.end = %f, want %f", a.end, want)
-	}
-}
-
-func (at *animationTester) checkCurrFrame(a *animation, want int) {
-	at.Helper()
-	if a.currFrame != want {
-		at.Errorf("a.currFrame = %d, want %d", a.currFrame, want)
-	}
-}
-
-func (at *animationTester) checkNumFrames(a *animation, want int) {
-	at.Helper()
-	if a.numFrames != want {
-		at.Errorf("a.numFrames = %d, want %d", a.numFrames, want)
-	}
-}
-
-func (at *animationTester) checkState(a *animation, want animationState) {
-	at.Helper()
-	if a.state != want {
-		at.Errorf("a.state = %v, want %v", a.state, want)
-	}
-}
-
-func (at *animationTester) callUpdateReturns(a *animation, want bool) {
-	at.Helper()
+func checkUpdate(t *testing.T, want bool, a *animation) {
+	t.Helper()
 	if got := a.Update(); got != want {
-		at.Errorf("a.Update() = %t, want %t", got, want)
+		t.Errorf("Update() = %t, want %t", got, want)
 	}
 }
 
-func (at *animationTester) callValueReturns(a *animation, fudge, want float32) {
-	at.Helper()
+func checkValue(t *testing.T, want float32, a *animation, fudge float32) {
+	t.Helper()
 	if got := a.Value(fudge); got != want {
-		at.Errorf("a.Value(%f) = %f, want %f", fudge, got, want)
+		t.Errorf("Value(%f) = %f, want %f", fudge, got, want)
 	}
 }
