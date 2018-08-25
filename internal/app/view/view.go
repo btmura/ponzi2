@@ -110,6 +110,110 @@ type View struct {
 	sidebarScrollOffset image.Point
 }
 
+type viewChart struct {
+	*Chart
+	fade  *animation
+	scale *animation
+}
+
+func newViewChart(ch *Chart) *viewChart {
+	return &viewChart{
+		Chart: ch,
+		fade:  newAnimation(1 * fps),
+		scale: newAnimation(1*fps, animationStartEnd(1.05, 1)),
+	}
+}
+
+func (v *viewChart) FadeIn() {
+	v.fade.Start()
+	v.scale.Start()
+}
+
+func (v *viewChart) FadeOut() {
+	v.fade = v.fade.Rewinded()
+	v.fade.Start()
+	v.scale = v.scale.Rewinded()
+	v.scale.Start()
+}
+
+func (v *viewChart) Animating() bool {
+	return v.fade.Animating() || v.scale.Animating()
+}
+
+func (v *viewChart) Update() (dirty bool) {
+	if v.Chart.Update() {
+		dirty = true
+	}
+	if v.fade.Update() {
+		dirty = true
+	}
+	if v.scale.Update() {
+		dirty = true
+	}
+	return dirty
+}
+
+func (v *viewChart) Render(vc viewContext) {
+	old := gfx.Alpha()
+	defer gfx.SetAlpha(old)
+
+	gfx.SetAlpha(v.fade.Value(vc.Fudge))
+	vc.Bounds = scaledRect(vc.Bounds, v.scale.Value(vc.Fudge))
+	v.Chart.Render(vc)
+}
+
+type viewChartThumb struct {
+	*ChartThumb
+	fade  *animation
+	scale *animation
+}
+
+func newViewChartThumb(ch *ChartThumb) *viewChartThumb {
+	return &viewChartThumb{
+		ChartThumb: ch,
+		fade:       newAnimation(1 * fps),
+		scale:      newAnimation(1*fps, animationStartEnd(1.05, 1)),
+	}
+}
+
+func (v *viewChartThumb) FadeIn() {
+	v.fade.Start()
+	v.scale.Start()
+}
+
+func (v *viewChartThumb) FadeOut() {
+	v.fade = v.fade.Rewinded()
+	v.fade.Start()
+	v.scale = v.scale.Rewinded()
+	v.scale.Start()
+}
+
+func (v *viewChartThumb) Animating() bool {
+	return v.fade.Animating() || v.scale.Animating()
+}
+
+func (v *viewChartThumb) Update() (dirty bool) {
+	if v.ChartThumb.Update() {
+		dirty = true
+	}
+	if v.fade.Update() {
+		dirty = true
+	}
+	if v.scale.Update() {
+		dirty = true
+	}
+	return dirty
+}
+
+func (v *viewChartThumb) Render(vc viewContext) {
+	old := gfx.Alpha()
+	defer gfx.SetAlpha(old)
+
+	gfx.SetAlpha(v.fade.Value(vc.Fudge))
+	vc.Bounds = scaledRect(vc.Bounds, v.scale.Value(vc.Fudge))
+	v.ChartThumb.Render(vc)
+}
+
 // viewContext is passed down the view hierarchy providing drawing hints and
 // event information. Meant to be passed around like a Rectangle or Point rather
 // than a pointer to avoid mistakes.
@@ -536,58 +640,6 @@ func (v *View) SetChart(ch *Chart) {
 	v.chart.FadeIn()
 }
 
-type viewChart struct {
-	*Chart
-	fade  *animation
-	scale *animation
-}
-
-func newViewChart(ch *Chart) *viewChart {
-	return &viewChart{
-		Chart: ch,
-		fade:  newAnimation(1 * fps),
-		scale: newAnimation(1*fps, animationStartEnd(1.05, 1)),
-	}
-}
-
-func (v *viewChart) FadeIn() {
-	v.fade.Start()
-	v.scale.Start()
-}
-
-func (v *viewChart) FadeOut() {
-	v.fade = v.fade.Rewinded()
-	v.fade.Start()
-	v.scale = v.scale.Rewinded()
-	v.scale.Start()
-}
-
-func (v *viewChart) Animating() bool {
-	return v.fade.Animating() || v.scale.Animating()
-}
-
-func (v *viewChart) Update() (dirty bool) {
-	if v.Chart.Update() {
-		dirty = true
-	}
-	if v.fade.Update() {
-		dirty = true
-	}
-	if v.scale.Update() {
-		dirty = true
-	}
-	return dirty
-}
-
-func (v *viewChart) Render(vc viewContext) {
-	old := gfx.Alpha()
-	defer gfx.SetAlpha(old)
-
-	gfx.SetAlpha(v.fade.Value(vc.Fudge))
-	vc.Bounds = scaledRect(vc.Bounds, v.scale.Value(vc.Fudge))
-	v.Chart.Render(vc)
-}
-
 // AddChartThumb adds the ChartThumbnail to the side bar.
 func (v *View) AddChartThumb(th *ChartThumb) {
 	defer v.PostEmptyEvent()
@@ -605,56 +657,4 @@ func (v *View) RemoveChartThumb(th *ChartThumb) {
 			break
 		}
 	}
-}
-
-type viewChartThumb struct {
-	*ChartThumb
-	fade  *animation
-	scale *animation
-}
-
-func newViewChartThumb(ch *ChartThumb) *viewChartThumb {
-	return &viewChartThumb{
-		ChartThumb: ch,
-		fade:       newAnimation(1 * fps),
-		scale:      newAnimation(1*fps, animationStartEnd(1.05, 1)),
-	}
-}
-
-func (v *viewChartThumb) FadeIn() {
-	v.fade.Start()
-	v.scale.Start()
-}
-
-func (v *viewChartThumb) FadeOut() {
-	v.fade = v.fade.Rewinded()
-	v.fade.Start()
-	v.scale = v.scale.Rewinded()
-	v.scale.Start()
-}
-
-func (v *viewChartThumb) Animating() bool {
-	return v.fade.Animating() || v.scale.Animating()
-}
-
-func (v *viewChartThumb) Update() (dirty bool) {
-	if v.ChartThumb.Update() {
-		dirty = true
-	}
-	if v.fade.Update() {
-		dirty = true
-	}
-	if v.scale.Update() {
-		dirty = true
-	}
-	return dirty
-}
-
-func (v *viewChartThumb) Render(vc viewContext) {
-	old := gfx.Alpha()
-	defer gfx.SetAlpha(old)
-
-	gfx.SetAlpha(v.fade.Value(vc.Fudge))
-	vc.Bounds = scaledRect(vc.Bounds, v.scale.Value(vc.Fudge))
-	v.ChartThumb.Render(vc)
 }
