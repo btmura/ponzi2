@@ -111,89 +111,62 @@ type View struct {
 }
 
 type viewChart struct {
-	*Chart
-	fade  *animation
-	inset *animation
+	chart *Chart
+	*viewAnimator
 }
 
 func newViewChart(ch *Chart) *viewChart {
 	return &viewChart{
-		Chart: ch,
-		fade:  newAnimation(1 * fps),
-		inset: newAnimation(1*fps, animationStartEnd(10, 0)),
+		chart:        ch,
+		viewAnimator: newViewAnimator(ch),
 	}
-}
-
-func (v *viewChart) FadeIn() {
-	v.fade.Start()
-	v.inset.Start()
-}
-
-func (v *viewChart) FadeOut() {
-	v.fade = v.fade.Rewinded()
-	v.fade.Start()
-	v.inset = v.inset.Rewinded()
-	v.inset.Start()
-}
-
-func (v *viewChart) Animating() bool {
-	return v.fade.Animating() || v.inset.Animating()
-}
-
-func (v *viewChart) Update() (dirty bool) {
-	if v.Chart.Update() {
-		dirty = true
-	}
-	if v.fade.Update() {
-		dirty = true
-	}
-	if v.inset.Update() {
-		dirty = true
-	}
-	return dirty
-}
-
-func (v *viewChart) Render(vc viewContext) {
-	old := gfx.Alpha()
-	defer gfx.SetAlpha(old)
-
-	gfx.SetAlpha(v.fade.Value(vc.Fudge))
-	vc.Bounds = vc.Bounds.Inset(int(v.inset.Value(vc.Fudge)))
-	v.Chart.Render(vc)
 }
 
 type viewChartThumb struct {
-	*ChartThumb
-	fade  *animation
-	inset *animation
+	chartThumb *ChartThumb
+	*viewAnimator
 }
 
-func newViewChartThumb(ch *ChartThumb) *viewChartThumb {
+func newViewChartThumb(th *ChartThumb) *viewChartThumb {
 	return &viewChartThumb{
-		ChartThumb: ch,
-		fade:       newAnimation(1 * fps),
-		inset:      newAnimation(1*fps, animationStartEnd(10, 0)),
+		chartThumb:   th,
+		viewAnimator: newViewAnimator(th),
 	}
 }
 
-func (v *viewChartThumb) FadeIn() {
+type viewUpdateRenderer interface {
+	Update() (dirty bool)
+	Render(viewContext)
+}
+
+type viewAnimator struct {
+	updateRenderer viewUpdateRenderer
+	fade           *animation
+	inset          *animation
+}
+
+func newViewAnimator(updateRenderer viewUpdateRenderer) *viewAnimator {
+	return &viewAnimator{
+		updateRenderer: updateRenderer,
+		fade:           newAnimation(1 * fps),
+		inset:          newAnimation(1*fps, animationStartEnd(10, 0)),
+	}
+}
+
+func (v *viewAnimator) Enter() {
 	v.fade.Start()
 	v.inset.Start()
 }
 
-func (v *viewChartThumb) FadeOut() {
+func (v *viewAnimator) Exit() {
 	v.fade = v.fade.Rewinded()
 	v.fade.Start()
 	v.inset = v.inset.Rewinded()
 	v.inset.Start()
 }
 
-func (v *viewChartThumb) Animating() bool {
-	return v.fade.Animating() || v.inset.Animating()
-}
-
-func (v *viewChartThumb) Update() (dirty bool) {
-	if v.ChartThumb.Update() {
+func (v *viewAnimator) Update() (dirty bool) {
+	if v.updateRenderer.Update() {
 		dirty = true
 	}
 	if v.fade.Update() {
@@ -205,13 +178,17 @@ func (v *viewChartThumb) Update() (dirty bool) {
 	return dirty
 }
 
-func (v *viewChartThumb) Render(vc viewContext) {
+func (v *viewAnimator) Animating() bool {
+	return v.fade.Animating() || v.inset.Animating()
+}
+
+func (v *viewAnimator) Render(vc viewContext) {
 	old := gfx.Alpha()
 	defer gfx.SetAlpha(old)
 
 	gfx.SetAlpha(v.fade.Value(vc.Fudge))
 	vc.Bounds = vc.Bounds.Inset(int(v.inset.Value(vc.Fudge)))
-	v.ChartThumb.Render(vc)
+	v.updateRenderer.Render(vc)
 }
 
 // viewContext is passed down the view hierarchy providing drawing hints and
@@ -632,19 +609,19 @@ func (v *View) SetChart(ch *Chart) {
 	defer v.PostEmptyEvent()
 
 	if v.chart != nil {
-		v.chart.FadeOut()
+		v.chart.Exit()
 		v.removedCharts = append(v.removedCharts, v.chart)
 	}
 
 	v.chart = newViewChart(ch)
-	v.chart.FadeIn()
+	v.chart.Enter()
 }
 
 // AddChartThumb adds the ChartThumbnail to the side bar.
 func (v *View) AddChartThumb(th *ChartThumb) {
 	defer v.PostEmptyEvent()
 	ct := newViewChartThumb(th)
-	ct.FadeIn()
+	ct.Enter()
 	v.chartThumbs = append(v.chartThumbs, ct)
 }
 
@@ -652,7 +629,7 @@ func (v *View) AddChartThumb(th *ChartThumb) {
 func (v *View) RemoveChartThumb(th *ChartThumb) {
 	defer v.PostEmptyEvent()
 	for i, thumb := range v.chartThumbs {
-		if thumb.ChartThumb == th {
+		if thumb.chartThumb == th {
 			v.chartThumbs = append(v.chartThumbs[:i], v.chartThumbs[i+1:]...)
 			break
 		}
