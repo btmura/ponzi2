@@ -78,17 +78,8 @@ func init() {
 
 // The View renders the UI to view and edit the model's stocks that it observes.
 type View struct {
-	// win is the handle to the GLFW window.
-	win *glfw.Window
-
-	// winSize is the current window's size used to measure and draw the UI.
-	winSize image.Point
-
-	// chart renders the currently viewed stock.
-	chart *viewChart
-
-	// removedCharts are charts that are being removed.
-	removedCharts []*viewChart
+	// charts renders the charts in the main area.
+	charts []*viewChart
 
 	// chartThumbs renders the stocks in the sidebar.
 	chartThumbs []*viewChartThumb
@@ -98,6 +89,12 @@ type View struct {
 
 	// inputSymbolSubmittedCallback is called when a new symbol is entered.
 	inputSymbolSubmittedCallback func(symbol string)
+
+	// win is the handle to the GLFW window.
+	win *glfw.Window
+
+	// winSize is the current window's size used to measure and draw the UI.
+	winSize image.Point
 
 	// mousePos is the current global mouse position.
 	mousePos image.Point
@@ -134,39 +131,45 @@ func newViewChartThumb(th *ChartThumb) *viewChartThumb {
 	}
 }
 
-type viewUpdateRenderer interface {
+type viewUpdateRenderCloser interface {
 	Update() (dirty bool)
 	Render(viewContext)
+	Close()
 }
 
 type viewAnimator struct {
-	updateRenderer viewUpdateRenderer
-	fade           *animation
-	inset          *animation
+	updateRenderCloser viewUpdateRenderCloser
+	exiting            bool
+	fade               *animation
+	inset              *animation
 }
 
-func newViewAnimator(updateRenderer viewUpdateRenderer) *viewAnimator {
+func newViewAnimator(updateRenderer viewUpdateRenderCloser) *viewAnimator {
 	return &viewAnimator{
-		updateRenderer: updateRenderer,
-		fade:           newAnimation(1 * fps),
-		inset:          newAnimation(1*fps, animationStartEnd(10, 0)),
+		updateRenderCloser: updateRenderer,
+		fade:               newAnimation(1*fps, animationStarted()),
+		inset:              newAnimation(1*fps, animationStarted(), animationStartEnd(10, 0)),
 	}
 }
 
-func (v *viewAnimator) Enter() {
-	v.fade.Start()
-	v.inset.Start()
-}
-
 func (v *viewAnimator) Exit() {
+	v.exiting = true
 	v.fade = v.fade.Rewinded()
 	v.fade.Start()
 	v.inset = v.inset.Rewinded()
 	v.inset.Start()
 }
 
+func (v *viewAnimator) Animating() bool {
+	return v.fade.Animating() || v.inset.Animating()
+}
+
+func (v *viewAnimator) Remove() bool {
+	return v.exiting && !v.Animating()
+}
+
 func (v *viewAnimator) Update() (dirty bool) {
-	if v.updateRenderer.Update() {
+	if v.updateRenderCloser.Update() {
 		dirty = true
 	}
 	if v.fade.Update() {
@@ -178,17 +181,17 @@ func (v *viewAnimator) Update() (dirty bool) {
 	return dirty
 }
 
-func (v *viewAnimator) Animating() bool {
-	return v.fade.Animating() || v.inset.Animating()
-}
-
 func (v *viewAnimator) Render(vc viewContext) {
 	old := gfx.Alpha()
 	defer gfx.SetAlpha(old)
 
 	gfx.SetAlpha(v.fade.Value(vc.Fudge))
 	vc.Bounds = vc.Bounds.Inset(int(v.inset.Value(vc.Fudge)))
-	v.updateRenderer.Render(vc)
+	v.updateRenderCloser.Render(vc)
+}
+
+func (v *viewAnimator) Close() {
+	v.updateRenderCloser.Close()
 }
 
 // viewContext is passed down the view hierarchy providing drawing hints and
@@ -520,28 +523,30 @@ start:
 }
 
 func (v *View) update() (dirty bool) {
-	if v.chart != nil {
-		if v.chart.Update() {
+	for i := 0; i < len(v.charts); i++ {
+		ch := v.charts[i]
+		if ch.Update() {
 			dirty = true
+		}
+		if ch.Remove() {
+			v.charts = append(v.charts[:i], v.charts[i+1:]...)
+			ch.Close()
+			i--
 		}
 	}
 
-	var rcs []*viewChart
-	for _, rc := range v.removedCharts {
-		if rc.Update() {
-			dirty = true
-		}
-		if rc.Animating() {
-			rcs = append(rcs, rc)
-		}
-	}
-	v.removedCharts = rcs
-
-	for _, th := range v.chartThumbs {
+	for i := 0; i < len(v.chartThumbs); i++ {
+		th := v.chartThumbs[i]
 		if th.Update() {
 			dirty = true
 		}
+		if th.Remove() {
+			v.chartThumbs = append(v.chartThumbs[:i], v.chartThumbs[i+1:]...)
+			th.Close()
+			i--
+		}
 	}
+
 	return dirty
 }
 
@@ -558,16 +563,14 @@ func (v *View) render(fudge float32) (dirty bool) {
 		ScheduledCallbacks: new([]func()),
 	}
 
-	// Render the the main chart or instructions.
-	if v.chart != nil {
-		v.chart.Render(vc)
-	} else {
-		instructionsText.Render(vc.Bounds)
+	// Render the main chart.
+	for _, ch := range v.charts {
+		ch.Render(vc)
 	}
 
-	// Render any removed charts that are fading out.
-	for _, ch := range v.removedCharts {
-		ch.Render(vc)
+	// Render instructions if there are no charts to show.
+	if len(v.charts) == 0 {
+		instructionsText.Render(vc.Bounds)
 	}
 
 	// Render the input symbol over the chart.
@@ -607,30 +610,24 @@ func (v *View) SetInputSymbolSubmittedCallback(cb func(symbol string)) {
 // SetChart sets the View's main chart.
 func (v *View) SetChart(ch *Chart) {
 	defer v.PostEmptyEvent()
-
-	if v.chart != nil {
-		v.chart.Exit()
-		v.removedCharts = append(v.removedCharts, v.chart)
+	for _, ch := range v.charts {
+		ch.Exit()
 	}
-
-	v.chart = newViewChart(ch)
-	v.chart.Enter()
+	v.charts = append([]*viewChart{newViewChart(ch)}, v.charts...)
 }
 
 // AddChartThumb adds the ChartThumbnail to the side bar.
 func (v *View) AddChartThumb(th *ChartThumb) {
 	defer v.PostEmptyEvent()
-	ct := newViewChartThumb(th)
-	ct.Enter()
-	v.chartThumbs = append(v.chartThumbs, ct)
+	v.chartThumbs = append(v.chartThumbs, newViewChartThumb(th))
 }
 
 // RemoveChartThumb removes the ChartThumbnail from the side bar.
 func (v *View) RemoveChartThumb(th *ChartThumb) {
 	defer v.PostEmptyEvent()
-	for i, thumb := range v.chartThumbs {
-		if thumb.chartThumb == th {
-			v.chartThumbs = append(v.chartThumbs[:i], v.chartThumbs[i+1:]...)
+	for _, vth := range v.chartThumbs {
+		if vth.chartThumb == th {
+			vth.Exit()
 			break
 		}
 	}
