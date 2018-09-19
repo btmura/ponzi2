@@ -20,9 +20,19 @@ import (
 // loc is the timezone to use when parsing dates.
 var loc = mustLoadLocation("America/New_York")
 
+// ChartRange is the range to specify in the request.
+type ChartRange string
+
+// ChartRange values.
+const (
+	ChartRangeOneDay   ChartRange = "1d"
+	ChartRangeTwoYears            = "2y"
+)
+
 // GetChartRequest is the request for GetChart.
 type GetChartRequest struct {
 	Symbol string
+	Range  ChartRange
 }
 
 // Chart is the response from calling GetChart.
@@ -59,8 +69,11 @@ func (c *Client) GetChart(ctx context.Context, req *GetChartRequest) (*Chart, er
 	if req.Symbol == "" {
 		return nil, errors.New("iex: missing symbol for chart req")
 	}
+	if req.Range == "" {
+		return nil, errors.New("iex: missing range for chart req")
+	}
 
-	u, err := url.Parse(fmt.Sprintf("https://api.iextrading.com/1.0/stock/%s/chart/2y", req.Symbol))
+	u, err := url.Parse(fmt.Sprintf("https://api.iextrading.com/1.0/stock/%s/chart/%s", req.Symbol, req.Range))
 	if err != nil {
 		return nil, err
 	}

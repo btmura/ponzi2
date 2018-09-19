@@ -242,7 +242,10 @@ func (c *Controller) refreshStock(ctx context.Context, symbol string) {
 		th.SetError(false)
 	}
 	go func() {
-		req := &iex.GetChartRequest{Symbol: symbol}
+		req := &iex.GetChartRequest{
+			Symbol: symbol,
+			Range:  iex.ChartRangeTwoYears,
+		}
 		ch, err := c.iexClient.GetChart(ctx, req)
 		if err != nil {
 			c.pendingStockUpdates <- controllerStockUpdate{
