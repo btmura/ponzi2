@@ -19,7 +19,45 @@ func TestDecodeChart(t *testing.T) {
 		wantErr error
 	}{
 		{
-			desc:   "demo",
+			desc:   "one day",
+			symbol: "AAPL",
+			data: `[
+				{"date":"20180918","minute":"15:57","open":218.44,"high":218.49,"low":218.37,"close":218.49,"volume":2607},
+				{"date":"20180918","minute":"15:58","open":218.46,"high":218.5,"low":218.435,"close":218.44,"volume":3680},
+				{"date":"20180918","minute":"15:59","open":218.45,"high":218.49,"low":218.34,"close":218.34,"volume":26153}
+			]`,
+			want: &Chart{
+				Symbol: "AAPL",
+				Points: []*ChartPoint{
+					{
+						Date:   mustParseDateMinute("20180918", "15:57"),
+						Open:   218.44,
+						High:   218.49,
+						Low:    218.37,
+						Close:  218.49,
+						Volume: 2607,
+					},
+					{
+						Date:   mustParseDateMinute("20180918", "15:58"),
+						Open:   218.46,
+						High:   218.5,
+						Low:    218.435,
+						Close:  218.44,
+						Volume: 3680,
+					},
+					{
+						Date:   mustParseDateMinute("20180918", "15:59"),
+						Open:   218.45,
+						High:   218.49,
+						Low:    218.34,
+						Close:  218.34,
+						Volume: 26153,
+					},
+				},
+			},
+		},
+		{
+			desc:   "daily",
 			symbol: "MSFT",
 			data: `[
 				{"date":"2017-07-05","open":66.948,"high":68.1103,"low":66.9136,"close":67.7572,"volume":21176272,"change":0.892575,"changePercent":1.335},
@@ -30,7 +68,7 @@ func TestDecodeChart(t *testing.T) {
 				Symbol: "MSFT",
 				Points: []*ChartPoint{
 					{
-						Date:          mustParseDate("2017-07-05"),
+						Date:          mustParseDateMinute("2017-07-05", ""),
 						Open:          66.948,
 						High:          68.1103,
 						Low:           66.9136,
@@ -40,7 +78,7 @@ func TestDecodeChart(t *testing.T) {
 						ChangePercent: 1.335,
 					},
 					{
-						Date:          mustParseDate("2017-07-06"),
+						Date:          mustParseDateMinute("2017-07-06", ""),
 						Open:          66.9627,
 						High:          67.4629,
 						Low:           66.8156,
@@ -50,7 +88,7 @@ func TestDecodeChart(t *testing.T) {
 						ChangePercent: -0.738,
 					},
 					{
-						Date:          mustParseDate("2017-07-07"),
+						Date:          mustParseDateMinute("2017-07-07", ""),
 						Open:          67.3845,
 						High:          68.5026,
 						Low:           67.3845,
@@ -77,22 +115,29 @@ func TestDecodeChart(t *testing.T) {
 	}
 }
 
-func TestParseDate(t *testing.T) {
+func TestParseDateMinute(t *testing.T) {
 	for _, tt := range []struct {
-		desc  string
-		input string
-		want  time.Time
+		desc        string
+		inputDate   string
+		inputMinute string
+		want        time.Time
 	}{
 		{
-			desc:  "date without time",
-			input: "2018-06-28",
-			want:  time.Date(2018, 6, 28, 0, 0, 0, 0, loc),
+			desc:      "date",
+			inputDate: "2018-06-28",
+			want:      time.Date(2018, 6, 28, 0, 0, 0, 0, loc),
+		},
+		{
+			desc:        "date and time",
+			inputDate:   "20180628",
+			inputMinute: "14:53",
+			want:        time.Date(2018, 6, 28, 14, 53, 0, 0, loc),
 		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
-			got, gotErr := parseDate(tt.input)
+			got, gotErr := parseDateMinute(tt.inputDate, tt.inputMinute)
 			if gotErr != nil {
-				t.Fatalf("parseDate returned an error (%v), want success", gotErr)
+				t.Fatalf("returned error (%v), want success", gotErr)
 			}
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
@@ -102,10 +147,10 @@ func TestParseDate(t *testing.T) {
 	}
 }
 
-func mustParseDate(dstr string) time.Time {
-	date, err := parseDate(dstr)
+func mustParseDateMinute(date, minute string) time.Time {
+	t, err := parseDateMinute(date, minute)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return date
+	return t
 }

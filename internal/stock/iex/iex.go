@@ -79,7 +79,7 @@ func (c *Client) GetChart(ctx context.Context, req *GetChartRequest) (*Chart, er
 	}
 
 	v := url.Values{}
-	v.Set("filter", "date,open,high,low,close,volume,change,changePercent")
+	v.Set("filter", "date,minute,open,high,low,close,volume,change,changePercent")
 
 	u.RawQuery = v.Encode()
 
@@ -114,6 +114,7 @@ func (c *Client) GetChart(ctx context.Context, req *GetChartRequest) (*Chart, er
 func decodeChart(symbol string, r io.Reader) (*Chart, error) {
 	type DataPoint struct {
 		Date          string  `json:"date"`
+		Minute        string  `json:"minute"`
 		Open          float64 `json:"open"`
 		High          float64 `json:"high"`
 		Low           float64 `json:"low"`
@@ -131,7 +132,7 @@ func decodeChart(symbol string, r io.Reader) (*Chart, error) {
 
 	var ps []*ChartPoint
 	for _, pt := range data {
-		date, err := parseDate(pt.Date)
+		date, err := parseDateMinute(pt.Date, pt.Minute)
 		if err != nil {
 			return nil, fmt.Errorf("parsing date (%s) failed: %v", pt.Date, err)
 		}
@@ -155,8 +156,11 @@ func decodeChart(symbol string, r io.Reader) (*Chart, error) {
 	return &Chart{Symbol: symbol, Points: ps}, nil
 }
 
-func parseDate(s string) (time.Time, error) {
-	return time.ParseInLocation("2006-01-02", s, loc)
+func parseDateMinute(date, minute string) (time.Time, error) {
+	if minute != "" {
+		return time.ParseInLocation("20060102 15:04", date+" "+minute, loc)
+	}
+	return time.ParseInLocation("2006-01-02", date, loc)
 }
 
 func dumpResponse(fileName string, r io.Reader) (io.ReadCloser, error) {
