@@ -10,12 +10,12 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestDecodeTradingSessionSeries(t *testing.T) {
+func TestDecodeChart(t *testing.T) {
 	for _, tt := range []struct {
 		desc    string
 		symbol  string
 		data    string
-		want    *TradingSessionSeries
+		want    *Chart
 		wantErr error
 	}{
 		{
@@ -26,9 +26,9 @@ func TestDecodeTradingSessionSeries(t *testing.T) {
 				{"date":"2017-07-06","open":66.9627,"high":67.4629,"low":66.8156,"close":67.2569,"volume":21117572,"change":-0.500233,"changePercent":-0.738},
 				{"date":"2017-07-07","open":67.3845,"high":68.5026,"low":67.3845,"close":68.1299,"volume":16878317,"change":0.872957,"changePercent":1.298}
 			]`,
-			want: &TradingSessionSeries{
+			want: &Chart{
 				Symbol: "MSFT",
-				TradingSessions: []*TradingSession{
+				Points: []*ChartPoint{
 					{
 						Date:          mustParseDate("2017-07-05"),
 						Open:          66.948,
@@ -64,7 +64,7 @@ func TestDecodeTradingSessionSeries(t *testing.T) {
 		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
-			got, gotErr := decodeTradingSessionSeries(tt.symbol, strings.NewReader(tt.data))
+			got, gotErr := decodeChart(tt.symbol, strings.NewReader(tt.data))
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("resp differs:\n%s", diff)

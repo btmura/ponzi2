@@ -20,14 +20,14 @@ func main() {
 
 	c := iex.NewClient(*dumpAPIResponses)
 
-	req := &iex.GetTradingSessionSeriesRequest{Symbol: *symbol}
-	sr, err := c.GetTradingSessionSeries(ctx, req)
+	req := &iex.GetChartRequest{Symbol: *symbol}
+	ch, err := c.GetChart(ctx, req)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for i, ts := range sr.TradingSessions {
+	for i, p := range ch.Points {
 		fmt.Printf("%d: %s O: %.2f H: %.2f L: %.2f C: %.2f V: %d\n",
-			i, ts.Date, ts.Open, ts.High, ts.Low, ts.Close, ts.Volume)
+			i, p.Date, p.Open, p.High, p.Low, p.Close, p.Volume)
 	}
 }

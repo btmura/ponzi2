@@ -242,8 +242,8 @@ func (c *Controller) refreshStock(ctx context.Context, symbol string) {
 		th.SetError(false)
 	}
 	go func() {
-		req := &iex.GetTradingSessionSeriesRequest{Symbol: symbol}
-		sr, err := c.iexClient.GetTradingSessionSeries(ctx, req)
+		req := &iex.GetChartRequest{Symbol: symbol}
+		ch, err := c.iexClient.GetChart(ctx, req)
 		if err != nil {
 			c.pendingStockUpdates <- controllerStockUpdate{
 				symbol:    symbol,
@@ -252,7 +252,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbol string) {
 		} else {
 			c.pendingStockUpdates <- controllerStockUpdate{
 				symbol: symbol,
-				update: modelStockUpdate(sr),
+				update: modelStockUpdate(ch),
 			}
 		}
 		c.view.PostEmptyEvent()

@@ -20,19 +20,19 @@ import (
 // loc is the timezone to use when parsing dates.
 var loc = mustLoadLocation("America/New_York")
 
-// GetTradingSessionSeriesRequest is the request passed to GetTradingSessionSeries.
-type GetTradingSessionSeriesRequest struct {
+// GetChartRequest is the request for GetChart.
+type GetChartRequest struct {
 	Symbol string
 }
 
-// TradingSessionSeries is the response returned by GetTradingSessionSeries.
-type TradingSessionSeries struct {
-	Symbol          string
-	TradingSessions []*TradingSession
+// Chart is the response from calling GetChart.
+type Chart struct {
+	Symbol string
+	Points []*ChartPoint
 }
 
-// TradingSession contains stats for a single trading session.
-type TradingSession struct {
+// ChartPoint is a single point on the chart.
+type ChartPoint struct {
 	Date          time.Time
 	Open          float32
 	High          float32
@@ -54,10 +54,10 @@ func NewClient(dumpAPIResponses bool) *Client {
 	return &Client{dumpAPIResponses: dumpAPIResponses}
 }
 
-// GetTradingSessionSeries gets a series of trading sessions for a stock symbol.
-func (c *Client) GetTradingSessionSeries(ctx context.Context, req *GetTradingSessionSeriesRequest) (*TradingSessionSeries, error) {
+// GetChart gets a series of trading sessions for a stock symbol.
+func (c *Client) GetChart(ctx context.Context, req *GetChartRequest) (*Chart, error) {
 	if req.Symbol == "" {
-		return nil, errors.New("iex: missing symbol for ts req")
+		return nil, errors.New("iex: missing symbol for chart req")
 	}
 
 	u, err := url.Parse(fmt.Sprintf("https://api.iextrading.com/1.0/stock/%s/chart/2y", req.Symbol))
@@ -83,14 +83,14 @@ func (c *Client) GetTradingSessionSeries(ctx context.Context, req *GetTradingSes
 
 	r := httpResp.Body
 	if c.dumpAPIResponses {
-		rr, err := dumpResponse(fmt.Sprintf("iex-ts-%s.txt", req.Symbol), r)
+		rr, err := dumpResponse(fmt.Sprintf("iex-chart-%s.txt", req.Symbol), r)
 		if err != nil {
 			return nil, fmt.Errorf("iex: failed to dump resp: %v", err)
 		}
 		r = rr
 	}
 
-	resp, err := decodeTradingSessionSeries(req.Symbol, r)
+	resp, err := decodeChart(req.Symbol, r)
 	if err != nil {
 		return nil, fmt.Errorf("iex: failed to decode resp: %v", err)
 	}
@@ -98,7 +98,7 @@ func (c *Client) GetTradingSessionSeries(ctx context.Context, req *GetTradingSes
 	return resp, nil
 }
 
-func decodeTradingSessionSeries(symbol string, r io.Reader) (*TradingSessionSeries, error) {
+func decodeChart(symbol string, r io.Reader) (*Chart, error) {
 	type DataPoint struct {
 		Date          string  `json:"date"`
 		Open          float64 `json:"open"`
@@ -116,14 +116,14 @@ func decodeTradingSessionSeries(symbol string, r io.Reader) (*TradingSessionSeri
 		return nil, fmt.Errorf("json decode failed: %v", err)
 	}
 
-	var ts []*TradingSession
+	var ps []*ChartPoint
 	for _, pt := range data {
 		date, err := parseDate(pt.Date)
 		if err != nil {
 			return nil, fmt.Errorf("parsing date (%s) failed: %v", pt.Date, err)
 		}
 
-		ts = append(ts, &TradingSession{
+		ps = append(ps, &ChartPoint{
 			Date:          date,
 			Open:          float32(pt.Open),
 			High:          float32(pt.High),
@@ -135,11 +135,11 @@ func decodeTradingSessionSeries(symbol string, r io.Reader) (*TradingSessionSeri
 		})
 	}
 
-	sort.Slice(ts, func(i, j int) bool {
-		return ts[i].Date.Before(ts[j].Date)
+	sort.Slice(ps, func(i, j int) bool {
+		return ps[i].Date.Before(ps[j].Date)
 	})
 
-	return &TradingSessionSeries{Symbol: symbol, TradingSessions: ts}, nil
+	return &Chart{Symbol: symbol, Points: ps}, nil
 }
 
 func parseDate(s string) (time.Time, error) {

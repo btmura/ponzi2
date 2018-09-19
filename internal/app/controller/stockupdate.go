@@ -16,9 +16,9 @@ const (
 	d = 3
 )
 
-func modelStockUpdate(sr *iex.TradingSessionSeries) *model.StockUpdate {
-	ds := modelTradingSessions(sr.TradingSessions)
-	ws := modelTradingSessions(weeklyTradingSessions(sr.TradingSessions))
+func modelStockUpdate(ch *iex.Chart) *model.StockUpdate {
+	ds := modelTradingSessions(ch.Points)
+	ws := modelTradingSessions(weeklyChartPoints(ch.Points))
 
 	m25 := modelMovingAverages(ds, 25)
 	m50 := modelMovingAverages(ds, 50)
@@ -66,7 +66,7 @@ func modelStockUpdate(sr *iex.TradingSessionSeries) *model.StockUpdate {
 	}
 
 	return &model.StockUpdate{
-		Symbol: sr.Symbol,
+		Symbol: ch.Symbol,
 		DailyTradingSessionSeries:   &model.TradingSessionSeries{TradingSessions: ds},
 		DailyMovingAverageSeries25:  &model.MovingAverageSeries{MovingAverages: m25},
 		DailyMovingAverageSeries50:  &model.MovingAverageSeries{MovingAverages: m50},
@@ -76,48 +76,48 @@ func modelStockUpdate(sr *iex.TradingSessionSeries) *model.StockUpdate {
 	}
 }
 
-func modelTradingSessions(ts []*iex.TradingSession) []*model.TradingSession {
-	var ms []*model.TradingSession
-	for _, s := range ts {
-		ms = append(ms, &model.TradingSession{
-			Date:          s.Date,
-			Open:          s.Open,
-			High:          s.High,
-			Low:           s.Low,
-			Close:         s.Close,
-			Volume:        s.Volume,
-			Change:        s.Change,
-			PercentChange: s.ChangePercent,
+func modelTradingSessions(ps []*iex.ChartPoint) []*model.TradingSession {
+	var ts []*model.TradingSession
+	for _, p := range ps {
+		ts = append(ts, &model.TradingSession{
+			Date:          p.Date,
+			Open:          p.Open,
+			High:          p.High,
+			Low:           p.Low,
+			Close:         p.Close,
+			Volume:        p.Volume,
+			Change:        p.Change,
+			PercentChange: p.ChangePercent,
 		})
 	}
-	sort.Slice(ms, func(i, j int) bool {
-		return ms[i].Date.Before(ms[j].Date)
+	sort.Slice(ts, func(i, j int) bool {
+		return ts[i].Date.Before(ts[j].Date)
 	})
-	return ms
+	return ts
 }
 
-func weeklyTradingSessions(ds []*iex.TradingSession) (ws []*iex.TradingSession) {
-	for _, s := range ds {
+func weeklyChartPoints(ps []*iex.ChartPoint) (ws []*iex.ChartPoint) {
+	for _, p := range ps {
 		diffWeek := ws == nil
 		if !diffWeek {
-			_, week := s.Date.ISOWeek()
+			_, week := p.Date.ISOWeek()
 			_, prevWeek := ws[len(ws)-1].Date.ISOWeek()
 			diffWeek = week != prevWeek
 		}
 
 		if diffWeek {
-			sc := *s
-			ws = append(ws, &sc)
+			pcopy := *p
+			ws = append(ws, &pcopy)
 		} else {
 			ls := ws[len(ws)-1]
-			if ls.High < s.High {
-				ls.High = s.High
+			if ls.High < p.High {
+				ls.High = p.High
 			}
-			if ls.Low > s.Low {
-				ls.Low = s.Low
+			if ls.Low > p.Low {
+				ls.Low = p.Low
 			}
-			ls.Close = s.Close
-			ls.Volume += s.Volume
+			ls.Close = p.Close
+			ls.Volume += p.Volume
 		}
 	}
 	return ws
