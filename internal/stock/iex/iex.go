@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"os"
 	"sort"
+	"strconv"
 	"time"
 )
 
@@ -33,6 +34,7 @@ const (
 type GetChartRequest struct {
 	Symbol string
 	Range  ChartRange
+	Last   int
 }
 
 // Chart is the response from calling GetChart.
@@ -72,6 +74,9 @@ func (c *Client) GetChart(ctx context.Context, req *GetChartRequest) (*Chart, er
 	if req.Range == "" {
 		return nil, errors.New("iex: missing range for chart req")
 	}
+	if req.Last < 0 {
+		return nil, errors.New("iex: last must be greater than or equal to zero")
+	}
 
 	u, err := url.Parse(fmt.Sprintf("https://api.iextrading.com/1.0/stock/%s/chart/%s", req.Symbol, req.Range))
 	if err != nil {
@@ -80,7 +85,9 @@ func (c *Client) GetChart(ctx context.Context, req *GetChartRequest) (*Chart, er
 
 	v := url.Values{}
 	v.Set("filter", "date,minute,open,high,low,close,volume,change,changePercent")
-
+	if req.Last > 0 {
+		v.Set("chartLast", strconv.Itoa(req.Last))
+	}
 	u.RawQuery = v.Encode()
 
 	httpReq, err := http.NewRequest(http.MethodGet, u.String(), nil)
