@@ -21,11 +21,15 @@ func TestDecodeChart(t *testing.T) {
 		{
 			desc:   "one day",
 			symbol: "AAPL",
-			data: `[
-				{"date":"20180918","minute":"15:57","open":218.44,"high":218.49,"low":218.37,"close":218.49,"volume":2607},
-				{"date":"20180918","minute":"15:58","open":218.46,"high":218.5,"low":218.435,"close":218.44,"volume":3680},
-				{"date":"20180918","minute":"15:59","open":218.45,"high":218.49,"low":218.34,"close":218.34,"volume":26153}
-			]`,
+			data: `{
+				"AAPL": {
+					"chart": [
+						{"date":"20180918","minute":"15:57","open":218.44,"high":218.49,"low":218.37,"close":218.49,"volume":2607},
+						{"date":"20180918","minute":"15:58","open":218.46,"high":218.5,"low":218.435,"close":218.44,"volume":3680},
+						{"date":"20180918","minute":"15:59","open":218.45,"high":218.49,"low":218.34,"close":218.34,"volume":26153}
+					]
+				}
+			}`,
 			want: &Chart{
 				Symbol: "AAPL",
 				Points: []*ChartPoint{
@@ -59,11 +63,15 @@ func TestDecodeChart(t *testing.T) {
 		{
 			desc:   "daily",
 			symbol: "MSFT",
-			data: `[
-				{"date":"2017-07-05","open":66.948,"high":68.1103,"low":66.9136,"close":67.7572,"volume":21176272,"change":0.892575,"changePercent":1.335},
-				{"date":"2017-07-06","open":66.9627,"high":67.4629,"low":66.8156,"close":67.2569,"volume":21117572,"change":-0.500233,"changePercent":-0.738},
-				{"date":"2017-07-07","open":67.3845,"high":68.5026,"low":67.3845,"close":68.1299,"volume":16878317,"change":0.872957,"changePercent":1.298}
-			]`,
+			data: `{
+				"MSFT": {
+					"chart": [
+						{"date":"2017-07-05","open":66.948,"high":68.1103,"low":66.9136,"close":67.7572,"volume":21176272,"change":0.892575,"changePercent":1.335},
+						{"date":"2017-07-06","open":66.9627,"high":67.4629,"low":66.8156,"close":67.2569,"volume":21117572,"change":-0.500233,"changePercent":-0.738},
+						{"date":"2017-07-07","open":67.3845,"high":68.5026,"low":67.3845,"close":68.1299,"volume":16878317,"change":0.872957,"changePercent":1.298}
+					]
+				}
+			}`,
 			want: &Chart{
 				Symbol: "MSFT",
 				Points: []*ChartPoint{

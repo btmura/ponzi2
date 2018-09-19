@@ -78,12 +78,15 @@ func (c *Client) GetChart(ctx context.Context, req *GetChartRequest) (*Chart, er
 		return nil, errors.New("iex: last must be greater than or equal to zero")
 	}
 
-	u, err := url.Parse(fmt.Sprintf("https://api.iextrading.com/1.0/stock/%s/chart/%s", req.Symbol, req.Range))
+	u, err := url.Parse("https://api.iextrading.com/1.0/stock/market/batch")
 	if err != nil {
 		return nil, err
 	}
 
 	v := url.Values{}
+	v.Set("symbols", req.Symbol)
+	v.Set("types", "chart")
+	v.Set("range", string(req.Range))
 	v.Set("filter", "date,minute,open,high,low,close,volume,change,changePercent")
 	if req.Last > 0 {
 		v.Set("chartLast", strconv.Itoa(req.Last))
@@ -119,7 +122,7 @@ func (c *Client) GetChart(ctx context.Context, req *GetChartRequest) (*Chart, er
 }
 
 func decodeChart(symbol string, r io.Reader) (*Chart, error) {
-	type DataPoint struct {
+	type chartPoint struct {
 		Date          string  `json:"date"`
 		Minute        string  `json:"minute"`
 		Open          float64 `json:"open"`
@@ -131,29 +134,35 @@ func decodeChart(symbol string, r io.Reader) (*Chart, error) {
 		ChangePercent float64 `json:"changePercent"`
 	}
 
-	var data []DataPoint
+	type stockData struct {
+		Chart []chartPoint `json:"chart"`
+	}
+
+	var m map[string]stockData
 	dec := json.NewDecoder(r)
-	if err := dec.Decode(&data); err != nil {
+	if err := dec.Decode(&m); err != nil {
 		return nil, fmt.Errorf("json decode failed: %v", err)
 	}
 
 	var ps []*ChartPoint
-	for _, pt := range data {
-		date, err := parseDateMinute(pt.Date, pt.Minute)
-		if err != nil {
-			return nil, fmt.Errorf("parsing date (%s) failed: %v", pt.Date, err)
-		}
+	for _, d := range m {
+		for _, pt := range d.Chart {
+			date, err := parseDateMinute(pt.Date, pt.Minute)
+			if err != nil {
+				return nil, fmt.Errorf("parsing date (%s) failed: %v", pt.Date, err)
+			}
 
-		ps = append(ps, &ChartPoint{
-			Date:          date,
-			Open:          float32(pt.Open),
-			High:          float32(pt.High),
-			Low:           float32(pt.Low),
-			Close:         float32(pt.Close),
-			Volume:        int(pt.Volume),
-			Change:        float32(pt.Change),
-			ChangePercent: float32(pt.ChangePercent),
-		})
+			ps = append(ps, &ChartPoint{
+				Date:          date,
+				Open:          float32(pt.Open),
+				High:          float32(pt.High),
+				Low:           float32(pt.Low),
+				Close:         float32(pt.Close),
+				Volume:        int(pt.Volume),
+				Change:        float32(pt.Change),
+				ChangePercent: float32(pt.ChangePercent),
+			})
+		}
 	}
 
 	sort.Slice(ps, func(i, j int) bool {
