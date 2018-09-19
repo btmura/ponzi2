@@ -13,7 +13,7 @@ import (
 	"github.com/golang/glog"
 	"golang.org/x/image/font/gofont/goregular"
 
-	"github.com/btmura/ponzi2/internal/gfx"
+	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/matrix"
 )
 

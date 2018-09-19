@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/btmura/ponzi2/internal/gfx"
+	"github.com/btmura/ponzi2/internal/app/gfx"
 )
 
 func dataLineVAO(yValues []float32, yRange [2]float32, color [3]float32) *gfx.VAO {
