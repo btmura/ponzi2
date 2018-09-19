@@ -148,7 +148,6 @@ func newViewAnimator(updateRenderer viewUpdateRenderCloser) *viewAnimator {
 	return &viewAnimator{
 		updateRenderCloser: updateRenderer,
 		fade:               newAnimation(1*fps, animationStarted()),
-		inset:              newAnimation(1*fps, animationStarted(), animationStartEnd(10, 0)),
 	}
 }
 
@@ -156,12 +155,10 @@ func (v *viewAnimator) Exit() {
 	v.exiting = true
 	v.fade = v.fade.Rewinded()
 	v.fade.Start()
-	v.inset = v.inset.Rewinded()
-	v.inset.Start()
 }
 
 func (v *viewAnimator) Animating() bool {
-	return v.fade.Animating() || v.inset.Animating()
+	return v.fade.Animating()
 }
 
 func (v *viewAnimator) Remove() bool {
@@ -175,18 +172,13 @@ func (v *viewAnimator) Update() (dirty bool) {
 	if v.fade.Update() {
 		dirty = true
 	}
-	if v.inset.Update() {
-		dirty = true
-	}
 	return dirty
 }
 
 func (v *viewAnimator) Render(vc viewContext) {
 	old := gfx.Alpha()
 	defer gfx.SetAlpha(old)
-
 	gfx.SetAlpha(v.fade.Value(vc.Fudge))
-	vc.Bounds = vc.Bounds.Inset(int(v.inset.Value(vc.Fudge)))
 	v.updateRenderCloser.Render(vc)
 }
 
@@ -294,7 +286,7 @@ func (v *View) Init(ctx context.Context) (cleanup func(), err error) {
 }
 
 func (v *View) handleSizeEvent(width, height int) {
-	glog.V(2).Infof("width:%d height:%d", width, height)
+	glog.V(2).Infof("width:%o height:%o", width, height)
 	defer v.PostEmptyEvent()
 
 	s := image.Pt(width, height)
@@ -511,7 +503,7 @@ start:
 			dirty = true
 		}
 		v.win.SwapBuffers()
-		glog.V(2).Infof("updates:%d lag(%f)/updateSec(%f)=fudge(%f) dirty:%t render:%v", i, lag, updateSec, fudge, dirty, time.Since(now).Seconds())
+		glog.V(2).Infof("updates:%o lag(%f)/updateSec(%f)=fudge(%f) dirty:%t render:%v", i, lag, updateSec, fudge, dirty, time.Since(now).Seconds())
 
 		glfw.PollEvents()
 		if !dirty {
