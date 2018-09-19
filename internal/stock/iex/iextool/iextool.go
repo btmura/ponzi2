@@ -20,7 +20,7 @@ func main() {
 
 	c := iex.NewClient(*dumpAPIResponses)
 
-	req := &iex.GetChartRequest{Symbol: *symbol}
+	req := &iex.GetChartRequest{Symbol: *symbol, Range: iex.ChartRangeTwoYears}
 	ch, err := c.GetChart(ctx, req)
 	if err != nil {
 		log.Fatal(err)
