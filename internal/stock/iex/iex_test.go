@@ -13,14 +13,12 @@ import (
 func TestDecodeChart(t *testing.T) {
 	for _, tt := range []struct {
 		desc    string
-		symbol  string
 		data    string
-		want    *Chart
+		want    []*Chart
 		wantErr error
 	}{
 		{
-			desc:   "one day",
-			symbol: "AAPL",
+			desc: "one day",
 			data: `{
 				"AAPL": {
 					"chart": [
@@ -30,39 +28,40 @@ func TestDecodeChart(t *testing.T) {
 					]
 				}
 			}`,
-			want: &Chart{
-				Symbol: "AAPL",
-				Points: []*ChartPoint{
-					{
-						Date:   mustParseDateMinute("20180918", "15:57"),
-						Open:   218.44,
-						High:   218.49,
-						Low:    218.37,
-						Close:  218.49,
-						Volume: 2607,
-					},
-					{
-						Date:   mustParseDateMinute("20180918", "15:58"),
-						Open:   218.46,
-						High:   218.5,
-						Low:    218.435,
-						Close:  218.44,
-						Volume: 3680,
-					},
-					{
-						Date:   mustParseDateMinute("20180918", "15:59"),
-						Open:   218.45,
-						High:   218.49,
-						Low:    218.34,
-						Close:  218.34,
-						Volume: 26153,
+			want: []*Chart{
+				{
+					Symbol: "AAPL",
+					Points: []*ChartPoint{
+						{
+							Date:   mustParseDateMinute("20180918", "15:57"),
+							Open:   218.44,
+							High:   218.49,
+							Low:    218.37,
+							Close:  218.49,
+							Volume: 2607,
+						},
+						{
+							Date:   mustParseDateMinute("20180918", "15:58"),
+							Open:   218.46,
+							High:   218.5,
+							Low:    218.435,
+							Close:  218.44,
+							Volume: 3680,
+						},
+						{
+							Date:   mustParseDateMinute("20180918", "15:59"),
+							Open:   218.45,
+							High:   218.49,
+							Low:    218.34,
+							Close:  218.34,
+							Volume: 26153,
+						},
 					},
 				},
 			},
 		},
 		{
-			desc:   "daily",
-			symbol: "MSFT",
+			desc: "daily",
 			data: `{
 				"MSFT": {
 					"chart": [
@@ -72,45 +71,47 @@ func TestDecodeChart(t *testing.T) {
 					]
 				}
 			}`,
-			want: &Chart{
-				Symbol: "MSFT",
-				Points: []*ChartPoint{
-					{
-						Date:          mustParseDateMinute("2017-07-05", ""),
-						Open:          66.948,
-						High:          68.1103,
-						Low:           66.9136,
-						Close:         67.7572,
-						Volume:        21176272,
-						Change:        0.892575,
-						ChangePercent: 1.335,
-					},
-					{
-						Date:          mustParseDateMinute("2017-07-06", ""),
-						Open:          66.9627,
-						High:          67.4629,
-						Low:           66.8156,
-						Close:         67.2569,
-						Volume:        21117572,
-						Change:        -0.500233,
-						ChangePercent: -0.738,
-					},
-					{
-						Date:          mustParseDateMinute("2017-07-07", ""),
-						Open:          67.3845,
-						High:          68.5026,
-						Low:           67.3845,
-						Close:         68.1299,
-						Volume:        16878317,
-						Change:        0.872957,
-						ChangePercent: 1.298,
+			want: []*Chart{
+				{
+					Symbol: "MSFT",
+					Points: []*ChartPoint{
+						{
+							Date:          mustParseDateMinute("2017-07-05", ""),
+							Open:          66.948,
+							High:          68.1103,
+							Low:           66.9136,
+							Close:         67.7572,
+							Volume:        21176272,
+							Change:        0.892575,
+							ChangePercent: 1.335,
+						},
+						{
+							Date:          mustParseDateMinute("2017-07-06", ""),
+							Open:          66.9627,
+							High:          67.4629,
+							Low:           66.8156,
+							Close:         67.2569,
+							Volume:        21117572,
+							Change:        -0.500233,
+							ChangePercent: -0.738,
+						},
+						{
+							Date:          mustParseDateMinute("2017-07-07", ""),
+							Open:          67.3845,
+							High:          68.5026,
+							Low:           67.3845,
+							Close:         68.1299,
+							Volume:        16878317,
+							Change:        0.872957,
+							ChangePercent: 1.298,
+						},
 					},
 				},
 			},
 		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
-			got, gotErr := decodeChart(tt.symbol, strings.NewReader(tt.data))
+			got, gotErr := decodeChart(strings.NewReader(tt.data))
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("resp differs:\n%s", diff)

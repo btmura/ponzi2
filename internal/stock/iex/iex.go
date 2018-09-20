@@ -15,6 +15,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -32,9 +33,9 @@ const (
 
 // GetChartRequest is the request for GetChart.
 type GetChartRequest struct {
-	Symbol string
-	Range  ChartRange
-	Last   int
+	Symbols    []string
+	ChartRange ChartRange
+	ChartLast  int
 }
 
 // Chart is the response from calling GetChart.
@@ -67,14 +68,16 @@ func NewClient(dumpAPIResponses bool) *Client {
 }
 
 // GetChart gets a series of trading sessions for a stock symbol.
-func (c *Client) GetChart(ctx context.Context, req *GetChartRequest) (*Chart, error) {
-	if req.Symbol == "" {
-		return nil, errors.New("iex: missing symbol for chart req")
+func (c *Client) GetChart(ctx context.Context, req *GetChartRequest) ([]*Chart, error) {
+	if len(req.Symbols) == 0 {
+		return nil, nil
 	}
-	if req.Range == "" {
+
+	if req.ChartRange == "" {
 		return nil, errors.New("iex: missing range for chart req")
 	}
-	if req.Last < 0 {
+
+	if req.ChartLast < 0 {
 		return nil, errors.New("iex: last must be greater than or equal to zero")
 	}
 
@@ -84,12 +87,12 @@ func (c *Client) GetChart(ctx context.Context, req *GetChartRequest) (*Chart, er
 	}
 
 	v := url.Values{}
-	v.Set("symbols", req.Symbol)
+	v.Set("symbols", strings.Join(req.Symbols, ","))
 	v.Set("types", "chart")
-	v.Set("range", string(req.Range))
+	v.Set("range", string(req.ChartRange))
 	v.Set("filter", "date,minute,open,high,low,close,volume,change,changePercent")
-	if req.Last > 0 {
-		v.Set("chartLast", strconv.Itoa(req.Last))
+	if req.ChartLast > 0 {
+		v.Set("chartLast", strconv.Itoa(req.ChartLast))
 	}
 	u.RawQuery = v.Encode()
 
@@ -106,14 +109,14 @@ func (c *Client) GetChart(ctx context.Context, req *GetChartRequest) (*Chart, er
 
 	r := httpResp.Body
 	if c.dumpAPIResponses {
-		rr, err := dumpResponse(fmt.Sprintf("iex-chart-%s.txt", req.Symbol), r)
+		rr, err := dumpResponse(fmt.Sprintf("iex-chart-%s.txt", strings.Join(req.Symbols, "-")), r)
 		if err != nil {
 			return nil, fmt.Errorf("iex: failed to dump resp: %v", err)
 		}
 		r = rr
 	}
 
-	resp, err := decodeChart(req.Symbol, r)
+	resp, err := decodeChart(r)
 	if err != nil {
 		return nil, fmt.Errorf("iex: failed to decode resp: %v", err)
 	}
@@ -121,7 +124,7 @@ func (c *Client) GetChart(ctx context.Context, req *GetChartRequest) (*Chart, er
 	return resp, nil
 }
 
-func decodeChart(symbol string, r io.Reader) (*Chart, error) {
+func decodeChart(r io.Reader) ([]*Chart, error) {
 	type chartPoint struct {
 		Date          string  `json:"date"`
 		Minute        string  `json:"minute"`
@@ -144,15 +147,17 @@ func decodeChart(symbol string, r io.Reader) (*Chart, error) {
 		return nil, fmt.Errorf("json decode failed: %v", err)
 	}
 
-	var ps []*ChartPoint
-	for _, d := range m {
+	var chs []*Chart
+
+	for s, d := range m {
+		ch := &Chart{Symbol: s}
 		for _, pt := range d.Chart {
 			date, err := parseDateMinute(pt.Date, pt.Minute)
 			if err != nil {
 				return nil, fmt.Errorf("parsing date (%s) failed: %v", pt.Date, err)
 			}
 
-			ps = append(ps, &ChartPoint{
+			ch.Points = append(ch.Points, &ChartPoint{
 				Date:          date,
 				Open:          float32(pt.Open),
 				High:          float32(pt.High),
@@ -163,13 +168,13 @@ func decodeChart(symbol string, r io.Reader) (*Chart, error) {
 				ChangePercent: float32(pt.ChangePercent),
 			})
 		}
+		sort.Slice(ch.Points, func(i, j int) bool {
+			return ch.Points[i].Date.Before(ch.Points[j].Date)
+		})
+		chs = append(chs, ch)
 	}
 
-	sort.Slice(ps, func(i, j int) bool {
-		return ps[i].Date.Before(ps[j].Date)
-	})
-
-	return &Chart{Symbol: symbol, Points: ps}, nil
+	return chs, nil
 }
 
 func parseDateMinute(date, minute string) (time.Time, error) {

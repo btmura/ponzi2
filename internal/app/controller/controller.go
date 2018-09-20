@@ -3,6 +3,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/golang/glog"
 
@@ -243,19 +244,26 @@ func (c *Controller) refreshStock(ctx context.Context, symbol string) {
 	}
 	go func() {
 		req := &iex.GetChartRequest{
-			Symbol: symbol,
-			Range:  iex.ChartRangeTwoYears,
+			Symbols:    []string{symbol},
+			ChartRange: iex.ChartRangeTwoYears,
 		}
-		ch, err := c.iexClient.GetChart(ctx, req)
-		if err != nil {
+		chs, err := c.iexClient.GetChart(ctx, req)
+
+		switch {
+		case err != nil:
 			c.pendingStockUpdates <- controllerStockUpdate{
 				symbol:    symbol,
 				updateErr: err,
 			}
-		} else {
+		case len(chs) == 0:
+			c.pendingStockUpdates <- controllerStockUpdate{
+				symbol:    symbol,
+				updateErr: fmt.Errorf("no stock data for %s", symbol),
+			}
+		default:
 			c.pendingStockUpdates <- controllerStockUpdate{
 				symbol: symbol,
-				update: modelStockUpdate(ch),
+				update: modelStockUpdate(chs[0]),
 			}
 		}
 		c.view.PostEmptyEvent()
