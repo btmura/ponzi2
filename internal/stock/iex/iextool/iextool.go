@@ -39,6 +39,7 @@ func main() {
 
 	for _, st := range stocks {
 		fmt.Println(st.Symbol)
+		fmt.Printf("%+v\n", st.Quote)
 		for i, p := range st.Chart {
 			fmt.Printf("%3d: %s Open: %.2f High: %.2f Low: %.2f Close: %.2f Volume: %d\n",
 				i, p.Date, p.Open, p.High, p.Low, p.Close, p.Volume)

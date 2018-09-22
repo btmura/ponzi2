@@ -41,7 +41,18 @@ type GetStocksRequest struct {
 // Stock is the response from calling GetStocks.
 type Stock struct {
 	Symbol string
+	Quote  *Quote
 	Chart  []*ChartPoint
+}
+
+// Quote is a stock quote.
+type Quote struct {
+	CompanyName  string
+	LatestPrice  float32
+	LatestSource string
+	LatestTime   string
+	LatestUpdate int64
+	LatestVolume int
 }
 
 // ChartPoint is a single point on the chart.
@@ -88,9 +99,28 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 
 	v := url.Values{}
 	v.Set("symbols", strings.Join(req.Symbols, ","))
-	v.Set("types", "chart")
+	v.Set("types", "quote,chart")
 	v.Set("range", string(req.Range))
-	v.Set("filter", "date,minute,open,high,low,close,volume,change,changePercent")
+	v.Set("filter", strings.Join([]string{
+		// Keys for quote.
+		"companyName",
+		"latestPrice",
+		"latestSource",
+		"latestTime",
+		"latestUpdate",
+		"latestVolume",
+
+		// Keys for chart.
+		"date",
+		"minute",
+		"open",
+		"high",
+		"low",
+		"close",
+		"volume",
+		"change",
+		"changePercent",
+	}, ","))
 	if req.ChartLast > 0 {
 		v.Set("chartLast", strconv.Itoa(req.ChartLast))
 	}
@@ -125,6 +155,15 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 }
 
 func decodeStocks(r io.Reader) ([]*Stock, error) {
+	type quote struct {
+		CompanyName  string  `json:"companyName"`
+		LatestPrice  float64 `json:"latestPrice"`
+		LatestSource string  `json:"latestSource"`
+		LatestTime   string  `json:"latestTime"`
+		LatestUpdate int64   `json:"latestUpdate"`
+		LatestVolume int64   `json:"latestVolume"`
+	}
+
 	type chartPoint struct {
 		Date          string  `json:"date"`
 		Minute        string  `json:"minute"`
@@ -138,7 +177,8 @@ func decodeStocks(r io.Reader) ([]*Stock, error) {
 	}
 
 	type stock struct {
-		Chart []chartPoint `json:"chart"`
+		Quote *quote        `json:"quote"`
+		Chart []*chartPoint `json:"chart"`
 	}
 
 	var m map[string]stock
@@ -151,6 +191,18 @@ func decodeStocks(r io.Reader) ([]*Stock, error) {
 
 	for s, d := range m {
 		ch := &Stock{Symbol: s}
+
+		if d.Quote != nil {
+			ch.Quote = &Quote{
+				CompanyName:  d.Quote.CompanyName,
+				LatestPrice:  float32(d.Quote.LatestPrice),
+				LatestSource: d.Quote.LatestSource,
+				LatestTime:   d.Quote.LatestTime,
+				LatestUpdate: d.Quote.LatestUpdate,
+				LatestVolume: int(d.Quote.LatestVolume),
+			}
+		}
+
 		for _, pt := range d.Chart {
 			date, err := parseDateMinute(pt.Date, pt.Minute)
 			if err != nil {
