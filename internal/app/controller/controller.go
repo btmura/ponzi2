@@ -243,28 +243,23 @@ func (c *Controller) refreshStock(ctx context.Context, symbol string) {
 		th.SetError(false)
 	}
 	go func() {
-		req := &iex.GetChartRequest{
-			Symbols:    []string{symbol},
-			ChartRange: iex.ChartRangeTwoYears,
+		req := &iex.GetStocksRequest{
+			Symbols: []string{symbol},
+			Range:   iex.RangeTwoYears,
 		}
-		chs, err := c.iexClient.GetChart(ctx, req)
-
-		switch {
-		case err != nil:
+		stocks, err := c.iexClient.GetStocks(ctx, req)
+		if err == nil && len(stocks) == 0 {
+			err = fmt.Errorf("no stock data for %q", symbol)
+		}
+		if err != nil {
 			c.pendingStockUpdates <- controllerStockUpdate{
 				symbol:    symbol,
 				updateErr: err,
 			}
-		case len(chs) == 0:
-			c.pendingStockUpdates <- controllerStockUpdate{
-				symbol:    symbol,
-				updateErr: fmt.Errorf("no stock data for %s", symbol),
-			}
-		default:
-			c.pendingStockUpdates <- controllerStockUpdate{
-				symbol: symbol,
-				update: modelStockUpdate(chs[0]),
-			}
+		}
+		c.pendingStockUpdates <- controllerStockUpdate{
+			symbol: symbol,
+			update: modelStockUpdate(stocks[0]),
 		}
 		c.view.PostEmptyEvent()
 	}()

@@ -24,22 +24,22 @@ func main() {
 
 	c := iex.NewClient(*dumpAPIResponses)
 
-	req := &iex.GetChartRequest{
-		Symbols:    strings.Split(*symbols, ","),
-		ChartRange: iex.ChartRangeTwoYears,
+	req := &iex.GetStocksRequest{
+		Symbols: strings.Split(*symbols, ","),
+		Range:   iex.RangeTwoYears,
 	}
 	if *chartLast > 0 {
 		req.ChartLast = *chartLast
 	}
 
-	chs, err := c.GetChart(ctx, req)
+	stocks, err := c.GetStocks(ctx, req)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for _, ch := range chs {
-		fmt.Println(ch.Symbol)
-		for i, p := range ch.Points {
+	for _, st := range stocks {
+		fmt.Println(st.Symbol)
+		for i, p := range st.Chart {
 			fmt.Printf("%3d: %s Open: %.2f High: %.2f Low: %.2f Close: %.2f Volume: %d\n",
 				i, p.Date, p.Open, p.High, p.Low, p.Close, p.Volume)
 		}

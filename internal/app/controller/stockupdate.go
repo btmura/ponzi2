@@ -16,9 +16,9 @@ const (
 	d = 3
 )
 
-func modelStockUpdate(ch *iex.Chart) *model.StockUpdate {
-	ds := modelTradingSessions(ch.Points)
-	ws := modelTradingSessions(weeklyChartPoints(ch.Points))
+func modelStockUpdate(ch *iex.Stock) *model.StockUpdate {
+	ds := modelTradingSessions(ch.Chart)
+	ws := modelTradingSessions(weeklyChartPoints(ch.Chart))
 
 	m25 := modelMovingAverages(ds, 25)
 	m50 := modelMovingAverages(ds, 50)

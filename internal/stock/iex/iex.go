@@ -22,26 +22,26 @@ import (
 // loc is the timezone to use when parsing dates.
 var loc = mustLoadLocation("America/New_York")
 
-// ChartRange is the range to specify in the request.
-type ChartRange string
+// Range is the range to specify in the request.
+type Range string
 
 // ChartRange values.
 const (
-	ChartRangeOneDay   ChartRange = "1d"
-	ChartRangeTwoYears            = "2y"
+	RangeOneDay   Range = "1d"
+	RangeTwoYears       = "2y"
 )
 
-// GetChartRequest is the request for GetChart.
-type GetChartRequest struct {
-	Symbols    []string
-	ChartRange ChartRange
-	ChartLast  int
+// GetStocksRequest is the request for GetStocks.
+type GetStocksRequest struct {
+	Symbols   []string
+	Range     Range
+	ChartLast int
 }
 
-// Chart is the response from calling GetChart.
-type Chart struct {
+// Stock is the response from calling GetStocks.
+type Stock struct {
 	Symbol string
-	Points []*ChartPoint
+	Chart  []*ChartPoint
 }
 
 // ChartPoint is a single point on the chart.
@@ -67,13 +67,13 @@ func NewClient(dumpAPIResponses bool) *Client {
 	return &Client{dumpAPIResponses: dumpAPIResponses}
 }
 
-// GetChart gets a series of trading sessions for a stock symbol.
-func (c *Client) GetChart(ctx context.Context, req *GetChartRequest) ([]*Chart, error) {
+// GetStocks gets a series of trading sessions for a stock symbol.
+func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock, error) {
 	if len(req.Symbols) == 0 {
 		return nil, nil
 	}
 
-	if req.ChartRange == "" {
+	if req.Range == "" {
 		return nil, errors.New("iex: missing range for chart req")
 	}
 
@@ -89,7 +89,7 @@ func (c *Client) GetChart(ctx context.Context, req *GetChartRequest) ([]*Chart, 
 	v := url.Values{}
 	v.Set("symbols", strings.Join(req.Symbols, ","))
 	v.Set("types", "chart")
-	v.Set("range", string(req.ChartRange))
+	v.Set("range", string(req.Range))
 	v.Set("filter", "date,minute,open,high,low,close,volume,change,changePercent")
 	if req.ChartLast > 0 {
 		v.Set("chartLast", strconv.Itoa(req.ChartLast))
@@ -109,14 +109,14 @@ func (c *Client) GetChart(ctx context.Context, req *GetChartRequest) ([]*Chart, 
 
 	r := httpResp.Body
 	if c.dumpAPIResponses {
-		rr, err := dumpResponse(fmt.Sprintf("iex-chart-%s.txt", strings.Join(req.Symbols, "-")), r)
+		rr, err := dumpResponse(fmt.Sprintf("iex-%s.txt", strings.Join(req.Symbols, "-")), r)
 		if err != nil {
 			return nil, fmt.Errorf("iex: failed to dump resp: %v", err)
 		}
 		r = rr
 	}
 
-	resp, err := decodeChart(r)
+	resp, err := decodeStocks(r)
 	if err != nil {
 		return nil, fmt.Errorf("iex: failed to decode resp: %v", err)
 	}
@@ -124,7 +124,7 @@ func (c *Client) GetChart(ctx context.Context, req *GetChartRequest) ([]*Chart, 
 	return resp, nil
 }
 
-func decodeChart(r io.Reader) ([]*Chart, error) {
+func decodeStocks(r io.Reader) ([]*Stock, error) {
 	type chartPoint struct {
 		Date          string  `json:"date"`
 		Minute        string  `json:"minute"`
@@ -137,27 +137,27 @@ func decodeChart(r io.Reader) ([]*Chart, error) {
 		ChangePercent float64 `json:"changePercent"`
 	}
 
-	type stockData struct {
+	type stock struct {
 		Chart []chartPoint `json:"chart"`
 	}
 
-	var m map[string]stockData
+	var m map[string]stock
 	dec := json.NewDecoder(r)
 	if err := dec.Decode(&m); err != nil {
 		return nil, fmt.Errorf("json decode failed: %v", err)
 	}
 
-	var chs []*Chart
+	var chs []*Stock
 
 	for s, d := range m {
-		ch := &Chart{Symbol: s}
+		ch := &Stock{Symbol: s}
 		for _, pt := range d.Chart {
 			date, err := parseDateMinute(pt.Date, pt.Minute)
 			if err != nil {
 				return nil, fmt.Errorf("parsing date (%s) failed: %v", pt.Date, err)
 			}
 
-			ch.Points = append(ch.Points, &ChartPoint{
+			ch.Chart = append(ch.Chart, &ChartPoint{
 				Date:          date,
 				Open:          float32(pt.Open),
 				High:          float32(pt.High),
@@ -168,8 +168,8 @@ func decodeChart(r io.Reader) ([]*Chart, error) {
 				ChangePercent: float32(pt.ChangePercent),
 			})
 		}
-		sort.Slice(ch.Points, func(i, j int) bool {
-			return ch.Points[i].Date.Before(ch.Points[j].Date)
+		sort.Slice(ch.Chart, func(i, j int) bool {
+			return ch.Chart[i].Date.Before(ch.Chart[j].Date)
 		})
 		chs = append(chs, ch)
 	}
