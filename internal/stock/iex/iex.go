@@ -47,12 +47,18 @@ type Stock struct {
 
 // Quote is a stock quote.
 type Quote struct {
-	CompanyName  string
-	LatestPrice  float32
-	LatestSource string
-	LatestTime   string
-	LatestUpdate int64
-	LatestVolume int
+	CompanyName   string
+	LatestPrice   float32
+	LatestSource  string
+	LatestTime    string
+	LatestUpdate  int64
+	LatestVolume  int
+	Open          float32
+	High          float32
+	Low           float32
+	Close         float32
+	Change        float32
+	ChangePercent float32
 }
 
 // ChartPoint is a single point on the chart.
@@ -110,7 +116,7 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 		"latestUpdate",
 		"latestVolume",
 
-		// Keys for chart.
+		// Keys for chart and quote.
 		"date",
 		"minute",
 		"open",
@@ -156,12 +162,18 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 
 func decodeStocks(r io.Reader) ([]*Stock, error) {
 	type quote struct {
-		CompanyName  string  `json:"companyName"`
-		LatestPrice  float64 `json:"latestPrice"`
-		LatestSource string  `json:"latestSource"`
-		LatestTime   string  `json:"latestTime"`
-		LatestUpdate int64   `json:"latestUpdate"`
-		LatestVolume int64   `json:"latestVolume"`
+		CompanyName   string  `json:"companyName"`
+		LatestPrice   float64 `json:"latestPrice"`
+		LatestSource  string  `json:"latestSource"`
+		LatestTime    string  `json:"latestTime"`
+		LatestUpdate  int64   `json:"latestUpdate"`
+		LatestVolume  int64   `json:"latestVolume"`
+		Open          float64 `json:"open"`
+		High          float64 `json:"high"`
+		Low           float64 `json:"low"`
+		Close         float64 `json:"close"`
+		Change        float64 `json:"change"`
+		ChangePercent float64 `json:"changePercent"`
 	}
 
 	type chartPoint struct {
@@ -194,12 +206,18 @@ func decodeStocks(r io.Reader) ([]*Stock, error) {
 
 		if d.Quote != nil {
 			ch.Quote = &Quote{
-				CompanyName:  d.Quote.CompanyName,
-				LatestPrice:  float32(d.Quote.LatestPrice),
-				LatestSource: d.Quote.LatestSource,
-				LatestTime:   d.Quote.LatestTime,
-				LatestUpdate: d.Quote.LatestUpdate,
-				LatestVolume: int(d.Quote.LatestVolume),
+				CompanyName:   d.Quote.CompanyName,
+				LatestPrice:   float32(d.Quote.LatestPrice),
+				LatestSource:  d.Quote.LatestSource,
+				LatestTime:    d.Quote.LatestTime,
+				LatestUpdate:  d.Quote.LatestUpdate,
+				LatestVolume:  int(d.Quote.LatestVolume),
+				Open:          float32(d.Quote.Open),
+				High:          float32(d.Quote.High),
+				Low:           float32(d.Quote.Low),
+				Close:         float32(d.Quote.Close),
+				Change:        float32(d.Quote.Change),
+				ChangePercent: float32(d.Quote.ChangePercent),
 			}
 		}
 
