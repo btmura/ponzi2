@@ -18,9 +18,56 @@ func TestDecodeStocks(t *testing.T) {
 		wantErr error
 	}{
 		{
-			desc: "one day",
+			desc: "real time quote",
+			data: `{"CEF": {"quote":{"companyName":"Sprott Physical Gold and Silver Trust Units","latestPrice":11.71,"latestSource":"IEX real time price","latestTime":"12:45:40 PM","latestUpdate":1538153140524,"latestVolume":478088,"open":11.61,"high":11.72,"low":11.61,"close":11.54,"change":0.17,"changePercent":0.01473}}}`,
+			want: []*Stock{
+				{
+					Symbol: "CEF",
+					Quote: &Quote{
+						CompanyName:   "Sprott Physical Gold and Silver Trust Units",
+						LatestPrice:   11.71,
+						LatestSource:  "IEX real time price",
+						LatestTime:    "12:45:40 PM",
+						LatestUpdate:  1538153140524,
+						LatestVolume:  478088,
+						Open:          11.61,
+						High:          11.72,
+						Low:           11.61,
+						Close:         11.54,
+						Change:        0.17,
+						ChangePercent: 0.01473,
+					},
+				},
+			},
+		},
+		{
+			desc: "delayed quote",
+			data: `{"UUP":{"quote":{"companyName":"Invesco DB USD Index Bullish Fund","latestPrice":25.234,"latestSource":"15 minute delayed price","latestTime":"12:32:11 PM","latestUpdate":1538152331455,"latestVolume":1000000,"open":25.3,"high":25.314,"low":25.22,"close":25.2,"change":0.034,"changePercent":0.00135}}}`,
+			want: []*Stock{
+				{
+					Symbol: "UUP",
+					Quote: &Quote{
+						CompanyName:   "Invesco DB USD Index Bullish Fund",
+						LatestPrice:   25.234,
+						LatestSource:  "15 minute delayed price",
+						LatestTime:    "12:32:11 PM",
+						LatestUpdate:  1538152331455,
+						LatestVolume:  1000000,
+						Open:          25.3,
+						High:          25.314,
+						Low:           25.22,
+						Close:         25.2,
+						Change:        0.034,
+						ChangePercent: 0.00135,
+					},
+				},
+			},
+		},
+		{
+			desc: "one day quote and chart",
 			data: `{
 				"AAPL": {
+					"quote":{"companyName":"Apple Inc.","latestPrice":225.74,"latestSource":"Close","latestTime":"September 28, 2018","latestUpdate":1538164800414,"latestVolume":22067409,"open":224.8,"high":225.84,"low":224.02,"close":225.74,"change":0.79,"changePercent":0.00351},
 					"chart": [
 						{"date":"20180918","minute":"15:57","open":218.44,"high":218.49,"low":218.37,"close":218.49,"volume":2607},
 						{"date":"20180918","minute":"15:58","open":218.46,"high":218.5,"low":218.435,"close":218.44,"volume":3680},
@@ -31,6 +78,20 @@ func TestDecodeStocks(t *testing.T) {
 			want: []*Stock{
 				{
 					Symbol: "AAPL",
+					Quote: &Quote{
+						CompanyName:   "Apple Inc.",
+						LatestPrice:   225.74,
+						LatestSource:  "Close",
+						LatestTime:    "September 28, 2018",
+						LatestUpdate:  1538164800414,
+						LatestVolume:  22067409,
+						Open:          224.8,
+						High:          225.84,
+						Low:           224.02,
+						Close:         225.74,
+						Change:        0.79,
+						ChangePercent: 0.00351,
+					},
 					Chart: []*ChartPoint{
 						{
 							Date:   mustParseDateMinute("20180918", "15:57"),
@@ -61,9 +122,10 @@ func TestDecodeStocks(t *testing.T) {
 			},
 		},
 		{
-			desc: "daily",
+			desc: "daily quote and chart",
 			data: `{
 				"MSFT": {
+					"quote":{"companyName":"Microsoft Corporation","latestPrice":114.37,"latestSource":"Close","latestTime":"September 28, 2018","latestUpdate":1538164800600,"latestVolume":20491683,"open":114.17,"high":114.57,"low":113.68,"close":114.37,"change":-0.04,"changePercent":-0.00035},
 					"chart": [
 						{"date":"2017-07-05","open":66.948,"high":68.1103,"low":66.9136,"close":67.7572,"volume":21176272,"change":0.892575,"changePercent":1.335},
 						{"date":"2017-07-06","open":66.9627,"high":67.4629,"low":66.8156,"close":67.2569,"volume":21117572,"change":-0.500233,"changePercent":-0.738},
@@ -74,6 +136,20 @@ func TestDecodeStocks(t *testing.T) {
 			want: []*Stock{
 				{
 					Symbol: "MSFT",
+					Quote: &Quote{
+						CompanyName:   "Microsoft Corporation",
+						LatestPrice:   114.37,
+						LatestSource:  "Close",
+						LatestTime:    "September 28, 2018",
+						LatestUpdate:  1538164800600,
+						LatestVolume:  20491683,
+						Open:          114.17,
+						High:          114.57,
+						Low:           113.68,
+						Close:         114.37,
+						Change:        -0.04,
+						ChangePercent: -0.00035,
+					},
 					Chart: []*ChartPoint{
 						{
 							Date:          mustParseDateMinute("2017-07-05", ""),
