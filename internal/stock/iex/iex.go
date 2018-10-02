@@ -51,7 +51,7 @@ type Quote struct {
 	LatestPrice   float32
 	LatestSource  string
 	LatestTime    string
-	LatestUpdate  int64
+	LatestUpdate  time.Time
 	LatestVolume  int
 	Open          float32
 	High          float32
@@ -210,7 +210,7 @@ func decodeStocks(r io.Reader) ([]*Stock, error) {
 				LatestPrice:   float32(d.Quote.LatestPrice),
 				LatestSource:  d.Quote.LatestSource,
 				LatestTime:    d.Quote.LatestTime,
-				LatestUpdate:  d.Quote.LatestUpdate,
+				LatestUpdate:  millisToTime(d.Quote.LatestUpdate),
 				LatestVolume:  int(d.Quote.LatestVolume),
 				Open:          float32(d.Quote.Open),
 				High:          float32(d.Quote.High),
@@ -252,6 +252,12 @@ func parseDateMinute(date, minute string) (time.Time, error) {
 		return time.ParseInLocation("20060102 15:04", date+" "+minute, loc)
 	}
 	return time.ParseInLocation("2006-01-02", date, loc)
+}
+
+func millisToTime(ms int64) time.Time {
+	sec := ms / 1e3
+	nsec := ms*1e6 - sec*1e9
+	return time.Unix(sec, nsec)
 }
 
 func dumpResponse(fileName string, r io.Reader) (io.ReadCloser, error) {

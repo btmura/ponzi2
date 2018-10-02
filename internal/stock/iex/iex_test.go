@@ -28,7 +28,7 @@ func TestDecodeStocks(t *testing.T) {
 						LatestPrice:   11.71,
 						LatestSource:  "IEX real time price",
 						LatestTime:    "12:45:40 PM",
-						LatestUpdate:  1538153140524,
+						LatestUpdate:  time.Unix(1538153140, 524000000),
 						LatestVolume:  478088,
 						Open:          11.61,
 						High:          11.72,
@@ -51,7 +51,7 @@ func TestDecodeStocks(t *testing.T) {
 						LatestPrice:   25.234,
 						LatestSource:  "15 minute delayed price",
 						LatestTime:    "12:32:11 PM",
-						LatestUpdate:  1538152331455,
+						LatestUpdate:  time.Unix(1538152331, 455000000),
 						LatestVolume:  1000000,
 						Open:          25.3,
 						High:          25.314,
@@ -83,7 +83,7 @@ func TestDecodeStocks(t *testing.T) {
 						LatestPrice:   225.74,
 						LatestSource:  "Close",
 						LatestTime:    "September 28, 2018",
-						LatestUpdate:  1538164800414,
+						LatestUpdate:  time.Unix(1538164800, 414000000),
 						LatestVolume:  22067409,
 						Open:          224.8,
 						High:          225.84,
@@ -141,7 +141,7 @@ func TestDecodeStocks(t *testing.T) {
 						LatestPrice:   114.37,
 						LatestSource:  "Close",
 						LatestTime:    "September 28, 2018",
-						LatestUpdate:  1538164800600,
+						LatestUpdate:  time.Unix(1538164800, 600000000),
 						LatestVolume:  20491683,
 						Open:          114.17,
 						High:          114.57,
@@ -200,7 +200,7 @@ func TestDecodeStocks(t *testing.T) {
 	}
 }
 
-func TestParseDateMinute(t *testing.T) {
+func TestChartDate(t *testing.T) {
 	for _, tt := range []struct {
 		desc        string
 		inputDate   string
