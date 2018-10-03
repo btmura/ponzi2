@@ -94,7 +94,7 @@ func TestDecodeStocks(t *testing.T) {
 					},
 					Chart: []*ChartPoint{
 						{
-							Date:   mustParseDateMinute("20180918", "15:57"),
+							Date:   mustChartDate("20180918", "15:57"),
 							Open:   218.44,
 							High:   218.49,
 							Low:    218.37,
@@ -102,7 +102,7 @@ func TestDecodeStocks(t *testing.T) {
 							Volume: 2607,
 						},
 						{
-							Date:   mustParseDateMinute("20180918", "15:58"),
+							Date:   mustChartDate("20180918", "15:58"),
 							Open:   218.46,
 							High:   218.5,
 							Low:    218.435,
@@ -110,7 +110,7 @@ func TestDecodeStocks(t *testing.T) {
 							Volume: 3680,
 						},
 						{
-							Date:   mustParseDateMinute("20180918", "15:59"),
+							Date:   mustChartDate("20180918", "15:59"),
 							Open:   218.45,
 							High:   218.49,
 							Low:    218.34,
@@ -152,7 +152,7 @@ func TestDecodeStocks(t *testing.T) {
 					},
 					Chart: []*ChartPoint{
 						{
-							Date:          mustParseDateMinute("2017-07-05", ""),
+							Date:          mustChartDate("2017-07-05", ""),
 							Open:          66.948,
 							High:          68.1103,
 							Low:           66.9136,
@@ -162,7 +162,7 @@ func TestDecodeStocks(t *testing.T) {
 							ChangePercent: 1.335,
 						},
 						{
-							Date:          mustParseDateMinute("2017-07-06", ""),
+							Date:          mustChartDate("2017-07-06", ""),
 							Open:          66.9627,
 							High:          67.4629,
 							Low:           66.8156,
@@ -172,7 +172,7 @@ func TestDecodeStocks(t *testing.T) {
 							ChangePercent: -0.738,
 						},
 						{
-							Date:          mustParseDateMinute("2017-07-07", ""),
+							Date:          mustChartDate("2017-07-07", ""),
 							Open:          67.3845,
 							High:          68.5026,
 							Low:           67.3845,
@@ -220,7 +220,7 @@ func TestChartDate(t *testing.T) {
 		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
-			got, gotErr := parseDateMinute(tt.inputDate, tt.inputMinute)
+			got, gotErr := chartDate(tt.inputDate, tt.inputMinute)
 			if gotErr != nil {
 				t.Fatalf("returned error (%v), want success", gotErr)
 			}
@@ -232,8 +232,8 @@ func TestChartDate(t *testing.T) {
 	}
 }
 
-func mustParseDateMinute(date, minute string) time.Time {
-	t, err := parseDateMinute(date, minute)
+func mustChartDate(date, minute string) time.Time {
+	t, err := chartDate(date, minute)
 	if err != nil {
 		log.Fatal(err)
 	}

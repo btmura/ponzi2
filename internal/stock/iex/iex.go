@@ -222,7 +222,7 @@ func decodeStocks(r io.Reader) ([]*Stock, error) {
 		}
 
 		for _, pt := range d.Chart {
-			date, err := parseDateMinute(pt.Date, pt.Minute)
+			date, err := chartDate(pt.Date, pt.Minute)
 			if err != nil {
 				return nil, fmt.Errorf("parsing date (%s) failed: %v", pt.Date, err)
 			}
@@ -247,7 +247,7 @@ func decodeStocks(r io.Reader) ([]*Stock, error) {
 	return chs, nil
 }
 
-func parseDateMinute(date, minute string) (time.Time, error) {
+func chartDate(date, minute string) (time.Time, error) {
 	if minute != "" {
 		return time.ParseInLocation("20060102 15:04", date+" "+minute, loc)
 	}
