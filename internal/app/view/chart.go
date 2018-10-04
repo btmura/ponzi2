@@ -3,12 +3,11 @@ package view
 import (
 	"fmt"
 	"image"
-	"time"
 
 	"golang.org/x/image/font/gofont/goregular"
 
-	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/model"
 )
 
 const (
@@ -20,17 +19,13 @@ const (
 var (
 	chartSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 24)
 	chartFormatQuote             = func(st *model.Stock) string {
-		if st.Price() != 0 {
-			fresh := ""
-			if time.Now().YearDay() == st.Date().YearDay() {
-				fresh = "*"
-			}
-			return fmt.Sprintf("%.2f %+5.2f %+5.2f%% %s%s",
-				st.Price(),
-				st.Change(),
-				st.PercentChange(),
-				st.Date().Format("1/2/06"),
-				fresh)
+		if q := st.Quote; q != nil {
+			return fmt.Sprintf("%.2f %+5.2f %+5.2f%% %s %s",
+				q.LatestPrice,
+				q.Change,
+				q.ChangePercent*100,
+				q.LatestSource,
+				q.LatestTime)
 		}
 		return ""
 	}

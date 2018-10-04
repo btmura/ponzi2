@@ -78,6 +78,9 @@ func modelStockUpdate(st *iex.Stock) *model.StockUpdate {
 }
 
 func modelQuote(q *iex.Quote) *model.Quote {
+	if q == nil {
+		return nil
+	}
 	return &model.Quote{
 		CompanyName:   q.CompanyName,
 		LatestPrice:   q.LatestPrice,

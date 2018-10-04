@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"image"
 
-	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/model"
 )
 
 var (
@@ -128,7 +128,11 @@ func (ch *chartHeader) SetData(st *model.Stock) {
 	ch.symbol = st.Symbol
 	ch.quoteText = ch.quoteFormatter(st)
 
-	c := st.PercentChange()
+	var c float32
+	if q := st.Quote; q != nil {
+		c = q.ChangePercent
+	}
+
 	switch {
 	case c > 0:
 		ch.quoteColor = green
