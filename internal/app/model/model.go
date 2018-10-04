@@ -16,6 +16,7 @@ type Model struct {
 // Stock models a single stock's data.
 type Stock struct {
 	Symbol                      string
+	Quote                       *Quote
 	DailyTradingSessionSeries   *TradingSessionSeries
 	DailyMovingAverageSeries25  *MovingAverageSeries
 	DailyMovingAverageSeries50  *MovingAverageSeries
@@ -23,6 +24,22 @@ type Stock struct {
 	DailyStochasticSeries       *StochasticSeries
 	WeeklyStochasticSeries      *StochasticSeries
 	LastUpdateTime              time.Time
+}
+
+// Quote is the latest quote for the stock.
+type Quote struct {
+	CompanyName   string
+	LatestPrice   float32
+	LatestSource  string
+	LatestTime    string
+	LatestUpdate  time.Time
+	LatestVolume  int
+	Open          float32
+	High          float32
+	Low           float32
+	Close         float32
+	Change        float32
+	ChangePercent float32
 }
 
 // TradingSessionSeries is a time series of trading sessions.
@@ -79,6 +96,7 @@ type Stochastic struct {
 // StockUpdate is an update that can be applied to a single stock.
 type StockUpdate struct {
 	Symbol                      string
+	Quote                       *Quote
 	DailyTradingSessionSeries   *TradingSessionSeries
 	DailyMovingAverageSeries25  *MovingAverageSeries
 	DailyMovingAverageSeries50  *MovingAverageSeries
@@ -149,6 +167,7 @@ func (m *Model) UpdateStock(u *StockUpdate) (st *Stock, updated bool) {
 	if st = m.stock(u.Symbol); st == nil {
 		return nil, false
 	}
+	st.Quote = u.Quote
 	st.DailyTradingSessionSeries = u.DailyTradingSessionSeries
 	st.DailyStochasticSeries = u.DailyStochasticSeries
 	st.WeeklyStochasticSeries = u.WeeklyStochasticSeries

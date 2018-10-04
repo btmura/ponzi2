@@ -16,9 +16,9 @@ const (
 	d = 3
 )
 
-func modelStockUpdate(ch *iex.Stock) *model.StockUpdate {
-	ds := modelTradingSessions(ch.Chart)
-	ws := modelTradingSessions(weeklyChartPoints(ch.Chart))
+func modelStockUpdate(st *iex.Stock) *model.StockUpdate {
+	ds := modelTradingSessions(st.Chart)
+	ws := modelTradingSessions(weeklyChartPoints(st.Chart))
 
 	m25 := modelMovingAverages(ds, 25)
 	m50 := modelMovingAverages(ds, 50)
@@ -66,13 +66,31 @@ func modelStockUpdate(ch *iex.Stock) *model.StockUpdate {
 	}
 
 	return &model.StockUpdate{
-		Symbol: ch.Symbol,
+		Symbol: st.Symbol,
+		Quote:  modelQuote(st.Quote),
 		DailyTradingSessionSeries:   &model.TradingSessionSeries{TradingSessions: ds},
 		DailyMovingAverageSeries25:  &model.MovingAverageSeries{MovingAverages: m25},
 		DailyMovingAverageSeries50:  &model.MovingAverageSeries{MovingAverages: m50},
 		DailyMovingAverageSeries200: &model.MovingAverageSeries{MovingAverages: m200},
 		DailyStochasticSeries:       &model.StochasticSeries{Stochastics: dsto},
 		WeeklyStochasticSeries:      &model.StochasticSeries{Stochastics: wsto},
+	}
+}
+
+func modelQuote(q *iex.Quote) *model.Quote {
+	return &model.Quote{
+		CompanyName:   q.CompanyName,
+		LatestPrice:   q.LatestPrice,
+		LatestSource:  q.LatestSource,
+		LatestTime:    q.LatestTime,
+		LatestUpdate:  q.LatestUpdate,
+		LatestVolume:  q.LatestVolume,
+		Open:          q.Open,
+		High:          q.High,
+		Low:           q.Low,
+		Close:         q.Close,
+		Change:        q.Change,
+		ChangePercent: q.ChangePercent,
 	}
 }
 
