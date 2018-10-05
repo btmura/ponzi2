@@ -166,6 +166,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) {
 
 	st, changed := c.model.SetCurrentStock(symbol)
 	if !changed {
+		c.refreshStock(ctx, []string{symbol})
 		return
 	}
 
@@ -205,6 +206,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) {
 
 	st, added := c.model.AddSavedStock(symbol)
 	if !added {
+		c.refreshStock(ctx, []string{symbol})
 		return
 	}
 
