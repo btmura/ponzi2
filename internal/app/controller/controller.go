@@ -179,7 +179,15 @@ func (c *Controller) setChart(ctx context.Context, symbol string) {
 
 	ch.SetData(st)
 	ch.SetRefreshButtonClickCallback(func() {
-		c.refreshStock(ctx, []string{symbol})
+		// Refresh all stocks in the model.
+		var symbols []string
+		if st := c.model.CurrentStock; st != nil {
+			symbols = append(symbols, st.Symbol)
+		}
+		for _, st := range c.model.SavedStocks {
+			symbols = append(symbols, st.Symbol)
+		}
+		c.refreshStock(ctx, symbols)
 	})
 	ch.SetAddButtonClickCallback(func() {
 		c.addChartThumb(ctx, symbol)
