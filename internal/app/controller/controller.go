@@ -179,14 +179,14 @@ func (c *Controller) setChart(ctx context.Context, symbol string) {
 
 	ch.SetData(st)
 	ch.SetRefreshButtonClickCallback(func() {
-		c.refreshStock(ctx, symbol)
+		c.refreshStock(ctx, []string{symbol})
 	})
 	ch.SetAddButtonClickCallback(func() {
 		c.addChartThumb(ctx, symbol)
 	})
 
 	c.view.SetChart(ch)
-	c.refreshStock(ctx, symbol)
+	c.refreshStock(ctx, []string{symbol})
 	c.saveConfig()
 }
 
@@ -212,7 +212,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) {
 	})
 
 	c.view.AddChartThumb(th)
-	c.refreshStock(ctx, symbol)
+	c.refreshStock(ctx, []string{symbol})
 	c.saveConfig()
 }
 
@@ -233,34 +233,57 @@ func (c *Controller) removeChartThumb(symbol string) {
 	c.saveConfig()
 }
 
-func (c *Controller) refreshStock(ctx context.Context, symbol string) {
-	if ch, ok := c.symbolToChartMap[symbol]; ok {
-		ch.SetLoading(true)
-		ch.SetError(false)
+func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
+	if len(symbols) == 0 {
+		return
 	}
-	if th, ok := c.symbolToChartThumbMap[symbol]; ok {
-		th.SetLoading(true)
-		th.SetError(false)
+
+	for _, s := range symbols {
+		if ch, ok := c.symbolToChartMap[s]; ok {
+			ch.SetLoading(true)
+			ch.SetError(false)
+		}
+		if th, ok := c.symbolToChartThumbMap[s]; ok {
+			th.SetLoading(true)
+			th.SetError(false)
+		}
 	}
+
 	go func() {
 		req := &iex.GetStocksRequest{
-			Symbols: []string{symbol},
+			Symbols: symbols,
 			Range:   iex.RangeTwoYears,
 		}
 		stocks, err := c.iexClient.GetStocks(ctx, req)
-		if err == nil && len(stocks) == 0 {
-			err = fmt.Errorf("no stock data for %q", symbol)
-		}
 		if err != nil {
+			for _, s := range symbols {
+				c.pendingStockUpdates <- controllerStockUpdate{
+					symbol:    s,
+					updateErr: err,
+				}
+			}
+			return
+		}
+
+		found := map[string]bool{}
+		for _, st := range stocks {
+			found[st.Symbol] = true
 			c.pendingStockUpdates <- controllerStockUpdate{
-				symbol:    symbol,
-				updateErr: err,
+				symbol: st.Symbol,
+				update: modelStockUpdate(st),
 			}
 		}
-		c.pendingStockUpdates <- controllerStockUpdate{
-			symbol: symbol,
-			update: modelStockUpdate(stocks[0]),
+
+		for _, s := range symbols {
+			if found[s] {
+				continue
+			}
+			c.pendingStockUpdates <- controllerStockUpdate{
+				symbol:    s,
+				updateErr: fmt.Errorf("no stock data for %q", s),
+			}
 		}
+
 		c.view.PostEmptyEvent()
 	}()
 }
