@@ -13,6 +13,7 @@ Data provided for free by [IEX](https://iextrading.com/developer). View [IEX’s
 ## Development Environment Setup
 
 * `go get -u github.com/mjibson/esc`
+* `go get -u github.com/akavel/rsrc`
 * `go get -u golang.org/x/tools/cmd/stringer`
 * Setup `protoc` compiler.
 * `go generate ./...`

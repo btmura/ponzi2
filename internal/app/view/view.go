@@ -19,8 +19,12 @@ import (
 	"github.com/btmura/ponzi2/internal/matrix"
 )
 
-// Get esc from github.com/mjibson/esc. It's used to embed resources into the binary.
+// Embed resources into the application. Get esc from github.com/mjibson/esc.
 //go:generate esc -o bindata.go -pkg view -include ".*(ply|png)" -modtime 1337 -private data
+
+// Add a Windows icon by generating a SYSO file in the root that will be picked
+// up by the Go build tools. Get rsrc from github.com/akavel/rsrc.
+//go:generate rsrc -ico data/icon.ico -arch amd64 -o ../../../ponzi2.syso
 
 // Application name for the window title.
 const appName = "ponzi2"
@@ -242,6 +246,7 @@ func (v *View) Init(ctx context.Context) (cleanup func(), err error) {
 
 	win.MakeContextCurrent()
 
+	// Set the window icon. Windows additionally uses the embedded SYSO file.
 	icon, err := png.Decode(bytes.NewReader(_escFSMustByte(false, "/data/icon.png")))
 	if err != nil {
 		return nil, err
