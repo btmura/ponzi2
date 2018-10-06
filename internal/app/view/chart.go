@@ -3,6 +3,9 @@ package view
 import (
 	"fmt"
 	"image"
+	"math"
+	"strings"
+	"strconv"
 
 	"golang.org/x/image/font/gofont/goregular"
 
