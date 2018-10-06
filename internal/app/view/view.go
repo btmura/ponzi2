@@ -2,8 +2,10 @@
 package view
 
 import (
+	"bytes"
 	"context"
 	"image"
+	"image/png"
 	"runtime"
 	"time"
 	"unicode"
@@ -239,6 +241,12 @@ func (v *View) Init(ctx context.Context) (cleanup func(), err error) {
 	v.win = win
 
 	win.MakeContextCurrent()
+
+	icon, err := png.Decode(bytes.NewReader(_escFSMustByte(false, "/data/icon.png")))
+	if err != nil {
+		return nil, err
+	}
+	win.SetIcon([]image.Image{icon})
 
 	if err := gl.Init(); err != nil {
 		return nil, err
