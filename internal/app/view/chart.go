@@ -3,6 +3,9 @@ package view
 import (
 	"fmt"
 	"image"
+	"math"
+	"strings"
+	"strconv"
 
 	"golang.org/x/image/font/gofont/goregular"
 
@@ -57,6 +60,7 @@ var (
 
 // Chart shows a stock chart for a single stock.
 type Chart struct {
+
 	// header renders the header with the symbol, quote, and buttons.
 	header *chartHeader
 
@@ -98,6 +102,13 @@ type Chart struct {
 
 	// fadeIn fades in the data after it loads.
 	fadeIn *animation
+
+	// pointer to TradingSessionSeries for use in trackline legend
+	tlTradingSessions *model.TradingSessionSeries
+	// pointers to moving averages for use in trackline legend
+	tlMovingAverage25 *model.MovingAverageSeries
+	tlMovingAverage50 *model.MovingAverageSeries
+	tlMovingAverage200 *model.MovingAverageSeries
 }
 
 // NewChart creates a new Chart.
@@ -156,6 +167,7 @@ func (ch *Chart) SetData(st *model.Stock) {
 	ch.dailyStochastics.SetData(st.DailyStochasticSeries)
 	ch.weeklyStochastics.SetData(st.WeeklyStochasticSeries)
 	ch.timeLabels.SetData(ts)
+	ch.setTrackLineData(ts, st.DailyMovingAverageSeries25, st.DailyMovingAverageSeries50, st.DailyMovingAverageSeries200)
 }
 
 // Update updates the Chart.
@@ -234,6 +246,10 @@ func (ch *Chart) Render(vc viewContext) {
 	dr.Max.X = dlr.Min.X
 	wr.Max.X = wlr.Min.X
 
+	// Legend labels and its cursors labels overlap and use the same rect.
+	// pr.Max.X = plr.Min.X
+	llr := pr
+
 	// Time labels and its cursors labels overlap and use the same rect.
 	tr.Max.X = wlr.Min.X
 	tlr := tr
@@ -280,6 +296,12 @@ func (ch *Chart) Render(vc viewContext) {
 	ch.dailyStochastics.RenderCursorLabels(dr, dlr, vc.MousePos)
 	ch.weeklyStochastics.RenderCursorLabels(wr, wlr, vc.MousePos)
 	ch.timeLabels.RenderCursorLabels(tr, tlr, vc.MousePos)
+
+
+	// Renders trackline legend. To display inline comment out the two lines below and uncomment the last line.
+	ch.renderMATrackLineLegend(pr, llr, vc.MousePos)
+	ch.renderCandleTrackLineLegend(pr, llr, vc.MousePos)
+	//ch.renderTrackLineLegendInline(pr, llr, vc.MousePos) // Stocks that have higher prices tend to overflow the chart on default window size 
 }
 
 // SetRefreshButtonClickCallback sets the callback for refresh button clicks.
@@ -326,6 +348,12 @@ func (ch *Chart) Close() {
 	}
 }
 
+type chartLegendLabel struct {
+	percent float32
+	text    string
+	size    image.Point
+}
+
 func renderCursorLines(r image.Rectangle, mousePos image.Point) {
 	if mousePos.In(r) {
 		gfx.SetModelMatrixRect(image.Rect(r.Min.X, mousePos.Y, r.Max.X, mousePos.Y))
@@ -336,4 +364,123 @@ func renderCursorLines(r image.Rectangle, mousePos image.Point) {
 		gfx.SetModelMatrixRect(image.Rect(mousePos.X, r.Min.Y, mousePos.X, r.Max.Y))
 		chartCursorVertLine.Render()
 	}
+}
+
+func (ch *Chart) setTrackLineData(ts *model.TradingSessionSeries, ms25 *model.MovingAverageSeries, ms50 *model.MovingAverageSeries, ms200 *model.MovingAverageSeries) {
+	ch.tlTradingSessions = ts
+	ch.tlMovingAverage25 = ms25
+	ch.tlMovingAverage50 = ms50
+	ch.tlMovingAverage200 = ms200
+}
+
+func (ch *Chart) chartLegendLabelText(candle *model.TradingSession, ma25 *model.MovingAverage, ma50 *model.MovingAverage, ma200 *model.MovingAverage) string {
+	legendOHLCVC := string(strings.Join([]string{"O:", strconv.FormatFloat(float64(candle.Open), 'f', 2, 32), "   H:", strconv.FormatFloat(float64(candle.High), 'f', 2, 32), "   L:", strconv.FormatFloat(float64(candle.Low), 'f', 2, 32), "   C:", strconv.FormatFloat(float64(candle.Close), 'f', 2, 32), "   V:", strconv.Itoa(candle.Volume), "   ", strconv.FormatFloat(float64(candle.Change), 'f', 2, 32), "%"},""))
+	legendMA := strings.Join([]string{" MA25:", strconv.FormatFloat(float64(ma25.Value), 'f', 1, 32), "   MA50:", strconv.FormatFloat(float64(ma50.Value), 'f', 1, 32), "   MA200:", strconv.FormatFloat(float64(ma200.Value), 'f', 1, 32)},"")
+	legend := strings.Join([]string{legendOHLCVC, legendMA},"   ")
+	return fmt.Sprintf("%s", legend);
+}
+
+func (ch *Chart) chartLegendCandleLabelText(candle *model.TradingSession) string {
+	legendOHLCVC := string(strings.Join([]string{"O:", strconv.FormatFloat(float64(candle.Open), 'f', 2, 32), "   H:", strconv.FormatFloat(float64(candle.High), 'f', 2, 32), "   L:", strconv.FormatFloat(float64(candle.Low), 'f', 2, 32), "   C:", strconv.FormatFloat(float64(candle.Close), 'f', 2, 32), "   V:", strconv.Itoa(candle.Volume), "   ", strconv.FormatFloat(float64(candle.Change), 'f', 2, 32), "%"},""))
+	return fmt.Sprintf("%s", legendOHLCVC);
+}
+
+func (ch *Chart) chartLegendMALabelText(ma25 *model.MovingAverage, ma50 *model.MovingAverage, ma200 *model.MovingAverage) string {
+	legendMA := strings.Join([]string{"MA25:", strconv.FormatFloat(float64(ma25.Value), 'f', 1, 32), "   MA50:", strconv.FormatFloat(float64(ma50.Value), 'f', 1, 32), "   MA200:", strconv.FormatFloat(float64(ma200.Value), 'f', 1, 32)},"")
+	return fmt.Sprintf("%s", legendMA);
+}
+
+func (ch *Chart) renderCandleTrackLineLegend(mainRect, labelRect image.Rectangle, mousePos image.Point) {
+	if !mousePos.In(mainRect) {
+		return
+	}
+
+	// Render candle trackline legend
+	ts := ch.tlTradingSessions.TradingSessions
+
+	pl := chartLegendLabel{
+		percent: float32(mousePos.X-mainRect.Min.X) / float32(mainRect.Dx()),
+	}
+
+	i := int(math.Floor(float64(len(ts))*float64(pl.percent)))
+	if i >= len(ts) {
+		i = len(ts) - 1
+	}
+
+	// Candlestick and moving average legends stacked as two chartAxisLabelBubbleSpec lines
+	pl.text = ch.chartLegendCandleLabelText(ts[i], )
+	pl.size = chartAxisLabelTextRenderer.Measure(pl.text)
+
+	ohlcvp := image.Point{
+		X: labelRect.Min.X + labelRect.Dx()/2 - pl.size.X/2,
+		Y: labelRect.Min.Y + labelRect.Dy() - pl.size.Y,
+	}
+
+	renderBubble(ohlcvp, pl.size, chartAxisLabelBubbleSpec)
+	chartAxisLabelTextRenderer.Render(pl.text, ohlcvp, white)
+}
+
+func (ch *Chart) renderMATrackLineLegend(mainRect, labelRect image.Rectangle, mousePos image.Point) {
+	if !mousePos.In(mainRect) {
+		return
+	}
+
+	// Render moving average trackline legend 
+	ts := ch.tlTradingSessions.TradingSessions
+	ms25 := ch.tlMovingAverage25.MovingAverages
+	ms50 := ch.tlMovingAverage50.MovingAverages
+	ms200 := ch.tlMovingAverage200.MovingAverages
+
+	mal := chartLegendLabel{
+		percent: float32(mousePos.X-mainRect.Min.X) / float32(mainRect.Dx()),
+	}
+
+	i := int(math.Floor(float64(len(ts))*float64(mal.percent)))
+	if i >= len(ts) {
+		i = len(ts) - 1
+	}
+
+	mal.text = ch.chartLegendMALabelText(ms25[i], ms50[i], ms200[i])
+	mal.size = chartAxisLabelTextRenderer.Measure(mal.text)
+
+	MAp := image.Point{
+		X: labelRect.Min.X + labelRect.Dx()/2 - mal.size.X/2,
+		Y: labelRect.Min.Y + labelRect.Dy() - int(math.Floor(float64(mal.size.Y)*float64(2.4))),
+	}
+
+	renderBubble(MAp, mal.size, chartAxisLabelBubbleSpec)
+	chartAxisLabelTextRenderer.Render(mal.text, MAp, white)
+}
+
+func (ch *Chart) renderTrackLineLegendInline(mainRect, labelRect image.Rectangle, mousePos image.Point) {
+	if !mousePos.In(mainRect) {
+		return
+	}
+
+	// Render inline trackline legend
+	ts := ch.tlTradingSessions.TradingSessions
+	ms25 := ch.tlMovingAverage25.MovingAverages
+	ms50 := ch.tlMovingAverage50.MovingAverages
+	ms200 := ch.tlMovingAverage200.MovingAverages
+
+	l := chartLegendLabel{
+		percent: float32(mousePos.X-mainRect.Min.X) / float32(mainRect.Dx()),
+	}
+
+	i := int(math.Floor(float64(len(ts))*float64(l.percent)))
+	if i >= len(ts) {
+		i = len(ts) - 1
+	}
+
+	l.text = ch.chartLegendLabelText(ts[i], ms25[i], ms50[i], ms200[i] )
+	l.size = chartAxisLabelTextRenderer.Measure(l.text)
+
+	tp := image.Point{
+		X: labelRect.Min.X + labelRect.Dx()/2 - l.size.X/2,
+		Y: labelRect.Min.Y + labelRect.Dy() - l.size.Y,
+	}
+
+	renderBubble(tp, l.size, chartAxisLabelBubbleSpec)
+	chartAxisLabelTextRenderer.Render(l.text, tp, white)
+
 }
