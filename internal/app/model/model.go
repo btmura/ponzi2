@@ -31,7 +31,7 @@ type Quote struct {
 	CompanyName   string
 	LatestPrice   float32
 	LatestSource  string
-	LatestTime    string
+	LatestTime    time.Time
 	LatestUpdate  time.Time
 	LatestVolume  int
 	Open          float32

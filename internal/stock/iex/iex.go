@@ -53,10 +53,9 @@ type Quote struct {
 	CompanyName   string
 	LatestPrice   float32
 	LatestSource  string
-	LatestTime    string
+	LatestTime    time.Time
 	LatestUpdate  time.Time
 	LatestVolume  int
-	Date          time.Time
 	Open          float32
 	High          float32
 	Low           float32
@@ -218,10 +217,9 @@ func decodeStocks(r io.Reader) ([]*Stock, error) {
 				CompanyName:   q.CompanyName,
 				LatestPrice:   float32(q.LatestPrice),
 				LatestSource:  q.LatestSource,
-				LatestTime:    q.LatestTime,
+				LatestTime:    date,
 				LatestUpdate:  millisToTime(q.LatestUpdate),
 				LatestVolume:  int(q.LatestVolume),
-				Date:          date,
 				Open:          float32(q.Open),
 				High:          float32(q.High),
 				Low:           float32(q.Low),
