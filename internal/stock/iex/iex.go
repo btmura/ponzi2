@@ -56,6 +56,7 @@ type Quote struct {
 	LatestTime    string
 	LatestUpdate  time.Time
 	LatestVolume  int
+	Date          time.Time
 	Open          float32
 	High          float32
 	Low           float32
@@ -207,20 +208,26 @@ func decodeStocks(r io.Reader) ([]*Stock, error) {
 	for s, d := range m {
 		ch := &Stock{Symbol: s}
 
-		if d.Quote != nil {
+		if q := d.Quote; q != nil {
+			date, err := quoteDate(q.LatestSource, q.LatestTime)
+			if err != nil {
+				return nil, err
+			}
+
 			ch.Quote = &Quote{
-				CompanyName:   d.Quote.CompanyName,
-				LatestPrice:   float32(d.Quote.LatestPrice),
-				LatestSource:  d.Quote.LatestSource,
-				LatestTime:    d.Quote.LatestTime,
-				LatestUpdate:  millisToTime(d.Quote.LatestUpdate),
-				LatestVolume:  int(d.Quote.LatestVolume),
-				Open:          float32(d.Quote.Open),
-				High:          float32(d.Quote.High),
-				Low:           float32(d.Quote.Low),
-				Close:         float32(d.Quote.Close),
-				Change:        float32(d.Quote.Change),
-				ChangePercent: float32(d.Quote.ChangePercent),
+				CompanyName:   q.CompanyName,
+				LatestPrice:   float32(q.LatestPrice),
+				LatestSource:  q.LatestSource,
+				LatestTime:    q.LatestTime,
+				LatestUpdate:  millisToTime(q.LatestUpdate),
+				LatestVolume:  int(q.LatestVolume),
+				Date:          date,
+				Open:          float32(q.Open),
+				High:          float32(q.High),
+				Low:           float32(q.Low),
+				Close:         float32(q.Close),
+				Change:        float32(q.Change),
+				ChangePercent: float32(q.ChangePercent),
 			}
 		}
 

@@ -11,6 +11,10 @@ import (
 )
 
 func TestDecodeStocks(t *testing.T) {
+	old := now
+	defer func() { now = old }()
+	now = func() time.Time { return time.Date(2018, time.October, 11, 0, 0, 0, 0, loc) }
+
 	for _, tt := range []struct {
 		desc    string
 		data    string
@@ -30,6 +34,7 @@ func TestDecodeStocks(t *testing.T) {
 						LatestTime:    "12:45:40 PM",
 						LatestUpdate:  time.Unix(1538153140, 524000000),
 						LatestVolume:  478088,
+						Date:          time.Date(2018, time.October, 11, 12, 45, 40, 0, loc),
 						Open:          11.61,
 						High:          11.72,
 						Low:           11.61,
@@ -53,6 +58,7 @@ func TestDecodeStocks(t *testing.T) {
 						LatestTime:    "12:32:11 PM",
 						LatestUpdate:  time.Unix(1538152331, 455000000),
 						LatestVolume:  1000000,
+						Date:          time.Date(2018, time.October, 11, 12, 32, 11, 0, loc),
 						Open:          25.3,
 						High:          25.314,
 						Low:           25.22,
@@ -85,6 +91,7 @@ func TestDecodeStocks(t *testing.T) {
 						LatestTime:    "September 28, 2018",
 						LatestUpdate:  time.Unix(1538164800, 414000000),
 						LatestVolume:  22067409,
+						Date:          time.Date(2018, time.September, 28, 0, 0, 0, 0, loc),
 						Open:          224.8,
 						High:          225.84,
 						Low:           224.02,
@@ -143,6 +150,7 @@ func TestDecodeStocks(t *testing.T) {
 						LatestTime:    "September 28, 2018",
 						LatestUpdate:  time.Unix(1538164800, 600000000),
 						LatestVolume:  20491683,
+						Date:          time.Date(2018, time.September, 28, 0, 0, 0, 0, loc),
 						Open:          114.17,
 						High:          114.57,
 						Low:           113.68,
