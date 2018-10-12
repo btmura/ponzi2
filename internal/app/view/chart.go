@@ -23,12 +23,16 @@ var (
 	chartSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 24)
 	chartFormatQuote             = func(st *model.Stock) string {
 		if q := st.Quote; q != nil {
+			layout := "1/2/2006"
+			if q.LatestTime.Hour() != 0 || q.LatestTime.Minute() != 0 || q.LatestTime.Second() != 0 || q.LatestTime.Nanosecond() != 0 {
+				layout += " 3:04 PM"
+			}
 			return fmt.Sprintf("%.2f %+5.2f %+5.2f%% %s %s",
 				q.LatestPrice,
 				q.Change,
 				q.ChangePercent*100,
 				q.LatestSource,
-				q.LatestTime.Format("1/2/2006"))
+				q.LatestTime.Format(layout))
 		}
 		return ""
 	}
