@@ -200,6 +200,55 @@ func TestDecodeStocks(t *testing.T) {
 	}
 }
 
+func TestQuoteDate(t *testing.T) {
+	old := now
+	defer func() { now = old }()
+	now = func() time.Time { return time.Date(2018, time.October, 11, 0, 0, 0, 0, loc) }
+
+	for _, tt := range []struct {
+		desc              string
+		inputLatestSource string
+		inputLatestTime   string
+		want              time.Time
+	}{
+		{
+			desc:              "IEX real time price",
+			inputLatestSource: "IEX real time price",
+			inputLatestTime:   "2:52:11 PM",
+			want:              time.Date(2018, time.October, 11, 14, 52, 11, 0, loc),
+		},
+		{
+			desc:              "15 minute delayed price",
+			inputLatestSource: "15 minute delayed price",
+			inputLatestTime:   "12:32:11 PM",
+			want:              time.Date(2018, time.October, 11, 12, 32, 11, 0, loc),
+		},
+		{
+			desc:              "previous close",
+			inputLatestSource: "Previous close",
+			inputLatestTime:   "September 25, 2018",
+			want:              time.Date(2018, time.September, 25, 0, 0, 0, 0, loc),
+		},
+		{
+			desc:              "close",
+			inputLatestSource: "Close",
+			inputLatestTime:   "September 25, 2018",
+			want:              time.Date(2018, time.September, 25, 0, 0, 0, 0, loc),
+		},
+	} {
+		t.Run(tt.desc, func(t *testing.T) {
+			got, gotErr := quoteDate(tt.inputLatestSource, tt.inputLatestTime)
+			if gotErr != nil {
+				t.Fatalf("returned error (%v), want success", gotErr)
+			}
+
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("differs:\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestChartDate(t *testing.T) {
 	for _, tt := range []struct {
 		desc        string

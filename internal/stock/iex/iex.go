@@ -19,6 +19,9 @@ import (
 	"time"
 )
 
+// now is a function to get the current time. Mocked out in tests to return a fixed time.
+var now = time.Now
+
 // loc is the timezone to use when parsing dates.
 var loc = mustLoadLocation("America/New_York")
 
@@ -245,6 +248,27 @@ func decodeStocks(r io.Reader) ([]*Stock, error) {
 	}
 
 	return chs, nil
+}
+
+func quoteDate(latestSource, latestTime string) (time.Time, error) {
+	switch latestSource {
+	case "IEX real time price", "15 minute delayed price":
+		t, err := time.ParseInLocation("3:04:05 PM", latestTime, loc)
+		if err != nil {
+			return time.Time{}, err
+		}
+
+		n := now()
+		return time.Date(
+			n.Year(), n.Month(), n.Day(),
+			t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), t.Location()), nil
+
+	case "Previous close", "Close":
+		return time.ParseInLocation("January 2, 2006", latestTime, loc)
+
+	default:
+		return time.Time{}, fmt.Errorf("couldn't parse quote date with source(%q) and time(%q)", latestSource, latestTime)
+	}
 }
 
 func chartDate(date, minute string) (time.Time, error) {
