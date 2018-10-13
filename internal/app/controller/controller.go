@@ -263,37 +263,49 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 		}
 		stocks, err := c.iexClient.GetStocks(ctx, req)
 		if err != nil {
+			var us []controllerStockUpdate
 			for _, s := range symbols {
-				c.addPendingStockUpdateLocked(s, nil, err)
+				us = append(us, controllerStockUpdate{
+					symbol:    s,
+					updateErr: err,
+				})
 			}
+			c.addPendingStockUpdatesLocked(us)
 			return
 		}
+
+		var us []controllerStockUpdate
 
 		found := map[string]bool{}
 		for _, st := range stocks {
 			found[st.Symbol] = true
 			u, err := modelStockUpdate(st)
-			c.addPendingStockUpdateLocked(st.Symbol, u, err)
+			us = append(us, controllerStockUpdate{
+				symbol:    st.Symbol,
+				update:    u,
+				updateErr: err,
+			})
 		}
 
 		for _, s := range symbols {
 			if found[s] {
 				continue
 			}
-			c.addPendingStockUpdateLocked(s, nil, fmt.Errorf("no stock data for %q", s))
+			us = append(us, controllerStockUpdate{
+				symbol:    s,
+				updateErr: fmt.Errorf("no stock data for %q", s),
+			})
 		}
+
+		c.addPendingStockUpdatesLocked(us)
 	}()
 }
 
-// addPendingStockUpdateLocked locks the pendingStockUpdates slice,
-// adds the update or error, and wakes up the view's update loop.
-func (c *Controller) addPendingStockUpdateLocked(symbol string, update *model.StockUpdate, updateErr error) {
+// addPendingStockUpdatesLocked locks the pendingStockUpdates slice,
+// adds the updates, and wakes up the view's update loop.
+func (c *Controller) addPendingStockUpdatesLocked(us []controllerStockUpdate) {
 	c.pendingStockUpdates.Lock()
-	c.pendingStockUpdates.updates = append(c.pendingStockUpdates.updates, controllerStockUpdate{
-		symbol:    symbol,
-		update:    update,
-		updateErr: updateErr,
-	})
+	c.pendingStockUpdates.updates = us
 	c.pendingStockUpdates.Unlock()
 	c.view.PostEmptyEvent()
 }
