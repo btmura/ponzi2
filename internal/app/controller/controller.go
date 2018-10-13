@@ -48,15 +48,9 @@ type Controller struct {
 	doneSavingConfigs chan bool
 }
 
-// controllerStockUpdate bundles a stock and new data for that stock.
 type controllerStockUpdate struct {
-	// symbol is the stock's symbol.
-	symbol string
-
-	// update is the new data for the stock. Nil if an error happened.
-	update *model.StockUpdate
-
-	// updateErr is the error getting the update. Nil if no error happened.
+	symbol    string
+	update    *model.StockUpdate
 	updateErr error
 }
 
@@ -73,8 +67,8 @@ func New(iexClient *iex.Client) *Controller {
 	}
 }
 
-// Run initializes and runs the "game loop".
-func (c *Controller) Run() error {
+// RunLoop runs the loop until the user exits the app.
+func (c *Controller) RunLoop() error {
 	ctx := context.Background()
 
 	cleanup, err := c.view.Init(ctx)
@@ -116,7 +110,7 @@ func (c *Controller) Run() error {
 		c.setChart(ctx, symbol)
 	})
 
-	c.view.Run(c.update)
+	c.view.RunLoop(c.update)
 
 	// Disable config changes to start shutting down save processor.
 	c.enableSavingConfigs = false
@@ -271,7 +265,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 				})
 			}
 			c.addPendingStockUpdatesLocked(us)
-			c.view.PostEmptyEvent()
+			c.view.WakeLoop()
 			return
 		}
 
@@ -299,7 +293,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 		}
 
 		c.addPendingStockUpdatesLocked(us)
-		c.view.PostEmptyEvent()
+		c.view.WakeLoop()
 	}()
 }
 

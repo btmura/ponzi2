@@ -300,7 +300,7 @@ func (v *View) Init(ctx context.Context) (cleanup func(), err error) {
 
 func (v *View) handleSizeEvent(width, height int) {
 	glog.V(2).Infof("width:%o height:%o", width, height)
-	defer v.PostEmptyEvent()
+	defer v.WakeLoop()
 
 	s := image.Pt(width, height)
 	if v.winSize == s {
@@ -399,7 +399,7 @@ func (v *View) metrics() viewMetrics {
 
 func (v *View) handleCharEvent(char rune) {
 	glog.V(2).Infof("char:%c", char)
-	defer v.PostEmptyEvent()
+	defer v.WakeLoop()
 
 	char = unicode.ToUpper(char)
 	if _, ok := acceptedChars[char]; ok {
@@ -409,7 +409,7 @@ func (v *View) handleCharEvent(char rune) {
 
 func (v *View) handleKeyEvent(key glfw.Key, action glfw.Action) {
 	glog.V(2).Infof("key:%v action:%v", key, action)
-	defer v.PostEmptyEvent()
+	defer v.WakeLoop()
 
 	if action != glfw.Release {
 		return
@@ -432,7 +432,7 @@ func (v *View) handleKeyEvent(key glfw.Key, action glfw.Action) {
 
 func (v *View) handleCursorPosEvent(x, y float64) {
 	glog.V(2).Infof("x:%f y:%f", x, y)
-	defer v.PostEmptyEvent()
+	defer v.WakeLoop()
 
 	// Flip Y-axis since the OpenGL coordinate system makes lower left the origin.
 	v.mousePos = image.Pt(int(x), v.winSize.Y-int(y))
@@ -440,7 +440,7 @@ func (v *View) handleCursorPosEvent(x, y float64) {
 
 func (v *View) handleMouseButtonEvent(button glfw.MouseButton, action glfw.Action) {
 	glog.V(2).Infof("button:%v action:%v", button, action)
-	defer v.PostEmptyEvent()
+	defer v.WakeLoop()
 
 	if button != glfw.MouseButtonLeft {
 		return
@@ -451,7 +451,7 @@ func (v *View) handleMouseButtonEvent(button glfw.MouseButton, action glfw.Actio
 
 func (v *View) handleScrollEvent(yoff float64) {
 	glog.V(2).Infof("yoff:%f", yoff)
-	defer v.PostEmptyEvent()
+	defer v.WakeLoop()
 
 	if yoff != -1 && yoff != +1 {
 		return
@@ -484,8 +484,13 @@ func (v *View) handleScrollEvent(yoff float64) {
 	v.sidebarScrollOffset = v.sidebarScrollOffset.Add(off)
 }
 
-// Run runs the "game loop".
-func (v *View) Run(preupdate func()) {
+// SetInputSymbolSubmittedCallback sets the callback for when a new symbol is entered.
+func (v *View) SetInputSymbolSubmittedCallback(cb func(symbol string)) {
+	v.inputSymbolSubmittedCallback = cb
+}
+
+// RunLoop runs the "game loop".
+func (v *View) RunLoop(preupdate func()) {
 start:
 	var lag float64
 	dirty := false
@@ -525,6 +530,11 @@ start:
 			goto start
 		}
 	}
+}
+
+// WakeLoop wakes up the loop if it is asleep.
+func (v *View) WakeLoop() {
+	glfw.PostEmptyEvent()
 }
 
 func (v *View) update() (dirty bool) {
@@ -602,19 +612,9 @@ func (v *View) render(fudge float32) (dirty bool) {
 	return len(*vc.ScheduledCallbacks) != 0
 }
 
-// PostEmptyEvent wakes up the Run loop with an event if it is asleep.
-func (v *View) PostEmptyEvent() {
-	glfw.PostEmptyEvent()
-}
-
-// SetInputSymbolSubmittedCallback sets the callback for when a new symbol is entered.
-func (v *View) SetInputSymbolSubmittedCallback(cb func(symbol string)) {
-	v.inputSymbolSubmittedCallback = cb
-}
-
 // SetChart sets the View's main chart.
 func (v *View) SetChart(ch *Chart) {
-	defer v.PostEmptyEvent()
+	defer v.WakeLoop()
 	for _, ch := range v.charts {
 		ch.Exit()
 	}
@@ -623,13 +623,13 @@ func (v *View) SetChart(ch *Chart) {
 
 // AddChartThumb adds the ChartThumbnail to the side bar.
 func (v *View) AddChartThumb(th *ChartThumb) {
-	defer v.PostEmptyEvent()
+	defer v.WakeLoop()
 	v.chartThumbs = append(v.chartThumbs, newViewChartThumb(th))
 }
 
 // RemoveChartThumb removes the ChartThumbnail from the side bar.
 func (v *View) RemoveChartThumb(th *ChartThumb) {
-	defer v.PostEmptyEvent()
+	defer v.WakeLoop()
 	for _, vth := range v.chartThumbs {
 		if vth.chartThumb == th {
 			vth.Exit()

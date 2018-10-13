@@ -1,4 +1,4 @@
-// Package app exports a Run function to start the app. 
+// Package app exports a Run function to start the app.
 package app
 
 import (
@@ -11,7 +11,7 @@ import (
 // Run runs the app. Should be called from main.
 func Run(dumpAPIResponses bool) {
 	c := iex.NewClient(dumpAPIResponses)
-	if err := controller.New(c).Run(); err != nil {
+	if err := controller.New(c).RunLoop(); err != nil {
 		glog.Fatal(err)
 	}
 }
