@@ -271,6 +271,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 				})
 			}
 			c.addPendingStockUpdatesLocked(us)
+			c.view.PostEmptyEvent()
 			return
 		}
 
@@ -298,6 +299,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 		}
 
 		c.addPendingStockUpdatesLocked(us)
+		c.view.PostEmptyEvent()
 	}()
 }
 
@@ -305,9 +307,8 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 // adds the updates, and wakes up the view's update loop.
 func (c *Controller) addPendingStockUpdatesLocked(us []controllerStockUpdate) {
 	c.pendingStockUpdates.Lock()
-	c.pendingStockUpdates.updates = us
+	c.pendingStockUpdates.updates = append(c.pendingStockUpdates.updates, us...)
 	c.pendingStockUpdates.Unlock()
-	c.view.PostEmptyEvent()
 }
 
 // takePendingStockUpdatesLocked locks the pendingStockUpdates slice,
