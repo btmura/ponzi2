@@ -28,7 +28,7 @@ var loc = mustLoadLocation("America/New_York")
 // Range is the range to specify in the request.
 type Range string
 
-// ChartRange values.
+// Range values.
 const (
 	RangeOneDay   Range = "1d"
 	RangeTwoYears       = "2y"
@@ -52,7 +52,7 @@ type Stock struct {
 type Quote struct {
 	CompanyName   string
 	LatestPrice   float32
-	LatestSource  string
+	LatestSource  Source
 	LatestTime    time.Time
 	LatestUpdate  time.Time
 	LatestVolume  int
@@ -63,6 +63,19 @@ type Quote struct {
 	Change        float32
 	ChangePercent float32
 }
+
+// Source is the quote data source.
+type Source int
+
+// Source values.
+//go:generate stringer -type=Source
+const (
+	SourceUnspecified Source = iota
+	SourceIEXRealTimePrice
+	Source15MinuteDelayedPrice
+	SourceClose
+	SourcePreviousClose
+)
 
 // ChartPoint is a single point on the chart.
 type ChartPoint struct {
@@ -208,7 +221,12 @@ func decodeStocks(r io.Reader) ([]*Stock, error) {
 		ch := &Stock{Symbol: s}
 
 		if q := d.Quote; q != nil {
-			date, err := quoteDate(q.LatestSource, q.LatestTime)
+			src, err := quoteSource(q.LatestSource)
+			if err != nil {
+				return nil, err
+			}
+
+			date, err := quoteDate(src, q.LatestTime)
 			if err != nil {
 				return nil, err
 			}
@@ -216,7 +234,7 @@ func decodeStocks(r io.Reader) ([]*Stock, error) {
 			ch.Quote = &Quote{
 				CompanyName:   q.CompanyName,
 				LatestPrice:   float32(q.LatestPrice),
-				LatestSource:  q.LatestSource,
+				LatestSource:  src,
 				LatestTime:    date,
 				LatestUpdate:  millisToTime(q.LatestUpdate),
 				LatestVolume:  int(q.LatestVolume),
@@ -255,9 +273,24 @@ func decodeStocks(r io.Reader) ([]*Stock, error) {
 	return chs, nil
 }
 
-func quoteDate(latestSource, latestTime string) (time.Time, error) {
+func quoteSource(latestSource string) (Source, error) {
 	switch latestSource {
-	case "IEX real time price", "15 minute delayed price":
+	case "IEX real time price":
+		return SourceIEXRealTimePrice, nil
+	case "15 minute delayed price":
+		return Source15MinuteDelayedPrice, nil
+	case "Close":
+		return SourceClose, nil
+	case "Previous close":
+		return SourcePreviousClose, nil
+	default:
+		return SourceUnspecified, fmt.Errorf("unrecognized source: %q", latestSource)
+	}
+}
+
+func quoteDate(latestSource Source, latestTime string) (time.Time, error) {
+	switch latestSource {
+	case SourceIEXRealTimePrice, Source15MinuteDelayedPrice:
 		t, err := time.ParseInLocation("3:04:05 PM", latestTime, loc)
 		if err != nil {
 			return time.Time{}, err
@@ -268,7 +301,7 @@ func quoteDate(latestSource, latestTime string) (time.Time, error) {
 			n.Year(), n.Month(), n.Day(),
 			t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), t.Location()), nil
 
-	case "Previous close", "Close":
+	case SourcePreviousClose, SourceClose:
 		return time.ParseInLocation("January 2, 2006", latestTime, loc)
 
 	default:

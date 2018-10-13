@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"sort"
 	"time"
 
@@ -17,7 +18,12 @@ const (
 	d = 3
 )
 
-func modelStockUpdate(st *iex.Stock) *model.StockUpdate {
+func modelStockUpdate(st *iex.Stock) (*model.StockUpdate, error) {
+	q, err := modelQuote(st.Quote)
+	if err != nil {
+		return nil, err
+	}
+
 	ds := modelTradingSessions(st)
 	ws := weeklyModelTradingSessions(ds)
 
@@ -68,24 +74,30 @@ func modelStockUpdate(st *iex.Stock) *model.StockUpdate {
 
 	return &model.StockUpdate{
 		Symbol: st.Symbol,
-		Quote:  modelQuote(st.Quote),
+		Quote:  q,
 		DailyTradingSessionSeries:   &model.TradingSessionSeries{TradingSessions: ds},
 		DailyMovingAverageSeries25:  &model.MovingAverageSeries{MovingAverages: m25},
 		DailyMovingAverageSeries50:  &model.MovingAverageSeries{MovingAverages: m50},
 		DailyMovingAverageSeries200: &model.MovingAverageSeries{MovingAverages: m200},
 		DailyStochasticSeries:       &model.StochasticSeries{Stochastics: dsto},
 		WeeklyStochasticSeries:      &model.StochasticSeries{Stochastics: wsto},
-	}
+	}, nil
 }
 
-func modelQuote(q *iex.Quote) *model.Quote {
+func modelQuote(q *iex.Quote) (*model.Quote, error) {
 	if q == nil {
-		return nil
+		return nil, nil
 	}
+
+	src, err := modelSource(q.LatestSource)
+	if err != nil {
+		return nil, err
+	}
+
 	return &model.Quote{
 		CompanyName:   q.CompanyName,
 		LatestPrice:   q.LatestPrice,
-		LatestSource:  q.LatestSource,
+		LatestSource:  src,
 		LatestTime:    q.LatestTime,
 		LatestUpdate:  q.LatestUpdate,
 		LatestVolume:  q.LatestVolume,
@@ -95,6 +107,23 @@ func modelQuote(q *iex.Quote) *model.Quote {
 		Close:         q.Close,
 		Change:        q.Change,
 		ChangePercent: q.ChangePercent,
+	}, nil
+}
+
+func modelSource(src iex.Source) (model.Source, error) {
+	switch src {
+	case iex.SourceUnspecified:
+		return model.SourceUnspecified, nil
+	case iex.SourceIEXRealTimePrice:
+		return model.SourceIEXRealTimePrice, nil
+	case iex.Source15MinuteDelayedPrice:
+		return model.Source15MinuteDelayedPrice, nil
+	case iex.SourceClose:
+		return model.SourceClose, nil
+	case iex.SourcePreviousClose:
+		return model.SourcePreviousClose, nil
+	default:
+		return 0, fmt.Errorf("unrecognized iex source: %v", src)
 	}
 }
 

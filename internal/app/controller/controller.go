@@ -267,10 +267,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 		stocks, err := c.iexClient.GetStocks(ctx, req)
 		if err != nil {
 			for _, s := range symbols {
-				c.pendingStockUpdates <- controllerStockUpdate{
-					symbol:    s,
-					updateErr: err,
-				}
+				c.updateStock(s, nil, err)
 			}
 			return
 		}
@@ -278,24 +275,27 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 		found := map[string]bool{}
 		for _, st := range stocks {
 			found[st.Symbol] = true
-			c.pendingStockUpdates <- controllerStockUpdate{
-				symbol: st.Symbol,
-				update: modelStockUpdate(st),
-			}
+			u, err := modelStockUpdate(st)
+			c.updateStock(st.Symbol, u, err)
 		}
 
 		for _, s := range symbols {
 			if found[s] {
 				continue
 			}
-			c.pendingStockUpdates <- controllerStockUpdate{
-				symbol:    s,
-				updateErr: fmt.Errorf("no stock data for %q", s),
-			}
+			c.updateStock(s, nil, fmt.Errorf("no stock data for %q", s))
 		}
 
 		c.view.PostEmptyEvent()
 	}()
+}
+
+func (c *Controller) updateStock(symbol string, update *model.StockUpdate, updateErr error) {
+	c.pendingStockUpdates <- controllerStockUpdate{
+		symbol:    symbol,
+		update:    update,
+		updateErr: updateErr,
+	}
 }
 
 func (c *Controller) saveConfig() {

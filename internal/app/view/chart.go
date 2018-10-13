@@ -27,7 +27,7 @@ var (
 			if q.LatestTime.Hour() != 0 || q.LatestTime.Minute() != 0 || q.LatestTime.Second() != 0 || q.LatestTime.Nanosecond() != 0 {
 				layout += " 3:04 PM"
 			}
-			return fmt.Sprintf("%.2f %+5.2f %+5.2f%% %s %s",
+			return fmt.Sprintf("%.2f %+5.2f %+5.2f%% %v %s",
 				q.LatestPrice,
 				q.Change,
 				q.ChangePercent*100,

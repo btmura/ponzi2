@@ -30,7 +30,7 @@ type Stock struct {
 type Quote struct {
 	CompanyName   string
 	LatestPrice   float32
-	LatestSource  string
+	LatestSource  Source
 	LatestTime    time.Time
 	LatestUpdate  time.Time
 	LatestVolume  int
@@ -41,6 +41,19 @@ type Quote struct {
 	Change        float32
 	ChangePercent float32
 }
+
+// Source is the quote data source.
+type Source int
+
+// Source values.
+//go:generate stringer -type=Source
+const (
+	SourceUnspecified Source = iota
+	SourceIEXRealTimePrice
+	Source15MinuteDelayedPrice
+	SourceClose
+	SourcePreviousClose
+)
 
 // TradingSessionSeries is a time series of trading sessions.
 type TradingSessionSeries struct {
