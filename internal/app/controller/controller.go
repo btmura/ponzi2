@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/golang/glog"
 
@@ -26,6 +27,12 @@ type Controller struct {
 	// Go routines fetch data using iexClient and deposit them into this slice.
 	pendingStockUpdates struct {
 		updates []controllerStockUpdate
+		sync.Mutex
+	}
+
+	// pendingSignals has signals that should be handled by the controller.
+	pendingSignals struct {
+		signals []controllerSignal
 		sync.Mutex
 	}
 
@@ -53,6 +60,13 @@ type controllerStockUpdate struct {
 	update    *model.StockUpdate
 	updateErr error
 }
+
+type controllerSignal int
+
+const (
+	signalUnspecified controllerSignal = iota
+	signalRefreshCurrentStock
+)
 
 // New creates a new Controller.
 func New(iexClient *iex.Client) *Controller {
@@ -106,11 +120,22 @@ func (c *Controller) RunLoop() error {
 	// Enable saving configs after UI is setup and change processor started.
 	c.enableSavingConfigs = true
 
+	ticker := time.NewTicker(5 * time.Minute)
+	go func() {
+		for t := range ticker.C {
+			fmt.Printf("ticker fired at: %v\n", t)
+			c.addPendingSignalsLocked([]controllerSignal{signalRefreshCurrentStock})
+			c.view.WakeLoop()
+		}
+	}()
+
 	c.view.SetInputSymbolSubmittedCallback(func(symbol string) {
 		c.setChart(ctx, symbol)
 	})
 
 	c.view.RunLoop(c.update)
+
+	ticker.Stop()
 
 	// Disable config changes to start shutting down save processor.
 	c.enableSavingConfigs = false
@@ -146,6 +171,13 @@ func (c *Controller) update() {
 				th.SetLoading(false)
 				th.SetError(true)
 			}
+		}
+	}
+
+	for _, s := range c.takePendingSignalsLocked() {
+		switch s {
+		case signalRefreshCurrentStock:
+			fmt.Println("refresh current stock")
 		}
 	}
 }
@@ -297,8 +329,8 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 	}()
 }
 
-// addPendingStockUpdatesLocked locks the pendingStockUpdates slice,
-// adds the updates, and wakes up the view's update loop.
+// addPendingStockUpdatesLocked locks the pendingStockUpdates slice
+// and adds the new stock updates to the existing slice.
 func (c *Controller) addPendingStockUpdatesLocked(us []controllerStockUpdate) {
 	c.pendingStockUpdates.Lock()
 	c.pendingStockUpdates.updates = append(c.pendingStockUpdates.updates, us...)
@@ -306,7 +338,7 @@ func (c *Controller) addPendingStockUpdatesLocked(us []controllerStockUpdate) {
 }
 
 // takePendingStockUpdatesLocked locks the pendingStockUpdates slice,
-// copies and empties the pendingStockUpdates, and returns the copied slice.
+// returns a copy of the updates, and empties the existing updates.
 func (c *Controller) takePendingStockUpdatesLocked() []controllerStockUpdate {
 	var us []controllerStockUpdate
 	c.pendingStockUpdates.Lock()
@@ -316,6 +348,27 @@ func (c *Controller) takePendingStockUpdatesLocked() []controllerStockUpdate {
 	c.pendingStockUpdates.updates = nil
 	c.pendingStockUpdates.Unlock()
 	return us
+}
+
+// addPendingSignalsLocked locks the pendingSignals slice
+// and adds the new signals to the existing slice.
+func (c *Controller) addPendingSignalsLocked(signals []controllerSignal) {
+	c.pendingSignals.Lock()
+	c.pendingSignals.signals = append(c.pendingSignals.signals, signals...)
+	c.pendingSignals.Unlock()
+}
+
+// takePendingSignalsLocked locks the pendingSignals slice,
+// returns a copy of the current signals, and empties the existing signals.
+func (c *Controller) takePendingSignalsLocked() []controllerSignal {
+	var ss []controllerSignal
+	c.pendingSignals.Lock()
+	for _, s := range c.pendingSignals.signals {
+		ss = append(ss, s)
+	}
+	c.pendingSignals.signals = nil
+	c.pendingSignals.Unlock()
+	return ss
 }
 
 func (c *Controller) saveConfig() {
