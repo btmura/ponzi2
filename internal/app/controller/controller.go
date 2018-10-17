@@ -57,6 +57,7 @@ type controllerStockUpdate struct {
 	updateErr error
 }
 
+//go:generate stringer -type=controllerSignal
 type controllerSignal int
 
 const (
