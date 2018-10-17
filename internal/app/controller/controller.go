@@ -23,18 +23,14 @@ type Controller struct {
 	// iexClient fetches stock data to update the model.
 	iexClient *iex.Client
 
-	// pendingStockUpdates has stock updates ready to apply to the model.
-	// Go routines fetch data using iexClient and deposit them into this slice.
-	pendingStockUpdates struct {
-		updates []controllerStockUpdate
-		sync.Mutex
-	}
+	// pendingStockUpdates are the updates to be processed by the main thread.
+	pendingStockUpdates []controllerStockUpdate
 
-	// pendingSignals has signals that should be handled by the controller.
-	pendingSignals struct {
-		signals []controllerSignal
-		sync.Mutex
-	}
+	// pendingSignals are the signals to be processed by the main thread.
+	pendingSignals []controllerSignal
+
+	// pendingMutex guards pendingUpdates and pendingSignals.
+	pendingMutex *sync.Mutex
 
 	// view is the UI that the Controller updates.
 	view *view.View
@@ -73,6 +69,7 @@ func New(iexClient *iex.Client) *Controller {
 	return &Controller{
 		model:                 model.New(),
 		iexClient:             iexClient,
+		pendingMutex:          &sync.Mutex{},
 		view:                  view.New(),
 		symbolToChartMap:      map[string]*view.Chart{},
 		symbolToChartThumbMap: map[string]*view.ChartThumb{},
@@ -332,42 +329,44 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 // addPendingStockUpdatesLocked locks the pendingStockUpdates slice
 // and adds the new stock updates to the existing slice.
 func (c *Controller) addPendingStockUpdatesLocked(us []controllerStockUpdate) {
-	c.pendingStockUpdates.Lock()
-	c.pendingStockUpdates.updates = append(c.pendingStockUpdates.updates, us...)
-	c.pendingStockUpdates.Unlock()
+	c.pendingMutex.Lock()
+	defer c.pendingMutex.Unlock()
+	c.pendingStockUpdates = append(c.pendingStockUpdates, us...)
 }
 
 // takePendingStockUpdatesLocked locks the pendingStockUpdates slice,
 // returns a copy of the updates, and empties the existing updates.
 func (c *Controller) takePendingStockUpdatesLocked() []controllerStockUpdate {
+	c.pendingMutex.Lock()
+	defer c.pendingMutex.Unlock()
+
 	var us []controllerStockUpdate
-	c.pendingStockUpdates.Lock()
-	for _, u := range c.pendingStockUpdates.updates {
+	for _, u := range c.pendingStockUpdates {
 		us = append(us, u)
 	}
-	c.pendingStockUpdates.updates = nil
-	c.pendingStockUpdates.Unlock()
+	c.pendingStockUpdates = nil
 	return us
 }
 
 // addPendingSignalsLocked locks the pendingSignals slice
 // and adds the new signals to the existing slice.
 func (c *Controller) addPendingSignalsLocked(signals []controllerSignal) {
-	c.pendingSignals.Lock()
-	c.pendingSignals.signals = append(c.pendingSignals.signals, signals...)
-	c.pendingSignals.Unlock()
+	c.pendingMutex.Lock()
+	defer c.pendingMutex.Unlock()
+	c.pendingSignals = append(c.pendingSignals, signals...)
 }
 
 // takePendingSignalsLocked locks the pendingSignals slice,
 // returns a copy of the current signals, and empties the existing signals.
 func (c *Controller) takePendingSignalsLocked() []controllerSignal {
+	c.pendingMutex.Lock()
+	defer c.pendingMutex.Unlock()
+
 	var ss []controllerSignal
-	c.pendingSignals.Lock()
-	for _, s := range c.pendingSignals.signals {
+	for _, s := range c.pendingSignals {
 		ss = append(ss, s)
 	}
-	c.pendingSignals.signals = nil
-	c.pendingSignals.Unlock()
+	c.pendingSignals = nil
 	return ss
 }
 
