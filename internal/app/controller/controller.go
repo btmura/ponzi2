@@ -4,6 +4,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -14,6 +15,9 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
+
+// loc is the timezone to use when parsing dates.
+var loc = mustLoadLocation("America/New_York")
 
 // Controller runs the program in a "game loop".
 type Controller struct {
@@ -121,7 +125,15 @@ func (c *Controller) RunLoop() error {
 	ticker := time.NewTicker(5 * time.Minute)
 	go func() {
 		for t := range ticker.C {
-			fmt.Printf("ticker fired at: %v\n", t)
+			n := time.Now()
+			open := time.Date(n.Year(), n.Month(), n.Day(), 9, 30, 0, 0, loc)
+			close := time.Date(n.Year(), n.Month(), n.Day(), 16, 0, 0, 0, loc)
+
+			if t.Before(open) || t.After(close) {
+				fmt.Printf("ignoring ticker at: %v\n", t)
+				continue
+			}
+
 			c.addPendingSignalsLocked([]controllerSignal{signalRefreshCurrentStock})
 			c.view.WakeLoop()
 		}
@@ -390,4 +402,12 @@ func (c *Controller) saveConfig() {
 	go func() {
 		c.pendingConfigSaves <- cfg
 	}()
+}
+
+func mustLoadLocation(name string) *time.Location {
+	loc, err := time.LoadLocation(name)
+	if err != nil {
+		log.Fatalf("time.LoadLocation(%s) failed: %v", name, err)
+	}
+	return loc
 }
