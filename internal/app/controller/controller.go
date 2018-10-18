@@ -130,7 +130,7 @@ func (c *Controller) RunLoop() error {
 			close := time.Date(n.Year(), n.Month(), n.Day(), 16, 0, 0, 0, loc)
 
 			if t.Before(open) || t.After(close) {
-				fmt.Printf("ignoring ticker at: %v\n", t)
+				glog.V(2).Infof("ignoring refresh ticker at %v", t.Format("1/2/2006 3:04:05 PM"))
 				continue
 			}
 
@@ -143,7 +143,7 @@ func (c *Controller) RunLoop() error {
 		c.setChart(ctx, symbol)
 	})
 
-	c.view.RunLoop(c.update)
+	c.view.RunLoop(ctx, c.update)
 
 	ticker.Stop()
 
@@ -155,7 +155,7 @@ func (c *Controller) RunLoop() error {
 	return nil
 }
 
-func (c *Controller) update() {
+func (c *Controller) update(ctx context.Context) {
 	for _, u := range c.takePendingStockUpdatesLocked() {
 		switch {
 		case u.update != nil:
@@ -187,7 +187,7 @@ func (c *Controller) update() {
 	for _, s := range c.takePendingSignalsLocked() {
 		switch s {
 		case signalRefreshCurrentStock:
-			fmt.Println("refresh current stock")
+			c.refreshStock(ctx, c.allSymbols())
 		}
 	}
 }
@@ -213,15 +213,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) {
 
 	ch.SetData(st)
 	ch.SetRefreshButtonClickCallback(func() {
-		// Refresh all stocks in the model.
-		var symbols []string
-		if st := c.model.CurrentStock; st != nil {
-			symbols = append(symbols, st.Symbol)
-		}
-		for _, st := range c.model.SavedStocks {
-			symbols = append(symbols, st.Symbol)
-		}
-		c.refreshStock(ctx, symbols)
+		c.refreshStock(ctx, c.allSymbols())
 	})
 	ch.SetAddButtonClickCallback(func() {
 		c.addChartThumb(ctx, symbol)
@@ -274,6 +266,17 @@ func (c *Controller) removeChartThumb(symbol string) {
 
 	c.view.RemoveChartThumb(th)
 	c.saveConfig()
+}
+
+func (c *Controller) allSymbols() []string {
+	var symbols []string
+	if st := c.model.CurrentStock; st != nil {
+		symbols = append(symbols, st.Symbol)
+	}
+	for _, st := range c.model.SavedStocks {
+		symbols = append(symbols, st.Symbol)
+	}
+	return symbols
 }
 
 func (c *Controller) refreshStock(ctx context.Context, symbols []string) {

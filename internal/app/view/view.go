@@ -490,7 +490,7 @@ func (v *View) SetInputSymbolSubmittedCallback(cb func(symbol string)) {
 }
 
 // RunLoop runs the "game loop".
-func (v *View) RunLoop(preupdate func()) {
+func (v *View) RunLoop(ctx context.Context, preupdate func(context.Context)) {
 start:
 	var lag float64
 	dirty := false
@@ -503,7 +503,7 @@ start:
 
 		i := 0
 		for ; i < minUpdates || i < maxUpdates && lag >= updateSec; i++ {
-			preupdate()
+			preupdate(ctx)
 			dirty = v.update()
 			lag -= updateSec
 		}
