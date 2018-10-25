@@ -3,7 +3,7 @@ package view
 import (
 	"image"
 
-	"github.com/btmura/ponzi2/internal/app/gfx"
+	"gitlab.com/btmura/ponzi2/internal/app/gfx"
 )
 
 // centeredText draws text that is horizontally and vertically centered.

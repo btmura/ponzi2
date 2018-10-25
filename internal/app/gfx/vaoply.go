@@ -7,7 +7,7 @@ import (
 
 	"github.com/golang/glog"
 
-	"github.com/btmura/ponzi2/internal/ply"
+	"gitlab.com/btmura/ponzi2/internal/ply"
 )
 
 // PLYVAO returns a VAO decoded from a PLY Reader.

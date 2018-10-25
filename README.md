@@ -6,7 +6,7 @@ ponzi2 is a stock chart viewer written in Go using OpenGL and GLFW.
 
 It is go-gettable:
 
-`go get -u github.com/btmura/ponzi2`
+`go get -u gitlab.com/btmura/ponzi2`
 
 ## Stock Data
 

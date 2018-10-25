@@ -5,7 +5,7 @@ import (
 	"image"
 	"math"
 
-	"github.com/btmura/ponzi2/internal/app/gfx"
+	"gitlab.com/btmura/ponzi2/internal/app/gfx"
 )
 
 // White horizontal and vertical line VAOs that can be reused anywhere.

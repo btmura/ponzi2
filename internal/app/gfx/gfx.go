@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 
-	"github.com/btmura/ponzi2/internal/matrix"
+	"gitlab.com/btmura/ponzi2/internal/matrix"
 )
 
 // Get esc from github.com/mjibson/esc. It's used to embed resources into the binary.

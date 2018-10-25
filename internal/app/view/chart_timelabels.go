@@ -5,7 +5,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/btmura/ponzi2/internal/app/model"
+	"gitlab.com/btmura/ponzi2/internal/app/model"
 )
 
 // chartTimeLabels renders the time labels for a single stock.

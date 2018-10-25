@@ -15,8 +15,8 @@ import (
 	"github.com/golang/glog"
 	"golang.org/x/image/font/gofont/goregular"
 
-	"github.com/btmura/ponzi2/internal/app/gfx"
-	"github.com/btmura/ponzi2/internal/matrix"
+	"gitlab.com/btmura/ponzi2/internal/app/gfx"
+	"gitlab.com/btmura/ponzi2/internal/matrix"
 )
 
 // Embed resources into the application. Get esc from github.com/mjibson/esc.

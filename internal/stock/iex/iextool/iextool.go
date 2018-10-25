@@ -8,7 +8,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/btmura/ponzi2/internal/stock/iex"
+	"gitlab.com/btmura/ponzi2/internal/stock/iex"
 )
 
 var (

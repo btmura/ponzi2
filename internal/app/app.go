@@ -4,8 +4,8 @@ package app
 import (
 	"github.com/golang/glog"
 
-	"github.com/btmura/ponzi2/internal/app/controller"
-	"github.com/btmura/ponzi2/internal/stock/iex"
+	"gitlab.com/btmura/ponzi2/internal/app/controller"
+	"gitlab.com/btmura/ponzi2/internal/stock/iex"
 )
 
 // Run runs the app. Should be called from main.
