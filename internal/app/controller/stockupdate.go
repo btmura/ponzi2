@@ -5,8 +5,8 @@ import (
 	"sort"
 	"time"
 
-	"gitlab.com/btmura/ponzi2/internal/app/model"
-	"gitlab.com/btmura/ponzi2/internal/stock/iex"
+	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
 // maxDataWeeks is maximum number of weeks of data to retain.

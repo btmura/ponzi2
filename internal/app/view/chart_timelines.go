@@ -3,8 +3,8 @@ package view
 import (
 	"image"
 
-	"gitlab.com/btmura/ponzi2/internal/app/model"
-	"gitlab.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/gfx"
 )
 
 type chartTimeLines struct {

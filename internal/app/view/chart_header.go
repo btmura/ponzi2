@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"image"
 
-	"gitlab.com/btmura/ponzi2/internal/app/gfx"
-	"gitlab.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/model"
 )
 
 var (
