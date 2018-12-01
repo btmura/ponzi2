@@ -49,10 +49,10 @@ type Source int
 //go:generate stringer -type=Source
 const (
 	SourceUnspecified Source = iota
-	SourceIEXRealTimePrice
-	Source15MinuteDelayedPrice
-	SourceClose
-	SourcePreviousClose
+	IEXRealTimePrice
+	FifteenMinuteDelayedPrice
+	Close
+	PreviousClose
 )
 
 // TradingSessionSeries is a time series of trading sessions.
