@@ -17,10 +17,11 @@ const (
 var (
 	thumbSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
 	thumbFormatQuote             = func(st *model.Stock) string {
-		if q := st.Quote; q != nil {
-			return fmt.Sprintf(" %.2f %+5.2f%% ", q.LatestPrice, q.ChangePercent*100)
+		q := st.Quote
+		if q == nil {
+			return ""
 		}
-		return ""
+		return fmt.Sprintf(" %.2f %+5.2f (%+5.2f%%)", q.LatestPrice, q.Change, q.ChangePercent*100)
 	}
 	thumbLoadingText = newCenteredText(thumbSymbolQuoteTextRenderer, "LOADING...")
 	thumbErrorText   = newCenteredText(thumbSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange))
