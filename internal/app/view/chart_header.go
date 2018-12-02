@@ -180,26 +180,11 @@ func (c chartHeaderClicks) HasClicks() bool {
 
 // Render renders the ChartHeader.
 func (ch *chartHeader) Render(vc viewContext) (body image.Rectangle, clicks chartHeaderClicks) {
-	// Start rendering from the top left. Track position with point.
-	r := vc.Bounds
-	pt := image.Pt(r.Min.X, r.Max.Y)
-	pt.Y -= ch.padding + ch.symbolQuoteTextRenderer.LineHeight()
-	{
-		pt := pt
-		pt.X += ch.rounding
-		pt.X += ch.symbolQuoteTextRenderer.Render(ch.symbol, pt, white)
-		pt.X += ch.padding
-
-		old := gfx.Alpha()
-		gfx.SetAlpha(old * ch.fadeIn.Value(vc.Fudge))
-		pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteText, pt, ch.quoteColor)
-		gfx.SetAlpha(old)
-
-	}
-	pt.Y -= ch.padding
+	h := ch.padding + ch.symbolQuoteTextRenderer.LineHeight() + ch.padding
+	buttonSize := image.Pt(h, h)
 
 	// Render buttons in the upper right corner from right to left.
-	buttonSize := image.Pt(r.Max.Y-pt.Y, r.Max.Y-pt.Y)
+	r := vc.Bounds
 	vc.Bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
 
 	if ch.removeButton.enabled {
@@ -227,6 +212,26 @@ func (ch *chartHeader) Render(vc viewContext) (body image.Rectangle, clicks char
 		chartErrorIconVAO.Render()
 		vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
 	}
+
+	buttonEdge := vc.Bounds.Min.X + buttonSize.X
+
+	// Start rendering from the top left. Track position with point.
+	pt := image.Pt(r.Min.X, r.Max.Y)
+	pt.Y -= ch.padding + ch.symbolQuoteTextRenderer.LineHeight()
+	{
+		pt := pt
+		pt.X += ch.rounding
+		pt.X += ch.symbolQuoteTextRenderer.Render(ch.symbol, pt, white)
+		pt.X += ch.padding
+
+		if w := buttonEdge - pt.X; w > 0 {
+			old := gfx.Alpha()
+			gfx.SetAlpha(old * ch.fadeIn.Value(vc.Fudge))
+			pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteText, pt, ch.quoteColor, gfx.TextRenderMaxWidth(w))
+			gfx.SetAlpha(old)
+		}
+	}
+	pt.Y -= ch.padding
 
 	r.Max.Y = pt.Y
 

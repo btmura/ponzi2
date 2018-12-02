@@ -29,6 +29,20 @@ type TextRenderer struct {
 // TextColor is a RGB color of 3 floats from 0.0 to 1.0.
 type TextColor [3]float32
 
+type textRenderSettings struct {
+	maxWidth int
+}
+
+// TextRenderOpt is an option to pass to Render.
+type TextRenderOpt func(f *textRenderSettings)
+
+// TextRenderMaxWidth is an option
+func TextRenderMaxWidth(w int) func(s *textRenderSettings) {
+	return func(s *textRenderSettings) {
+		s.maxWidth = w
+	}
+}
+
 // NewTextRenderer creates a new TextRenderer from a TTF font file and a size.
 func NewTextRenderer(ttfBytes []byte, size int) *TextRenderer {
 	// Callers should be able to initialize TextRenderers as globals,
@@ -82,9 +96,14 @@ func (t *TextRenderer) Measure(text string) image.Point {
 }
 
 // Render renders color text at the given point that points at the origin (baseline).
-func (t *TextRenderer) Render(text string, pt image.Point, color TextColor) (dx int) {
+func (t *TextRenderer) Render(text string, pt image.Point, color TextColor, opts ...TextRenderOpt) (dx int) {
 	if text == "" {
 		return dx
+	}
+
+	var s textRenderSettings
+	for _, o := range opts {
+		o(&s)
 	}
 
 	setTextColor(color)
@@ -93,6 +112,9 @@ func (t *TextRenderer) Render(text string, pt image.Point, color TextColor) (dx 
 
 	for _, r := range text {
 		rr := t.runeRenderer(r)
+		if s.maxWidth != 0 && dx+rr.size.X > s.maxWidth {
+			break
+		}
 		rr.render(pt)
 		pt.X += rr.size.X
 		dx += rr.size.X
