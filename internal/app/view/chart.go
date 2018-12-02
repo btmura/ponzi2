@@ -21,41 +21,9 @@ const (
 
 var (
 	chartSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 24)
-
-	chartDisplaySources = map[model.Source]string{
-		model.IEXRealTimePrice:          "IEX Real Time",
-		model.FifteenMinuteDelayedPrice: "15 Min Delayed",
-		model.Close:                     "Close",
-		model.PreviousClose:             "Previous Close",
-	}
-
-	chartFormatQuote = func(st *model.Stock) string {
-		q := st.Quote
-		if q == nil {
-			return ""
-		}
-
-		layout := "1/2/2006"
-		if q.LatestTime.Hour() != 0 || q.LatestTime.Minute() != 0 || q.LatestTime.Second() != 0 || q.LatestTime.Nanosecond() != 0 {
-			layout += " 3:04 PM"
-		}
-
-		ds, ok := chartDisplaySources[q.LatestSource]
-		if !ok {
-			ds = "?"
-		}
-
-		return fmt.Sprintf("%.2f %+5.2f (%+5.2f%%) %v %s",
-			q.LatestPrice,
-			q.Change,
-			q.ChangePercent*100,
-			ds,
-			q.LatestTime.Format(layout))
-	}
-
-	chartLoadingText = newCenteredText(chartSymbolQuoteTextRenderer, "LOADING...")
-
-	chartErrorText = newCenteredText(chartSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange))
+	chartQuotePrinter            = func(q *model.Quote) string { return join(priceStatus(q), updateStatus(q)) }
+	chartLoadingText             = newCenteredText(chartSymbolQuoteTextRenderer, "LOADING...")
+	chartErrorText               = newCenteredText(chartSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange))
 )
 
 // Constants for rendering a bubble behind an axis-label.
@@ -137,7 +105,7 @@ func NewChart() *Chart {
 	return &Chart{
 		header: newChartHeader(&chartHeaderArgs{
 			SymbolQuoteTextRenderer: chartSymbolQuoteTextRenderer,
-			QuoteFormatter:          chartFormatQuote,
+			QuotePrinter:            chartQuotePrinter,
 			ShowRefreshButton:       true,
 			ShowAddButton:           true,
 			Rounding:                chartRounding,

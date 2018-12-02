@@ -1,8 +1,6 @@
 package view
 
 import (
-	"fmt"
-
 	"golang.org/x/image/font/gofont/goregular"
 
 	"gitlab.com/btmura/ponzi2/internal/app/gfx"
@@ -16,15 +14,9 @@ const (
 
 var (
 	thumbSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
-	thumbFormatQuote             = func(st *model.Stock) string {
-		q := st.Quote
-		if q == nil {
-			return ""
-		}
-		return fmt.Sprintf(" %.2f %+5.2f (%+5.2f%%)", q.LatestPrice, q.Change, q.ChangePercent*100)
-	}
-	thumbLoadingText = newCenteredText(thumbSymbolQuoteTextRenderer, "LOADING...")
-	thumbErrorText   = newCenteredText(thumbSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange))
+	thumbQuotePrinter            = func(q *model.Quote) string { return priceStatus(q) }
+	thumbLoadingText             = newCenteredText(thumbSymbolQuoteTextRenderer, "LOADING...")
+	thumbErrorText               = newCenteredText(thumbSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange))
 )
 
 // ChartThumb shows a thumbnail for a stock.
@@ -62,7 +54,7 @@ func NewChartThumb() *ChartThumb {
 	return &ChartThumb{
 		header: newChartHeader(&chartHeaderArgs{
 			SymbolQuoteTextRenderer: thumbSymbolQuoteTextRenderer,
-			QuoteFormatter:          thumbFormatQuote,
+			QuotePrinter:            thumbQuotePrinter,
 			ShowRemoveButton:        true,
 			Rounding:                thumbChartRounding,
 			Padding:                 thumbChartPadding,
