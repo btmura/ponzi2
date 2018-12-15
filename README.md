@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/btmura/ponzi2.svg?branch=master)](https://travis-ci.org/btmura/ponzi2)
 
-ponzi2 is a stock chart viewer written in Go using OpenGL and GLFW. 
+[ponzi2](https://ponzi2.io) is a stock chart viewer written in [Go](https://golang.org) using [OpenGL](https://github.com/go-gl/gl) and [GLFW](https://github.com/go-gl/glfw/).
 
 It is go-gettable:
 
