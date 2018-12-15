@@ -2,13 +2,13 @@
 
 [ponzi2](https://ponzi2.io) is a stock chart viewer written in [Go](https://golang.org) using [OpenGL](https://github.com/go-gl/gl) and [GLFW](https://github.com/go-gl/glfw/).
 
+Visit [ponzi2.io](https://ponzi2.io) and donate to unlock more features and tutorials!
+
 ## Features
 
 * View real-time charts using data provided for free by [IEX](https://iextrading.com/developer). View [IEX’s Terms of Use](https://iextrading.com/api-exhibit-a/). No account or API key required!
 * Learn [Go](https://golang.org) from the actual code with [detailed tutorials](https://ponzi2.io/tutorials)!
 * Runs on both [Windows and Linux](https://github.com/btmura/ponzi2/releases).
-
-Visit [ponzi2.io](https://ponzi2.io) and donate to unlock more features and tutorials!
 
 ## Getting Started
 
