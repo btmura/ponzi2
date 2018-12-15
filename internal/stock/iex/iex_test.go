@@ -30,7 +30,7 @@ func TestDecodeStocks(t *testing.T) {
 					Quote: &Quote{
 						CompanyName:   "Sprott Physical Gold and Silver Trust Units",
 						LatestPrice:   11.71,
-						LatestSource:  SourceIEXRealTimePrice,
+						LatestSource:  IEXRealTimePrice,
 						LatestTime:    time.Date(2018, time.October, 11, 12, 45, 40, 0, loc),
 						LatestUpdate:  time.Unix(1538153140, 524000000),
 						LatestVolume:  478088,
@@ -53,7 +53,7 @@ func TestDecodeStocks(t *testing.T) {
 					Quote: &Quote{
 						CompanyName:   "Invesco DB USD Index Bullish Fund",
 						LatestPrice:   25.234,
-						LatestSource:  Source15MinuteDelayedPrice,
+						LatestSource:  FifteenMinuteDelayedPrice,
 						LatestTime:    time.Date(2018, time.October, 11, 12, 32, 11, 0, loc),
 						LatestUpdate:  time.Unix(1538152331, 455000000),
 						LatestVolume:  1000000,
@@ -85,7 +85,7 @@ func TestDecodeStocks(t *testing.T) {
 					Quote: &Quote{
 						CompanyName:   "Apple Inc.",
 						LatestPrice:   225.74,
-						LatestSource:  SourceClose,
+						LatestSource:  Close,
 						LatestTime:    time.Date(2018, time.September, 28, 0, 0, 0, 0, loc),
 						LatestUpdate:  time.Unix(1538164800, 414000000),
 						LatestVolume:  22067409,
@@ -143,7 +143,7 @@ func TestDecodeStocks(t *testing.T) {
 					Quote: &Quote{
 						CompanyName:   "Microsoft Corporation",
 						LatestPrice:   114.37,
-						LatestSource:  SourceClose,
+						LatestSource:  Close,
 						LatestTime:    time.Date(2018, time.September, 28, 0, 0, 0, 0, loc),
 						LatestUpdate:  time.Unix(1538164800, 600000000),
 						LatestVolume:  20491683,
@@ -217,25 +217,25 @@ func TestQuoteDate(t *testing.T) {
 	}{
 		{
 			desc:              "IEX real time price",
-			inputLatestSource: SourceIEXRealTimePrice,
+			inputLatestSource: IEXRealTimePrice,
 			inputLatestTime:   "2:52:11 PM",
 			want:              time.Date(2018, time.October, 11, 14, 52, 11, 0, loc),
 		},
 		{
 			desc:              "15 minute delayed price",
-			inputLatestSource: Source15MinuteDelayedPrice,
+			inputLatestSource: FifteenMinuteDelayedPrice,
 			inputLatestTime:   "12:32:11 PM",
 			want:              time.Date(2018, time.October, 11, 12, 32, 11, 0, loc),
 		},
 		{
 			desc:              "previous close",
-			inputLatestSource: SourcePreviousClose,
+			inputLatestSource: PreviousClose,
 			inputLatestTime:   "September 25, 2018",
 			want:              time.Date(2018, time.September, 25, 0, 0, 0, 0, loc),
 		},
 		{
 			desc:              "close",
-			inputLatestSource: SourceClose,
+			inputLatestSource: Close,
 			inputLatestTime:   "September 25, 2018",
 			want:              time.Date(2018, time.September, 25, 0, 0, 0, 0, loc),
 		},

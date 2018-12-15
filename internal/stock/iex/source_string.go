@@ -4,9 +4,9 @@ package iex
 
 import "strconv"
 
-const _Source_name = "SourceUnspecifiedSourceIEXRealTimePriceSource15MinuteDelayedPriceSourceCloseSourcePreviousClose"
+const _Source_name = "SourceUnspecifiedIEXRealTimePriceFifteenMinuteDelayedPriceClosePreviousClose"
 
-var _Source_index = [...]uint8{0, 17, 39, 65, 76, 95}
+var _Source_index = [...]uint8{0, 17, 33, 58, 63, 76}
 
 func (i Source) String() string {
 	if i < 0 || i >= Source(len(_Source_index)-1) {

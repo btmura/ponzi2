@@ -71,10 +71,10 @@ type Source int
 //go:generate stringer -type=Source
 const (
 	SourceUnspecified Source = iota
-	SourceIEXRealTimePrice
-	Source15MinuteDelayedPrice
-	SourceClose
-	SourcePreviousClose
+	IEXRealTimePrice
+	FifteenMinuteDelayedPrice
+	Close
+	PreviousClose
 )
 
 // ChartPoint is a single point on the chart.
@@ -276,13 +276,13 @@ func decodeStocks(r io.Reader) ([]*Stock, error) {
 func quoteSource(latestSource string) (Source, error) {
 	switch latestSource {
 	case "IEX real time price":
-		return SourceIEXRealTimePrice, nil
+		return IEXRealTimePrice, nil
 	case "15 minute delayed price":
-		return Source15MinuteDelayedPrice, nil
+		return FifteenMinuteDelayedPrice, nil
 	case "Close":
-		return SourceClose, nil
+		return Close, nil
 	case "Previous close":
-		return SourcePreviousClose, nil
+		return PreviousClose, nil
 	default:
 		return SourceUnspecified, fmt.Errorf("unrecognized source: %q", latestSource)
 	}
@@ -290,7 +290,7 @@ func quoteSource(latestSource string) (Source, error) {
 
 func quoteDate(latestSource Source, latestTime string) (time.Time, error) {
 	switch latestSource {
-	case SourceIEXRealTimePrice, Source15MinuteDelayedPrice:
+	case IEXRealTimePrice, FifteenMinuteDelayedPrice:
 		t, err := time.ParseInLocation("3:04:05 PM", latestTime, loc)
 		if err != nil {
 			return time.Time{}, err
@@ -301,7 +301,7 @@ func quoteDate(latestSource Source, latestTime string) (time.Time, error) {
 			n.Year(), n.Month(), n.Day(),
 			t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), t.Location()), nil
 
-	case SourcePreviousClose, SourceClose:
+	case PreviousClose, Close:
 		return time.ParseInLocation("January 2, 2006", latestTime, loc)
 
 	default:

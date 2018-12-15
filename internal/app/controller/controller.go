@@ -39,6 +39,9 @@ type Controller struct {
 	// view is the UI that the Controller updates.
 	view *view.View
 
+	// title controls the title bar.
+	title *view.Title
+
 	// symbolToChartMap maps symbol to Chart. Only one entry right now.
 	symbolToChartMap map[string]*view.Chart
 
@@ -76,6 +79,7 @@ func New(iexClient *iex.Client) *Controller {
 		iexClient:             iexClient,
 		pendingMutex:          &sync.Mutex{},
 		view:                  view.New(),
+		title:                 view.NewTitle(),
 		symbolToChartMap:      map[string]*view.Chart{},
 		symbolToChartThumbMap: map[string]*view.ChartThumb{},
 		pendingConfigSaves:    make(chan *config.Config),
@@ -139,6 +143,8 @@ func (c *Controller) RunLoop() error {
 		}
 	}()
 
+	c.view.SetTitle(c.title)
+
 	c.view.SetInputSymbolSubmittedCallback(func(symbol string) {
 		c.setChart(ctx, symbol)
 	})
@@ -162,6 +168,9 @@ func (c *Controller) update(ctx context.Context) {
 			st, updated := c.model.UpdateStock(u.update)
 			if !updated {
 				continue
+			}
+			if st == c.model.CurrentStock {
+				c.title.SetData(st)
 			}
 			if ch, ok := c.symbolToChartMap[u.symbol]; ok {
 				ch.SetLoading(false)
@@ -207,6 +216,8 @@ func (c *Controller) setChart(ctx context.Context, symbol string) {
 		delete(c.symbolToChartMap, symbol)
 		ch.Close()
 	}
+
+	c.title.SetData(st)
 
 	ch := view.NewChart()
 	c.symbolToChartMap[symbol] = ch

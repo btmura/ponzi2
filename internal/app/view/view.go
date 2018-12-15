@@ -84,6 +84,9 @@ func init() {
 
 // The View renders the UI to view and edit the model's stocks that it observes.
 type View struct {
+	// title renders the window title.
+	title *Title
+
 	// charts renders the charts in the main area.
 	charts []*viewChart
 
@@ -221,6 +224,7 @@ func (vc viewContext) LeftClickInBounds() bool {
 // New creates a new View.
 func New() *View {
 	return &View{
+		title:                        NewTitle(),
 		inputSymbol:                  newCenteredText(inputSymbolTextRenderer, "", centeredTextBubble(chartRounding, chartPadding)),
 		inputSymbolSubmittedCallback: func(symbol string) {},
 	}
@@ -566,6 +570,8 @@ func (v *View) update() (dirty bool) {
 }
 
 func (v *View) render(fudge float32) (dirty bool) {
+	v.title.Render(v.win)
+
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	m := v.metrics()
@@ -610,6 +616,12 @@ func (v *View) render(fudge float32) (dirty bool) {
 
 	// Return dirty if some callbacks were scheduled.
 	return len(*vc.ScheduledCallbacks) != 0
+}
+
+// SetTitle sets the View's title.
+func (v *View) SetTitle(title *Title) {
+	defer v.WakeLoop()
+	v.title = title
 }
 
 // SetChart sets the View's main chart.

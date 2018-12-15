@@ -29,8 +29,8 @@ type chartHeader struct {
 	// symbolQuoteTextRenderer renders the symbol and quote text.
 	symbolQuoteTextRenderer *gfx.TextRenderer
 
-	// quoteFormatter is the function used to generate the quote text.
-	quoteFormatter func(*model.Stock) string
+	// quotePrinter is the function used to generate the quote text.
+	quotePrinter func(*model.Quote) string
 
 	// refreshButton is the button to refresh the chart.
 	refreshButton *chartHeaderButton
@@ -72,7 +72,7 @@ type chartHeaderButton struct {
 // chartHeaderArgs are passed to newChartHeader.
 type chartHeaderArgs struct {
 	SymbolQuoteTextRenderer *gfx.TextRenderer
-	QuoteFormatter          func(*model.Stock) string
+	QuotePrinter            func(*model.Quote) string
 	ShowRefreshButton       bool
 	ShowAddButton           bool
 	ShowRemoveButton        bool
@@ -83,7 +83,7 @@ type chartHeaderArgs struct {
 func newChartHeader(args *chartHeaderArgs) *chartHeader {
 	return &chartHeader{
 		symbolQuoteTextRenderer: args.SymbolQuoteTextRenderer,
-		quoteFormatter:          args.QuoteFormatter,
+		quotePrinter:            args.QuotePrinter,
 		refreshButton: &chartHeaderButton{
 			button:  newButton(chartRefreshButtonVAO),
 			enabled: args.ShowRefreshButton,
@@ -126,7 +126,7 @@ func (ch *chartHeader) SetData(st *model.Stock) {
 	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
 
 	ch.symbol = st.Symbol
-	ch.quoteText = ch.quoteFormatter(st)
+	ch.quoteText = ch.quotePrinter(st.Quote)
 
 	var c float32
 	if q := st.Quote; q != nil {
@@ -180,26 +180,11 @@ func (c chartHeaderClicks) HasClicks() bool {
 
 // Render renders the ChartHeader.
 func (ch *chartHeader) Render(vc viewContext) (body image.Rectangle, clicks chartHeaderClicks) {
-	// Start rendering from the top left. Track position with point.
-	r := vc.Bounds
-	pt := image.Pt(r.Min.X, r.Max.Y)
-	pt.Y -= ch.padding + ch.symbolQuoteTextRenderer.LineHeight()
-	{
-		pt := pt
-		pt.X += ch.rounding
-		pt.X += ch.symbolQuoteTextRenderer.Render(ch.symbol, pt, white)
-		pt.X += ch.padding
-
-		old := gfx.Alpha()
-		gfx.SetAlpha(old * ch.fadeIn.Value(vc.Fudge))
-		pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteText, pt, ch.quoteColor)
-		gfx.SetAlpha(old)
-
-	}
-	pt.Y -= ch.padding
+	h := ch.padding + ch.symbolQuoteTextRenderer.LineHeight() + ch.padding
+	buttonSize := image.Pt(h, h)
 
 	// Render buttons in the upper right corner from right to left.
-	buttonSize := image.Pt(r.Max.Y-pt.Y, r.Max.Y-pt.Y)
+	r := vc.Bounds
 	vc.Bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
 
 	if ch.removeButton.enabled {
@@ -227,6 +212,26 @@ func (ch *chartHeader) Render(vc viewContext) (body image.Rectangle, clicks char
 		chartErrorIconVAO.Render()
 		vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
 	}
+
+	buttonEdge := vc.Bounds.Min.X + buttonSize.X
+
+	// Start rendering from the top left. Track position with point.
+	pt := image.Pt(r.Min.X, r.Max.Y)
+	pt.Y -= ch.padding + ch.symbolQuoteTextRenderer.LineHeight()
+	{
+		pt := pt
+		pt.X += ch.rounding
+		pt.X += ch.symbolQuoteTextRenderer.Render(ch.symbol, pt, white)
+		pt.X += ch.padding
+
+		if w := buttonEdge - pt.X; w > 0 {
+			old := gfx.Alpha()
+			gfx.SetAlpha(old * ch.fadeIn.Value(vc.Fudge))
+			pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteText, pt, ch.quoteColor, gfx.TextRenderMaxWidth(w))
+			gfx.SetAlpha(old)
+		}
+	}
+	pt.Y -= ch.padding
 
 	r.Max.Y = pt.Y
 
