@@ -26,7 +26,7 @@ func main() {
 
 	req := &iex.GetStocksRequest{
 		Symbols: strings.Split(*symbols, ","),
-		Range:   iex.RangeTwoYears,
+		Range:   iex.TwoYears,
 	}
 	if *chartLast > 0 {
 		req.ChartLast = *chartLast

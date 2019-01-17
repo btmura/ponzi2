@@ -32,8 +32,8 @@ type Range int
 //go:generate stringer -type=Range
 const (
 	RangeUnspecified Range = iota
-	RangeOneDay
-	RangeTwoYears
+	OneDay
+	TwoYears
 )
 
 // GetStocksRequest is the request for GetStocks.
@@ -114,9 +114,9 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 
 	var rangeVal string
 	switch req.Range {
-	case RangeOneDay:
+	case OneDay:
 		rangeVal = "1d"
-	case RangeTwoYears:
+	case TwoYears:
 		rangeVal = "2y"
 	default:
 		return nil, fmt.Errorf("iex: unsupported range for chart req: %s", req.Range)

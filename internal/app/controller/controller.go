@@ -309,7 +309,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 	go func() {
 		req := &iex.GetStocksRequest{
 			Symbols: symbols,
-			Range:   iex.RangeTwoYears,
+			Range:   iex.TwoYears,
 		}
 		stocks, err := c.iexClient.GetStocks(ctx, req)
 		if err != nil {
