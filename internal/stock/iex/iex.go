@@ -26,12 +26,14 @@ var now = time.Now
 var loc = mustLoadLocation("America/New_York")
 
 // Range is the range to specify in the request.
-type Range string
+type Range int
 
 // Range values.
+//go:generate stringer -type=Range
 const (
-	RangeOneDay   Range = "1d"
-	RangeTwoYears       = "2y"
+	RangeUnspecified Range = iota
+	RangeOneDay
+	RangeTwoYears
 )
 
 // GetStocksRequest is the request for GetStocks.
@@ -106,8 +108,18 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 		return nil, nil
 	}
 
-	if req.Range == "" {
+	if req.Range == RangeUnspecified {
 		return nil, errors.New("iex: missing range for chart req")
+	}
+
+	var rangeVal string
+	switch req.Range {
+	case RangeOneDay:
+		rangeVal = "1d"
+	case RangeTwoYears:
+		rangeVal = "2y"
+	default:
+		return nil, fmt.Errorf("iex: unsupported range for chart req: %s", req.Range)
 	}
 
 	if req.ChartLast < 0 {
@@ -122,7 +134,7 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 	v := url.Values{}
 	v.Set("symbols", strings.Join(req.Symbols, ","))
 	v.Set("types", "quote,chart")
-	v.Set("range", string(req.Range))
+	v.Set("range", rangeVal)
 	v.Set("filter", strings.Join([]string{
 		// Keys for quote.
 		"companyName",
