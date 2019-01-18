@@ -137,7 +137,9 @@ func (c *Client) GetStocks(ctx context.Context, symbols []string, opts ...GetSto
 
 	req := &getStocksRequest{}
 	for _, o := range opts {
-		o(req)
+		if err := o(req); err != nil {
+			return nil, err
+		}
 	}
 
 	u, err := url.Parse("https://api.iextrading.com/1.0/stock/market/batch")
