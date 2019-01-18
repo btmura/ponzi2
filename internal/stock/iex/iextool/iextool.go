@@ -24,15 +24,14 @@ func main() {
 
 	c := iex.NewClient(*dumpAPIResponses)
 
-	req := &iex.GetStocksRequest{
-		Symbols: strings.Split(*symbols, ","),
-		Range:   iex.TwoYears,
-	}
+	symbols := strings.Split(*symbols, ",")
+
+	opts := []iex.GetStocksOption{iex.WithRange(iex.TwoYears)}
 	if *chartLast > 0 {
-		req.ChartLast = *chartLast
+		opts = append(opts, iex.WithChartLast(*chartLast))
 	}
 
-	stocks, err := c.GetStocks(ctx, req)
+	stocks, err := c.GetStocks(ctx, symbols, opts...)
 	if err != nil {
 		log.Fatal(err)
 	}

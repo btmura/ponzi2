@@ -31,17 +31,9 @@ type Range int
 // Range values.
 //go:generate stringer -type=Range
 const (
-	RangeUnspecified Range = iota
-	OneDay
+	OneDay Range = iota
 	TwoYears
 )
-
-// GetStocksRequest is the request for GetStocks.
-type GetStocksRequest struct {
-	Symbols   []string
-	Range     Range
-	ChartLast int
-}
 
 // Stock is the response from calling GetStocks.
 type Stock struct {
@@ -102,28 +94,50 @@ func NewClient(dumpAPIResponses bool) *Client {
 	return &Client{dumpAPIResponses: dumpAPIResponses}
 }
 
+// getStocksRequest is the request for GetStocks.
+type getStocksRequest struct {
+	rangeVal  string
+	chartLast int
+}
+
+// GetStocksOption is an option for GetStocks.
+type GetStocksOption func(req *getStocksRequest) error
+
+// WithRange returns an option that requests a data range.
+func WithRange(r Range) GetStocksOption {
+	return func(req *getStocksRequest) error {
+		switch r {
+		case OneDay:
+			req.rangeVal = "1d"
+		case TwoYears:
+			req.rangeVal = "2y"
+		default:
+			return fmt.Errorf("iex: unsupported range for chart req: %s", r)
+		}
+		return nil
+	}
+}
+
+// WithChartLast returns an option that requests the last N chart elements.
+func WithChartLast(chartLast int) GetStocksOption {
+	return func(req *getStocksRequest) error {
+		if chartLast < 0 {
+			return errors.New("iex: chart last must be greater than or equal to zero")
+		}
+		req.chartLast = chartLast
+		return nil
+	}
+}
+
 // GetStocks gets a series of trading sessions for a stock symbol.
-func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock, error) {
-	if len(req.Symbols) == 0 {
+func (c *Client) GetStocks(ctx context.Context, symbols []string, opts ...GetStocksOption) ([]*Stock, error) {
+	if len(symbols) == 0 {
 		return nil, nil
 	}
 
-	if req.Range == RangeUnspecified {
-		return nil, errors.New("iex: missing range for chart req")
-	}
-
-	var rangeVal string
-	switch req.Range {
-	case OneDay:
-		rangeVal = "1d"
-	case TwoYears:
-		rangeVal = "2y"
-	default:
-		return nil, fmt.Errorf("iex: unsupported range for chart req: %s", req.Range)
-	}
-
-	if req.ChartLast < 0 {
-		return nil, errors.New("iex: last must be greater than or equal to zero")
+	req := &getStocksRequest{}
+	for _, o := range opts {
+		o(req)
 	}
 
 	u, err := url.Parse("https://api.iextrading.com/1.0/stock/market/batch")
@@ -132,9 +146,9 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 	}
 
 	v := url.Values{}
-	v.Set("symbols", strings.Join(req.Symbols, ","))
+	v.Set("symbols", strings.Join(symbols, ","))
 	v.Set("types", "quote,chart")
-	v.Set("range", rangeVal)
+	v.Set("range", req.rangeVal)
 	v.Set("filter", strings.Join([]string{
 		// Keys for quote.
 		"companyName",
@@ -155,8 +169,8 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 		"change",
 		"changePercent",
 	}, ","))
-	if req.ChartLast > 0 {
-		v.Set("chartLast", strconv.Itoa(req.ChartLast))
+	if req.chartLast > 0 {
+		v.Set("chartLast", strconv.Itoa(req.chartLast))
 	}
 	u.RawQuery = v.Encode()
 
@@ -173,7 +187,7 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 
 	r := httpResp.Body
 	if c.dumpAPIResponses {
-		rr, err := dumpResponse(fmt.Sprintf("iex-%s.txt", strings.Join(req.Symbols, "-")), r)
+		rr, err := dumpResponse(fmt.Sprintf("iex-%s.txt", strings.Join(symbols, "-")), r)
 		if err != nil {
 			return nil, fmt.Errorf("iex: failed to dump resp: %v", err)
 		}
