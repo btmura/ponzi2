@@ -25,16 +25,6 @@ var now = time.Now
 // loc is the timezone to use when parsing dates.
 var loc = mustLoadLocation("America/New_York")
 
-// Range is the range to specify in the request.
-type Range int
-
-// Range values.
-//go:generate stringer -type=Range
-const (
-	OneDay Range = iota
-	TwoYears
-)
-
 // Stock is the response from calling GetStocks.
 type Stock struct {
 	Symbol string
@@ -102,6 +92,17 @@ type getStocksRequest struct {
 
 // GetStocksOption is an option for GetStocks.
 type GetStocksOption func(req *getStocksRequest) error
+
+// Range is the range to specify in the request.
+type Range int
+
+// Range values.
+//go:generate stringer -type=Range
+const (
+	RangeUnspecified Range = iota
+	OneDay
+	TwoYears
+)
 
 // WithRange returns an option that requests a data range.
 func WithRange(r Range) GetStocksOption {
