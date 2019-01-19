@@ -10,7 +10,12 @@ import (
 
 // Run runs the app. Should be called from main.
 func Run(dumpAPIResponses bool) {
-	c := iex.NewClient(dumpAPIResponses)
+	var opts []iex.ClientOption
+	if dumpAPIResponses {
+		opts = append(opts, iex.DumpAPIResponses())
+	}
+
+	c := iex.NewClient(opts...)
 	if err := controller.New(c).RunLoop(); err != nil {
 		glog.Fatal(err)
 	}

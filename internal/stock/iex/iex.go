@@ -79,9 +79,23 @@ type Client struct {
 	dumpAPIResponses bool
 }
 
+// ClientOption is an option for NewClient.
+type ClientOption func(c *Client)
+
+// DumpAPIResponses enables dumping API responses into text files.
+func DumpAPIResponses() ClientOption {
+	return func(c *Client) {
+		c.dumpAPIResponses = true
+	}
+}
+
 // NewClient returns a new Client.
-func NewClient(dumpAPIResponses bool) *Client {
-	return &Client{dumpAPIResponses: dumpAPIResponses}
+func NewClient(opts ...ClientOption) *Client {
+	c := &Client{}
+	for _, o := range opts {
+		o(c)
+	}
+	return c
 }
 
 // getStocksRequest is the request for GetStocks.

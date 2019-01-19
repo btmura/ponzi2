@@ -22,16 +22,21 @@ func main() {
 
 	ctx := context.Background()
 
-	c := iex.NewClient(*dumpAPIResponses)
+	var opts []iex.ClientOption
+	if *dumpAPIResponses {
+		opts = append(opts, iex.DumpAPIResponses())
+	}
+
+	c := iex.NewClient(opts...)
 
 	symbols := strings.Split(*symbols, ",")
 
-	opts := []iex.GetStocksOption{iex.WithRange(iex.TwoYears)}
+	gopts := []iex.GetStocksOption{iex.WithRange(iex.TwoYears)}
 	if *chartLast > 0 {
-		opts = append(opts, iex.WithChartLast(*chartLast))
+		gopts = append(gopts, iex.WithChartLast(*chartLast))
 	}
 
-	stocks, err := c.GetStocks(ctx, symbols, opts...)
+	stocks, err := c.GetStocks(ctx, symbols, gopts...)
 	if err != nil {
 		log.Fatal(err)
 	}
