@@ -80,32 +80,35 @@ type Client struct {
 }
 
 // ClientOption is an option for NewClient.
-type ClientOption func(c *Client)
+type ClientOption func(c *Client) error
 
 // DumpAPIResponses enables dumping API responses into text files.
 func DumpAPIResponses() ClientOption {
-	return func(c *Client) {
+	return func(c *Client) error {
 		c.dumpAPIResponses = true
+		return nil
 	}
 }
 
 // NewClient returns a new Client.
-func NewClient(opts ...ClientOption) *Client {
+func NewClient(opts ...ClientOption) (*Client, error) {
 	c := &Client{}
 	for _, o := range opts {
-		o(c)
+		if err := o(c); err != nil {
+			return nil, err
+		}
 	}
-	return c
+	return c, nil
 }
 
-// getStocksRequest is the request for GetStocks.
-type getStocksRequest struct {
+// stockRequest is the request for GetStocks.
+type stockRequest struct {
 	rangeVal  string
 	chartLast int
 }
 
-// GetStocksOption is an option for GetStocks.
-type GetStocksOption func(req *getStocksRequest) error
+// StockOption is an option for GetStocks.
+type StockOption func(req *stockRequest) error
 
 // Range is the range to specify in the request.
 type Range int
@@ -119,8 +122,8 @@ const (
 )
 
 // WithRange returns an option that requests a data range.
-func WithRange(r Range) GetStocksOption {
-	return func(req *getStocksRequest) error {
+func WithRange(r Range) StockOption {
+	return func(req *stockRequest) error {
 		switch r {
 		case OneDay:
 			req.rangeVal = "1d"
@@ -134,8 +137,8 @@ func WithRange(r Range) GetStocksOption {
 }
 
 // WithChartLast returns an option that requests the last N chart elements.
-func WithChartLast(chartLast int) GetStocksOption {
-	return func(req *getStocksRequest) error {
+func WithChartLast(chartLast int) StockOption {
+	return func(req *stockRequest) error {
 		if chartLast < 0 {
 			return errors.New("iex: chart last must be greater than or equal to zero")
 		}
@@ -145,12 +148,12 @@ func WithChartLast(chartLast int) GetStocksOption {
 }
 
 // GetStocks gets a series of trading sessions for a stock symbol.
-func (c *Client) GetStocks(ctx context.Context, symbols []string, opts ...GetStocksOption) ([]*Stock, error) {
+func (c *Client) GetStocks(ctx context.Context, symbols []string, opts ...StockOption) ([]*Stock, error) {
 	if len(symbols) == 0 {
 		return nil, nil
 	}
 
-	req := &getStocksRequest{}
+	req := &stockRequest{}
 	for _, o := range opts {
 		if err := o(req); err != nil {
 			return nil, err

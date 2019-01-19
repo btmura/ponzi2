@@ -15,7 +15,11 @@ func Run(dumpAPIResponses bool) {
 		opts = append(opts, iex.DumpAPIResponses())
 	}
 
-	c := iex.NewClient(opts...)
+	c, err := iex.NewClient(opts...)
+	if err != nil {
+		glog.Fatal(err)
+	}
+
 	if err := controller.New(c).RunLoop(); err != nil {
 		glog.Fatal(err)
 	}
