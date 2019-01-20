@@ -19,11 +19,14 @@ import (
 	"time"
 )
 
-// now is a function to get the current time. Mocked out in tests to return a fixed time.
-var now = time.Now
+// Internal package variables used for the implementation.
+var (
+	// now is a function to get the current time. Mocked out in tests to return a fixed time.
+	now = time.Now
 
-// loc is the timezone to use when parsing dates.
-var loc = mustLoadLocation("America/New_York")
+	// loc is the timezone to use when parsing dates.
+	loc = mustLoadLocation("America/New_York")
+)
 
 // Range is the range to specify in the request.
 type Range int
