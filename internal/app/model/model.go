@@ -17,6 +17,7 @@ type Model struct {
 type Stock struct {
 	Symbol                      string
 	Quote                       *Quote
+	MinuteTradingSessionSeries  *TradingSessionSeries
 	DailyTradingSessionSeries   *TradingSessionSeries
 	DailyMovingAverageSeries25  *MovingAverageSeries
 	DailyMovingAverageSeries50  *MovingAverageSeries
@@ -110,6 +111,7 @@ type Stochastic struct {
 type StockUpdate struct {
 	Symbol                      string
 	Quote                       *Quote
+	MinuteTradingSessionSeries  *TradingSessionSeries
 	DailyTradingSessionSeries   *TradingSessionSeries
 	DailyMovingAverageSeries25  *MovingAverageSeries
 	DailyMovingAverageSeries50  *MovingAverageSeries
@@ -181,6 +183,7 @@ func (m *Model) UpdateStock(u *StockUpdate) (st *Stock, updated bool) {
 		return nil, false
 	}
 	st.Quote = u.Quote
+	st.MinuteTradingSessionSeries = u.MinuteTradingSessionSeries
 	st.DailyTradingSessionSeries = u.DailyTradingSessionSeries
 	st.DailyStochasticSeries = u.DailyStochasticSeries
 	st.WeeklyStochasticSeries = u.WeeklyStochasticSeries

@@ -307,12 +307,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 	}
 
 	go func() {
-		req := &iex.GetStocksRequest{
-			Symbols: symbols,
-			Range:   iex.TwoYears,
-		}
-		stocks, err := c.iexClient.GetStocks(ctx, req)
-		if err != nil {
+		handleErr := func(err error) {
 			var us []controllerStockUpdate
 			for _, s := range symbols {
 				us = append(us, controllerStockUpdate{
@@ -322,24 +317,63 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 			}
 			c.addPendingStockUpdatesLocked(us)
 			c.view.WakeLoop()
+		}
+
+		oneDayStocks, err := c.iexClient.GetStocks(ctx, &iex.GetStocksRequest{
+			Symbols: symbols,
+			Range:   iex.OneDay,
+		})
+		if err != nil {
+			handleErr(err)
 			return
+		}
+
+		twoYearStocks, err := c.iexClient.GetStocks(ctx, &iex.GetStocksRequest{
+			Symbols: symbols,
+			Range:   iex.TwoYears,
+		})
+		if err != nil {
+			handleErr(err)
+			return
+		}
+
+		type stockData struct {
+			oneDay  *iex.Stock
+			twoYear *iex.Stock
+		}
+
+		found := map[string]*stockData{}
+		for _, st := range oneDayStocks {
+			d := found[st.Symbol]
+			if d == nil {
+				d = &stockData{}
+				found[st.Symbol] = d
+			}
+			d.oneDay = st
+		}
+
+		for _, st := range twoYearStocks {
+			d := found[st.Symbol]
+			if d == nil {
+				d = &stockData{}
+				found[st.Symbol] = d
+			}
+			d.twoYear = st
 		}
 
 		var us []controllerStockUpdate
 
-		found := map[string]bool{}
-		for _, st := range stocks {
-			found[st.Symbol] = true
-			u, err := modelStockUpdate(st)
+		for s, d := range found {
+			u, err := modelStockUpdate(d.oneDay, d.twoYear)
 			us = append(us, controllerStockUpdate{
-				symbol:    st.Symbol,
+				symbol:    s,
 				update:    u,
 				updateErr: err,
 			})
 		}
 
 		for _, s := range symbols {
-			if found[s] {
+			if _, ok := found[s]; ok {
 				continue
 			}
 			us = append(us, controllerStockUpdate{

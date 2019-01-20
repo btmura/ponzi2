@@ -18,13 +18,14 @@ const (
 	d = 3
 )
 
-func modelStockUpdate(st *iex.Stock) (*model.StockUpdate, error) {
-	q, err := modelQuote(st.Quote)
+func modelStockUpdate(oneDayStock, twoYearStock *iex.Stock) (*model.StockUpdate, error) {
+	q, err := modelQuote(twoYearStock.Quote)
 	if err != nil {
 		return nil, err
 	}
 
-	ds := modelTradingSessions(st)
+	ms := modelTradingSessions(oneDayStock)
+	ds := modelTradingSessions(twoYearStock)
 	ws := weeklyModelTradingSessions(ds)
 
 	m25 := modelMovingAverages(ds, 25)
@@ -73,8 +74,9 @@ func modelStockUpdate(st *iex.Stock) (*model.StockUpdate, error) {
 	}
 
 	return &model.StockUpdate{
-		Symbol: st.Symbol,
+		Symbol: twoYearStock.Symbol,
 		Quote:  q,
+		MinuteTradingSessionSeries:  &model.TradingSessionSeries{TradingSessions: ms},
 		DailyTradingSessionSeries:   &model.TradingSessionSeries{TradingSessions: ds},
 		DailyMovingAverageSeries25:  &model.MovingAverageSeries{MovingAverages: m25},
 		DailyMovingAverageSeries50:  &model.MovingAverageSeries{MovingAverages: m50},
