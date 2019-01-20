@@ -13,7 +13,8 @@ import (
 
 var (
 	symbols          = flag.String("symbols", "SPY", "Comma-separated list of symbols.")
-	chartLast        = flag.Int("chart_last", 0, "Last N chart elements if greater than zero.")
+	rangeFlag        = flag.String("range", "1d", "Range of data to get. Values: 1d, 2y")
+	chartLast        = flag.Int("chart_last", 5, "Last N chart elements if greater than zero.")
 	dumpAPIResponses = flag.Bool("dump_api_responses", false, "Dump API responses to txt files.")
 )
 
@@ -28,6 +29,16 @@ func main() {
 		Symbols: strings.Split(*symbols, ","),
 		Range:   iex.TwoYears,
 	}
+
+	switch *rangeFlag {
+	case "1d":
+		req.Range = iex.OneDay
+	case "2y":
+		req.Range = iex.TwoYears
+	default:
+		log.Fatalf("iextool: unsupported range: %v", *rangeFlag)
+	}
+
 	if *chartLast > 0 {
 		req.ChartLast = *chartLast
 	}
@@ -37,9 +48,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	fmt.Printf("Request:\n\n%+v\n\n", req)
+
 	for _, st := range stocks {
-		fmt.Println(st.Symbol)
-		fmt.Printf("%+v\n", st.Quote)
+		fmt.Printf("Symbol:\n\n%s\n\nQuote:\n\n%+v\n\n", st.Symbol, st.Quote)
 		for i, p := range st.Chart {
 			fmt.Printf("%3d: %s Open: %.2f High: %.2f Low: %.2f Close: %.2f Volume: %d\n",
 				i, p.Date, p.Open, p.High, p.Low, p.Close, p.Volume)
