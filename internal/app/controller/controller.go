@@ -342,16 +342,23 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 			twoYear *iex.Stock
 		}
 
-		found := map[string]stockData{}
+		found := map[string]*stockData{}
 		for _, st := range oneDayStocks {
 			d := found[st.Symbol]
+			if d == nil {
+				d = &stockData{}
+				found[st.Symbol] = d
+			}
 			d.oneDay = st
-			found[st.Symbol] = d
 		}
+
 		for _, st := range twoYearStocks {
 			d := found[st.Symbol]
+			if d == nil {
+				d = &stockData{}
+				found[st.Symbol] = d
+			}
 			d.twoYear = st
-			found[st.Symbol] = d
 		}
 
 		var us []controllerStockUpdate

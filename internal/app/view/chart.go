@@ -56,9 +56,6 @@ type Chart struct {
 	// timeLines renders the vertical time lines.
 	timeLines *chartTimeLines
 
-	// oneDayPrices renders the candlesticks for one day.
-	oneDayPrices *chartPrices
-
 	// prices renders the candlesticks.
 	prices *chartPrices
 
@@ -115,7 +112,6 @@ func NewChart() *Chart {
 			Padding:                 chartPadding,
 		}),
 		timeLines:         newChartTimeLines(),
-		oneDayPrices:      newChartPrices(),
 		prices:            newChartPrices(),
 		movingAverage25:   newChartMovingAverage(purple),
 		movingAverage50:   newChartMovingAverage(yellow),
@@ -152,7 +148,6 @@ func (ch *Chart) SetData(st *model.Stock) {
 
 	ch.header.SetData(st)
 	ch.timeLines.SetData(ts)
-	ch.oneDayPrices.SetData(st.MinuteTradingSessionSeries)
 	ch.prices.SetData(ts)
 	ch.movingAverage25.SetData(ts, st.DailyMovingAverageSeries25)
 	ch.movingAverage50.SetData(ts, st.DailyMovingAverageSeries50)
@@ -210,25 +205,13 @@ func (ch *Chart) Render(vc viewContext) {
 		renderRectTopDivider(rects[i], horizLine)
 	}
 
-	// Rects: Volume, Daily Stochastics, Weekly Stochastics, Time Labels
-	vr, dr, wr, tr := rects[3], rects[2], rects[1], rects[0]
-
-	// Divide the main candlestick area into two for day and year chart.
-	prects := sliceRect(rects[4], 0.75)
-
-	renderRectTopDivider(prects[0], horizLine)
-
-	// Rects: One Day Prices, Prices
-	or, pr := prects[1], prects[0]
+	pr, vr, dr, wr, tr := rects[4], rects[3], rects[2], rects[1], rects[0]
 
 	// Create separate rects for each section's labels shown on the right.
-	olr, plr, vlr, dlr, wlr := or, pr, vr, dr, wr
+	plr, vlr, dlr, wlr := pr, vr, dr, wr
 
 	// Figure out width to trim off on the right of each rect for the labels.
-	maxWidth := ch.oneDayPrices.MaxLabelSize.X
-	if w := ch.prices.MaxLabelSize.X; w > maxWidth {
-		maxWidth = w
-	}
+	maxWidth := ch.prices.MaxLabelSize.X
 	if w := ch.volume.MaxLabelSize.X; w > maxWidth {
 		maxWidth = w
 	}
@@ -241,20 +224,19 @@ func (ch *Chart) Render(vc viewContext) {
 	maxWidth += chartPadding
 
 	// Set left side of label rects.
-	olr.Min.X = or.Max.X - maxWidth
 	plr.Min.X = pr.Max.X - maxWidth
 	vlr.Min.X = vr.Max.X - maxWidth
 	dlr.Min.X = dr.Max.X - maxWidth
 	wlr.Min.X = wr.Max.X - maxWidth
 
 	// Trim off the label rects from the main rects.
-	or.Max.X = olr.Min.X
 	pr.Max.X = plr.Min.X
 	vr.Max.X = vlr.Min.X
 	dr.Max.X = dlr.Min.X
 	wr.Max.X = wlr.Min.X
 
 	// Legend labels and its cursors labels overlap and use the same rect.
+	// pr.Max.X = plr.Min.X
 	llr := pr
 
 	// Time labels and its cursors labels overlap and use the same rect.
@@ -262,27 +244,23 @@ func (ch *Chart) Render(vc viewContext) {
 	tlr := tr
 
 	// Pad all the rects.
-	or = or.Inset(chartPadding)
 	pr = pr.Inset(chartPadding)
 	vr = vr.Inset(chartPadding)
 	dr = dr.Inset(chartPadding)
 	wr = wr.Inset(chartPadding)
 	tr = tr.Inset(chartPadding)
 
-	olr = olr.Inset(chartPadding)
 	plr = plr.Inset(chartPadding)
 	vlr = vlr.Inset(chartPadding)
 	dlr = dlr.Inset(chartPadding)
 	wlr = wlr.Inset(chartPadding)
 	tlr = tlr.Inset(chartPadding)
 
-	ch.timeLines.Render(or)
 	ch.timeLines.Render(pr)
 	ch.timeLines.Render(vr)
 	ch.timeLines.Render(dr)
 	ch.timeLines.Render(wr)
 
-	ch.oneDayPrices.Render(or)
 	ch.prices.Render(pr)
 	ch.movingAverage25.Render(pr)
 	ch.movingAverage50.Render(pr)
@@ -292,19 +270,16 @@ func (ch *Chart) Render(vc viewContext) {
 	ch.weeklyStochastics.Render(wr)
 	ch.timeLabels.Render(tr)
 
-	ch.oneDayPrices.RenderAxisLabels(olr)
 	ch.prices.RenderAxisLabels(plr)
 	ch.volume.RenderAxisLabels(vlr)
 	ch.dailyStochastics.RenderAxisLabels(dlr)
 	ch.weeklyStochastics.RenderAxisLabels(wlr)
 
-	renderCursorLines(or, vc.MousePos)
 	renderCursorLines(pr, vc.MousePos)
 	renderCursorLines(vr, vc.MousePos)
 	renderCursorLines(dr, vc.MousePos)
 	renderCursorLines(wr, vc.MousePos)
 
-	ch.oneDayPrices.RenderCursorLabels(or, olr, vc.MousePos)
 	ch.prices.RenderCursorLabels(pr, plr, vc.MousePos)
 	ch.volume.RenderCursorLabels(vr, vlr, vc.MousePos)
 	ch.dailyStochastics.RenderCursorLabels(dr, dlr, vc.MousePos)
