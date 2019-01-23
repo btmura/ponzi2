@@ -331,7 +331,7 @@ type viewMetrics struct {
 	// chartBounds is where to draw the main chart.
 	chartBounds image.Rectangle
 
-	// sidebarBounds is where to draw the sidebar with thumbnails.
+	// sidebarBounds is where to draw the sidebar that can move up or down.
 	sidebarBounds image.Rectangle
 
 	// firstThumbBounds is where to draw the first thumbnail in the sidebar.
@@ -339,6 +339,9 @@ type viewMetrics struct {
 
 	// sidebarRegion is where to detect scroll events for the sidebar.
 	sidebarRegion image.Rectangle
+
+	// chartRegion is where to detect scroll events for the chart.
+	chartRegion image.Rectangle
 }
 
 func (v *View) metrics() viewMetrics {
@@ -357,7 +360,7 @@ func (v *View) metrics() viewMetrics {
 	if len(v.chartThumbs) == 0 {
 		cb := image.Rect(0, 0, v.winSize.X, v.winSize.Y)
 		cb = cb.Inset(viewPadding)
-		return viewMetrics{chartBounds: cb}
+		return viewMetrics{chartBounds: cb, chartRegion: cb}
 	}
 
 	cb := image.Rect(viewPadding+chartThumbSize.X, 0, v.winSize.X, v.winSize.Y)
@@ -388,7 +391,8 @@ func (v *View) metrics() viewMetrics {
 		sb.Max.X, sb.Max.Y-viewPadding,
 	)
 
-	ssb := image.Rect(
+	// Side bar region.
+	sr := image.Rect(
 		viewPadding, 0,
 		viewPadding+chartThumbSize.X, v.winSize.Y,
 	)
@@ -397,7 +401,8 @@ func (v *View) metrics() viewMetrics {
 		chartBounds:      cb,
 		sidebarBounds:    sb,
 		firstThumbBounds: fb,
-		sidebarRegion:    ssb,
+		sidebarRegion:    sr,
+		chartRegion:      cb,
 	}
 }
 
@@ -467,25 +472,28 @@ func (v *View) handleScrollEvent(yoff float64) {
 
 	m := v.metrics()
 
-	if !v.mousePos.In(m.sidebarRegion) {
-		return
-	}
+	switch {
+	case v.mousePos.In(m.sidebarRegion):
+		// Don't scroll if sidebar is shorter than the window.
+		if m.sidebarBounds.Dy() < v.winSize.Y {
+			return
+		}
 
-	if m.sidebarBounds.Dy() < v.winSize.Y {
-		return
-	}
+		// Scroll wheel down: yoff = -1 up: yoff = +1
+		off := sidebarScrollAmount.Mul(-int(yoff))
+		tmpRect := m.sidebarBounds.Add(off)
+		if botGap := tmpRect.Min.Y - m.sidebarRegion.Min.Y; botGap > 0 {
+			off.Y -= botGap
+		}
+		if topGap := m.sidebarRegion.Max.Y - tmpRect.Max.Y; topGap > 0 {
+			off.Y += topGap
+		}
 
-	// Scroll wheel down: yoff = -1 up: yoff = +1
-	off := sidebarScrollAmount.Mul(-int(yoff))
-	tmpRect := m.sidebarBounds.Add(off)
-	if botGap := tmpRect.Min.Y - m.sidebarRegion.Min.Y; botGap > 0 {
-		off.Y -= botGap
-	}
-	if topGap := m.sidebarRegion.Max.Y - tmpRect.Max.Y; topGap > 0 {
-		off.Y += topGap
-	}
+		v.sidebarScrollOffset = v.sidebarScrollOffset.Add(off)
 
-	v.sidebarScrollOffset = v.sidebarScrollOffset.Add(off)
+	case v.mousePos.In(m.chartRegion):
+		glog.V(2).Infof("wheel scroll in chart")
+	}
 }
 
 // SetInputSymbolSubmittedCallback sets the callback for when a new symbol is entered.
@@ -525,11 +533,11 @@ start:
 			dirty = true
 		}
 		v.win.SwapBuffers()
-		glog.V(2).Infof("updates:%o lag(%f)/updateSec(%f)=fudge(%f) dirty:%t render:%v", i, lag, updateSec, fudge, dirty, time.Since(now).Seconds())
+		glog.V(3).Infof("updates:%o lag(%f)/updateSec(%f)=fudge(%f) dirty:%t render:%v", i, lag, updateSec, fudge, dirty, time.Since(now).Seconds())
 
 		glfw.PollEvents()
 		if !dirty {
-			glog.V(2).Info("wait events")
+			glog.V(3).Info("wait events")
 			glfw.WaitEvents()
 			goto start
 		}
