@@ -118,6 +118,17 @@ type StockUpdate struct {
 	WeeklyStochasticSeries      *StochasticSeries
 }
 
+// Range is the range to specify in the request.
+type Range int
+
+// Range values.
+//go:generate stringer -type=Range
+const (
+	RangeUnspecified Range = iota
+	OneDay
+	TwoYears
+)
+
 // New creates a new Model.
 func New() *Model {
 	return &Model{}

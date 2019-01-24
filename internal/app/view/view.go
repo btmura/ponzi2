@@ -16,6 +16,7 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 
 	"gitlab.com/btmura/ponzi2/internal/app/gfx"
+	"gitlab.com/btmura/ponzi2/internal/app/model"
 	"gitlab.com/btmura/ponzi2/internal/matrix"
 )
 
@@ -98,6 +99,9 @@ type View struct {
 
 	// inputSymbolSubmittedCallback is called when a new symbol is entered.
 	inputSymbolSubmittedCallback func(symbol string)
+
+	// rangeChangeCallback is called when the range is changed.
+	rangeChangeCallback func(rang model.Range)
 
 	// win is the handle to the GLFW window.
 	win *glfw.Window
@@ -227,6 +231,7 @@ func New() *View {
 		title:                        NewTitle(),
 		inputSymbol:                  newCenteredText(inputSymbolTextRenderer, "", centeredTextBubble(chartRounding, chartPadding)),
 		inputSymbolSubmittedCallback: func(symbol string) {},
+		rangeChangeCallback:          func(rang model.Range) {},
 	}
 }
 
@@ -496,11 +501,6 @@ func (v *View) handleScrollEvent(yoff float64) {
 	}
 }
 
-// SetInputSymbolSubmittedCallback sets the callback for when a new symbol is entered.
-func (v *View) SetInputSymbolSubmittedCallback(cb func(symbol string)) {
-	v.inputSymbolSubmittedCallback = cb
-}
-
 // RunLoop runs the "game loop".
 func (v *View) RunLoop(ctx context.Context, preupdate func(context.Context)) {
 start:
@@ -624,6 +624,16 @@ func (v *View) render(fudge float32) (dirty bool) {
 
 	// Return dirty if some callbacks were scheduled.
 	return len(*vc.ScheduledCallbacks) != 0
+}
+
+// SetInputSymbolSubmittedCallback sets the callback for when a new symbol is entered.
+func (v *View) SetInputSymbolSubmittedCallback(cb func(symbol string)) {
+	v.inputSymbolSubmittedCallback = cb
+}
+
+// SetRangeChangeCallback sets the callback for when the range changes.
+func (v *View) SetRangeChangeCallback(cb func(rang model.Range)) {
+	v.rangeChangeCallback = cb
 }
 
 // SetTitle sets the View's title.
