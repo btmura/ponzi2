@@ -16,7 +16,6 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 
 	"gitlab.com/btmura/ponzi2/internal/app/gfx"
-	"gitlab.com/btmura/ponzi2/internal/app/model"
 	"gitlab.com/btmura/ponzi2/internal/matrix"
 )
 
@@ -83,6 +82,17 @@ func init() {
 	runtime.LockOSThread()
 }
 
+// ZoomChange specifies whether the user zooms in or out.
+type ZoomChange int
+
+// ZoomChange values.
+//go:generate stringer -type=ZoomChange
+const (
+	ZoomChangeUnspecified ZoomChange = iota
+	ZoomIn
+	ZoomOut
+)
+
 // The View renders the UI to view and edit the model's stocks that it observes.
 type View struct {
 	// title renders the window title.
@@ -100,8 +110,8 @@ type View struct {
 	// inputSymbolSubmittedCallback is called when a new symbol is entered.
 	inputSymbolSubmittedCallback func(symbol string)
 
-	// rangeChangeCallback is called when the range is changed.
-	rangeChangeCallback func(rang model.Range)
+	// chartZoomChangeCallback is called when the chart is zoomed in or out.
+	chartZoomChangeCallback func(zoomChange ZoomChange)
 
 	// win is the handle to the GLFW window.
 	win *glfw.Window
@@ -231,7 +241,7 @@ func New() *View {
 		title:                        NewTitle(),
 		inputSymbol:                  newCenteredText(inputSymbolTextRenderer, "", centeredTextBubble(chartRounding, chartPadding)),
 		inputSymbolSubmittedCallback: func(symbol string) {},
-		rangeChangeCallback:          func(rang model.Range) {},
+		chartZoomChangeCallback:      func(zoomChange ZoomChange) {},
 	}
 }
 
@@ -497,7 +507,12 @@ func (v *View) handleScrollEvent(yoff float64) {
 		v.sidebarScrollOffset = v.sidebarScrollOffset.Add(off)
 
 	case v.mousePos.In(m.chartRegion):
-		glog.V(2).Infof("wheel scroll in chart")
+		switch {
+		case yoff < 0: // Scroll wheel down
+			v.chartZoomChangeCallback(ZoomOut)
+		case yoff > 0: // Scroll wheel up
+			v.chartZoomChangeCallback(ZoomIn)
+		}
 	}
 }
 
@@ -631,9 +646,9 @@ func (v *View) SetInputSymbolSubmittedCallback(cb func(symbol string)) {
 	v.inputSymbolSubmittedCallback = cb
 }
 
-// SetRangeChangeCallback sets the callback for when the range changes.
-func (v *View) SetRangeChangeCallback(cb func(rang model.Range)) {
-	v.rangeChangeCallback = cb
+// SetChartZoomChangeCallback sets the callback for when the chart is zoomed in or out.
+func (v *View) SetChartZoomChangeCallback(cb func(zoomzoomChange ZoomChange)) {
+	v.chartZoomChangeCallback = cb
 }
 
 // SetTitle sets the View's title.

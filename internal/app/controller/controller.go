@@ -149,6 +149,15 @@ func (c *Controller) RunLoop() error {
 		c.setChart(ctx, symbol)
 	})
 
+	c.view.SetChartZoomChangeCallback(func(zoomChange view.ZoomChange) {
+		switch zoomChange {
+		case view.ZoomIn:
+			glog.V(2).Infof("zoom in")
+		case view.ZoomOut:
+			glog.V(2).Infof("zoom out")
+		}
+	})
+
 	c.view.RunLoop(ctx, c.update)
 
 	ticker.Stop()
