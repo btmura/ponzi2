@@ -19,10 +19,19 @@ import (
 // loc is the timezone to use when parsing dates.
 var loc = mustLoadLocation("America/New_York")
 
+// zoomRanges are the ranges from most zoomed out to most zoomed in.
+var zoomRanges = []model.Range{
+	model.TwoYears,
+	model.OneDay,
+}
+
 // Controller runs the program in a "game loop".
 type Controller struct {
 	// model is the data that the Controller connects to the View.
 	model *model.Model
+
+	// currentRange is the currently selected data range.
+	currentRange model.Range
 
 	// iexClient fetches stock data to update the model.
 	iexClient *iex.Client
@@ -76,6 +85,7 @@ const (
 func New(iexClient *iex.Client) *Controller {
 	return &Controller{
 		model:                 model.New(),
+		currentRange:          model.TwoYears,
 		iexClient:             iexClient,
 		pendingMutex:          &sync.Mutex{},
 		view:                  view.New(),
@@ -150,12 +160,28 @@ func (c *Controller) RunLoop() error {
 	})
 
 	c.view.SetChartZoomChangeCallback(func(zoomChange view.ZoomChange) {
+		// Find the current zoom range.
+		i := 0
+		for j := range zoomRanges {
+			if zoomRanges[j] == c.currentRange {
+				i = j
+			}
+		}
+
+		// Adjust the zoom one increment.
 		switch zoomChange {
 		case view.ZoomIn:
-			glog.V(2).Infof("zoom in")
+			if i+1 < len(zoomRanges) {
+				i++
+			}
 		case view.ZoomOut:
-			glog.V(2).Infof("zoom out")
+			if i-1 >= 0 {
+				i--
+			}
 		}
+		c.currentRange = zoomRanges[i]
+
+		glog.V(2).Infof("current range: %v", c.currentRange)
 	})
 
 	c.view.RunLoop(ctx, c.update)
