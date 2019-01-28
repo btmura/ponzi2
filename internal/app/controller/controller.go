@@ -179,9 +179,16 @@ func (c *Controller) RunLoop() error {
 				i--
 			}
 		}
-		c.currentRange = zoomRanges[i]
 
+		// Ignore if no change in zoom.
+		if c.currentRange == zoomRanges[i] {
+			return
+		}
+
+		// Set zoom and refresh all stocks.
+		c.currentRange = zoomRanges[i]
 		glog.V(2).Infof("current range: %v", c.currentRange)
+		c.refreshStock(ctx, c.allSymbols())
 	})
 
 	c.view.RunLoop(ctx, c.update)
@@ -342,12 +349,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 	}
 
 	go func() {
-		req := &iex.GetStocksRequest{
-			Symbols: symbols,
-			Range:   iex.TwoYears,
-		}
-		stocks, err := c.iexClient.GetStocks(ctx, req)
-		if err != nil {
+		handleErr := func(err error) {
 			var us []controllerStockUpdate
 			for _, s := range symbols {
 				us = append(us, controllerStockUpdate{
@@ -357,6 +359,21 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 			}
 			c.addPendingStockUpdatesLocked(us)
 			c.view.WakeLoop()
+		}
+
+		r, err := iexRange(c.currentRange)
+		if err != nil {
+			handleErr(err)
+			return
+		}
+
+		req := &iex.GetStocksRequest{
+			Symbols: symbols,
+			Range:   r,
+		}
+		stocks, err := c.iexClient.GetStocks(ctx, req)
+		if err != nil {
+			handleErr(err)
 			return
 		}
 
@@ -451,6 +468,17 @@ func (c *Controller) saveConfig() {
 	go func() {
 		c.pendingConfigSaves <- cfg
 	}()
+}
+
+func iexRange(rang model.Range) (iex.Range, error) {
+	switch rang {
+	case model.OneDay:
+		return iex.OneDay, nil
+	case model.TwoYears:
+		return iex.TwoYears, nil
+	default:
+		return 0, fmt.Errorf("bad range: %v", rang)
+	}
 }
 
 func mustLoadLocation(name string) *time.Location {
