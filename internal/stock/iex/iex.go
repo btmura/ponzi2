@@ -176,7 +176,7 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 
 	r := httpResp.Body
 	if c.dumpAPIResponses {
-		rr, err := dumpResponse(fmt.Sprintf("iex-%s.txt", strings.Join(req.Symbols, "-")), r)
+		rr, err := dumpResponse(fmt.Sprintf("iex-%s-%v.txt", strings.Join(req.Symbols, "-"), rangeVal), r)
 		if err != nil {
 			return nil, fmt.Errorf("iex: failed to dump resp: %v", err)
 		}
