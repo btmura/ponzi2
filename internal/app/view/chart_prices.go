@@ -5,8 +5,8 @@ import (
 	"math"
 	"strconv"
 
-	"gitlab.com/btmura/ponzi2/internal/app/model"
 	"gitlab.com/btmura/ponzi2/internal/app/gfx"
+	"gitlab.com/btmura/ponzi2/internal/app/model"
 )
 
 // chartPrices shows the candlesticks and price labels for a single stock.
@@ -153,6 +153,9 @@ func priceRange(ts []*model.TradingSession) [2]float32 {
 	var low float32 = math.MaxFloat32
 	var high float32
 	for _, s := range ts {
+		if s.Empty() {
+			continue
+		}
 		if s.Low < low {
 			low = s.Low
 		}

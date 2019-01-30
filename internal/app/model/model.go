@@ -73,6 +73,12 @@ type TradingSession struct {
 	PercentChange float32
 }
 
+// Empty returns whether the TradingSession has any data to report.
+func (s *TradingSession) Empty() bool {
+	// IEX sets the low and high to -1 when it has no data to report.
+	return s.Low < 0 || s.High < 0
+}
+
 // MovingAverageSeries is a time series of moving average values.
 type MovingAverageSeries struct {
 	// MovingAverages are sorted by date in ascending order.
