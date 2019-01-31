@@ -17,6 +17,7 @@ type Model struct {
 type Stock struct {
 	Symbol                      string
 	Quote                       *Quote
+	Range                       Range
 	DailyTradingSessionSeries   *TradingSessionSeries
 	DailyMovingAverageSeries25  *MovingAverageSeries
 	DailyMovingAverageSeries50  *MovingAverageSeries
@@ -53,6 +54,17 @@ const (
 	FifteenMinuteDelayedPrice
 	Close
 	PreviousClose
+)
+
+// Range is the range to specify in the request.
+type Range int
+
+// Range values.
+//go:generate stringer -type=Range
+const (
+	RangeUnspecified Range = iota
+	OneDay
+	TwoYears
 )
 
 // TradingSessionSeries is a time series of trading sessions.
@@ -116,6 +128,7 @@ type Stochastic struct {
 type StockUpdate struct {
 	Symbol                      string
 	Quote                       *Quote
+	Range                       Range
 	DailyTradingSessionSeries   *TradingSessionSeries
 	DailyMovingAverageSeries25  *MovingAverageSeries
 	DailyMovingAverageSeries50  *MovingAverageSeries
@@ -123,17 +136,6 @@ type StockUpdate struct {
 	DailyStochasticSeries       *StochasticSeries
 	WeeklyStochasticSeries      *StochasticSeries
 }
-
-// Range is the range to specify in the request.
-type Range int
-
-// Range values.
-//go:generate stringer -type=Range
-const (
-	RangeUnspecified Range = iota
-	OneDay
-	TwoYears
-)
 
 // New creates a new Model.
 func New() *Model {

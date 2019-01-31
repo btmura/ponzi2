@@ -50,6 +50,7 @@ type GetStocksRequest struct {
 type Stock struct {
 	Symbol string
 	Quote  *Quote
+	Range  Range
 	Chart  []*ChartPoint
 }
 
@@ -183,12 +184,17 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 		r = rr
 	}
 
-	resp, err := decodeStocks(r)
+	stocks, err := decodeStocks(r)
 	if err != nil {
 		return nil, fmt.Errorf("iex: failed to decode resp: %v", err)
 	}
 
-	return resp, nil
+	// Add the requested range to each stock, since the response doesn't have it.
+	for _, st := range stocks {
+		st.Range = req.Range
+	}
+
+	return stocks, nil
 }
 
 func decodeStocks(r io.Reader) ([]*Stock, error) {

@@ -24,6 +24,11 @@ func modelStockUpdate(st *iex.Stock) (*model.StockUpdate, error) {
 		return nil, err
 	}
 
+	r, err := modelRange(st.Range)
+	if err != nil {
+		return nil, err
+	}
+
 	ds := modelTradingSessions(st)
 	ws := weeklyModelTradingSessions(ds)
 
@@ -75,6 +80,7 @@ func modelStockUpdate(st *iex.Stock) (*model.StockUpdate, error) {
 	return &model.StockUpdate{
 		Symbol: st.Symbol,
 		Quote:  q,
+		Range:  r,
 		DailyTradingSessionSeries:   &model.TradingSessionSeries{TradingSessions: ds},
 		DailyMovingAverageSeries25:  &model.MovingAverageSeries{MovingAverages: m25},
 		DailyMovingAverageSeries50:  &model.MovingAverageSeries{MovingAverages: m50},
@@ -124,6 +130,19 @@ func modelSource(src iex.Source) (model.Source, error) {
 		return model.PreviousClose, nil
 	default:
 		return 0, fmt.Errorf("unrecognized iex source: %v", src)
+	}
+}
+
+func modelRange(r iex.Range) (model.Range, error) {
+	switch r {
+	case iex.RangeUnspecified:
+		return model.RangeUnspecified, nil
+	case iex.OneDay:
+		return model.OneDay, nil
+	case iex.TwoYears:
+		return model.TwoYears, nil
+	default:
+		return 0, fmt.Errorf("unrecognized iex range: %v", r)
 	}
 }
 
