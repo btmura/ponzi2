@@ -18,13 +18,13 @@ const (
 	d = 3
 )
 
-func modelStockUpdate(st *iex.Stock) (*model.StockUpdate, error) {
+func modelStockUpdate(rang iex.Range, st *iex.Stock) (*model.StockUpdate, error) {
 	q, err := modelQuote(st.Quote)
 	if err != nil {
 		return nil, err
 	}
 
-	r, err := modelRange(st.Range)
+	r, err := modelRange(rang)
 	if err != nil {
 		return nil, err
 	}

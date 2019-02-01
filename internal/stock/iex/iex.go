@@ -28,6 +28,13 @@ var (
 	loc = mustLoadLocation("America/New_York")
 )
 
+// GetStocksRequest is the request for GetStocks.
+type GetStocksRequest struct {
+	Symbols   []string
+	Range     Range
+	ChartLast int
+}
+
 // Range is the range to specify in the request.
 type Range int
 
@@ -39,18 +46,10 @@ const (
 	TwoYears
 )
 
-// GetStocksRequest is the request for GetStocks.
-type GetStocksRequest struct {
-	Symbols   []string
-	Range     Range
-	ChartLast int
-}
-
 // Stock is the response from calling GetStocks.
 type Stock struct {
 	Symbol string
 	Quote  *Quote
-	Range  Range
 	Chart  []*ChartPoint
 }
 
@@ -116,12 +115,12 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 		return nil, errors.New("iex: missing range for chart req")
 	}
 
-	var rangeVal string
+	var rangeStr string
 	switch req.Range {
 	case OneDay:
-		rangeVal = "1d"
+		rangeStr = "1d"
 	case TwoYears:
-		rangeVal = "2y"
+		rangeStr = "2y"
 	default:
 		return nil, fmt.Errorf("iex: unsupported range for chart req: %s", req.Range)
 	}
@@ -138,7 +137,7 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 	v := url.Values{}
 	v.Set("symbols", strings.Join(req.Symbols, ","))
 	v.Set("types", "quote,chart")
-	v.Set("range", rangeVal)
+	v.Set("range", rangeStr)
 	v.Set("filter", strings.Join([]string{
 		// Keys for quote.
 		"companyName",
@@ -177,7 +176,7 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 
 	r := httpResp.Body
 	if c.dumpAPIResponses {
-		rr, err := dumpResponse(fmt.Sprintf("iex-%s-%v.txt", strings.Join(req.Symbols, "-"), rangeVal), r)
+		rr, err := dumpResponse(fmt.Sprintf("iex-%s-%v.txt", strings.Join(req.Symbols, "-"), rangeStr), r)
 		if err != nil {
 			return nil, fmt.Errorf("iex: failed to dump resp: %v", err)
 		}
@@ -188,12 +187,6 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 	if err != nil {
 		return nil, fmt.Errorf("iex: failed to decode resp: %v", err)
 	}
-
-	// Add the requested range to each stock, since the response doesn't have it.
-	for _, st := range stocks {
-		st.Range = req.Range
-	}
-
 	return stocks, nil
 }
 

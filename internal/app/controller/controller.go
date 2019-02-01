@@ -382,7 +382,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 		found := map[string]bool{}
 		for _, st := range stocks {
 			found[st.Symbol] = true
-			u, err := modelStockUpdate(st)
+			u, err := modelStockUpdate(r, st)
 			us = append(us, controllerStockUpdate{
 				symbol:    st.Symbol,
 				update:    u,
