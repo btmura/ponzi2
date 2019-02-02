@@ -1,6 +1,11 @@
 package model
 
-import "testing"
+import (
+	"testing"
+	"time"
+
+	"github.com/google/go-cmp/cmp"
+)
 
 func TestSetCurrentStock(t *testing.T) {
 	check := func(t *testing.T, got *Stock, gotChanged bool, wantSymbol string, wantChanged bool) {
@@ -28,4 +33,42 @@ func TestSetCurrentStock(t *testing.T) {
 	// Change to a different stock.
 	st, changed = m.SetCurrentStock("MO")
 	check(t, st, changed, "MO", true)
+}
+
+func TestUpdateStock(t *testing.T) {
+	old := now
+	defer func() { now = old }()
+	n := time.Date(2018, time.October, 11, 0, 0, 0, 0, time.UTC)
+	now = func() time.Time { return n }
+
+	m := New()
+
+	st, changed := m.SetCurrentStock("SPY")
+	if !changed {
+		t.Errorf("SetCurrentStock should return changed for new symbols.")
+	}
+
+	st2, updated := m.UpdateStock(&StockUpdate{
+		Symbol: "SPY",
+		Range:  OneDay,
+	})
+	if !updated {
+		t.Errorf("UpdateStock should return updated for existing symbols.")
+	}
+
+	if st != st2 {
+		t.Errorf("UpdateStock should return the same pointer to the existing stock.\n%v\n%v", st, st2)
+	}
+
+	// TODO(btmura): check more fields in want
+
+	want := &Stock{
+		Symbol:         "SPY",
+		Range:          OneDay,
+		LastUpdateTime: n,
+	}
+
+	if diff := cmp.Diff(want, st2); diff != "" {
+		t.Errorf("differs: (-want, +got)\n%s", diff)
+	}
 }

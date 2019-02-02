@@ -7,6 +7,11 @@ import (
 	"github.com/golang/glog"
 )
 
+// TODO(btmura): check arguments in functions and return errors
+
+// now is a function to get the current time. Mocked out in tests to return a fixed time.
+var now = time.Now
+
 // Model models the app's state.
 type Model struct {
 	CurrentStock *Stock
@@ -200,13 +205,14 @@ func (m *Model) UpdateStock(u *StockUpdate) (st *Stock, updated bool) {
 		return nil, false
 	}
 	st.Quote = u.Quote
+	st.Range = u.Range
 	st.DailyTradingSessionSeries = u.DailyTradingSessionSeries
 	st.DailyStochasticSeries = u.DailyStochasticSeries
 	st.WeeklyStochasticSeries = u.WeeklyStochasticSeries
 	st.DailyMovingAverageSeries25 = u.DailyMovingAverageSeries25
 	st.DailyMovingAverageSeries50 = u.DailyMovingAverageSeries50
 	st.DailyMovingAverageSeries200 = u.DailyMovingAverageSeries200
-	st.LastUpdateTime = time.Now()
+	st.LastUpdateTime = now()
 	return st, true
 }
 
