@@ -2,7 +2,6 @@ package iex
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"testing"
 	"time"
@@ -98,7 +97,7 @@ func TestDecodeStocks(t *testing.T) {
 					},
 					Chart: []*ChartPoint{
 						{
-							Date:   mustChartDate("20180918", "15:57"),
+							Date:   time.Date(2018, time.September, 18, 15, 57, 0, 0, loc),
 							Open:   218.44,
 							High:   218.49,
 							Low:    218.37,
@@ -106,7 +105,7 @@ func TestDecodeStocks(t *testing.T) {
 							Volume: 2607,
 						},
 						{
-							Date:   mustChartDate("20180918", "15:58"),
+							Date:   time.Date(2018, time.September, 18, 15, 58, 0, 0, loc),
 							Open:   218.46,
 							High:   218.5,
 							Low:    218.435,
@@ -114,7 +113,7 @@ func TestDecodeStocks(t *testing.T) {
 							Volume: 3680,
 						},
 						{
-							Date:   mustChartDate("20180918", "15:59"),
+							Date:   time.Date(2018, time.September, 18, 15, 59, 0, 0, loc),
 							Open:   218.45,
 							High:   218.49,
 							Low:    218.34,
@@ -156,7 +155,7 @@ func TestDecodeStocks(t *testing.T) {
 					},
 					Chart: []*ChartPoint{
 						{
-							Date:          mustChartDate("2017-07-05", ""),
+							Date:          time.Date(2017, time.July, 5, 0, 0, 0, 0, loc),
 							Open:          66.948,
 							High:          68.1103,
 							Low:           66.9136,
@@ -166,7 +165,7 @@ func TestDecodeStocks(t *testing.T) {
 							ChangePercent: 1.335,
 						},
 						{
-							Date:          mustChartDate("2017-07-06", ""),
+							Date:          time.Date(2017, time.July, 6, 0, 0, 0, 0, loc),
 							Open:          66.9627,
 							High:          67.4629,
 							Low:           66.8156,
@@ -176,7 +175,7 @@ func TestDecodeStocks(t *testing.T) {
 							ChangePercent: -0.738,
 						},
 						{
-							Date:          mustChartDate("2017-07-07", ""),
+							Date:          time.Date(2017, time.July, 7, 0, 0, 0, 0, loc),
 							Open:          67.3845,
 							High:          68.5026,
 							Low:           67.3845,
@@ -283,12 +282,4 @@ func TestChartDate(t *testing.T) {
 			}
 		})
 	}
-}
-
-func mustChartDate(date, minute string) time.Time {
-	t, err := chartDate(date, minute)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return t
 }
