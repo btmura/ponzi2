@@ -191,19 +191,19 @@ func (c *Controller) RunLoop() error {
 		c.refreshStock(ctx, c.allSymbols())
 	})
 
-	c.view.RunLoop(ctx, c.update)
+	defer func() {
+		ticker.Stop()
 
-	ticker.Stop()
+		// Disable config changes to start shutting down save processor.
+		c.enableSavingConfigs = false
+		close(c.pendingConfigSaves)
+		<-c.doneSavingConfigs
+	}()
 
-	// Disable config changes to start shutting down save processor.
-	c.enableSavingConfigs = false
-	close(c.pendingConfigSaves)
-	<-c.doneSavingConfigs
-
-	return nil
+	return c.view.RunLoop(ctx, c.update)
 }
 
-func (c *Controller) update(ctx context.Context) {
+func (c *Controller) update(ctx context.Context) error {
 	for _, u := range c.takePendingStockUpdatesLocked() {
 		switch {
 		case u.update != nil:
@@ -216,7 +216,9 @@ func (c *Controller) update(ctx context.Context) {
 			}
 			if ch, ok := c.symbolToChartMap[u.symbol]; ok {
 				ch.SetLoading(false)
-				ch.SetData(st)
+				if err := ch.SetData(st); err != nil {
+					return err
+				}
 			}
 			if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
 				th.SetLoading(false)
@@ -241,6 +243,8 @@ func (c *Controller) update(ctx context.Context) {
 			c.refreshStock(ctx, c.allSymbols())
 		}
 	}
+
+	return nil
 }
 
 func (c *Controller) setChart(ctx context.Context, symbol string) {

@@ -1,12 +1,17 @@
 package view
 
 import (
+	"fmt"
 	"image"
 	"math"
+	"strconv"
 	"time"
 
 	"gitlab.com/btmura/ponzi2/internal/app/model"
 )
+
+// longTime is a time that takes the most display width for measuring purposes.
+var longTime = time.Date(2019, time.December, 31, 23, 59, 0, 0, time.UTC)
 
 // chartTimeLabels renders the time labels for a single stock.
 type chartTimeLabels struct {
@@ -27,18 +32,26 @@ func newChartTimeLabels() *chartTimeLabels {
 	return &chartTimeLabels{}
 }
 
-func (ch *chartTimeLabels) SetData(ts *model.TradingSessionSeries) {
+func (ch *chartTimeLabels) SetData(r model.Range, ts *model.TradingSessionSeries) error {
 	// Reset everything.
 	ch.Close()
 
 	// Bail out if there is no data yet.
 	if ts == nil {
-		return
+		return nil
 	}
 
-	ch.MaxLabelSize = chartAxisLabelTextRenderer.Measure(chartTimeLabelText(time.December))
+	txt, err := chartTimeLabelText(r, longTime)
+	if err != nil {
+		return err
+	}
+	ch.MaxLabelSize = chartAxisLabelTextRenderer.Measure(txt)
 
-	ch.labels = makeChartTimeLabels(ts.TradingSessions)
+	labels, err := makeChartTimeLabels(r, ts.TradingSessions)
+	if err != nil {
+		return err
+	}
+	ch.labels = labels
 
 	ch.dates = nil
 	for _, s := range ts.TradingSessions {
@@ -46,6 +59,8 @@ func (ch *chartTimeLabels) SetData(ts *model.TradingSessionSeries) {
 	}
 
 	ch.renderable = true
+
+	return nil
 }
 
 func (ch *chartTimeLabels) Render(r image.Rectangle) {
@@ -101,28 +116,80 @@ type chartTimeLabel struct {
 	size    image.Point
 }
 
-func chartTimeLabelText(month time.Month) string {
-	return string(month.String()[0:3])
+func chartTimeLabelText(r model.Range, t time.Time) (string, error) {
+	switch r {
+	case model.OneDay:
+		return hourChartTimeLabelText(t), nil
+	case model.TwoYears:
+		return monthChartTimeLabelText(t), nil
+	default:
+		return "", fmt.Errorf("bad range: %v", r)
+	}
 }
 
-func makeChartTimeLabels(ds []*model.TradingSession) []chartTimeLabel {
+func hourChartTimeLabelText(t time.Time) string {
+	return strconv.Itoa(t.Hour())
+}
+
+func monthChartTimeLabelText(t time.Time) string {
+	return string(t.Month().String()[0:3])
+}
+
+func makeChartTimeLabels(r model.Range, ts []*model.TradingSession) ([]chartTimeLabel, error) {
+	switch r {
+	case model.OneDay:
+		return hourChartTimeLabels(ts), nil
+	case model.TwoYears:
+		return monthChartTimeLabels(ts), nil
+	default:
+		return nil, fmt.Errorf("bad range: %v", r)
+	}
+}
+
+func hourChartTimeLabels(ts []*model.TradingSession) []chartTimeLabel {
 	var ls []chartTimeLabel
 
-	for i, s := range ds {
+	for i := range ts {
+		if i == 0 {
+			continue // Can't check previous value.
+		}
+
+		prev := ts[i-1].Date.Hour()
+		curr := ts[i].Date.Hour()
+		if prev == curr {
+			continue
+		}
+
+		txt := hourChartTimeLabelText(ts[i].Date)
+
+		ls = append(ls, chartTimeLabel{
+			percent: float32(i) / float32(len(ts)),
+			text:    txt,
+			size:    chartAxisLabelTextRenderer.Measure(txt),
+		})
+	}
+
+	return ls
+}
+
+func monthChartTimeLabels(ts []*model.TradingSession) []chartTimeLabel {
+	var ls []chartTimeLabel
+
+	for i := range ts {
 		if i == 0 {
 			continue // Can't check previous month.
 		}
 
-		pm := ds[i-1].Date.Month()
-		m := s.Date.Month()
+		pm := ts[i-1].Date.Month()
+		m := ts[i].Date.Month()
 		if pm == m {
 			continue
 		}
 
-		txt := chartTimeLabelText(m)
+		txt := monthChartTimeLabelText(ts[i].Date)
 
 		ls = append(ls, chartTimeLabel{
-			percent: float32(i) / float32(len(ds)),
+			percent: float32(i) / float32(len(ts)),
 			text:    txt,
 			size:    chartAxisLabelTextRenderer.Measure(txt),
 		})

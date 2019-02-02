@@ -138,7 +138,7 @@ func (ch *Chart) SetError(error bool) {
 }
 
 // SetData sets the Chart's stock.
-func (ch *Chart) SetData(st *model.Stock) {
+func (ch *Chart) SetData(st *model.Stock) error {
 	if !ch.hasStockUpdated && !st.LastUpdateTime.IsZero() {
 		ch.fadeIn.Start()
 	}
@@ -155,8 +155,14 @@ func (ch *Chart) SetData(st *model.Stock) {
 	ch.volume.SetData(ts)
 	ch.dailyStochastics.SetData(st.DailyStochasticSeries)
 	ch.weeklyStochastics.SetData(st.WeeklyStochasticSeries)
-	ch.timeLabels.SetData(ts)
+
+	if err := ch.timeLabels.SetData(st.Range, ts); err != nil {
+		return err
+	}
+
 	ch.setTrackLineData(ts, st.DailyMovingAverageSeries25, st.DailyMovingAverageSeries50, st.DailyMovingAverageSeries200)
+
+	return nil
 }
 
 // Update updates the Chart.
