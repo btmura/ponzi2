@@ -222,7 +222,9 @@ func (c *Controller) update(ctx context.Context) error {
 			}
 			if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
 				th.SetLoading(false)
-				th.SetData(st)
+				if err := th.SetData(st); err != nil {
+					return err
+				}
 			}
 
 		case u.updateErr != nil:
@@ -268,7 +270,9 @@ func (c *Controller) setChart(ctx context.Context, symbol string) {
 	ch := view.NewChart()
 	c.symbolToChartMap[symbol] = ch
 
+	// TODO(btmura): check for error
 	ch.SetData(st)
+
 	ch.SetRefreshButtonClickCallback(func() {
 		c.refreshStock(ctx, c.allSymbols())
 	})
@@ -295,7 +299,9 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) {
 	th := view.NewChartThumb()
 	c.symbolToChartThumbMap[symbol] = th
 
+	// TODO(btmura): check for error
 	th.SetData(st)
+
 	th.SetRemoveButtonClickCallback(func() {
 		c.removeChartThumb(symbol)
 	})

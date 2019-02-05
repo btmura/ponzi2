@@ -147,7 +147,11 @@ func (ch *Chart) SetData(st *model.Stock) error {
 	ts := st.DailyTradingSessionSeries
 
 	ch.header.SetData(st)
-	ch.timeLines.SetData(ts)
+
+	if err := ch.timeLines.SetData(st.Range, ts); err != nil {
+		return err
+	}
+
 	ch.prices.SetData(ts)
 	ch.movingAverage25.SetData(ts, st.DailyMovingAverageSeries25)
 	ch.movingAverage50.SetData(ts, st.DailyMovingAverageSeries50)
