@@ -110,7 +110,7 @@ func (ch *ChartThumb) Update() (dirty bool) {
 }
 
 // Render renders the ChartThumb.
-func (ch *ChartThumb) Render(vc viewContext) {
+func (ch *ChartThumb) Render(vc viewContext) error {
 	// Render the border around the chart.
 	strokeRoundedRect(vc.Bounds, thumbChartRounding)
 
@@ -126,12 +126,12 @@ func (ch *ChartThumb) Render(vc viewContext) {
 	if !ch.hasStockUpdated {
 		if ch.loading {
 			thumbLoadingText.Render(r)
-			return
+			return nil
 		}
 
 		if ch.hasError {
 			thumbErrorText.Render(r)
-			return
+			return nil
 		}
 	}
 
@@ -159,6 +159,8 @@ func (ch *ChartThumb) Render(vc viewContext) {
 
 	ch.dailyStochastics.RenderCursorLabels(dr, dr, vc.MousePos)
 	ch.weeklyStochastics.RenderCursorLabels(wr, wr, vc.MousePos)
+
+	return nil
 }
 
 // SetRemoveButtonClickCallback sets the callback for remove button clicks.

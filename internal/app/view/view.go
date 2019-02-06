@@ -156,7 +156,7 @@ func newViewChartThumb(th *ChartThumb) *viewChartThumb {
 
 type viewUpdateRenderCloser interface {
 	Update() (dirty bool)
-	Render(viewContext)
+	Render(viewContext) error
 	Close()
 }
 

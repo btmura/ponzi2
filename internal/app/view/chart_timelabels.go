@@ -17,6 +17,8 @@ type chartTimeLabels struct {
 	// renderable is whether the ChartTimeLabels can be rendered.
 	renderable bool
 
+	dataRange model.Range
+
 	// MaxLabelSize is the maximum label size useful for rendering measurements.
 	MaxLabelSize image.Point
 
@@ -39,6 +41,8 @@ func (ch *chartTimeLabels) SetData(r model.Range, ts *model.TradingSessionSeries
 	if ts == nil {
 		return nil
 	}
+
+	ch.dataRange = r
 
 	txt, err := chartTimeLabelText(r, longTime)
 	if err != nil {
@@ -76,33 +80,44 @@ func (ch *chartTimeLabels) Render(r image.Rectangle) {
 	}
 }
 
-func (ch *chartTimeLabels) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {
+func (ch *chartTimeLabels) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) error {
 	if !ch.renderable {
-		return
+		return nil
 	}
 
 	if mousePos.X < mainRect.Min.X || mousePos.X > mainRect.Max.X {
-		return
+		return nil
 	}
 
-	l := chartTimeLabel{
-		percent: float32(mousePos.X-mainRect.Min.X) / float32(mainRect.Dx()),
-	}
+	percent := float32(mousePos.X-mainRect.Min.X) / float32(mainRect.Dx())
 
-	i := int(math.Floor(float64(len(ch.dates))*float64(l.percent) + 0.5))
+	i := int(math.Floor(float64(len(ch.dates))*float64(percent) + 0.5))
 	if i >= len(ch.dates) {
 		i = len(ch.dates) - 1
 	}
-	l.text = ch.dates[i].Format("1/2/06")
-	l.size = chartAxisLabelTextRenderer.Measure(l.text)
 
-	tp := image.Point{
-		X: mousePos.X - l.size.X/2,
-		Y: labelRect.Min.Y + labelRect.Dy()/2 - l.size.Y/2,
+	var layout string
+	switch ch.dataRange {
+	case model.OneDay:
+		layout = "03:04"
+	case model.TwoYears:
+		layout = "1/2/06"
+	default:
+		return fmt.Errorf("bad range: %v", ch.dataRange)
 	}
 
-	renderBubble(tp, l.size, chartAxisLabelBubbleSpec)
-	chartAxisLabelTextRenderer.Render(l.text, tp, white)
+	text := ch.dates[i].Format(layout)
+	size := chartAxisLabelTextRenderer.Measure(text)
+
+	tp := image.Point{
+		X: mousePos.X - size.X/2,
+		Y: labelRect.Min.Y + labelRect.Dy()/2 - size.Y/2,
+	}
+
+	renderBubble(tp, size, chartAxisLabelBubbleSpec)
+	chartAxisLabelTextRenderer.Render(text, tp, white)
+
+	return nil
 }
 
 func (ch *chartTimeLabels) Close() {

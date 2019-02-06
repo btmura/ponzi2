@@ -181,7 +181,7 @@ func (ch *Chart) Update() (dirty bool) {
 }
 
 // Render renders the Chart.
-func (ch *Chart) Render(vc viewContext) {
+func (ch *Chart) Render(vc viewContext) error {
 	// Render the border around the chart.
 	strokeRoundedRect(vc.Bounds, chartRounding)
 
@@ -193,12 +193,12 @@ func (ch *Chart) Render(vc viewContext) {
 	if !ch.hasStockUpdated {
 		if ch.loading {
 			chartLoadingText.Render(r)
-			return
+			return nil
 		}
 
 		if ch.hasError {
 			chartErrorText.Render(r)
-			return
+			return nil
 		}
 	}
 
@@ -294,12 +294,17 @@ func (ch *Chart) Render(vc viewContext) {
 	ch.volume.RenderCursorLabels(vr, vlr, vc.MousePos)
 	ch.dailyStochastics.RenderCursorLabels(dr, dlr, vc.MousePos)
 	ch.weeklyStochastics.RenderCursorLabels(wr, wlr, vc.MousePos)
-	ch.timeLabels.RenderCursorLabels(tr, tlr, vc.MousePos)
+
+	if err := ch.timeLabels.RenderCursorLabels(tr, tlr, vc.MousePos); err != nil {
+		return err
+	}
 
 	// Renders trackline legend. To display inline comment out the two lines below and uncomment the last line.
 	ch.renderMATrackLineLegend(pr, llr, vc.MousePos)
 	ch.renderCandleTrackLineLegend(pr, llr, vc.MousePos)
 	//ch.renderTrackLineLegendInline(pr, llr, vc.MousePos) // Stocks that have higher prices tend to overflow the chart on default window size
+
+	return nil
 }
 
 // SetRefreshButtonClickCallback sets the callback for refresh button clicks.
