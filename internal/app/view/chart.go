@@ -98,6 +98,12 @@ type Chart struct {
 	tlMovingAverage25  *model.MovingAverageSeries
 	tlMovingAverage50  *model.MovingAverageSeries
 	tlMovingAverage200 *model.MovingAverageSeries
+
+	// showMovingAverages is whether to render the moving averages.
+	showMovingAverages bool
+
+	// showStochastics is whether to show stochastics.
+	showStochastics bool
 }
 
 // NewChart creates a new Chart.
@@ -144,6 +150,17 @@ func (ch *Chart) SetData(st *model.Stock) error {
 	}
 	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
 
+	switch st.Range {
+	case model.OneDay:
+		ch.showMovingAverages = false
+		ch.showStochastics = false
+	case model.TwoYears:
+		ch.showMovingAverages = true
+		ch.showStochastics = true
+	default:
+		return fmt.Errorf("bad range: %v", st.Range)
+	}
+
 	ts := st.DailyTradingSessionSeries
 
 	ch.header.SetData(st)
@@ -153,12 +170,19 @@ func (ch *Chart) SetData(st *model.Stock) error {
 	}
 
 	ch.prices.SetData(ts)
-	ch.movingAverage25.SetData(ts, st.DailyMovingAverageSeries25)
-	ch.movingAverage50.SetData(ts, st.DailyMovingAverageSeries50)
-	ch.movingAverage200.SetData(ts, st.DailyMovingAverageSeries200)
+
+	if ch.showMovingAverages {
+		ch.movingAverage25.SetData(ts, st.DailyMovingAverageSeries25)
+		ch.movingAverage50.SetData(ts, st.DailyMovingAverageSeries50)
+		ch.movingAverage200.SetData(ts, st.DailyMovingAverageSeries200)
+	}
+
 	ch.volume.SetData(ts)
-	ch.dailyStochastics.SetData(st.DailyStochasticSeries)
-	ch.weeklyStochastics.SetData(st.WeeklyStochasticSeries)
+
+	if ch.showStochastics {
+		ch.dailyStochastics.SetData(st.DailyStochasticSeries)
+		ch.weeklyStochastics.SetData(st.WeeklyStochasticSeries)
+	}
 
 	if err := ch.timeLabels.SetData(st.Range, ts); err != nil {
 		return err
@@ -209,13 +233,25 @@ func (ch *Chart) Render(vc viewContext) error {
 	// Calculate percentage needed for the time labels.
 	tperc := float32(ch.timeLabels.MaxLabelSize.Y+chartPadding*2) / float32(r.Dy())
 
+	// Divide up the rectangle into sections.
+	var rects []image.Rectangle
+	if ch.showStochastics {
+		rects = sliceRect(r, tperc, 0.13, 0.13, 0.13)
+	} else {
+		rects = sliceRect(r, tperc, 0.13)
+	}
+
 	// Render the dividers between the sections.
-	rects := sliceRect(r, tperc, 0.13, 0.13, 0.13)
 	for i := 0; i < len(rects)-1; i++ {
 		renderRectTopDivider(rects[i], horizLine)
 	}
 
-	pr, vr, dr, wr, tr := rects[4], rects[3], rects[2], rects[1], rects[0]
+	var pr, vr, dr, wr, tr image.Rectangle
+	if ch.showStochastics {
+		pr, vr, dr, wr, tr = rects[4], rects[3], rects[2], rects[1], rects[0]
+	} else {
+		pr, vr, tr = rects[2], rects[1], rects[0]
+	}
 
 	// Create separate rects for each section's labels shown on the right.
 	plr, vlr, dlr, wlr := pr, vr, dr, wr
@@ -225,11 +261,13 @@ func (ch *Chart) Render(vc viewContext) error {
 	if w := ch.volume.MaxLabelSize.X; w > maxWidth {
 		maxWidth = w
 	}
-	if w := ch.dailyStochastics.MaxLabelSize.X; w > maxWidth {
-		maxWidth = w
-	}
-	if w := ch.weeklyStochastics.MaxLabelSize.X; w > maxWidth {
-		maxWidth = w
+	if ch.showStochastics {
+		if w := ch.dailyStochastics.MaxLabelSize.X; w > maxWidth {
+			maxWidth = w
+		}
+		if w := ch.weeklyStochastics.MaxLabelSize.X; w > maxWidth {
+			maxWidth = w
+		}
 	}
 	maxWidth += chartPadding
 
@@ -268,32 +306,44 @@ func (ch *Chart) Render(vc viewContext) error {
 
 	ch.timeLines.Render(pr)
 	ch.timeLines.Render(vr)
-	ch.timeLines.Render(dr)
-	ch.timeLines.Render(wr)
+	if ch.showStochastics {
+		ch.timeLines.Render(dr)
+		ch.timeLines.Render(wr)
+	}
 
 	ch.prices.Render(pr)
-	ch.movingAverage25.Render(pr)
-	ch.movingAverage50.Render(pr)
-	ch.movingAverage200.Render(pr)
+	if ch.showMovingAverages {
+		ch.movingAverage25.Render(pr)
+		ch.movingAverage50.Render(pr)
+		ch.movingAverage200.Render(pr)
+	}
 	ch.volume.Render(vr)
-	ch.dailyStochastics.Render(dr)
-	ch.weeklyStochastics.Render(wr)
+	if ch.showStochastics {
+		ch.dailyStochastics.Render(dr)
+		ch.weeklyStochastics.Render(wr)
+	}
 	ch.timeLabels.Render(tr)
 
 	ch.prices.RenderAxisLabels(plr)
 	ch.volume.RenderAxisLabels(vlr)
-	ch.dailyStochastics.RenderAxisLabels(dlr)
-	ch.weeklyStochastics.RenderAxisLabels(wlr)
+	if ch.showStochastics {
+		ch.dailyStochastics.RenderAxisLabels(dlr)
+		ch.weeklyStochastics.RenderAxisLabels(wlr)
+	}
 
 	renderCursorLines(pr, vc.MousePos)
 	renderCursorLines(vr, vc.MousePos)
-	renderCursorLines(dr, vc.MousePos)
-	renderCursorLines(wr, vc.MousePos)
+	if ch.showStochastics {
+		renderCursorLines(dr, vc.MousePos)
+		renderCursorLines(wr, vc.MousePos)
+	}
 
 	ch.prices.RenderCursorLabels(pr, plr, vc.MousePos)
 	ch.volume.RenderCursorLabels(vr, vlr, vc.MousePos)
-	ch.dailyStochastics.RenderCursorLabels(dr, dlr, vc.MousePos)
-	ch.weeklyStochastics.RenderCursorLabels(wr, wlr, vc.MousePos)
+	if ch.showStochastics {
+		ch.dailyStochastics.RenderCursorLabels(dr, dlr, vc.MousePos)
+		ch.weeklyStochastics.RenderCursorLabels(wr, wlr, vc.MousePos)
+	}
 
 	if err := ch.timeLabels.RenderCursorLabels(tr, tlr, vc.MousePos); err != nil {
 		return err
