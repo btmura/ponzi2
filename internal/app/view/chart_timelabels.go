@@ -17,6 +17,7 @@ type chartTimeLabels struct {
 	// renderable is whether the ChartTimeLabels can be rendered.
 	renderable bool
 
+	// dataRange is range of the data being presented.
 	dataRange model.Range
 
 	// MaxLabelSize is the maximum label size useful for rendering measurements.
