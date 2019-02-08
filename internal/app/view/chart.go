@@ -230,15 +230,20 @@ func (ch *Chart) Render(vc viewContext) error {
 	gfx.SetAlpha(old * ch.fadeIn.Value(vc.Fudge))
 	defer gfx.SetAlpha(old)
 
-	// Calculate percentage needed for the time labels.
-	tperc := float32(ch.timeLabels.MaxLabelSize.Y+chartPadding*2) / float32(r.Dy())
+	// Calculate percentage needed for each section.
+	const (
+		volumePercent            = 0.13
+		dailyStochasticsPercent  = 0.13
+		weeklyStochasticsPercent = 0.13
+	)
+	timeLabelsPercent := float32(ch.timeLabels.MaxLabelSize.Y+chartPadding*2) / float32(r.Dy())
 
 	// Divide up the rectangle into sections.
 	var rects []image.Rectangle
 	if ch.showStochastics {
-		rects = sliceRect(r, tperc, 0.13, 0.13, 0.13)
+		rects = sliceRect(r, timeLabelsPercent, weeklyStochasticsPercent, dailyStochasticsPercent, volumePercent)
 	} else {
-		rects = sliceRect(r, tperc, 0.13)
+		rects = sliceRect(r, timeLabelsPercent, volumePercent)
 	}
 
 	// Render the dividers between the sections.
@@ -288,7 +293,7 @@ func (ch *Chart) Render(vc viewContext) error {
 	llr := pr
 
 	// Time labels and its cursors labels overlap and use the same rect.
-	tr.Max.X = wlr.Min.X
+	tr.Max.X = plr.Min.X
 	tlr := tr
 
 	// Pad all the rects.
