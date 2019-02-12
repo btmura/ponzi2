@@ -257,7 +257,7 @@ func (v *View) Init(ctx context.Context) (cleanup func(), err error) {
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
-	win, err := glfw.CreateWindow(800, 600, appName, nil, nil)
+	win, err := glfw.CreateWindow(1024, 768, appName, nil, nil)
 	if err != nil {
 		return nil, err
 	}
