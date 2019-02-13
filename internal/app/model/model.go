@@ -29,6 +29,8 @@ type Stock struct {
 	DailyMovingAverageSeries200 *MovingAverageSeries
 	DailyStochasticSeries       *StochasticSeries
 	WeeklyStochasticSeries      *StochasticSeries
+	OneDayChart                 *OneDayChart
+	TwoYearChart                *MultiYearChart
 	LastUpdateTime              time.Time
 }
 
@@ -127,6 +129,23 @@ type Stochastic struct {
 
 	// D is some moving average of K.
 	D float32
+}
+
+// OneDayChart has chart data for one day.
+type OneDayChart struct {
+	TradingSessionSeries *TradingSessionSeries
+	LastUpdateTime       time.Time
+}
+
+// MultiYearChart has chart data for one or more years.
+type MultiYearChart struct {
+	DailyTradingSessionSeries *TradingSessionSeries
+	MovingAverageSeries25     *MovingAverageSeries
+	MovingAverageSeries50     *MovingAverageSeries
+	MovingAverageSeries200    *MovingAverageSeries
+	DailyStochasticSeries     *StochasticSeries
+	WeeklyStochasticSeries    *StochasticSeries
+	LastUpdateTime            time.Time
 }
 
 // StockUpdate is an update that can be applied to a single stock.
