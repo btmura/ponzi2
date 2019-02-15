@@ -242,8 +242,8 @@ func (m *Model) UpdateStock(u *StockUpdate) (st *Stock, updated bool) {
 
 // UpdateOneDayChart inserts or updates the one day chart for a stock if it is in the model.
 func (m *Model) UpdateOneDayChart(symbol string, chart *MinuteChart) error {
-	if symbol == "" {
-		return fmt.Errorf("missing symbol")
+	if err := validateSymbol(symbol); err != nil {
+		return err
 	}
 
 	if chart == nil {
@@ -255,8 +255,30 @@ func (m *Model) UpdateOneDayChart(symbol string, chart *MinuteChart) error {
 		return nil
 	}
 
-	st.OneDayChart = &MinuteChart{LastUpdateTime: now()}
+	st.OneDayChart = &MinuteChart{}
 	*st.OneDayChart = *chart
+	st.LastUpdateTime = now()
+	return nil
+}
+
+// UpdateOneYearChart inserts or updates the one year chart for a stock if it is in the model.
+func (m *Model) UpdateOneYearChart(symbol string, chart *DailyChart) error {
+	if err := validateSymbol(symbol); err != nil {
+		return err
+	}
+
+	if chart == nil {
+		return fmt.Errorf("missing chart")
+	}
+
+	st := m.stock(symbol)
+	if st == nil {
+		return nil
+	}
+
+	st.OneYearChart = &DailyChart{}
+	*st.OneYearChart = *chart
+	st.LastUpdateTime = now()
 	return nil
 }
 
@@ -271,5 +293,12 @@ func (m *Model) stock(symbol string) *Stock {
 		}
 	}
 
+	return nil
+}
+
+func validateSymbol(symbol string) error {
+	if symbol == "" {
+		return fmt.Errorf("empty symbol")
+	}
 	return nil
 }
