@@ -2,12 +2,15 @@
 package model
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/golang/glog"
 )
 
 // TODO(btmura): check arguments in functions and return errors
+
+// TODO(btmura): add validation functions for symbol, quote, etc.
 
 // now is a function to get the current time. Mocked out in tests to return a fixed time.
 var now = time.Now
@@ -235,6 +238,26 @@ func (m *Model) UpdateStock(u *StockUpdate) (st *Stock, updated bool) {
 	st.DailyMovingAverageSeries200 = u.DailyMovingAverageSeries200
 	st.LastUpdateTime = now()
 	return st, true
+}
+
+// UpdateOneDayChart inserts or updates the one day chart for a stock if it is in the model.
+func (m *Model) UpdateOneDayChart(symbol string, chart *MinuteChart) error {
+	if symbol == "" {
+		return fmt.Errorf("missing symbol")
+	}
+
+	if chart == nil {
+		return fmt.Errorf("missing chart")
+	}
+
+	st := m.stock(symbol)
+	if st == nil {
+		return nil
+	}
+
+	st.OneDayChart = &MinuteChart{LastUpdateTime: now()}
+	*st.OneDayChart = *chart
+	return nil
 }
 
 func (m *Model) stock(symbol string) *Stock {
