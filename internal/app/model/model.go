@@ -29,8 +29,8 @@ type Stock struct {
 	DailyMovingAverageSeries200 *MovingAverageSeries
 	DailyStochasticSeries       *StochasticSeries
 	WeeklyStochasticSeries      *StochasticSeries
-	OneDayChart                 *OneDayChart
-	TwoYearChart                *MultiYearChart
+	OneDayChart                 *MinuteChart
+	OneYearChart                *DailyChart
 	LastUpdateTime              time.Time
 }
 
@@ -131,14 +131,16 @@ type Stochastic struct {
 	D float32
 }
 
-// OneDayChart has chart data for one day.
-type OneDayChart struct {
+// MinuteChart is a chart with points typically of 15 minute granularity.
+type MinuteChart struct {
+	Quote                *Quote
 	TradingSessionSeries *TradingSessionSeries
 	LastUpdateTime       time.Time
 }
 
-// MultiYearChart has chart data for one or more years.
-type MultiYearChart struct {
+// DailyChart is chart with points of daily granularity.
+type DailyChart struct {
+	Quote                     *Quote
 	DailyTradingSessionSeries *TradingSessionSeries
 	MovingAverageSeries25     *MovingAverageSeries
 	MovingAverageSeries50     *MovingAverageSeries
