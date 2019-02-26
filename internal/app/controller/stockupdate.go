@@ -18,6 +18,38 @@ const (
 	d = 3
 )
 
+func modelMinuteChart(st *iex.Stock) (*model.MinuteChart, error) {
+	q, err := modelQuote(st.Quote)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO(btmura): remove duplication with modelTradingSessions
+	var ts []*model.TradingSession
+	for _, p := range st.Chart {
+		ts = append(ts, &model.TradingSession{
+			Date:          p.Date,
+			Open:          p.Open,
+			High:          p.High,
+			Low:           p.Low,
+			Close:         p.Close,
+			Volume:        p.Volume,
+			Change:        p.Change,
+			PercentChange: p.ChangePercent,
+		})
+	}
+	sort.Slice(ts, func(i, j int) bool {
+		return ts[i].Date.Before(ts[j].Date)
+	})
+
+	return &model.MinuteChart{
+		Quote: q,
+		TradingSessionSeries: &model.TradingSessionSeries{
+			TradingSessions: ts,
+		},
+	}, nil
+}
+
 func modelStockUpdate(rang iex.Range, st *iex.Stock) (*model.StockUpdate, error) {
 	q, err := modelQuote(st.Quote)
 	if err != nil {
