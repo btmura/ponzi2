@@ -11,6 +11,7 @@ import (
 
 	"gitlab.com/btmura/ponzi2/internal/app/gfx"
 	"gitlab.com/btmura/ponzi2/internal/app/model"
+	"gitlab.com/btmura/ponzi2/internal/util"
 )
 
 const (
@@ -158,7 +159,7 @@ func (ch *Chart) SetData(st *model.Stock) error {
 		ch.showMovingAverages = true
 		ch.showStochastics = true
 	default:
-		return fmt.Errorf("bad range: %v", st.Range)
+		return util.Errorf("bad range: %v", st.Range)
 	}
 
 	ts := st.DailyTradingSessionSeries
