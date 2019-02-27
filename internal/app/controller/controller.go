@@ -69,7 +69,6 @@ type Controller struct {
 
 type controllerStockUpdate struct {
 	symbol       string
-	update       *model.StockUpdate
 	oneDayChart  *model.MinuteChart
 	oneYearChart *model.DailyChart
 	updateErr    error
@@ -208,14 +207,34 @@ func (c *Controller) RunLoop() error {
 func (c *Controller) update(ctx context.Context) error {
 	for _, u := range c.takePendingStockUpdatesLocked() {
 		switch {
-		case u.update != nil:
-			st, updated := c.model.UpdateStock(u.update)
-			if !updated {
+		case u.updateErr != nil:
+			if ch, ok := c.symbolToChartMap[u.symbol]; ok {
+				ch.SetLoading(false)
+				ch.SetError(true)
+			}
+			if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
+				th.SetLoading(false)
+				th.SetError(true)
+			}
+
+		default:
+			switch {
+			case u.oneDayChart != nil:
+				if err := c.model.UpdateOneDayChart(u.symbol, u.oneDayChart); err != nil {
+					return err
+				}
+
+			case u.oneYearChart != nil:
+				if err := c.model.UpdateOneYearChart(u.symbol, u.oneYearChart); err != nil {
+					return err
+				}
+			}
+
+			st := c.model.Stock(u.symbol)
+			if st == nil {
 				continue
 			}
-			if st == c.model.CurrentStock {
-				c.title.SetData(st)
-			}
+
 			if ch, ok := c.symbolToChartMap[u.symbol]; ok {
 				ch.SetLoading(false)
 				if err := ch.SetData(st); err != nil {
@@ -227,26 +246,6 @@ func (c *Controller) update(ctx context.Context) error {
 				if err := th.SetData(st); err != nil {
 					return err
 				}
-			}
-
-		case u.oneDayChart != nil:
-			if err := c.model.UpdateOneDayChart(u.symbol, u.oneDayChart); err != nil {
-				return err
-			}
-
-		case u.oneYearChart != nil:
-			if err := c.model.UpdateOneYearChart(u.symbol, u.oneYearChart); err != nil {
-				return err
-			}
-
-		case u.updateErr != nil:
-			if ch, ok := c.symbolToChartMap[u.symbol]; ok {
-				ch.SetLoading(false)
-				ch.SetError(true)
-			}
-			if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
-				th.SetLoading(false)
-				th.SetError(true)
 			}
 		}
 	}
@@ -404,13 +403,6 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 		found := map[string]bool{}
 		for _, st := range stocks {
 			found[st.Symbol] = true
-
-			u, err := modelStockUpdate(r, st)
-			us = append(us, controllerStockUpdate{
-				symbol:    st.Symbol,
-				update:    u,
-				updateErr: err,
-			})
 
 			switch currentRange {
 			case model.OneDay:

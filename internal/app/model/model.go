@@ -153,19 +153,6 @@ type DailyChart struct {
 	LastUpdateTime         time.Time
 }
 
-// StockUpdate is an update that can be applied to a single stock.
-type StockUpdate struct {
-	Symbol                      string
-	Quote                       *Quote
-	Range                       Range
-	DailyTradingSessionSeries   *TradingSessionSeries
-	DailyMovingAverageSeries25  *MovingAverageSeries
-	DailyMovingAverageSeries50  *MovingAverageSeries
-	DailyMovingAverageSeries200 *MovingAverageSeries
-	DailyStochasticSeries       *StochasticSeries
-	WeeklyStochasticSeries      *StochasticSeries
-}
-
 // New creates a new Model.
 func New() *Model {
 	return &Model{}
@@ -182,7 +169,7 @@ func (m *Model) SetCurrentStock(symbol string) (st *Stock, changed bool) {
 		return m.CurrentStock, false
 	}
 
-	if m.CurrentStock = m.stock(symbol); m.CurrentStock == nil {
+	if m.CurrentStock = m.Stock(symbol); m.CurrentStock == nil {
 		m.CurrentStock = &Stock{Symbol: symbol}
 	}
 	return m.CurrentStock, true
@@ -201,7 +188,7 @@ func (m *Model) AddSavedStock(symbol string) (st *Stock, added bool) {
 		}
 	}
 
-	if st = m.stock(symbol); st == nil {
+	if st = m.Stock(symbol); st == nil {
 		st = &Stock{Symbol: symbol}
 	}
 	m.SavedStocks = append(m.SavedStocks, st)
@@ -223,23 +210,6 @@ func (m *Model) RemoveSavedStock(symbol string) (removed bool) {
 	return false
 }
 
-// UpdateStock updates a stock with the update if it is in the model.
-func (m *Model) UpdateStock(u *StockUpdate) (st *Stock, updated bool) {
-	if st = m.stock(u.Symbol); st == nil {
-		return nil, false
-	}
-	st.Quote = u.Quote
-	st.Range = u.Range
-	st.DailyTradingSessionSeries = u.DailyTradingSessionSeries
-	st.DailyStochasticSeries = u.DailyStochasticSeries
-	st.WeeklyStochasticSeries = u.WeeklyStochasticSeries
-	st.DailyMovingAverageSeries25 = u.DailyMovingAverageSeries25
-	st.DailyMovingAverageSeries50 = u.DailyMovingAverageSeries50
-	st.DailyMovingAverageSeries200 = u.DailyMovingAverageSeries200
-	st.LastUpdateTime = now()
-	return st, true
-}
-
 // UpdateOneDayChart inserts or updates the one day chart for a stock if it is in the model.
 func (m *Model) UpdateOneDayChart(symbol string, chart *MinuteChart) error {
 	if err := validateSymbol(symbol); err != nil {
@@ -250,7 +220,7 @@ func (m *Model) UpdateOneDayChart(symbol string, chart *MinuteChart) error {
 		return fmt.Errorf("missing chart")
 	}
 
-	st := m.stock(symbol)
+	st := m.Stock(symbol)
 	if st == nil {
 		return nil
 	}
@@ -271,7 +241,7 @@ func (m *Model) UpdateOneYearChart(symbol string, chart *DailyChart) error {
 		return fmt.Errorf("missing chart")
 	}
 
-	st := m.stock(symbol)
+	st := m.Stock(symbol)
 	if st == nil {
 		return nil
 	}
@@ -282,7 +252,7 @@ func (m *Model) UpdateOneYearChart(symbol string, chart *DailyChart) error {
 	return nil
 }
 
-func (m *Model) stock(symbol string) *Stock {
+func (m *Model) Stock(symbol string) *Stock {
 	if m.CurrentStock != nil && m.CurrentStock.Symbol == symbol {
 		return m.CurrentStock
 	}
