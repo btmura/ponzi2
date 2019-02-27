@@ -143,14 +143,14 @@ type MinuteChart struct {
 
 // DailyChart is chart with points of daily granularity.
 type DailyChart struct {
-	Quote                     *Quote
-	DailyTradingSessionSeries *TradingSessionSeries
-	MovingAverageSeries25     *MovingAverageSeries
-	MovingAverageSeries50     *MovingAverageSeries
-	MovingAverageSeries200    *MovingAverageSeries
-	DailyStochasticSeries     *StochasticSeries
-	WeeklyStochasticSeries    *StochasticSeries
-	LastUpdateTime            time.Time
+	Quote                  *Quote
+	TradingSessionSeries   *TradingSessionSeries
+	MovingAverageSeries25  *MovingAverageSeries
+	MovingAverageSeries50  *MovingAverageSeries
+	MovingAverageSeries200 *MovingAverageSeries
+	DailyStochasticSeries  *StochasticSeries
+	WeeklyStochasticSeries *StochasticSeries
+	LastUpdateTime         time.Time
 }
 
 // StockUpdate is an update that can be applied to a single stock.

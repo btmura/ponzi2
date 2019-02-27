@@ -68,9 +68,11 @@ type Controller struct {
 }
 
 type controllerStockUpdate struct {
-	symbol    string
-	update    *model.StockUpdate
-	updateErr error
+	symbol       string
+	update       *model.StockUpdate
+	oneDayChart  *model.MinuteChart
+	oneYearChart *model.DailyChart
+	updateErr    error
 }
 
 //go:generate stringer -type=controllerSignal
@@ -227,6 +229,16 @@ func (c *Controller) update(ctx context.Context) error {
 				}
 			}
 
+		case u.oneDayChart != nil:
+			if err := c.model.UpdateOneDayChart(u.symbol, u.oneDayChart); err != nil {
+				return err
+			}
+
+		case u.oneYearChart != nil:
+			if err := c.model.UpdateOneYearChart(u.symbol, u.oneYearChart); err != nil {
+				return err
+			}
+
 		case u.updateErr != nil:
 			if ch, ok := c.symbolToChartMap[u.symbol]; ok {
 				ch.SetLoading(false)
@@ -358,7 +370,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 		}
 	}
 
-	go func() {
+	go func(currentRange model.Range) {
 		handleErr := func(err error) {
 			var us []controllerStockUpdate
 			for _, s := range symbols {
@@ -392,12 +404,31 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 		found := map[string]bool{}
 		for _, st := range stocks {
 			found[st.Symbol] = true
+
 			u, err := modelStockUpdate(r, st)
 			us = append(us, controllerStockUpdate{
 				symbol:    st.Symbol,
 				update:    u,
 				updateErr: err,
 			})
+
+			switch currentRange {
+			case model.OneDay:
+				ch, err := modelMinuteChart(st)
+				us = append(us, controllerStockUpdate{
+					symbol:      st.Symbol,
+					oneDayChart: ch,
+					updateErr:   err,
+				})
+
+			case model.TwoYears:
+				ch, err := modelDailyChart(st)
+				us = append(us, controllerStockUpdate{
+					symbol:       st.Symbol,
+					oneYearChart: ch,
+					updateErr:    err,
+				})
+			}
 		}
 
 		for _, s := range symbols {
@@ -412,7 +443,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 
 		c.addPendingStockUpdatesLocked(us)
 		c.view.WakeLoop()
-	}()
+	}(c.currentRange)
 }
 
 // addPendingStockUpdatesLocked locks the pendingStockUpdates slice
