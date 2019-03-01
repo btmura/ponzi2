@@ -18,7 +18,7 @@ const (
 	d = 3
 )
 
-func modelMinuteChart(st *iex.Stock) (*model.MinuteChart, error) {
+func modelMinuteChart(st *iex.Stock) (*model.Chart, error) {
 	q, err := modelQuote(st.Quote)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func modelMinuteChart(st *iex.Stock) (*model.MinuteChart, error) {
 		return ts[i].Date.Before(ts[j].Date)
 	})
 
-	return &model.MinuteChart{
+	return &model.Chart{
 		Quote: q,
 		TradingSessionSeries: &model.TradingSessionSeries{
 			TradingSessions: ts,
@@ -50,7 +50,7 @@ func modelMinuteChart(st *iex.Stock) (*model.MinuteChart, error) {
 	}, nil
 }
 
-func modelDailyChart(st *iex.Stock) (*model.DailyChart, error) {
+func modelDailyChart(st *iex.Stock) (*model.Chart, error) {
 	q, err := modelQuote(st.Quote)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func modelDailyChart(st *iex.Stock) (*model.DailyChart, error) {
 		wsto = trimmedStochastics(wsto)
 	}
 
-	return &model.DailyChart{
+	return &model.Chart{
 		Quote:                  q,
 		TradingSessionSeries:   &model.TradingSessionSeries{TradingSessions: ds},
 		MovingAverageSeries25:  &model.MovingAverageSeries{MovingAverages: m25},

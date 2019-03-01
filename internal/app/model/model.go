@@ -32,8 +32,7 @@ type Stock struct {
 	DailyMovingAverageSeries200 *MovingAverageSeries
 	DailyStochasticSeries       *StochasticSeries
 	WeeklyStochasticSeries      *StochasticSeries
-	OneDayChart                 *MinuteChart
-	OneYearChart                *DailyChart
+	Charts                      map[Range]*Chart
 	LastUpdateTime              time.Time
 }
 
@@ -76,6 +75,18 @@ const (
 	OneDay
 	TwoYears
 )
+
+// Chart has multiple series of data to be graphed.
+type Chart struct {
+	Quote                  *Quote
+	TradingSessionSeries   *TradingSessionSeries
+	MovingAverageSeries25  *MovingAverageSeries
+	MovingAverageSeries50  *MovingAverageSeries
+	MovingAverageSeries200 *MovingAverageSeries
+	DailyStochasticSeries  *StochasticSeries
+	WeeklyStochasticSeries *StochasticSeries
+	LastUpdateTime         time.Time
+}
 
 // TradingSessionSeries is a time series of trading sessions.
 type TradingSessionSeries struct {
@@ -132,25 +143,6 @@ type Stochastic struct {
 
 	// D is some moving average of K.
 	D float32
-}
-
-// MinuteChart is a chart with points typically of 15 minute granularity.
-type MinuteChart struct {
-	Quote                *Quote
-	TradingSessionSeries *TradingSessionSeries
-	LastUpdateTime       time.Time
-}
-
-// DailyChart is chart with points of daily granularity.
-type DailyChart struct {
-	Quote                  *Quote
-	TradingSessionSeries   *TradingSessionSeries
-	MovingAverageSeries25  *MovingAverageSeries
-	MovingAverageSeries50  *MovingAverageSeries
-	MovingAverageSeries200 *MovingAverageSeries
-	DailyStochasticSeries  *StochasticSeries
-	WeeklyStochasticSeries *StochasticSeries
-	LastUpdateTime         time.Time
 }
 
 // New creates a new Model.
@@ -210,8 +202,8 @@ func (m *Model) RemoveSavedStock(symbol string) (removed bool) {
 	return false
 }
 
-// UpdateOneDayChart inserts or updates the one day chart for a stock if it is in the model.
-func (m *Model) UpdateOneDayChart(symbol string, chart *MinuteChart) error {
+// UpdateChart inserts or updates the chart for a stock if it is in the model.
+func (m *Model) UpdateChart(symbol string, viewRange Range, chart *Chart) error {
 	if err := validateSymbol(symbol); err != nil {
 		return err
 	}
@@ -225,33 +217,19 @@ func (m *Model) UpdateOneDayChart(symbol string, chart *MinuteChart) error {
 		return nil
 	}
 
-	st.OneDayChart = &MinuteChart{}
-	*st.OneDayChart = *chart
-	st.LastUpdateTime = now()
+	ch := &Chart{}
+	*ch = *chart
+	ch.LastUpdateTime = now()
+
+	if st.Charts == nil {
+		st.Charts = map[Range]*Chart{}
+	}
+	st.Charts[viewRange] = ch
+
 	return nil
 }
 
-// UpdateOneYearChart inserts or updates the one year chart for a stock if it is in the model.
-func (m *Model) UpdateOneYearChart(symbol string, chart *DailyChart) error {
-	if err := validateSymbol(symbol); err != nil {
-		return err
-	}
-
-	if chart == nil {
-		return fmt.Errorf("missing chart")
-	}
-
-	st := m.Stock(symbol)
-	if st == nil {
-		return nil
-	}
-
-	st.OneYearChart = &DailyChart{}
-	*st.OneYearChart = *chart
-	st.LastUpdateTime = now()
-	return nil
-}
-
+// Stock returns the stock for the symbol if it is in the model. Nil otherwise.
 func (m *Model) Stock(symbol string) *Stock {
 	if m.CurrentStock != nil && m.CurrentStock.Symbol == symbol {
 		return m.CurrentStock

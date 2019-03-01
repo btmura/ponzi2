@@ -14,6 +14,7 @@ import (
 	"gitlab.com/btmura/ponzi2/internal/app/model"
 	"gitlab.com/btmura/ponzi2/internal/app/view"
 	"gitlab.com/btmura/ponzi2/internal/stock/iex"
+	"gitlab.com/btmura/ponzi2/internal/util"
 )
 
 // loc is the timezone to use when parsing dates.
@@ -68,10 +69,10 @@ type Controller struct {
 }
 
 type controllerStockUpdate struct {
-	symbol       string
-	oneDayChart  *model.MinuteChart
-	oneYearChart *model.DailyChart
-	updateErr    error
+	symbol    string
+	viewRange model.Range
+	chart     *model.Chart
+	updateErr error
 }
 
 //go:generate stringer -type=controllerSignal
@@ -217,17 +218,9 @@ func (c *Controller) update(ctx context.Context) error {
 				th.SetError(true)
 			}
 
-		default:
-			switch {
-			case u.oneDayChart != nil:
-				if err := c.model.UpdateOneDayChart(u.symbol, u.oneDayChart); err != nil {
-					return err
-				}
-
-			case u.oneYearChart != nil:
-				if err := c.model.UpdateOneYearChart(u.symbol, u.oneYearChart); err != nil {
-					return err
-				}
+		case u.chart != nil:
+			if err := c.model.UpdateChart(u.symbol, u.viewRange, u.chart); err != nil {
+				return err
 			}
 
 			st := c.model.Stock(u.symbol)
@@ -247,6 +240,9 @@ func (c *Controller) update(ctx context.Context) error {
 					return err
 				}
 			}
+
+		default:
+			return util.Errorf("bad update: %v", u)
 		}
 	}
 
@@ -369,12 +365,13 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 		}
 	}
 
-	go func(currentRange model.Range) {
+	go func(viewRange model.Range) {
 		handleErr := func(err error) {
 			var us []controllerStockUpdate
 			for _, s := range symbols {
 				us = append(us, controllerStockUpdate{
 					symbol:    s,
+					viewRange: viewRange,
 					updateErr: err,
 				})
 			}
@@ -382,7 +379,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 			c.view.WakeLoop()
 		}
 
-		r, err := iexRange(c.currentRange)
+		r, err := dataRange(viewRange)
 		if err != nil {
 			handleErr(err)
 			return
@@ -404,21 +401,23 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 		for _, st := range stocks {
 			found[st.Symbol] = true
 
-			switch currentRange {
+			switch viewRange {
 			case model.OneDay:
 				ch, err := modelMinuteChart(st)
 				us = append(us, controllerStockUpdate{
-					symbol:      st.Symbol,
-					oneDayChart: ch,
-					updateErr:   err,
+					symbol:    st.Symbol,
+					viewRange: viewRange,
+					chart:     ch,
+					updateErr: err,
 				})
 
 			case model.TwoYears:
 				ch, err := modelDailyChart(st)
 				us = append(us, controllerStockUpdate{
-					symbol:       st.Symbol,
-					oneYearChart: ch,
-					updateErr:    err,
+					symbol:    st.Symbol,
+					viewRange: viewRange,
+					chart:     ch,
+					updateErr: err,
 				})
 			}
 		}
@@ -429,6 +428,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 			}
 			us = append(us, controllerStockUpdate{
 				symbol:    s,
+				viewRange: viewRange,
 				updateErr: fmt.Errorf("no stock data for %q", s),
 			})
 		}
@@ -503,7 +503,7 @@ func (c *Controller) saveConfig() {
 	}()
 }
 
-func iexRange(rang model.Range) (iex.Range, error) {
+func dataRange(rang model.Range) (iex.Range, error) {
 	switch rang {
 	case model.OneDay:
 		return iex.OneDay, nil

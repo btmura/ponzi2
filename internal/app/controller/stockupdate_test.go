@@ -14,7 +14,7 @@ func TestModelMinuteChart(t *testing.T) {
 	for _, tt := range []struct {
 		desc    string
 		input   *iex.Stock
-		want    *model.MinuteChart
+		want    *model.Chart
 		wantErr error
 	}{
 		{
@@ -31,7 +31,7 @@ func TestModelMinuteChart(t *testing.T) {
 					},
 				},
 			},
-			want: &model.MinuteChart{
+			want: &model.Chart{
 				Quote: &model.Quote{CompanyName: "Apple Inc."},
 				TradingSessionSeries: &model.TradingSessionSeries{
 					TradingSessions: []*model.TradingSession{
