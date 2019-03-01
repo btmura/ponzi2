@@ -1,12 +1,12 @@
 package controller
 
 import (
-	"fmt"
 	"sort"
 	"time"
 
 	"gitlab.com/btmura/ponzi2/internal/app/model"
 	"gitlab.com/btmura/ponzi2/internal/stock/iex"
+	"gitlab.com/btmura/ponzi2/internal/util"
 )
 
 // maxDataWeeks is maximum number of weeks of data to retain.
@@ -18,7 +18,7 @@ const (
 	d = 3
 )
 
-func modelMinuteChart(st *iex.Stock) (*model.Chart, error) {
+func modelOneDayChart(st *iex.Stock) (*model.Chart, error) {
 	q, err := modelQuote(st.Quote)
 	if err != nil {
 		return nil, err
@@ -44,13 +44,14 @@ func modelMinuteChart(st *iex.Stock) (*model.Chart, error) {
 
 	return &model.Chart{
 		Quote: q,
+		Range: model.OneDay,
 		TradingSessionSeries: &model.TradingSessionSeries{
 			TradingSessions: ts,
 		},
 	}, nil
 }
 
-func modelDailyChart(st *iex.Stock) (*model.Chart, error) {
+func modelOneYearChart(st *iex.Stock) (*model.Chart, error) {
 	q, err := modelQuote(st.Quote)
 	if err != nil {
 		return nil, err
@@ -106,6 +107,7 @@ func modelDailyChart(st *iex.Stock) (*model.Chart, error) {
 
 	return &model.Chart{
 		Quote:                  q,
+		Range:                  model.OneYear,
 		TradingSessionSeries:   &model.TradingSessionSeries{TradingSessions: ds},
 		MovingAverageSeries25:  &model.MovingAverageSeries{MovingAverages: m25},
 		MovingAverageSeries50:  &model.MovingAverageSeries{MovingAverages: m50},
@@ -117,7 +119,7 @@ func modelDailyChart(st *iex.Stock) (*model.Chart, error) {
 
 func modelQuote(q *iex.Quote) (*model.Quote, error) {
 	if q == nil {
-		return nil, nil
+		return nil, util.Error("missing quote")
 	}
 
 	src, err := modelSource(q.LatestSource)
@@ -154,7 +156,7 @@ func modelSource(src iex.Source) (model.Source, error) {
 	case iex.PreviousClose:
 		return model.PreviousClose, nil
 	default:
-		return 0, fmt.Errorf("unrecognized iex source: %v", src)
+		return 0, util.Errorf("unrecognized iex source: %v", src)
 	}
 }
 
@@ -165,9 +167,9 @@ func modelRange(r iex.Range) (model.Range, error) {
 	case iex.OneDay:
 		return model.OneDay, nil
 	case iex.TwoYears:
-		return model.TwoYears, nil
+		return model.OneYear, nil
 	default:
-		return 0, fmt.Errorf("unrecognized iex range: %v", r)
+		return 0, util.Errorf("unrecognized iex range: %v", r)
 	}
 }
 

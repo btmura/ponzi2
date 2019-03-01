@@ -155,7 +155,7 @@ func (ch *Chart) SetData(st *model.Stock) error {
 	case model.OneDay:
 		ch.showMovingAverages = false
 		ch.showStochastics = false
-	case model.TwoYears:
+	case model.OneYear:
 		ch.showMovingAverages = true
 		ch.showStochastics = true
 	default:

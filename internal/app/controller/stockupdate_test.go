@@ -10,7 +10,7 @@ import (
 	"gitlab.com/btmura/ponzi2/internal/stock/iex"
 )
 
-func TestModelMinuteChart(t *testing.T) {
+func TestModelOneDayChart(t *testing.T) {
 	for _, tt := range []struct {
 		desc    string
 		input   *iex.Stock
@@ -33,6 +33,7 @@ func TestModelMinuteChart(t *testing.T) {
 			},
 			want: &model.Chart{
 				Quote: &model.Quote{CompanyName: "Apple Inc."},
+				Range: model.OneDay,
 				TradingSessionSeries: &model.TradingSessionSeries{
 					TradingSessions: []*model.TradingSession{
 						{
@@ -48,7 +49,7 @@ func TestModelMinuteChart(t *testing.T) {
 			},
 		},
 	} {
-		got, gotErr := modelMinuteChart(tt.input)
+		got, gotErr := modelOneDayChart(tt.input)
 
 		if diff := cmp.Diff(tt.want, got); diff != "" {
 			t.Errorf("diff (-want, +got)\n%s", diff)

@@ -101,7 +101,7 @@ func (ch *chartTimeLabels) RenderCursorLabels(mainRect, labelRect image.Rectangl
 	switch ch.dataRange {
 	case model.OneDay:
 		layout = "03:04"
-	case model.TwoYears:
+	case model.OneYear:
 		layout = "1/2/06"
 	default:
 		return fmt.Errorf("bad range: %v", ch.dataRange)
@@ -135,7 +135,7 @@ func chartTimeLabelText(r model.Range, t time.Time) (string, error) {
 	switch r {
 	case model.OneDay:
 		return t.Format("3:04"), nil
-	case model.TwoYears:
+	case model.OneYear:
 		return t.Format("Jan"), nil
 	default:
 		return "", fmt.Errorf("bad range: %v", r)
@@ -160,7 +160,7 @@ func makeChartTimeLabels(r model.Range, ts []*model.TradingSession) ([]chartTime
 				continue
 			}
 
-		case model.TwoYears:
+		case model.OneYear:
 			pm := ts[i-1].Date.Month()
 			m := ts[i].Date.Month()
 			if pm == m {

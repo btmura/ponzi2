@@ -3,7 +3,6 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -22,7 +21,7 @@ var loc = mustLoadLocation("America/New_York")
 
 // zoomRanges are the ranges from most zoomed out to most zoomed in.
 var zoomRanges = []model.Range{
-	model.TwoYears,
+	model.OneYear,
 	model.OneDay,
 }
 
@@ -70,7 +69,6 @@ type Controller struct {
 
 type controllerStockUpdate struct {
 	symbol    string
-	viewRange model.Range
 	chart     *model.Chart
 	updateErr error
 }
@@ -87,7 +85,7 @@ const (
 func New(iexClient *iex.Client) *Controller {
 	return &Controller{
 		model:                 model.New(),
-		currentRange:          model.TwoYears,
+		currentRange:          model.OneYear,
 		iexClient:             iexClient,
 		pendingMutex:          &sync.Mutex{},
 		view:                  view.New(),
@@ -219,7 +217,7 @@ func (c *Controller) update(ctx context.Context) error {
 			}
 
 		case u.chart != nil:
-			if err := c.model.UpdateChart(u.symbol, u.viewRange, u.chart); err != nil {
+			if err := c.model.UpdateChart(u.symbol, u.chart); err != nil {
 				return err
 			}
 
@@ -371,7 +369,6 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 			for _, s := range symbols {
 				us = append(us, controllerStockUpdate{
 					symbol:    s,
-					viewRange: viewRange,
 					updateErr: err,
 				})
 			}
@@ -403,19 +400,17 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 
 			switch viewRange {
 			case model.OneDay:
-				ch, err := modelMinuteChart(st)
+				ch, err := modelOneDayChart(st)
 				us = append(us, controllerStockUpdate{
 					symbol:    st.Symbol,
-					viewRange: viewRange,
 					chart:     ch,
 					updateErr: err,
 				})
 
-			case model.TwoYears:
-				ch, err := modelDailyChart(st)
+			case model.OneYear:
+				ch, err := modelOneYearChart(st)
 				us = append(us, controllerStockUpdate{
 					symbol:    st.Symbol,
-					viewRange: viewRange,
 					chart:     ch,
 					updateErr: err,
 				})
@@ -428,8 +423,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 			}
 			us = append(us, controllerStockUpdate{
 				symbol:    s,
-				viewRange: viewRange,
-				updateErr: fmt.Errorf("no stock data for %q", s),
+				updateErr: util.Errorf("no stock data for %q", s),
 			})
 		}
 
@@ -503,14 +497,15 @@ func (c *Controller) saveConfig() {
 	}()
 }
 
-func dataRange(rang model.Range) (iex.Range, error) {
-	switch rang {
+func dataRange(viewRange model.Range) (iex.Range, error) {
+	switch viewRange {
 	case model.OneDay:
 		return iex.OneDay, nil
-	case model.TwoYears:
+	case model.OneYear:
+		// Need additional data for weekly stochastics.
 		return iex.TwoYears, nil
 	default:
-		return 0, fmt.Errorf("bad range: %v", rang)
+		return 0, util.Errorf("bad range: %v", viewRange)
 	}
 }
 

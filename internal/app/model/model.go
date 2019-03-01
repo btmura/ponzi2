@@ -2,10 +2,10 @@
 package model
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/golang/glog"
+	"gitlab.com/btmura/ponzi2/internal/util"
 )
 
 // TODO(btmura): check arguments in functions and return errors
@@ -32,7 +32,7 @@ type Stock struct {
 	DailyMovingAverageSeries200 *MovingAverageSeries
 	DailyStochasticSeries       *StochasticSeries
 	WeeklyStochasticSeries      *StochasticSeries
-	Charts                      map[Range]*Chart
+	Charts                      []*Chart
 	LastUpdateTime              time.Time
 }
 
@@ -73,12 +73,13 @@ type Range int
 const (
 	RangeUnspecified Range = iota
 	OneDay
-	TwoYears
+	OneYear
 )
 
 // Chart has multiple series of data to be graphed.
 type Chart struct {
 	Quote                  *Quote
+	Range                  Range
 	TradingSessionSeries   *TradingSessionSeries
 	MovingAverageSeries25  *MovingAverageSeries
 	MovingAverageSeries50  *MovingAverageSeries
@@ -203,13 +204,13 @@ func (m *Model) RemoveSavedStock(symbol string) (removed bool) {
 }
 
 // UpdateChart inserts or updates the chart for a stock if it is in the model.
-func (m *Model) UpdateChart(symbol string, viewRange Range, chart *Chart) error {
+func (m *Model) UpdateChart(symbol string, chart *Chart) error {
 	if err := validateSymbol(symbol); err != nil {
 		return err
 	}
 
-	if chart == nil {
-		return fmt.Errorf("missing chart")
+	if err := validateChart(chart); err != nil {
+		return err
 	}
 
 	st := m.Stock(symbol)
@@ -221,11 +222,14 @@ func (m *Model) UpdateChart(symbol string, viewRange Range, chart *Chart) error 
 	*ch = *chart
 	ch.LastUpdateTime = now()
 
-	if st.Charts == nil {
-		st.Charts = map[Range]*Chart{}
+	for i := range st.Charts {
+		if st.Charts[i].Range == ch.Range {
+			st.Charts[i] = ch
+			return nil
+		}
 	}
-	st.Charts[viewRange] = ch
 
+	st.Charts = append(st.Charts, ch)
 	return nil
 }
 
@@ -246,7 +250,19 @@ func (m *Model) Stock(symbol string) *Stock {
 
 func validateSymbol(symbol string) error {
 	if symbol == "" {
-		return fmt.Errorf("empty symbol")
+		return util.Error("empty symbol")
 	}
+	return nil
+}
+
+func validateChart(ch *Chart) error {
+	if ch == nil {
+		return util.Error("missing chart")
+	}
+
+	if ch.Range == RangeUnspecified {
+		return util.Errorf("missing range")
+	}
+
 	return nil
 }

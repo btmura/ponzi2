@@ -54,7 +54,7 @@ func weekLineValues(r model.Range, ts []*model.TradingSession) ([]float32, error
 				continue
 			}
 
-		case model.TwoYears:
+		case model.OneYear:
 			_, prev := ts[i-1].Date.ISOWeek()
 			_, curr := ts[i].Date.ISOWeek()
 			if prev == curr {
