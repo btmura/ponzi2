@@ -30,9 +30,6 @@ type Controller struct {
 	// model is the data that the Controller connects to the View.
 	model *model.Model
 
-	// currentRange is the currently selected data range.
-	currentRange model.Range
-
 	// iexClient fetches stock data to update the model.
 	iexClient *iex.Client
 
@@ -56,6 +53,12 @@ type Controller struct {
 
 	// symbolToChartThumbMap maps symbol to ChartThumbnail.
 	symbolToChartThumbMap map[string]*view.ChartThumb
+
+	// chartRange is the current data range to use for Charts.
+	chartRange model.Range
+
+	// chartThumbRange is the current data range to use for ChartThumbnails.
+	chartThumbRange model.Range
 
 	// enableSavingConfigs enables saving config changes.
 	enableSavingConfigs bool
@@ -85,13 +88,14 @@ const (
 func New(iexClient *iex.Client) *Controller {
 	return &Controller{
 		model:                 model.New(),
-		currentRange:          model.OneYear,
 		iexClient:             iexClient,
 		pendingMutex:          &sync.Mutex{},
 		view:                  view.New(),
 		title:                 view.NewTitle(),
 		symbolToChartMap:      map[string]*view.Chart{},
 		symbolToChartThumbMap: map[string]*view.ChartThumb{},
+		chartRange:            model.OneYear,
+		chartThumbRange:       model.OneYear,
 		pendingConfigSaves:    make(chan *config.Config),
 		doneSavingConfigs:     make(chan bool),
 	}
@@ -163,7 +167,7 @@ func (c *Controller) RunLoop() error {
 		// Find the current zoom range.
 		i := 0
 		for j := range zoomRanges {
-			if zoomRanges[j] == c.currentRange {
+			if zoomRanges[j] == c.chartRange {
 				i = j
 			}
 		}
@@ -181,13 +185,13 @@ func (c *Controller) RunLoop() error {
 		}
 
 		// Ignore if no change in zoom.
-		if c.currentRange == zoomRanges[i] {
+		if c.chartRange == zoomRanges[i] {
 			return
 		}
 
 		// Set zoom and refresh all stocks.
-		c.currentRange = zoomRanges[i]
-		glog.V(2).Infof("current range: %v", c.currentRange)
+		c.chartRange = zoomRanges[i]
+		glog.V(2).Infof("current range: %v", c.chartRange)
 		c.refreshStock(ctx, c.allSymbols())
 	})
 
@@ -221,19 +225,26 @@ func (c *Controller) update(ctx context.Context) error {
 				return err
 			}
 
-			data, err := c.chartData(u.symbol)
-			if err != nil {
-				return err
-			}
-
 			if ch, ok := c.symbolToChartMap[u.symbol]; ok {
 				ch.SetLoading(false)
+
+				data, err := c.chartData(u.symbol, c.chartRange)
+				if err != nil {
+					return err
+				}
+
 				if err := ch.SetData(data); err != nil {
 					return err
 				}
 			}
 			if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
 				th.SetLoading(false)
+
+				data, err := c.chartData(u.symbol, c.chartThumbRange)
+				if err != nil {
+					return err
+				}
+
 				if err := th.SetData(data); err != nil {
 					return err
 				}
@@ -254,7 +265,7 @@ func (c *Controller) update(ctx context.Context) error {
 	return nil
 }
 
-func (c *Controller) chartData(symbol string) (*view.ChartData, error) {
+func (c *Controller) chartData(symbol string, dataRange model.Range) (*view.ChartData, error) {
 	if symbol == "" {
 		return nil, util.Error("missing symbol")
 	}
@@ -267,7 +278,7 @@ func (c *Controller) chartData(symbol string) (*view.ChartData, error) {
 	}
 
 	for _, ch := range st.Charts {
-		if ch.Range == c.currentRange {
+		if ch.Range == dataRange {
 			data.Quote = ch.Quote
 			data.Chart = ch
 			return data, nil
@@ -296,7 +307,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 	ch := view.NewChart()
 	c.symbolToChartMap[symbol] = ch
 
-	data, err := c.chartData(symbol)
+	data, err := c.chartData(symbol, c.chartRange)
 	if err != nil {
 		return err
 	}
@@ -337,7 +348,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 	th := view.NewChartThumb()
 	c.symbolToChartThumbMap[symbol] = th
 
-	data, err := c.chartData(symbol)
+	data, err := c.chartData(symbol, c.chartThumbRange)
 	if err != nil {
 		return err
 	}
@@ -470,7 +481,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 
 		c.addPendingStockUpdatesLocked(us)
 		c.view.WakeLoop()
-	}(c.currentRange)
+	}(c.chartRange)
 }
 
 // addPendingStockUpdatesLocked locks the pendingStockUpdates slice

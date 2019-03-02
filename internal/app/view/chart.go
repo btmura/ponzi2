@@ -375,7 +375,9 @@ func (ch *Chart) Render(vc viewContext) error {
 	}
 
 	// Renders trackline legend. To display inline comment out the two lines below and uncomment the last line.
-	ch.renderMATrackLineLegend(pr, llr, vc.MousePos)
+	if ch.showMovingAverages {
+		ch.renderMATrackLineLegend(pr, llr, vc.MousePos)
+	}
 	ch.renderCandleTrackLineLegend(pr, llr, vc.MousePos)
 	//ch.renderTrackLineLegendInline(pr, llr, vc.MousePos) // Stocks that have higher prices tend to overflow the chart on default window size
 
