@@ -4,9 +4,9 @@ package model
 
 import "strconv"
 
-const _Range_name = "RangeUnspecifiedOneDayTwoYears"
+const _Range_name = "RangeUnspecifiedOneDayOneYear"
 
-var _Range_index = [...]uint8{0, 16, 22, 30}
+var _Range_index = [...]uint8{0, 16, 22, 29}
 
 func (i Range) String() string {
 	if i < 0 || i >= Range(len(_Range_index)-1) {

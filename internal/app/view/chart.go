@@ -132,26 +132,47 @@ func NewChart() *Chart {
 	}
 }
 
-// SetLoading sets the Chart's loading state.
+// SetLoading toggles the Chart's loading indicator.
 func (ch *Chart) SetLoading(loading bool) {
 	ch.loading = loading
 	ch.header.SetLoading(loading)
 }
 
-// SetError sets the Chart's error flag.
+// SetError toggles the Chart's error indicator.
 func (ch *Chart) SetError(error bool) {
 	ch.hasError = error
 	ch.header.SetError(error)
 }
 
-// SetData sets the Chart's stock.
-func (ch *Chart) SetData(st *model.Stock) error {
-	if !ch.hasStockUpdated && !st.LastUpdateTime.IsZero() {
+// ChartData has the data to be shown on the chart.
+type ChartData struct {
+	Symbol string
+	Quote  *model.Quote
+	Chart  *model.Chart
+}
+
+// SetData sets the data to be shown on the chart.
+func (ch *Chart) SetData(data *ChartData) error {
+	if data == nil {
+		return util.Error("missing data")
+	}
+
+	if !ch.hasStockUpdated && data.Chart != nil {
 		ch.fadeIn.Start()
 	}
-	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
+	ch.hasStockUpdated = data.Chart != nil
 
-	switch st.Range {
+	if err := ch.header.SetData(data); err != nil {
+		return err
+	}
+
+	dc := data.Chart
+
+	if dc == nil {
+		return nil
+	}
+
+	switch dc.Range {
 	case model.OneDay:
 		ch.showMovingAverages = false
 		ch.showStochastics = false
@@ -159,37 +180,35 @@ func (ch *Chart) SetData(st *model.Stock) error {
 		ch.showMovingAverages = true
 		ch.showStochastics = true
 	default:
-		return util.Errorf("bad range: %v", st.Range)
+		return util.Errorf("bad range: %v", dc.Range)
 	}
 
-	ts := st.DailyTradingSessionSeries
+	ts := dc.TradingSessionSeries
 
-	ch.header.SetData(st)
-
-	if err := ch.timeLines.SetData(st.Range, ts); err != nil {
+	if err := ch.timeLines.SetData(dc.Range, ts); err != nil {
 		return err
 	}
 
 	ch.prices.SetData(ts)
 
 	if ch.showMovingAverages {
-		ch.movingAverage25.SetData(ts, st.DailyMovingAverageSeries25)
-		ch.movingAverage50.SetData(ts, st.DailyMovingAverageSeries50)
-		ch.movingAverage200.SetData(ts, st.DailyMovingAverageSeries200)
+		ch.movingAverage25.SetData(ts, dc.MovingAverageSeries25)
+		ch.movingAverage50.SetData(ts, dc.MovingAverageSeries50)
+		ch.movingAverage200.SetData(ts, dc.MovingAverageSeries200)
 	}
 
 	ch.volume.SetData(ts)
 
 	if ch.showStochastics {
-		ch.dailyStochastics.SetData(st.DailyStochasticSeries)
-		ch.weeklyStochastics.SetData(st.WeeklyStochasticSeries)
+		ch.dailyStochastics.SetData(dc.DailyStochasticSeries)
+		ch.weeklyStochastics.SetData(dc.WeeklyStochasticSeries)
 	}
 
-	if err := ch.timeLabels.SetData(st.Range, ts); err != nil {
+	if err := ch.timeLabels.SetData(dc.Range, ts); err != nil {
 		return err
 	}
 
-	ch.setTrackLineData(ts, st.DailyMovingAverageSeries25, st.DailyMovingAverageSeries50, st.DailyMovingAverageSeries200)
+	ch.setTrackLineData(ts, dc.MovingAverageSeries25, dc.MovingAverageSeries50, dc.MovingAverageSeries200)
 
 	return nil
 }

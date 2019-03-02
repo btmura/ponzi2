@@ -6,6 +6,7 @@ import (
 
 	"gitlab.com/btmura/ponzi2/internal/app/gfx"
 	"gitlab.com/btmura/ponzi2/internal/app/model"
+	"gitlab.com/btmura/ponzi2/internal/util"
 )
 
 var (
@@ -102,6 +103,7 @@ func newChartHeader(args *chartHeaderArgs) *chartHeader {
 	}
 }
 
+// SetLoading toggles the Chart's loading indicator.
 func (ch *chartHeader) SetLoading(loading bool) {
 	switch {
 	// Not Loading -> Loading
@@ -115,21 +117,28 @@ func (ch *chartHeader) SetLoading(loading bool) {
 	ch.loading = loading
 }
 
+// SetError toggles the Chart's error indicator.
 func (ch *chartHeader) SetError(error bool) {
 	ch.hasError = error
 }
 
-func (ch *chartHeader) SetData(st *model.Stock) {
-	if !ch.hasStockUpdated && !st.LastUpdateTime.IsZero() {
+// SetData sets the data to be shown on the chart.
+func (ch *chartHeader) SetData(data *ChartData) error {
+	if data == nil {
+		return util.Error("missing data")
+	}
+
+	if !ch.hasStockUpdated && data.Chart != nil {
 		ch.fadeIn.Start()
 	}
-	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
+	ch.hasStockUpdated = data.Chart != nil
 
-	ch.symbol = st.Symbol
-	ch.quoteText = ch.quotePrinter(st.Quote)
+	ch.symbol = data.Symbol
+
+	ch.quoteText = ch.quotePrinter(data.Quote)
 
 	var c float32
-	if q := st.Quote; q != nil {
+	if q := data.Quote; q != nil {
 		c = q.ChangePercent
 	}
 
@@ -143,6 +152,8 @@ func (ch *chartHeader) SetData(st *model.Stock) {
 	default:
 		ch.quoteColor = white
 	}
+
+	return nil
 }
 
 func (ch *chartHeader) Update() (dirty bool) {

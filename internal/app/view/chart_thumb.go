@@ -5,6 +5,7 @@ import (
 
 	"gitlab.com/btmura/ponzi2/internal/app/gfx"
 	"gitlab.com/btmura/ponzi2/internal/app/model"
+	"gitlab.com/btmura/ponzi2/internal/util"
 )
 
 const (
@@ -67,33 +68,45 @@ func NewChartThumb() *ChartThumb {
 	}
 }
 
-// SetLoading sets the ChartThumb's loading state.
+// SetLoading toggles the Chart's loading indicator.
 func (ch *ChartThumb) SetLoading(loading bool) {
 	ch.loading = loading
 	ch.header.SetLoading(loading)
 }
 
-// SetError sets the ChartThumb's error flag.
+// SetError toggles the Chart's error indicator.
 func (ch *ChartThumb) SetError(error bool) {
 	ch.hasError = error
 	ch.header.SetError(error)
 }
 
-// SetData sets the ChartThumb's stock.
-func (ch *ChartThumb) SetData(st *model.Stock) error {
-	if !ch.hasStockUpdated && !st.LastUpdateTime.IsZero() {
+// SetData sets the data to be shown on the chart.
+func (ch *ChartThumb) SetData(data *ChartData) error {
+	if data == nil {
+		return util.Error("missing data")
+	}
+
+	if !ch.hasStockUpdated && data.Chart != nil {
 		ch.fadeIn.Start()
 	}
-	ch.hasStockUpdated = !st.LastUpdateTime.IsZero()
+	ch.hasStockUpdated = data.Chart != nil
 
-	ch.header.SetData(st)
-
-	if err := ch.timeLines.SetData(st.Range, st.DailyTradingSessionSeries); err != nil {
+	if err := ch.header.SetData(data); err != nil {
 		return err
 	}
 
-	ch.dailyStochastics.SetData(st.DailyStochasticSeries)
-	ch.weeklyStochastics.SetData(st.WeeklyStochasticSeries)
+	dc := data.Chart
+
+	if dc == nil {
+		return nil
+	}
+
+	if err := ch.timeLines.SetData(dc.Range, dc.TradingSessionSeries); err != nil {
+		return err
+	}
+
+	ch.dailyStochastics.SetData(dc.DailyStochasticSeries)
+	ch.weeklyStochastics.SetData(dc.WeeklyStochasticSeries)
 
 	return nil
 }

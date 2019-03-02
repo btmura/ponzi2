@@ -3,7 +3,7 @@ package view
 import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 
-	"gitlab.com/btmura/ponzi2/internal/app/model"
+	"gitlab.com/btmura/ponzi2/internal/util"
 )
 
 // Title renders the the title bar.
@@ -17,13 +17,21 @@ func NewTitle() *Title {
 }
 
 // SetData sets the Title's stock.
-func (t *Title) SetData(st *model.Stock) {
-	q := st.Quote
-	if q == nil {
-		t.text = join(st.Symbol, "-", appName)
-		return
+func (t *Title) SetData(data *ChartData) error {
+	if data == nil {
+		return util.Error("missing data")
 	}
-	t.text = join(st.Symbol, paren(q.CompanyName), priceStatus(st.Quote), updateStatus(st.Quote), "-", appName)
+
+	q := data.Quote
+
+	if q == nil {
+		t.text = join(data.Symbol, "-", appName)
+		return nil
+	}
+
+	t.text = join(data.Symbol, paren(q.CompanyName), priceStatus(q), updateStatus(q), "-", appName)
+
+	return nil
 }
 
 // Render renders the Title.

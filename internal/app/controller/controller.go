@@ -221,20 +221,20 @@ func (c *Controller) update(ctx context.Context) error {
 				return err
 			}
 
-			st := c.model.Stock(u.symbol)
-			if st == nil {
-				continue
+			data, err := c.chartData(u.symbol)
+			if err != nil {
+				return err
 			}
 
 			if ch, ok := c.symbolToChartMap[u.symbol]; ok {
 				ch.SetLoading(false)
-				if err := ch.SetData(st); err != nil {
+				if err := ch.SetData(data); err != nil {
 					return err
 				}
 			}
 			if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
 				th.SetLoading(false)
-				if err := th.SetData(st); err != nil {
+				if err := th.SetData(data); err != nil {
 					return err
 				}
 			}
@@ -254,15 +254,38 @@ func (c *Controller) update(ctx context.Context) error {
 	return nil
 }
 
-func (c *Controller) setChart(ctx context.Context, symbol string) {
+func (c *Controller) chartData(symbol string) (*view.ChartData, error) {
 	if symbol == "" {
-		return
+		return nil, util.Error("missing symbol")
 	}
 
-	st, changed := c.model.SetCurrentStock(symbol)
+	data := &view.ChartData{Symbol: symbol}
+
+	st := c.model.Stock(symbol)
+	if st == nil {
+		return data, nil
+	}
+
+	for _, ch := range st.Charts {
+		if ch.Range == c.currentRange {
+			data.Quote = ch.Quote
+			data.Chart = ch
+			return data, nil
+		}
+	}
+
+	return data, nil
+}
+
+func (c *Controller) setChart(ctx context.Context, symbol string) error {
+	if symbol == "" {
+		return util.Error("missing symbol")
+	}
+
+	_, changed := c.model.SetCurrentStock(symbol)
 	if !changed {
 		c.refreshStock(ctx, []string{symbol})
-		return
+		return nil
 	}
 
 	for symbol, ch := range c.symbolToChartMap {
@@ -270,13 +293,21 @@ func (c *Controller) setChart(ctx context.Context, symbol string) {
 		ch.Close()
 	}
 
-	c.title.SetData(st)
-
 	ch := view.NewChart()
 	c.symbolToChartMap[symbol] = ch
 
-	// TODO(btmura): check for error
-	ch.SetData(st)
+	data, err := c.chartData(symbol)
+	if err != nil {
+		return err
+	}
+
+	if err := c.title.SetData(data); err != nil {
+		return err
+	}
+
+	if err := ch.SetData(data); err != nil {
+		return err
+	}
 
 	ch.SetRefreshButtonClickCallback(func() {
 		c.refreshStock(ctx, c.allSymbols())
@@ -288,24 +319,32 @@ func (c *Controller) setChart(ctx context.Context, symbol string) {
 	c.view.SetChart(ch)
 	c.refreshStock(ctx, []string{symbol})
 	c.saveConfig()
+
+	return nil
 }
 
-func (c *Controller) addChartThumb(ctx context.Context, symbol string) {
+func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 	if symbol == "" {
-		return
+		return util.Error("missing symbol")
 	}
 
-	st, added := c.model.AddSavedStock(symbol)
+	_, added := c.model.AddSavedStock(symbol)
 	if !added {
 		c.refreshStock(ctx, []string{symbol})
-		return
+		return nil
 	}
 
 	th := view.NewChartThumb()
 	c.symbolToChartThumbMap[symbol] = th
 
-	// TODO(btmura): check for error
-	th.SetData(st)
+	data, err := c.chartData(symbol)
+	if err != nil {
+		return err
+	}
+
+	if err := th.SetData(data); err != nil {
+		return err
+	}
 
 	th.SetRemoveButtonClickCallback(func() {
 		c.removeChartThumb(symbol)
@@ -317,6 +356,8 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) {
 	c.view.AddChartThumb(th)
 	c.refreshStock(ctx, []string{symbol})
 	c.saveConfig()
+
+	return nil
 }
 
 func (c *Controller) removeChartThumb(symbol string) {

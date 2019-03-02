@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+
 	"gitlab.com/btmura/ponzi2/internal/util"
 )
 
@@ -21,60 +22,14 @@ type Model struct {
 	SavedStocks  []*Stock
 }
 
-// Stock models a single stock's data.
+// Stock has a stock's symbol and charts.
 type Stock struct {
-	Symbol                      string
-	Quote                       *Quote
-	Range                       Range
-	DailyTradingSessionSeries   *TradingSessionSeries
-	DailyMovingAverageSeries25  *MovingAverageSeries
-	DailyMovingAverageSeries50  *MovingAverageSeries
-	DailyMovingAverageSeries200 *MovingAverageSeries
-	DailyStochasticSeries       *StochasticSeries
-	WeeklyStochasticSeries      *StochasticSeries
-	Charts                      []*Chart
-	LastUpdateTime              time.Time
+	// Symbol is the stock's non-empty symbol.
+	Symbol string
+
+	// Charts are the stock's unsorted charts. Nil initially.
+	Charts []*Chart
 }
-
-// Quote is the latest quote for the stock.
-type Quote struct {
-	CompanyName   string
-	LatestPrice   float32
-	LatestSource  Source
-	LatestTime    time.Time
-	LatestUpdate  time.Time
-	LatestVolume  int
-	Open          float32
-	High          float32
-	Low           float32
-	Close         float32
-	Change        float32
-	ChangePercent float32
-}
-
-// Source is the quote data source.
-type Source int
-
-// Source values.
-//go:generate stringer -type=Source
-const (
-	SourceUnspecified Source = iota
-	IEXRealTimePrice
-	FifteenMinuteDelayedPrice
-	Close
-	PreviousClose
-)
-
-// Range is the range to specify in the request.
-type Range int
-
-// Range values.
-//go:generate stringer -type=Range
-const (
-	RangeUnspecified Range = iota
-	OneDay
-	OneYear
-)
 
 // Chart has multiple series of data to be graphed.
 type Chart struct {
@@ -145,6 +100,46 @@ type Stochastic struct {
 	// D is some moving average of K.
 	D float32
 }
+
+// Quote is the latest quote for the stock.
+type Quote struct {
+	CompanyName   string
+	LatestPrice   float32
+	LatestSource  Source
+	LatestTime    time.Time
+	LatestUpdate  time.Time
+	LatestVolume  int
+	Open          float32
+	High          float32
+	Low           float32
+	Close         float32
+	Change        float32
+	ChangePercent float32
+}
+
+// Source is the quote data source.
+type Source int
+
+// Source values.
+//go:generate stringer -type=Source
+const (
+	SourceUnspecified Source = iota
+	IEXRealTimePrice
+	FifteenMinuteDelayedPrice
+	Close
+	PreviousClose
+)
+
+// Range is the range to specify in the request.
+type Range int
+
+// Range values.
+//go:generate stringer -type=Range
+const (
+	RangeUnspecified Range = iota
+	OneDay
+	OneYear
+)
 
 // New creates a new Model.
 func New() *Model {
