@@ -109,7 +109,9 @@ func (c *Controller) RunLoop() error {
 
 	for _, cs := range cfg.GetStocks() {
 		if s := cs.GetSymbol(); s != "" {
-			c.addChartThumb(ctx, s)
+			if err := c.addChartThumb(ctx, s); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -210,8 +212,12 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 		return status.Error("missing symbol")
 	}
 
-	_, changed := c.model.SetCurrentStock(symbol)
-	if !changed {
+	changed, err := c.model.SetCurrentStock(symbol)
+	if err != nil {
+		return err
+	}
+
+	if changed {
 		return c.refreshStocks(ctx, c.currentStockRefreshRequests())
 	}
 
@@ -242,7 +248,9 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 		}
 	})
 	ch.SetAddButtonClickCallback(func() {
-		c.addChartThumb(ctx, symbol)
+		if err := c.addChartThumb(ctx, symbol); err != nil {
+			glog.Fatalf("TODO(btmura): remove log fatal, addChartThumb: %v", err)
+		}
 	})
 
 	c.view.SetChart(ch)
@@ -261,8 +269,12 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 		return status.Error("missing symbol")
 	}
 
-	_, added := c.model.AddSavedStock(symbol)
-	if !added {
+	added, err := c.model.AddSavedStock(symbol)
+	if err != nil {
+		return err
+	}
+
+	if added {
 		return c.refreshStocks(ctx, []stockRefreshRequest{{
 			symbols:   []string{symbol},
 			dataRange: c.chartThumbRange,
@@ -282,10 +294,14 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 	}
 
 	th.SetRemoveButtonClickCallback(func() {
-		c.removeChartThumb(symbol)
+		if err := c.removeChartThumb(symbol); err != nil {
+			glog.Fatalf("TODO(btmura): remove log fatal, removeChartThumb: %v", err)
+		}
 	})
 	th.SetThumbClickCallback(func() {
-		c.setChart(ctx, symbol)
+		if err := c.setChart(ctx, symbol); err != nil {
+			glog.Fatalf("TODO(btmura): remove log fatal, setChart: %v", err)
+		}
 	})
 
 	c.view.AddChartThumb(th)
@@ -302,13 +318,18 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 	return nil
 }
 
-func (c *Controller) removeChartThumb(symbol string) {
+func (c *Controller) removeChartThumb(symbol string) error {
 	if symbol == "" {
-		return
+		return nil
 	}
 
-	if !c.model.RemoveSavedStock(symbol) {
-		return
+	removed, err := c.model.RemoveSavedStock(symbol)
+	if err != nil {
+		return err
+	}
+
+	if !removed {
+		return nil
 	}
 
 	th := c.symbolToChartThumbMap[symbol]
@@ -317,6 +338,8 @@ func (c *Controller) removeChartThumb(symbol string) {
 
 	c.view.RemoveChartThumb(th)
 	c.saveConfig()
+
+	return nil
 }
 
 func (c *Controller) chartData(symbol string, dataRange model.Range) (*view.ChartData, error) {

@@ -4,8 +4,6 @@ package model
 import (
 	"time"
 
-	"github.com/golang/glog"
-
 	"gitlab.com/btmura/ponzi2/internal/status"
 )
 
@@ -148,54 +146,57 @@ func New() *Model {
 
 // SetCurrentStock sets the current stock by symbol.
 // It returns the corresponding Stock and true if the current stock changed.
-func (m *Model) SetCurrentStock(symbol string) (st *Stock, changed bool) {
-	if symbol == "" {
-		glog.V(2).Info("cannot set current stock to empty symbol")
+func (m *Model) SetCurrentStock(symbol string) (changed bool, err error) {
+	if err := validateSymbol(symbol); err != nil {
+		return false, err
 	}
 
 	if m.CurrentStock != nil && m.CurrentStock.Symbol == symbol {
-		return m.CurrentStock, false
+		return false, nil
 	}
 
 	if m.CurrentStock = m.Stock(symbol); m.CurrentStock == nil {
 		m.CurrentStock = &Stock{Symbol: symbol}
 	}
-	return m.CurrentStock, true
+
+	return true, nil
 }
 
 // AddSavedStock adds the stock by symbol.
 // It returns the corresponding Stock and true if the stock was newly added.
-func (m *Model) AddSavedStock(symbol string) (st *Stock, added bool) {
-	if symbol == "" {
-		glog.V(2).Info("cannot add empty symbol")
+func (m *Model) AddSavedStock(symbol string) (added bool, err error) {
+	if err := validateSymbol(symbol); err != nil {
+		return false, err
 	}
 
 	for _, st := range m.SavedStocks {
 		if st.Symbol == symbol {
-			return st, false
+			return false, nil
 		}
 	}
 
-	if st = m.Stock(symbol); st == nil {
+	st := m.Stock(symbol)
+	if st == nil {
 		st = &Stock{Symbol: symbol}
 	}
 	m.SavedStocks = append(m.SavedStocks, st)
-	return st, true
+
+	return true, nil
 }
 
 // RemoveSavedStock removes the stock by symbol and returns true if removed.
-func (m *Model) RemoveSavedStock(symbol string) (removed bool) {
-	if symbol == "" {
-		glog.V(2).Info("cannot remove empty symbol")
+func (m *Model) RemoveSavedStock(symbol string) (removed bool, err error) {
+	if err := validateSymbol(symbol); err != nil {
+		return false, err
 	}
 
 	for i, st := range m.SavedStocks {
 		if st.Symbol == symbol {
 			m.SavedStocks = append(m.SavedStocks[:i], m.SavedStocks[i+1:]...)
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
 
 // UpdateChart inserts or updates the chart for a stock if it is in the model.
