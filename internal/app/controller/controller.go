@@ -189,10 +189,9 @@ func (c *Controller) RunLoop() error {
 			return
 		}
 
-		// Set zoom and refresh all stocks.
+		// Set zoom and refresh the current stock.
 		c.chartRange = zoomRanges[i]
-		glog.V(2).Infof("current range: %v", c.chartRange)
-		c.refreshStock(ctx, c.allSymbols())
+		c.refreshStock(ctx, c.currentSymbol(), c.chartRange)
 	})
 
 	defer func() {
@@ -258,7 +257,7 @@ func (c *Controller) update(ctx context.Context) error {
 	for _, s := range c.takePendingSignalsLocked() {
 		switch s {
 		case signalRefreshCurrentStock:
-			c.refreshStock(ctx, c.allSymbols())
+			c.refreshStock(ctx, c.currentSymbol(), c.chartRange)
 		}
 	}
 
@@ -295,7 +294,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 
 	_, changed := c.model.SetCurrentStock(symbol)
 	if !changed {
-		c.refreshStock(ctx, []string{symbol})
+		c.refreshStock(ctx, []string{symbol}, c.chartRange)
 		return nil
 	}
 
@@ -321,14 +320,14 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 	}
 
 	ch.SetRefreshButtonClickCallback(func() {
-		c.refreshStock(ctx, c.allSymbols())
+		c.refreshStock(ctx, c.allSymbols(), c.chartRange)
 	})
 	ch.SetAddButtonClickCallback(func() {
 		c.addChartThumb(ctx, symbol)
 	})
 
 	c.view.SetChart(ch)
-	c.refreshStock(ctx, []string{symbol})
+	c.refreshStock(ctx, []string{symbol}, c.chartRange)
 	c.saveConfig()
 
 	return nil
@@ -341,7 +340,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 
 	_, added := c.model.AddSavedStock(symbol)
 	if !added {
-		c.refreshStock(ctx, []string{symbol})
+		c.refreshStock(ctx, []string{symbol}, c.chartThumbRange)
 		return nil
 	}
 
@@ -365,7 +364,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 	})
 
 	c.view.AddChartThumb(th)
-	c.refreshStock(ctx, []string{symbol})
+	c.refreshStock(ctx, []string{symbol}, c.chartThumbRange)
 	c.saveConfig()
 
 	return nil
@@ -388,6 +387,14 @@ func (c *Controller) removeChartThumb(symbol string) {
 	c.saveConfig()
 }
 
+func (c *Controller) currentSymbol() []string {
+	var symbols []string
+	if st := c.model.CurrentStock; st != nil {
+		symbols = append(symbols, st.Symbol)
+	}
+	return symbols
+}
+
 func (c *Controller) allSymbols() []string {
 	var symbols []string
 	if st := c.model.CurrentStock; st != nil {
@@ -399,7 +406,7 @@ func (c *Controller) allSymbols() []string {
 	return symbols
 }
 
-func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
+func (c *Controller) refreshStock(ctx context.Context, symbols []string, dataRange model.Range) {
 	if len(symbols) == 0 {
 		return
 	}
@@ -415,7 +422,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 		}
 	}
 
-	go func(viewRange model.Range) {
+	go func() {
 		handleErr := func(err error) {
 			var us []controllerStockUpdate
 			for _, s := range symbols {
@@ -428,9 +435,15 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 			c.view.WakeLoop()
 		}
 
-		r, err := dataRange(viewRange)
-		if err != nil {
-			handleErr(err)
+		var r iex.Range
+
+		switch dataRange {
+		case model.OneDay:
+			r = iex.OneDay
+		case model.OneYear:
+			r = iex.TwoYears // Need additional data for weekly stochastics.
+		default:
+			handleErr(util.Errorf("bad range: %v", dataRange))
 			return
 		}
 
@@ -450,7 +463,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 		for _, st := range stocks {
 			found[st.Symbol] = true
 
-			switch viewRange {
+			switch dataRange {
 			case model.OneDay:
 				ch, err := modelOneDayChart(st)
 				us = append(us, controllerStockUpdate{
@@ -481,7 +494,7 @@ func (c *Controller) refreshStock(ctx context.Context, symbols []string) {
 
 		c.addPendingStockUpdatesLocked(us)
 		c.view.WakeLoop()
-	}(c.chartRange)
+	}()
 }
 
 // addPendingStockUpdatesLocked locks the pendingStockUpdates slice
@@ -547,18 +560,6 @@ func (c *Controller) saveConfig() {
 	go func() {
 		c.pendingConfigSaves <- cfg
 	}()
-}
-
-func dataRange(viewRange model.Range) (iex.Range, error) {
-	switch viewRange {
-	case model.OneDay:
-		return iex.OneDay, nil
-	case model.OneYear:
-		// Need additional data for weekly stochastics.
-		return iex.TwoYears, nil
-	default:
-		return 0, util.Errorf("bad range: %v", viewRange)
-	}
 }
 
 func mustLoadLocation(name string) *time.Location {
