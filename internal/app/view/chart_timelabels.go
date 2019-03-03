@@ -1,12 +1,12 @@
 package view
 
 import (
-	"fmt"
 	"image"
 	"math"
 	"time"
 
 	"gitlab.com/btmura/ponzi2/internal/app/model"
+	"gitlab.com/btmura/ponzi2/internal/status"
 )
 
 // longTime is a time that takes the most display width for measuring purposes.
@@ -104,7 +104,7 @@ func (ch *chartTimeLabels) RenderCursorLabels(mainRect, labelRect image.Rectangl
 	case model.OneYear:
 		layout = "1/2/06"
 	default:
-		return fmt.Errorf("bad range: %v", ch.dataRange)
+		return status.Errorf("bad range: %v", ch.dataRange)
 	}
 
 	text := ch.dates[i].Format(layout)
@@ -138,7 +138,7 @@ func chartTimeLabelText(r model.Range, t time.Time) (string, error) {
 	case model.OneYear:
 		return t.Format("Jan"), nil
 	default:
-		return "", fmt.Errorf("bad range: %v", r)
+		return "", status.Errorf("bad range: %v", r)
 	}
 }
 
@@ -168,7 +168,7 @@ func makeChartTimeLabels(r model.Range, ts []*model.TradingSession) ([]chartTime
 			}
 
 		default:
-			return nil, fmt.Errorf("bad range: %v", r)
+			return nil, status.Errorf("bad range: %v", r)
 		}
 
 		// Generate the label text and its position.

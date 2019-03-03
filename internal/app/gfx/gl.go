@@ -1,13 +1,13 @@
 package gfx
 
 import (
-	"fmt"
 	"image"
 	_ "image/png" // Needed to decode PNG images.
-
 	"strings"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
+
+	"gitlab.com/btmura/ponzi2/internal/status"
 )
 
 func glProgram(vertexShaderSrc, fragmentShaderSrc string) (uint32, error) {
@@ -31,16 +31,16 @@ func glProgram(vertexShaderSrc, fragmentShaderSrc string) (uint32, error) {
 
 	gl.LinkProgram(p)
 
-	var status int32
-	gl.GetProgramiv(p, gl.LINK_STATUS, &status)
-	if status == gl.FALSE {
+	var stat int32
+	gl.GetProgramiv(p, gl.LINK_STATUS, &stat)
+	if stat == gl.FALSE {
 		var logLen int32
 		gl.GetProgramiv(p, gl.INFO_LOG_LENGTH, &logLen)
 
 		log := strings.Repeat("\x00", int(logLen)+1)
 		gl.GetProgramInfoLog(p, logLen, nil, gl.Str(log))
 
-		return 0, fmt.Errorf("failed to create program: %q", log)
+		return 0, status.Errorf("failed to create program: %q", log)
 	}
 
 	return p, nil
@@ -53,16 +53,16 @@ func glShader(shaderSource string, shaderType uint32) (uint32, error) {
 	gl.ShaderSource(sh, 1, src, nil)
 	gl.CompileShader(sh)
 
-	var status int32
-	gl.GetShaderiv(sh, gl.COMPILE_STATUS, &status)
-	if status == gl.FALSE {
+	var stat int32
+	gl.GetShaderiv(sh, gl.COMPILE_STATUS, &stat)
+	if stat == gl.FALSE {
 		var logLen int32
 		gl.GetShaderiv(sh, gl.INFO_LOG_LENGTH, &logLen)
 
 		log := strings.Repeat("\x00", int(logLen)+1)
 		gl.GetShaderInfoLog(sh, logLen, nil, gl.Str(log))
 
-		return 0, fmt.Errorf("failed to compile shader:\n\ntype: %d\n\nsource: %q\n\nlog: %q", shaderType, shaderSource, log)
+		return 0, status.Errorf("failed to compile shader:\n\ntype: %d\n\nsource: %q\n\nlog: %q", shaderType, shaderSource, log)
 	}
 
 	return sh, nil

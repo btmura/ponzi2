@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/golang/glog"
+
+	"gitlab.com/btmura/ponzi2/internal/status"
 )
 
 // PLY has the elements parsed from a file in the Polygon File Format (PLY).
@@ -70,21 +72,21 @@ processHeader:
 			ed = &elementDescriptor{}
 			h.elementDescriptors = append(h.elementDescriptors, ed)
 			if _, err := fmt.Sscanf(line, "element %s %d", &ed.name, &ed.instances); err != nil {
-				return nil, fmt.Errorf("ply: parsing element failed: %s", line)
+				return nil, status.Errorf("ply: parsing element failed: %s", line)
 			}
 
 		case strings.HasPrefix(line, "property list "): // Keep above scalar property match below.
 			pd := &propertyDescriptor{list: true}
 			ed.propertyDescriptors = append(ed.propertyDescriptors, pd)
 			if _, err := fmt.Sscanf(line, "property list %s %s %s", &pd.listSizeType, &pd.valueType, &pd.name); err != nil {
-				return nil, fmt.Errorf("ply: parsing property list failed: %s", line)
+				return nil, status.Errorf("ply: parsing property list failed: %s", line)
 			}
 
 		case strings.HasPrefix(line, "property "):
 			pd := &propertyDescriptor{}
 			ed.propertyDescriptors = append(ed.propertyDescriptors, pd)
 			if _, err := fmt.Sscanf(line, "property %s %s", &pd.valueType, &pd.name); err != nil {
-				return nil, fmt.Errorf("ply: parsing property failed: %s", line)
+				return nil, status.Errorf("ply: parsing property failed: %s", line)
 			}
 
 		case line == "end_header":
@@ -96,7 +98,7 @@ processHeader:
 	for _, ed := range h.elementDescriptors {
 		for i := 0; i < ed.instances; i++ {
 			if !sc.Scan() {
-				return nil, fmt.Errorf("ply: expected %d rows for element %s", ed.instances, ed.name)
+				return nil, status.Errorf("ply: expected %d rows for element %s", ed.instances, ed.name)
 			}
 
 			e := &Element{}
@@ -135,7 +137,7 @@ processHeader:
 						e.Uint32Lists[pd.name] = us
 
 					default:
-						return nil, fmt.Errorf("ply: unsupported list value type: %s", pd.valueType)
+						return nil, status.Errorf("ply: unsupported list value type: %s", pd.valueType)
 					}
 				} else {
 					switch pd.valueType {
@@ -173,7 +175,7 @@ processHeader:
 						e.Uint8s[pd.name] = uint8(u)
 
 					default:
-						return nil, fmt.Errorf("ply: unsupported scalar value type: %s", pd.valueType)
+						return nil, status.Errorf("ply: unsupported scalar value type: %s", pd.valueType)
 					}
 				}
 				pi++

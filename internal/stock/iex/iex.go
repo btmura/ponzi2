@@ -17,6 +17,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"gitlab.com/btmura/ponzi2/internal/status"
 )
 
 // Internal package variables used for the implementation.
@@ -122,7 +124,7 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 	case TwoYears:
 		rangeStr = "2y"
 	default:
-		return nil, fmt.Errorf("iex: unsupported range for chart req: %s", req.Range)
+		return nil, status.Errorf("iex: unsupported range for chart req: %s", req.Range)
 	}
 
 	if req.ChartLast < 0 {
@@ -178,14 +180,14 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 	if c.dumpAPIResponses {
 		rr, err := dumpResponse(fmt.Sprintf("iex-%s-%v.txt", strings.Join(req.Symbols, "-"), rangeStr), r)
 		if err != nil {
-			return nil, fmt.Errorf("iex: failed to dump resp: %v", err)
+			return nil, status.Errorf("iex: failed to dump resp: %v", err)
 		}
 		r = rr
 	}
 
 	stocks, err := decodeStocks(r)
 	if err != nil {
-		return nil, fmt.Errorf("iex: failed to decode resp: %v", err)
+		return nil, status.Errorf("iex: failed to decode resp: %v", err)
 	}
 	return stocks, nil
 }
@@ -226,7 +228,7 @@ func decodeStocks(r io.Reader) ([]*Stock, error) {
 	var m map[string]stock
 	dec := json.NewDecoder(r)
 	if err := dec.Decode(&m); err != nil {
-		return nil, fmt.Errorf("json decode failed: %v", err)
+		return nil, status.Errorf("json decode failed: %v", err)
 	}
 
 	var chs []*Stock
@@ -264,7 +266,7 @@ func decodeStocks(r io.Reader) ([]*Stock, error) {
 		for _, pt := range d.Chart {
 			date, err := chartDate(pt.Date, pt.Minute)
 			if err != nil {
-				return nil, fmt.Errorf("parsing date (%s) failed: %v", pt.Date, err)
+				return nil, status.Errorf("parsing date (%s) failed: %v", pt.Date, err)
 			}
 
 			ch.Chart = append(ch.Chart, &ChartPoint{
@@ -298,7 +300,7 @@ func quoteSource(latestSource string) (Source, error) {
 	case "Previous close":
 		return PreviousClose, nil
 	default:
-		return SourceUnspecified, fmt.Errorf("unrecognized source: %q", latestSource)
+		return SourceUnspecified, status.Errorf("unrecognized source: %q", latestSource)
 	}
 }
 
@@ -319,7 +321,7 @@ func quoteDate(latestSource Source, latestTime string) (time.Time, error) {
 		return time.ParseInLocation("January 2, 2006", latestTime, loc)
 
 	default:
-		return time.Time{}, fmt.Errorf("couldn't parse quote date with source(%q) and time(%q)", latestSource, latestTime)
+		return time.Time{}, status.Errorf("couldn't parse quote date with source(%q) and time(%q)", latestSource, latestTime)
 	}
 }
 
