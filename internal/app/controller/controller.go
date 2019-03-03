@@ -12,8 +12,8 @@ import (
 	"gitlab.com/btmura/ponzi2/internal/app/config"
 	"gitlab.com/btmura/ponzi2/internal/app/model"
 	"gitlab.com/btmura/ponzi2/internal/app/view"
-	"gitlab.com/btmura/ponzi2/internal/stock/iex"
 	"gitlab.com/btmura/ponzi2/internal/status"
+	"gitlab.com/btmura/ponzi2/internal/stock/iex"
 )
 
 // loc is the timezone to use when parsing dates.
@@ -34,10 +34,10 @@ type Controller struct {
 	iexClient *iex.Client
 
 	// pendingStockUpdates are the updates to be processed by the main thread.
-	pendingStockUpdates []controllerStockUpdate
+	pendingStockUpdates []stockUpdate
 
 	// pendingSignals are the signals to be processed by the main thread.
-	pendingSignals []controllerSignal
+	pendingSignals []signal
 
 	// pendingMutex guards pendingUpdates and pendingSignals.
 	pendingMutex *sync.Mutex
@@ -138,7 +138,7 @@ func (c *Controller) RunLoop() error {
 				continue
 			}
 
-			c.addPendingSignalsLocked([]controllerSignal{signalRefreshCurrentStock})
+			c.addPendingSignalsLocked([]signal{refreshCurrentStock})
 			c.view.WakeLoop()
 		}
 	}()

@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"gitlab.com/btmura/ponzi2/internal/app/model"
-	"gitlab.com/btmura/ponzi2/internal/stock/iex"
 	"gitlab.com/btmura/ponzi2/internal/status"
+	"gitlab.com/btmura/ponzi2/internal/stock/iex"
 )
 
-type controllerStockUpdate struct {
+type stockUpdate struct {
 	symbol    string
 	chart     *model.Chart
 	updateErr error
@@ -16,7 +16,7 @@ type controllerStockUpdate struct {
 
 // addPendingStockUpdatesLocked locks the pendingStockUpdates slice
 // and adds the new stock updates to the existing slice.
-func (c *Controller) addPendingStockUpdatesLocked(us []controllerStockUpdate) {
+func (c *Controller) addPendingStockUpdatesLocked(us []stockUpdate) {
 	c.pendingMutex.Lock()
 	defer c.pendingMutex.Unlock()
 	c.pendingStockUpdates = append(c.pendingStockUpdates, us...)
@@ -24,11 +24,11 @@ func (c *Controller) addPendingStockUpdatesLocked(us []controllerStockUpdate) {
 
 // takePendingStockUpdatesLocked locks the pendingStockUpdates slice,
 // returns a copy of the updates, and empties the existing updates.
-func (c *Controller) takePendingStockUpdatesLocked() []controllerStockUpdate {
+func (c *Controller) takePendingStockUpdatesLocked() []stockUpdate {
 	c.pendingMutex.Lock()
 	defer c.pendingMutex.Unlock()
 
-	var us []controllerStockUpdate
+	var us []stockUpdate
 	for _, u := range c.pendingStockUpdates {
 		us = append(us, u)
 	}
@@ -102,9 +102,9 @@ func (c *Controller) refreshStocks(ctx context.Context, reqs []stockRefreshReque
 
 		go func(symbols []string, dataRange model.Range) {
 			handleErr := func(err error) {
-				var us []controllerStockUpdate
+				var us []stockUpdate
 				for _, s := range symbols {
-					us = append(us, controllerStockUpdate{
+					us = append(us, stockUpdate{
 						symbol:    s,
 						updateErr: err,
 					})
@@ -135,7 +135,7 @@ func (c *Controller) refreshStocks(ctx context.Context, reqs []stockRefreshReque
 				return
 			}
 
-			var us []controllerStockUpdate
+			var us []stockUpdate
 
 			found := map[string]bool{}
 			for _, st := range stocks {
@@ -144,7 +144,7 @@ func (c *Controller) refreshStocks(ctx context.Context, reqs []stockRefreshReque
 				switch dataRange {
 				case model.OneDay:
 					ch, err := modelOneDayChart(st)
-					us = append(us, controllerStockUpdate{
+					us = append(us, stockUpdate{
 						symbol:    st.Symbol,
 						chart:     ch,
 						updateErr: err,
@@ -152,7 +152,7 @@ func (c *Controller) refreshStocks(ctx context.Context, reqs []stockRefreshReque
 
 				case model.OneYear:
 					ch, err := modelOneYearChart(st)
-					us = append(us, controllerStockUpdate{
+					us = append(us, stockUpdate{
 						symbol:    st.Symbol,
 						chart:     ch,
 						updateErr: err,
@@ -164,7 +164,7 @@ func (c *Controller) refreshStocks(ctx context.Context, reqs []stockRefreshReque
 				if found[s] {
 					continue
 				}
-				us = append(us, controllerStockUpdate{
+				us = append(us, stockUpdate{
 					symbol:    s,
 					updateErr: status.Errorf("no stock data for %q", s),
 				})
