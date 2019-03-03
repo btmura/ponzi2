@@ -70,20 +70,6 @@ type Controller struct {
 	doneSavingConfigs chan bool
 }
 
-type controllerStockUpdate struct {
-	symbol    string
-	chart     *model.Chart
-	updateErr error
-}
-
-//go:generate stringer -type=controllerSignal
-type controllerSignal int
-
-const (
-	signalUnspecified controllerSignal = iota
-	signalRefreshCurrentStock
-)
-
 // New creates a new Controller.
 func New(iexClient *iex.Client) *Controller {
 	return &Controller{
@@ -207,84 +193,15 @@ func (c *Controller) RunLoop() error {
 }
 
 func (c *Controller) update(ctx context.Context) error {
-	for _, u := range c.takePendingStockUpdatesLocked() {
-		switch {
-		case u.updateErr != nil:
-			if ch, ok := c.symbolToChartMap[u.symbol]; ok {
-				ch.SetLoading(false)
-				ch.SetError(true)
-			}
-			if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
-				th.SetLoading(false)
-				th.SetError(true)
-			}
-
-		case u.chart != nil:
-			if err := c.model.UpdateChart(u.symbol, u.chart); err != nil {
-				return err
-			}
-
-			if ch, ok := c.symbolToChartMap[u.symbol]; ok {
-				ch.SetLoading(false)
-
-				data, err := c.chartData(u.symbol, c.chartRange)
-				if err != nil {
-					return err
-				}
-
-				if err := ch.SetData(data); err != nil {
-					return err
-				}
-			}
-			if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
-				th.SetLoading(false)
-
-				data, err := c.chartData(u.symbol, c.chartThumbRange)
-				if err != nil {
-					return err
-				}
-
-				if err := th.SetData(data); err != nil {
-					return err
-				}
-			}
-
-		default:
-			return util.Errorf("bad update: %v", u)
-		}
+	if err := c.processStockUpdates(ctx); err != nil {
+		return err
 	}
 
-	for _, s := range c.takePendingSignalsLocked() {
-		switch s {
-		case signalRefreshCurrentStock:
-			c.refreshStock(ctx, c.currentSymbol(), c.chartRange)
-		}
+	if err := c.processPendingSignals(ctx); err != nil {
+		return err
 	}
 
 	return nil
-}
-
-func (c *Controller) chartData(symbol string, dataRange model.Range) (*view.ChartData, error) {
-	if symbol == "" {
-		return nil, util.Error("missing symbol")
-	}
-
-	data := &view.ChartData{Symbol: symbol}
-
-	st := c.model.Stock(symbol)
-	if st == nil {
-		return data, nil
-	}
-
-	for _, ch := range st.Charts {
-		if ch.Range == dataRange {
-			data.Quote = ch.Quote
-			data.Chart = ch
-			return data, nil
-		}
-	}
-
-	return data, nil
 }
 
 func (c *Controller) setChart(ctx context.Context, symbol string) error {
@@ -387,158 +304,27 @@ func (c *Controller) removeChartThumb(symbol string) {
 	c.saveConfig()
 }
 
-func (c *Controller) currentSymbol() []string {
-	var symbols []string
-	if st := c.model.CurrentStock; st != nil {
-		symbols = append(symbols, st.Symbol)
-	}
-	return symbols
-}
-
-func (c *Controller) allSymbols() []string {
-	var symbols []string
-	if st := c.model.CurrentStock; st != nil {
-		symbols = append(symbols, st.Symbol)
-	}
-	for _, st := range c.model.SavedStocks {
-		symbols = append(symbols, st.Symbol)
-	}
-	return symbols
-}
-
-func (c *Controller) refreshStock(ctx context.Context, symbols []string, dataRange model.Range) {
-	if len(symbols) == 0 {
-		return
+func (c *Controller) chartData(symbol string, dataRange model.Range) (*view.ChartData, error) {
+	if symbol == "" {
+		return nil, util.Error("missing symbol")
 	}
 
-	for _, s := range symbols {
-		if ch, ok := c.symbolToChartMap[s]; ok {
-			ch.SetLoading(true)
-			ch.SetError(false)
-		}
-		if th, ok := c.symbolToChartThumbMap[s]; ok {
-			th.SetLoading(true)
-			th.SetError(false)
+	data := &view.ChartData{Symbol: symbol}
+
+	st := c.model.Stock(symbol)
+	if st == nil {
+		return data, nil
+	}
+
+	for _, ch := range st.Charts {
+		if ch.Range == dataRange {
+			data.Quote = ch.Quote
+			data.Chart = ch
+			return data, nil
 		}
 	}
 
-	go func() {
-		handleErr := func(err error) {
-			var us []controllerStockUpdate
-			for _, s := range symbols {
-				us = append(us, controllerStockUpdate{
-					symbol:    s,
-					updateErr: err,
-				})
-			}
-			c.addPendingStockUpdatesLocked(us)
-			c.view.WakeLoop()
-		}
-
-		var r iex.Range
-
-		switch dataRange {
-		case model.OneDay:
-			r = iex.OneDay
-		case model.OneYear:
-			r = iex.TwoYears // Need additional data for weekly stochastics.
-		default:
-			handleErr(util.Errorf("bad range: %v", dataRange))
-			return
-		}
-
-		req := &iex.GetStocksRequest{
-			Symbols: symbols,
-			Range:   r,
-		}
-		stocks, err := c.iexClient.GetStocks(ctx, req)
-		if err != nil {
-			handleErr(err)
-			return
-		}
-
-		var us []controllerStockUpdate
-
-		found := map[string]bool{}
-		for _, st := range stocks {
-			found[st.Symbol] = true
-
-			switch dataRange {
-			case model.OneDay:
-				ch, err := modelOneDayChart(st)
-				us = append(us, controllerStockUpdate{
-					symbol:    st.Symbol,
-					chart:     ch,
-					updateErr: err,
-				})
-
-			case model.OneYear:
-				ch, err := modelOneYearChart(st)
-				us = append(us, controllerStockUpdate{
-					symbol:    st.Symbol,
-					chart:     ch,
-					updateErr: err,
-				})
-			}
-		}
-
-		for _, s := range symbols {
-			if found[s] {
-				continue
-			}
-			us = append(us, controllerStockUpdate{
-				symbol:    s,
-				updateErr: util.Errorf("no stock data for %q", s),
-			})
-		}
-
-		c.addPendingStockUpdatesLocked(us)
-		c.view.WakeLoop()
-	}()
-}
-
-// addPendingStockUpdatesLocked locks the pendingStockUpdates slice
-// and adds the new stock updates to the existing slice.
-func (c *Controller) addPendingStockUpdatesLocked(us []controllerStockUpdate) {
-	c.pendingMutex.Lock()
-	defer c.pendingMutex.Unlock()
-	c.pendingStockUpdates = append(c.pendingStockUpdates, us...)
-}
-
-// takePendingStockUpdatesLocked locks the pendingStockUpdates slice,
-// returns a copy of the updates, and empties the existing updates.
-func (c *Controller) takePendingStockUpdatesLocked() []controllerStockUpdate {
-	c.pendingMutex.Lock()
-	defer c.pendingMutex.Unlock()
-
-	var us []controllerStockUpdate
-	for _, u := range c.pendingStockUpdates {
-		us = append(us, u)
-	}
-	c.pendingStockUpdates = nil
-	return us
-}
-
-// addPendingSignalsLocked locks the pendingSignals slice
-// and adds the new signals to the existing slice.
-func (c *Controller) addPendingSignalsLocked(signals []controllerSignal) {
-	c.pendingMutex.Lock()
-	defer c.pendingMutex.Unlock()
-	c.pendingSignals = append(c.pendingSignals, signals...)
-}
-
-// takePendingSignalsLocked locks the pendingSignals slice,
-// returns a copy of the current signals, and empties the existing signals.
-func (c *Controller) takePendingSignalsLocked() []controllerSignal {
-	c.pendingMutex.Lock()
-	defer c.pendingMutex.Unlock()
-
-	var ss []controllerSignal
-	for _, s := range c.pendingSignals {
-		ss = append(ss, s)
-	}
-	c.pendingSignals = nil
-	return ss
+	return data, nil
 }
 
 func (c *Controller) saveConfig() {
