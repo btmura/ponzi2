@@ -6,7 +6,7 @@ import (
 
 	"github.com/golang/glog"
 
-	"gitlab.com/btmura/ponzi2/internal/util"
+	"gitlab.com/btmura/ponzi2/internal/status"
 )
 
 // TODO(btmura): check arguments in functions and return errors
@@ -245,18 +245,18 @@ func (m *Model) Stock(symbol string) *Stock {
 
 func validateSymbol(symbol string) error {
 	if symbol == "" {
-		return util.Error("empty symbol")
+		return status.Error("empty symbol")
 	}
 	return nil
 }
 
 func validateChart(ch *Chart) error {
 	if ch == nil {
-		return util.Error("missing chart")
+		return status.Error("missing chart")
 	}
 
 	if ch.Range == RangeUnspecified {
-		return util.Errorf("missing range")
+		return status.Errorf("missing range")
 	}
 
 	return nil

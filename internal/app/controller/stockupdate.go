@@ -5,7 +5,7 @@ import (
 
 	"gitlab.com/btmura/ponzi2/internal/app/model"
 	"gitlab.com/btmura/ponzi2/internal/stock/iex"
-	"gitlab.com/btmura/ponzi2/internal/util"
+	"gitlab.com/btmura/ponzi2/internal/status"
 )
 
 type controllerStockUpdate struct {
@@ -121,7 +121,7 @@ func (c *Controller) refreshStocks(ctx context.Context, reqs []stockRefreshReque
 			case model.OneYear:
 				r = iex.TwoYears // Need additional data for weekly stochastics.
 			default:
-				handleErr(util.Errorf("bad range: %v", dataRange))
+				handleErr(status.Errorf("bad range: %v", dataRange))
 				return
 			}
 
@@ -166,7 +166,7 @@ func (c *Controller) refreshStocks(ctx context.Context, reqs []stockRefreshReque
 				}
 				us = append(us, controllerStockUpdate{
 					symbol:    s,
-					updateErr: util.Errorf("no stock data for %q", s),
+					updateErr: status.Errorf("no stock data for %q", s),
 				})
 			}
 
@@ -222,7 +222,7 @@ func (c *Controller) processStockUpdates(ctx context.Context) error {
 			}
 
 		default:
-			return util.Errorf("bad update: %v", u)
+			return status.Errorf("bad update: %v", u)
 		}
 	}
 

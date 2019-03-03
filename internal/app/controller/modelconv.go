@@ -6,7 +6,7 @@ import (
 
 	"gitlab.com/btmura/ponzi2/internal/app/model"
 	"gitlab.com/btmura/ponzi2/internal/stock/iex"
-	"gitlab.com/btmura/ponzi2/internal/util"
+	"gitlab.com/btmura/ponzi2/internal/status"
 )
 
 // maxDataWeeks is maximum number of weeks of data to retain.
@@ -119,7 +119,7 @@ func modelOneYearChart(st *iex.Stock) (*model.Chart, error) {
 
 func modelQuote(q *iex.Quote) (*model.Quote, error) {
 	if q == nil {
-		return nil, util.Error("missing quote")
+		return nil, status.Error("missing quote")
 	}
 
 	src, err := modelSource(q.LatestSource)
@@ -156,7 +156,7 @@ func modelSource(src iex.Source) (model.Source, error) {
 	case iex.PreviousClose:
 		return model.PreviousClose, nil
 	default:
-		return 0, util.Errorf("unrecognized iex source: %v", src)
+		return 0, status.Errorf("unrecognized iex source: %v", src)
 	}
 }
 
@@ -169,7 +169,7 @@ func modelRange(r iex.Range) (model.Range, error) {
 	case iex.TwoYears:
 		return model.OneYear, nil
 	default:
-		return 0, util.Errorf("unrecognized iex range: %v", r)
+		return 0, status.Errorf("unrecognized iex range: %v", r)
 	}
 }
 

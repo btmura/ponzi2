@@ -6,7 +6,7 @@ import (
 
 	"gitlab.com/btmura/ponzi2/internal/app/gfx"
 	"gitlab.com/btmura/ponzi2/internal/app/model"
-	"gitlab.com/btmura/ponzi2/internal/util"
+	"gitlab.com/btmura/ponzi2/internal/status"
 )
 
 var (
@@ -125,7 +125,7 @@ func (ch *chartHeader) SetError(error bool) {
 // SetData sets the data to be shown on the chart.
 func (ch *chartHeader) SetData(data *ChartData) error {
 	if data == nil {
-		return util.Error("missing data")
+		return status.Error("missing data")
 	}
 
 	if !ch.hasStockUpdated && data.Chart != nil {

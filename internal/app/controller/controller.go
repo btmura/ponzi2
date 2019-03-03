@@ -13,7 +13,7 @@ import (
 	"gitlab.com/btmura/ponzi2/internal/app/model"
 	"gitlab.com/btmura/ponzi2/internal/app/view"
 	"gitlab.com/btmura/ponzi2/internal/stock/iex"
-	"gitlab.com/btmura/ponzi2/internal/util"
+	"gitlab.com/btmura/ponzi2/internal/status"
 )
 
 // loc is the timezone to use when parsing dates.
@@ -209,7 +209,7 @@ func (c *Controller) update(ctx context.Context) error {
 
 func (c *Controller) setChart(ctx context.Context, symbol string) error {
 	if symbol == "" {
-		return util.Error("missing symbol")
+		return status.Error("missing symbol")
 	}
 
 	_, changed := c.model.SetCurrentStock(symbol)
@@ -260,7 +260,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 
 func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 	if symbol == "" {
-		return util.Error("missing symbol")
+		return status.Error("missing symbol")
 	}
 
 	_, added := c.model.AddSavedStock(symbol)
@@ -323,7 +323,7 @@ func (c *Controller) removeChartThumb(symbol string) {
 
 func (c *Controller) chartData(symbol string, dataRange model.Range) (*view.ChartData, error) {
 	if symbol == "" {
-		return nil, util.Error("missing symbol")
+		return nil, status.Error("missing symbol")
 	}
 
 	data := &view.ChartData{Symbol: symbol}
