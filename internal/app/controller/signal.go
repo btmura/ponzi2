@@ -36,7 +36,9 @@ func (c *Controller) processPendingSignals(ctx context.Context) error {
 	for _, s := range c.takePendingSignalsLocked() {
 		switch s {
 		case signalRefreshCurrentStock:
-			c.refreshStock(ctx, c.currentSymbol(), c.chartRange)
+			if err := c.refreshStocks(ctx, c.currentStockRefreshRequests()); err != nil {
+				return err
+			}
 		}
 	}
 

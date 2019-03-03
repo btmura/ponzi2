@@ -36,114 +36,146 @@ func (c *Controller) takePendingStockUpdatesLocked() []controllerStockUpdate {
 	return us
 }
 
-func (c *Controller) currentSymbol() []string {
-	var symbols []string
-	if st := c.model.CurrentStock; st != nil {
-		symbols = append(symbols, st.Symbol)
-	}
-	return symbols
+type stockRefreshRequest struct {
+	symbols   []string
+	dataRange model.Range
 }
 
-func (c *Controller) allSymbols() []string {
-	var symbols []string
-	if st := c.model.CurrentStock; st != nil {
-		symbols = append(symbols, st.Symbol)
+func (c *Controller) currentStockRefreshRequests() []stockRefreshRequest {
+	st := c.model.CurrentStock
+	if st == nil {
+		return nil
 	}
+
+	return []stockRefreshRequest{
+		{
+			symbols:   []string{st.Symbol},
+			dataRange: c.chartRange,
+		},
+	}
+}
+
+func (c *Controller) sidebarStockRefreshRequests() []stockRefreshRequest {
+	var symbols []string
 	for _, st := range c.model.SavedStocks {
 		symbols = append(symbols, st.Symbol)
 	}
-	return symbols
+	if len(symbols) == 0 {
+		return nil
+	}
+
+	return []stockRefreshRequest{
+		{
+			symbols:   symbols,
+			dataRange: c.chartThumbRange,
+		},
+	}
 }
 
-func (c *Controller) refreshStock(ctx context.Context, symbols []string, dataRange model.Range) {
-	if len(symbols) == 0 {
-		return
+func (c *Controller) fullStockRefreshRequests() []stockRefreshRequest {
+	return append(c.currentStockRefreshRequests(), c.sidebarStockRefreshRequests()...)
+}
+
+func (c *Controller) refreshStocks(ctx context.Context, reqs []stockRefreshRequest) error {
+	if len(reqs) == 0 {
+		return nil
 	}
 
-	for _, s := range symbols {
-		if ch, ok := c.symbolToChartMap[s]; ok {
-			ch.SetLoading(true)
-			ch.SetError(false)
-		}
-		if th, ok := c.symbolToChartThumbMap[s]; ok {
-			th.SetLoading(true)
-			th.SetError(false)
-		}
-	}
-
-	go func() {
-		handleErr := func(err error) {
-			var us []controllerStockUpdate
-			for _, s := range symbols {
-				us = append(us, controllerStockUpdate{
-					symbol:    s,
-					updateErr: err,
-				})
+	for _, req := range reqs {
+		if req.dataRange == c.chartRange {
+			for _, s := range req.symbols {
+				if ch, ok := c.symbolToChartMap[s]; ok {
+					ch.SetLoading(true)
+					ch.SetError(false)
+				}
 			}
-			c.addPendingStockUpdatesLocked(us)
-			c.view.WakeLoop()
 		}
 
-		var r iex.Range
-
-		switch dataRange {
-		case model.OneDay:
-			r = iex.OneDay
-		case model.OneYear:
-			r = iex.TwoYears // Need additional data for weekly stochastics.
-		default:
-			handleErr(util.Errorf("bad range: %v", dataRange))
-			return
+		if req.dataRange == c.chartThumbRange {
+			for _, s := range req.symbols {
+				if th, ok := c.symbolToChartThumbMap[s]; ok {
+					th.SetLoading(true)
+					th.SetError(false)
+				}
+			}
 		}
 
-		req := &iex.GetStocksRequest{
-			Symbols: symbols,
-			Range:   r,
-		}
-		stocks, err := c.iexClient.GetStocks(ctx, req)
-		if err != nil {
-			handleErr(err)
-			return
-		}
+		go func(symbols []string, dataRange model.Range) {
+			handleErr := func(err error) {
+				var us []controllerStockUpdate
+				for _, s := range symbols {
+					us = append(us, controllerStockUpdate{
+						symbol:    s,
+						updateErr: err,
+					})
+				}
+				c.addPendingStockUpdatesLocked(us)
+				c.view.WakeLoop()
+			}
 
-		var us []controllerStockUpdate
-
-		found := map[string]bool{}
-		for _, st := range stocks {
-			found[st.Symbol] = true
+			var r iex.Range
 
 			switch dataRange {
 			case model.OneDay:
-				ch, err := modelOneDayChart(st)
-				us = append(us, controllerStockUpdate{
-					symbol:    st.Symbol,
-					chart:     ch,
-					updateErr: err,
-				})
-
+				r = iex.OneDay
 			case model.OneYear:
-				ch, err := modelOneYearChart(st)
+				r = iex.TwoYears // Need additional data for weekly stochastics.
+			default:
+				handleErr(util.Errorf("bad range: %v", dataRange))
+				return
+			}
+
+			req := &iex.GetStocksRequest{
+				Symbols: symbols,
+				Range:   r,
+			}
+			stocks, err := c.iexClient.GetStocks(ctx, req)
+			if err != nil {
+				handleErr(err)
+				return
+			}
+
+			var us []controllerStockUpdate
+
+			found := map[string]bool{}
+			for _, st := range stocks {
+				found[st.Symbol] = true
+
+				switch dataRange {
+				case model.OneDay:
+					ch, err := modelOneDayChart(st)
+					us = append(us, controllerStockUpdate{
+						symbol:    st.Symbol,
+						chart:     ch,
+						updateErr: err,
+					})
+
+				case model.OneYear:
+					ch, err := modelOneYearChart(st)
+					us = append(us, controllerStockUpdate{
+						symbol:    st.Symbol,
+						chart:     ch,
+						updateErr: err,
+					})
+				}
+			}
+
+			for _, s := range symbols {
+				if found[s] {
+					continue
+				}
 				us = append(us, controllerStockUpdate{
-					symbol:    st.Symbol,
-					chart:     ch,
-					updateErr: err,
+					symbol:    s,
+					updateErr: util.Errorf("no stock data for %q", s),
 				})
 			}
-		}
 
-		for _, s := range symbols {
-			if found[s] {
-				continue
-			}
-			us = append(us, controllerStockUpdate{
-				symbol:    s,
-				updateErr: util.Errorf("no stock data for %q", s),
-			})
-		}
+			c.addPendingStockUpdatesLocked(us)
+			c.view.WakeLoop()
+		}(req.symbols, req.dataRange)
+	}
 
-		c.addPendingStockUpdatesLocked(us)
-		c.view.WakeLoop()
-	}()
+	return nil
 }
 
 func (c *Controller) processStockUpdates(ctx context.Context) error {

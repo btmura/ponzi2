@@ -177,7 +177,10 @@ func (c *Controller) RunLoop() error {
 
 		// Set zoom and refresh the current stock.
 		c.chartRange = zoomRanges[i]
-		c.refreshStock(ctx, c.currentSymbol(), c.chartRange)
+
+		if err := c.refreshStocks(ctx, c.currentStockRefreshRequests()); err != nil {
+			glog.Fatalf("TODO(btmura): remove log fatal, refreshStocks: %v", err)
+		}
 	})
 
 	defer func() {
@@ -211,8 +214,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 
 	_, changed := c.model.SetCurrentStock(symbol)
 	if !changed {
-		c.refreshStock(ctx, []string{symbol}, c.chartRange)
-		return nil
+		return c.refreshStocks(ctx, c.currentStockRefreshRequests())
 	}
 
 	for symbol, ch := range c.symbolToChartMap {
@@ -237,14 +239,20 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 	}
 
 	ch.SetRefreshButtonClickCallback(func() {
-		c.refreshStock(ctx, c.allSymbols(), c.chartRange)
+		if err := c.refreshStocks(ctx, c.fullStockRefreshRequests()); err != nil {
+			glog.Fatalf("TODO(btmura): remove log fatal, refreshStocks: %v", err)
+		}
 	})
 	ch.SetAddButtonClickCallback(func() {
 		c.addChartThumb(ctx, symbol)
 	})
 
 	c.view.SetChart(ch)
-	c.refreshStock(ctx, []string{symbol}, c.chartRange)
+
+	if err := c.refreshStocks(ctx, c.currentStockRefreshRequests()); err != nil {
+		return err
+	}
+
 	c.saveConfig()
 
 	return nil
@@ -257,8 +265,10 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 
 	_, added := c.model.AddSavedStock(symbol)
 	if !added {
-		c.refreshStock(ctx, []string{symbol}, c.chartThumbRange)
-		return nil
+		return c.refreshStocks(ctx, []stockRefreshRequest{{
+			symbols:   []string{symbol},
+			dataRange: c.chartThumbRange,
+		}})
 	}
 
 	th := view.NewChartThumb()
@@ -281,7 +291,14 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 	})
 
 	c.view.AddChartThumb(th)
-	c.refreshStock(ctx, []string{symbol}, c.chartThumbRange)
+
+	if err := c.refreshStocks(ctx, []stockRefreshRequest{{
+		symbols:   []string{symbol},
+		dataRange: c.chartThumbRange,
+	}}); err != nil {
+		return err
+	}
+
 	c.saveConfig()
 
 	return nil
