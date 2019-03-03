@@ -204,10 +204,15 @@ func (c *Controller) processStockUpdates(ctx context.Context) error {
 					return err
 				}
 
+				if err := c.title.SetData(data); err != nil {
+					return err
+				}
+
 				if err := ch.SetData(data); err != nil {
 					return err
 				}
 			}
+
 			if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
 				th.SetLoading(false)
 
