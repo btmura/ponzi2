@@ -192,19 +192,17 @@ func (c *Controller) RunLoop() error {
 		<-c.doneSavingConfigs
 	}()
 
-	return c.view.RunLoop(ctx, c.update)
-}
+	return c.view.RunLoop(ctx, func(ctx context.Context) error {
+		if err := c.processStockUpdates(ctx); err != nil {
+			return err
+		}
 
-func (c *Controller) update(ctx context.Context) error {
-	if err := c.processStockUpdates(ctx); err != nil {
-		return err
-	}
+		if err := c.processPendingSignals(ctx); err != nil {
+			return err
+		}
 
-	if err := c.processPendingSignals(ctx); err != nil {
-		return err
-	}
-
-	return nil
+		return nil
+	})
 }
 
 func (c *Controller) setChart(ctx context.Context, symbol string) error {
