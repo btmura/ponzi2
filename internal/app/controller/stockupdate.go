@@ -72,7 +72,7 @@ func (c *Controller) sidebarStockRefreshRequests() []stockRefreshRequest {
 	}
 }
 
-func (c *Controller) fullStockRefreshRequests() []stockRefreshRequest {
+func (c *Controller) allStockRefreshRequests() []stockRefreshRequest {
 	return append(c.currentStockRefreshRequests(), c.sidebarStockRefreshRequests()...)
 }
 

@@ -7,7 +7,7 @@ type signal int
 
 const (
 	signalUnspecified signal = iota
-	refreshCurrentStock
+	refreshAllStocks
 )
 
 // addPendingSignalsLocked locks the pendingSignals slice
@@ -35,8 +35,8 @@ func (c *Controller) takePendingSignalsLocked() []signal {
 func (c *Controller) processPendingSignals(ctx context.Context) error {
 	for _, s := range c.takePendingSignalsLocked() {
 		switch s {
-		case refreshCurrentStock:
-			if err := c.refreshStocks(ctx, c.currentStockRefreshRequests()); err != nil {
+		case refreshAllStocks:
+			if err := c.refreshStocks(ctx, c.allStockRefreshRequests()); err != nil {
 				return err
 			}
 		}

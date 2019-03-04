@@ -140,7 +140,7 @@ func (c *Controller) RunLoop() error {
 				continue
 			}
 
-			c.addPendingSignalsLocked([]signal{refreshCurrentStock})
+			c.addPendingSignalsLocked([]signal{refreshAllStocks})
 			c.view.WakeLoop()
 		}
 	}()
@@ -244,7 +244,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 	}
 
 	ch.SetRefreshButtonClickCallback(func() {
-		if err := c.refreshStocks(ctx, c.fullStockRefreshRequests()); err != nil {
+		if err := c.refreshStocks(ctx, c.allStockRefreshRequests()); err != nil {
 			glog.Fatalf("TODO(btmura): remove log fatal, refreshStocks: %v", err)
 		}
 	})
