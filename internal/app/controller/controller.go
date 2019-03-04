@@ -60,6 +60,9 @@ type Controller struct {
 	// chartThumbRange is the current data range to use for ChartThumbnails.
 	chartThumbRange model.Range
 
+	// enableRefreshingStocks enables refreshing stocks.
+	enableRefreshingStocks bool
+
 	// enableSavingConfigs enables saving config changes.
 	enableSavingConfigs bool
 
@@ -115,36 +118,6 @@ func (c *Controller) RunLoop() error {
 		}
 	}
 
-	// Process config changes in the background until the program ends.
-	go func() {
-		for cfg := range c.pendingConfigSaves {
-			if err := config.Save(cfg); err != nil {
-				glog.V(2).Infof("failed to save config: %v", err)
-			}
-		}
-		c.doneSavingConfigs <- true
-	}()
-
-	// Enable saving configs after UI is setup and change processor started.
-	c.enableSavingConfigs = true
-
-	ticker := time.NewTicker(5 * time.Minute)
-	go func() {
-		for t := range ticker.C {
-			n := time.Now()
-			open := time.Date(n.Year(), n.Month(), n.Day(), 9, 30, 0, 0, loc)
-			close := time.Date(n.Year(), n.Month(), n.Day(), 16, 0, 0, 0, loc)
-
-			if t.Before(open) || t.After(close) {
-				glog.V(2).Infof("ignoring refresh ticker at %v", t.Format("1/2/2006 3:04:05 PM"))
-				continue
-			}
-
-			c.addPendingSignalsLocked([]signal{refreshAllStocks})
-			c.view.WakeLoop()
-		}
-	}()
-
 	c.view.SetTitle(c.title)
 
 	c.view.SetInputSymbolSubmittedCallback(func(symbol string) {
@@ -185,14 +158,54 @@ func (c *Controller) RunLoop() error {
 		}
 	})
 
+	// Process config changes in the background until the program ends.
+	go func() {
+		for cfg := range c.pendingConfigSaves {
+			if err := config.Save(cfg); err != nil {
+				glog.V(2).Infof("failed to save config: %v", err)
+			}
+		}
+		c.doneSavingConfigs <- true
+	}()
+
+	// Refresh stocks during market hours.
+	ticker := time.NewTicker(5 * time.Minute)
+	go func() {
+		for t := range ticker.C {
+			n := time.Now()
+			open := time.Date(n.Year(), n.Month(), n.Day(), 9, 30, 0, 0, loc)
+			close := time.Date(n.Year(), n.Month(), n.Day(), 16, 0, 0, 0, loc)
+
+			if t.Before(open) || t.After(close) {
+				glog.V(2).Infof("ignoring refresh ticker at %v", t.Format("1/2/2006 3:04:05 PM"))
+				continue
+			}
+
+			c.addPendingSignalsLocked([]signal{refreshAllStocks})
+			c.view.WakeLoop()
+		}
+	}()
+
 	defer func() {
 		ticker.Stop()
+
+		// Disable refreshing stocks to avoid unnecessary work.
+		c.enableRefreshingStocks = false
 
 		// Disable config changes to start shutting down save processor.
 		c.enableSavingConfigs = false
 		close(c.pendingConfigSaves)
 		<-c.doneSavingConfigs
 	}()
+
+	// Enable refreshing stocks and saving configs after the UI is setup and go routines launched.
+	c.enableRefreshingStocks = true
+	c.enableSavingConfigs = true
+
+	// Fire requests to get data for the entire UI.
+	if err := c.refreshStocks(ctx, c.allStockRefreshRequests()); err != nil {
+		return err
+	}
 
 	return c.view.RunLoop(ctx, func(ctx context.Context) error {
 		if err := c.processStockUpdates(ctx); err != nil {

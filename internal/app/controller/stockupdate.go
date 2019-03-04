@@ -3,6 +3,8 @@ package controller
 import (
 	"context"
 
+	"github.com/golang/glog"
+
 	"gitlab.com/btmura/ponzi2/internal/app/model"
 	"gitlab.com/btmura/ponzi2/internal/status"
 	"gitlab.com/btmura/ponzi2/internal/stock/iex"
@@ -73,10 +75,46 @@ func (c *Controller) sidebarStockRefreshRequests() []stockRefreshRequest {
 }
 
 func (c *Controller) allStockRefreshRequests() []stockRefreshRequest {
-	return append(c.currentStockRefreshRequests(), c.sidebarStockRefreshRequests()...)
+	range2Symbols := map[model.Range][]string{}
+
+	for _, req := range c.currentStockRefreshRequests() {
+		for _, s := range req.symbols {
+			range2Symbols[req.dataRange] = append(range2Symbols[req.dataRange], s)
+		}
+	}
+
+	for _, req := range c.sidebarStockRefreshRequests() {
+		for _, s := range req.symbols {
+			range2Symbols[req.dataRange] = append(range2Symbols[req.dataRange], s)
+		}
+	}
+
+	var reqs []stockRefreshRequest
+	for r, ss := range range2Symbols {
+		symbolSet := map[string]bool{}
+		for _, s := range ss {
+			symbolSet[s] = true
+		}
+
+		var symbols []string
+		for s := range symbolSet {
+			symbols = append(symbols, s)
+		}
+
+		reqs = append(reqs, stockRefreshRequest{
+			symbols:   symbols,
+			dataRange: r,
+		})
+	}
+	return reqs
 }
 
 func (c *Controller) refreshStocks(ctx context.Context, reqs []stockRefreshRequest) error {
+	if !c.enableRefreshingStocks {
+		glog.V(2).Infof("ignoring stock refresh request, refreshing disabled")
+		return nil
+	}
+
 	if len(reqs) == 0 {
 		return nil
 	}

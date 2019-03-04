@@ -4,9 +4,9 @@ package controller
 
 import "strconv"
 
-const _signal_name = "signalUnspecifiedrefreshCurrentStock"
+const _signal_name = "signalUnspecifiedrefreshAllStocks"
 
-var _signal_index = [...]uint8{0, 17, 36}
+var _signal_index = [...]uint8{0, 17, 33}
 
 func (i signal) String() string {
 	if i < 0 || i >= signal(len(_signal_index)-1) {
