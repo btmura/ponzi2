@@ -217,7 +217,8 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 		return err
 	}
 
-	if changed {
+	// If the stock is already the current one, just refresh it.
+	if !changed {
 		return c.refreshStocks(ctx, c.currentStockRefreshRequests())
 	}
 
@@ -274,7 +275,8 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 		return err
 	}
 
-	if added {
+	// If the stock is already added, just refresh it.
+	if !added {
 		return c.refreshStocks(ctx, []stockRefreshRequest{{
 			symbols:   []string{symbol},
 			dataRange: c.chartThumbRange,
