@@ -7,8 +7,6 @@ import (
 	"gitlab.com/btmura/ponzi2/internal/status"
 )
 
-// TODO(btmura): check arguments in functions and return errors
-
 // TODO(btmura): add validation functions for symbol, quote, etc.
 
 // now is a function to get the current time. Mocked out in tests to return a fixed time.
@@ -16,8 +14,14 @@ var now = time.Now
 
 // Model models the app's state.
 type Model struct {
-	CurrentStock *Stock
-	SavedStocks  []*Stock
+	// currentSymbol is the symbol of the stock shown in the main area.
+	currentSymbol string
+
+	// sidebarSymbols is an ordered list of symbols shown in the sidebar.
+	sidebarSymbols []string
+
+	// symbol2Stock is map from symbol to Stock data.
+	symbol2Stock map[string]*Stock
 }
 
 // Stock has a stock's symbol and charts.
@@ -141,58 +145,64 @@ const (
 
 // New creates a new Model.
 func New() *Model {
-	return &Model{}
+	return &Model{
+		symbol2Stock: map[string]*Stock{},
+	}
 }
 
-// SetCurrentStock sets the current stock by symbol.
-// It returns the corresponding Stock and true if the current stock changed.
-func (m *Model) SetCurrentStock(symbol string) (changed bool, err error) {
+// CurrentSymbol returns the current symbol or empty string if no stock is set.
+func (m *Model) CurrentSymbol() string {
+	return m.currentSymbol
+}
+
+// SetCurrentSymbol sets the current stock symbol and returns true if the current symbol changed.
+func (m *Model) SetCurrentSymbol(symbol string) (changed bool, err error) {
 	if err := validateSymbol(symbol); err != nil {
 		return false, err
 	}
 
-	if m.CurrentStock != nil && m.CurrentStock.Symbol == symbol {
+	if m.currentSymbol == symbol {
 		return false, nil
 	}
 
-	if m.CurrentStock = m.Stock(symbol); m.CurrentStock == nil {
-		m.CurrentStock = &Stock{Symbol: symbol}
-	}
-
+	m.currentSymbol = symbol
 	return true, nil
 }
 
-// AddSavedStock adds the stock by symbol.
-// It returns the corresponding Stock and true if the stock was newly added.
-func (m *Model) AddSavedStock(symbol string) (added bool, err error) {
+// SidebarSymbols returns the sidebar's symbols.
+func (m *Model) SidebarSymbols() []string {
+	var symbols []string
+	for _, s := range m.sidebarSymbols {
+		symbols = append(symbols, s)
+	}
+	return symbols
+}
+
+// AddSidebarSymbol adds a symbol to the sidebar and returns true if the stock was newly added.
+func (m *Model) AddSidebarSymbol(symbol string) (added bool, err error) {
 	if err := validateSymbol(symbol); err != nil {
 		return false, err
 	}
 
-	for _, st := range m.SavedStocks {
-		if st.Symbol == symbol {
+	for _, s := range m.sidebarSymbols {
+		if s == symbol {
 			return false, nil
 		}
 	}
 
-	st := m.Stock(symbol)
-	if st == nil {
-		st = &Stock{Symbol: symbol}
-	}
-	m.SavedStocks = append(m.SavedStocks, st)
-
+	m.sidebarSymbols = append(m.sidebarSymbols, symbol)
 	return true, nil
 }
 
-// RemoveSavedStock removes the stock by symbol and returns true if removed.
-func (m *Model) RemoveSavedStock(symbol string) (removed bool, err error) {
+// RemoveSidebarSymbol removes a symbol from the sidebar and returns true if removed.
+func (m *Model) RemoveSidebarSymbol(symbol string) (removed bool, err error) {
 	if err := validateSymbol(symbol); err != nil {
 		return false, err
 	}
 
-	for i, st := range m.SavedStocks {
-		if st.Symbol == symbol {
-			m.SavedStocks = append(m.SavedStocks[:i], m.SavedStocks[i+1:]...)
+	for i, s := range m.sidebarSymbols {
+		if s == symbol {
+			m.sidebarSymbols = append(m.sidebarSymbols[:i], m.sidebarSymbols[i+1:]...)
 			return true, nil
 		}
 	}
@@ -209,9 +219,10 @@ func (m *Model) UpdateChart(symbol string, chart *Chart) error {
 		return err
 	}
 
-	st := m.Stock(symbol)
+	st := m.symbol2Stock[symbol]
 	if st == nil {
-		return nil
+		st = &Stock{Symbol: symbol}
+		m.symbol2Stock[symbol] = st
 	}
 
 	ch := &Chart{}
@@ -231,17 +242,7 @@ func (m *Model) UpdateChart(symbol string, chart *Chart) error {
 
 // Stock returns the stock for the symbol if it is in the model. Nil otherwise.
 func (m *Model) Stock(symbol string) *Stock {
-	if m.CurrentStock != nil && m.CurrentStock.Symbol == symbol {
-		return m.CurrentStock
-	}
-
-	for _, st := range m.SavedStocks {
-		if st.Symbol == symbol {
-			return st
-		}
-	}
-
-	return nil
+	return m.symbol2Stock[symbol]
 }
 
 func validateSymbol(symbol string) error {

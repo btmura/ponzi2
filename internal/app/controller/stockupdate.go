@@ -44,14 +44,14 @@ type stockRefreshRequest struct {
 }
 
 func (c *Controller) currentStockRefreshRequests() []stockRefreshRequest {
-	st := c.model.CurrentStock
-	if st == nil {
+	s := c.model.CurrentSymbol()
+	if s == "" {
 		return nil
 	}
 
 	return []stockRefreshRequest{
 		{
-			symbols:   []string{st.Symbol},
+			symbols:   []string{s},
 			dataRange: c.chartRange,
 		},
 	}
@@ -59,8 +59,8 @@ func (c *Controller) currentStockRefreshRequests() []stockRefreshRequest {
 
 func (c *Controller) sidebarStockRefreshRequests() []stockRefreshRequest {
 	var symbols []string
-	for _, st := range c.model.SavedStocks {
-		symbols = append(symbols, st.Symbol)
+	for _, s := range c.model.SidebarSymbols() {
+		symbols = append(symbols, s)
 	}
 	if len(symbols) == 0 {
 		return nil

@@ -225,7 +225,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 		return status.Error("missing symbol")
 	}
 
-	changed, err := c.model.SetCurrentStock(symbol)
+	changed, err := c.model.SetCurrentSymbol(symbol)
 	if err != nil {
 		return err
 	}
@@ -283,7 +283,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 		return status.Error("missing symbol")
 	}
 
-	added, err := c.model.AddSavedStock(symbol)
+	added, err := c.model.AddSidebarSymbol(symbol)
 	if err != nil {
 		return err
 	}
@@ -338,7 +338,7 @@ func (c *Controller) removeChartThumb(symbol string) error {
 		return nil
 	}
 
-	removed, err := c.model.RemoveSavedStock(symbol)
+	removed, err := c.model.RemoveSidebarSymbol(symbol)
 	if err != nil {
 		return err
 	}
@@ -388,11 +388,11 @@ func (c *Controller) saveConfig() {
 
 	// Make the config on the main thread to save the exact config at the time.
 	cfg := &config.Config{}
-	if st := c.model.CurrentStock; st != nil {
-		cfg.CurrentStock = &config.Stock{Symbol: st.Symbol}
+	if s := c.model.CurrentSymbol(); s != "" {
+		cfg.CurrentStock = &config.Stock{Symbol: s}
 	}
-	for _, st := range c.model.SavedStocks {
-		cfg.Stocks = append(cfg.Stocks, &config.Stock{Symbol: st.Symbol})
+	for _, s := range c.model.SidebarSymbols() {
+		cfg.Stocks = append(cfg.Stocks, &config.Stock{Symbol: s})
 	}
 
 	// Queue the config for saving.
