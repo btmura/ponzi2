@@ -2,6 +2,7 @@
 package model
 
 import (
+	"regexp"
 	"time"
 
 	"gitlab.com/btmura/ponzi2/internal/status"
@@ -45,6 +46,46 @@ type Chart struct {
 	WeeklyStochasticSeries *StochasticSeries
 	LastUpdateTime         time.Time
 }
+
+// Quote is the latest quote for the stock.
+type Quote struct {
+	CompanyName   string
+	LatestPrice   float32
+	LatestSource  Source
+	LatestTime    time.Time
+	LatestUpdate  time.Time
+	LatestVolume  int
+	Open          float32
+	High          float32
+	Low           float32
+	Close         float32
+	Change        float32
+	ChangePercent float32
+}
+
+// Source is the quote data source.
+type Source int
+
+// Source values.
+//go:generate stringer -type=Source
+const (
+	SourceUnspecified Source = iota
+	IEXRealTimePrice
+	FifteenMinuteDelayedPrice
+	Close
+	PreviousClose
+)
+
+// Range is the range to specify in the request.
+type Range int
+
+// Range values.
+//go:generate stringer -type=Range
+const (
+	RangeUnspecified Range = iota
+	OneDay
+	OneYear
+)
 
 // TradingSessionSeries is a time series of trading sessions.
 type TradingSessionSeries struct {
@@ -102,46 +143,6 @@ type Stochastic struct {
 	// D is some moving average of K.
 	D float32
 }
-
-// Quote is the latest quote for the stock.
-type Quote struct {
-	CompanyName   string
-	LatestPrice   float32
-	LatestSource  Source
-	LatestTime    time.Time
-	LatestUpdate  time.Time
-	LatestVolume  int
-	Open          float32
-	High          float32
-	Low           float32
-	Close         float32
-	Change        float32
-	ChangePercent float32
-}
-
-// Source is the quote data source.
-type Source int
-
-// Source values.
-//go:generate stringer -type=Source
-const (
-	SourceUnspecified Source = iota
-	IEXRealTimePrice
-	FifteenMinuteDelayedPrice
-	Close
-	PreviousClose
-)
-
-// Range is the range to specify in the request.
-type Range int
-
-// Range values.
-//go:generate stringer -type=Range
-const (
-	RangeUnspecified Range = iota
-	OneDay
-	OneYear
-)
 
 // New creates a new Model.
 func New() *Model {
@@ -245,9 +246,11 @@ func (m *Model) Stock(symbol string) *Stock {
 	return m.symbol2Stock[symbol]
 }
 
+var symbolRegexp = regexp.MustCompile("^[A-Z]{3,4}$")
+
 func validateSymbol(symbol string) error {
-	if symbol == "" {
-		return status.Error("empty symbol")
+	if !symbolRegexp.MatchString(symbol) {
+		return status.Errorf("bad symbol, want: %v", symbolRegexp)
 	}
 	return nil
 }
