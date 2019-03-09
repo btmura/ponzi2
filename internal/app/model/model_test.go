@@ -59,10 +59,10 @@ func TestAddSidebarSymbol(t *testing.T) {
 
 	added, err := m.AddSidebarSymbol("SPY")
 	if !added {
-		t.Errorf("AddSidebarSymbols should return true if the input symbol is new.")
+		t.Errorf("AddSidebarSymbol should return true if the input symbol is new.")
 	}
 	if err != nil {
-		t.Errorf("AddSidebarSymbols should not return an error if given a valid symbol.")
+		t.Errorf("AddSidebarSymbol should not return an error if given a valid symbol.")
 	}
 
 	if diff := cmp.Diff([]string{"SPY"}, m.SidebarSymbols()); diff != "" {
@@ -71,10 +71,10 @@ func TestAddSidebarSymbol(t *testing.T) {
 
 	added, err = m.AddSidebarSymbol("AAPL")
 	if !added {
-		t.Errorf("AddSidebarSymbols should return true if the input symbol is new.")
+		t.Errorf("AddSidebarSymbol should return true if the input symbol is new.")
 	}
 	if err != nil {
-		t.Errorf("AddSidebarSymbols should not return an error if given a valid symbol.")
+		t.Errorf("AddSidebarSymbol should not return an error if given a valid symbol.")
 	}
 
 	if diff := cmp.Diff([]string{"SPY", "AAPL"}, m.SidebarSymbols()); diff != "" {
@@ -83,10 +83,10 @@ func TestAddSidebarSymbol(t *testing.T) {
 
 	added, err = m.AddSidebarSymbol("AAPL")
 	if added {
-		t.Errorf("AddSidebarSymbols should return false if the input symbol exists.")
+		t.Errorf("AddSidebarSymbol should return false if the input symbol exists.")
 	}
 	if err != nil {
-		t.Errorf("AddSidebarSymbols should not return an error if given a valid symbol.")
+		t.Errorf("AddSidebarSymbol should not return an error if given a valid symbol.")
 	}
 
 	if diff := cmp.Diff([]string{"SPY", "AAPL"}, m.SidebarSymbols()); diff != "" {
@@ -95,10 +95,10 @@ func TestAddSidebarSymbol(t *testing.T) {
 
 	added, err = m.AddSidebarSymbol("AAPL AAPL")
 	if added {
-		t.Errorf("AddSidebarSymbols should return false if the input symbol is invalid.")
+		t.Errorf("AddSidebarSymbol should return false if the input symbol is invalid.")
 	}
 	if err == nil {
-		t.Errorf("AddSidebarSymbols should return an error if the given symbol is invalid.")
+		t.Errorf("AddSidebarSymbol should return an error if the given symbol is invalid.")
 	}
 
 	if diff := cmp.Diff([]string{"SPY", "AAPL"}, m.SidebarSymbols()); diff != "" {
@@ -106,6 +106,41 @@ func TestAddSidebarSymbol(t *testing.T) {
 	}
 }
 
+func TestRemoveSidebarSymbol(t *testing.T) {
+	m := New()
+
+	m.AddSidebarSymbol("SPY")
+	m.AddSidebarSymbol("AAPL")
+	m.AddSidebarSymbol("CEF")
+
+	if diff := cmp.Diff([]string{"SPY", "AAPL", "CEF"}, m.SidebarSymbols()); diff != "" {
+		t.Errorf("diff (-want, +got)\n%s", diff)
+	}
+
+	removed, err := m.RemoveSidebarSymbol("AAPL")
+	if !removed {
+		t.Errorf("RemoveSidebarSymbol should return true if the input symbol is in the sidebar.")
+	}
+	if err != nil {
+		t.Errorf("RemoveSidebarSypmbol should not return an error if the given symbol is valid.")
+	}
+
+	if diff := cmp.Diff([]string{"SPY", "CEF"}, m.SidebarSymbols()); diff != "" {
+		t.Errorf("diff (-want, +got)\n%s", diff)
+	}
+
+	removed, err = m.RemoveSidebarSymbol("FB")
+	if removed {
+		t.Errorf("RemoveSidebarSymbol should return false if the input symbol is not in the sidebar.")
+	}
+	if err != nil {
+		t.Errorf("RemoveSidebarSypmbol should not return an error if the given symbol is valid.")
+	}
+
+	if diff := cmp.Diff([]string{"SPY", "CEF"}, m.SidebarSymbols()); diff != "" {
+		t.Errorf("diff (-want, +got)\n%s", diff)
+	}
+}
 func TestValidateSymbol(t *testing.T) {
 	for _, tt := range []struct {
 		desc    string
