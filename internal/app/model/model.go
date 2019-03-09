@@ -211,6 +211,14 @@ func (m *Model) RemoveSidebarSymbol(symbol string) (removed bool, err error) {
 	return false, nil
 }
 
+// Stock returns the stock for the symbol if it is in the model. Nil otherwise.
+func (m *Model) Stock(symbol string) (*Stock, error) {
+	if err := validateSymbol(symbol); err != nil {
+		return nil, err
+	}
+	return m.symbol2Stock[symbol], nil
+}
+
 // UpdateStockChart inserts or updates the chart for a stock if it is in the model.
 func (m *Model) UpdateStockChart(symbol string, chart *Chart) error {
 	if err := validateSymbol(symbol); err != nil {
@@ -240,11 +248,6 @@ func (m *Model) UpdateStockChart(symbol string, chart *Chart) error {
 
 	st.Charts = append(st.Charts, ch)
 	return nil
-}
-
-// Stock returns the stock for the symbol if it is in the model. Nil otherwise.
-func (m *Model) Stock(symbol string) *Stock {
-	return m.symbol2Stock[symbol]
 }
 
 func validateSymbol(symbol string) error {

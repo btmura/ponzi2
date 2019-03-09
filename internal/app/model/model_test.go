@@ -2,6 +2,7 @@ package model
 
 import (
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -138,6 +139,119 @@ func TestRemoveSidebarSymbol(t *testing.T) {
 	}
 
 	if diff := cmp.Diff([]string{"SPY", "CEF"}, m.SidebarSymbols()); diff != "" {
+		t.Errorf("diff (-want, +got)\n%s", diff)
+	}
+}
+
+func TestUpdateStockChart(t *testing.T) {
+	old := now
+	defer func() { now = old }()
+	now = func() time.Time { return time.Date(2019, time.March, 10, 30, 0, 0, 0, time.UTC) }
+
+	m := New()
+
+	if err := m.UpdateStockChart("", &Chart{Range: OneDay}); err == nil {
+		t.Errorf("UpdateStockChart should return an error when the input symbol is invalid.")
+	}
+
+	if err := m.UpdateStockChart("SPY", nil); err == nil {
+		t.Errorf("UpdateStockChart should return an error when the input chart is invalid.")
+	}
+
+	st, err := m.Stock("SPY")
+	if st != nil {
+		t.Errorf("Stock should not return a stock if UpdateStockChart hasn't added a chart yet.")
+	}
+	if err != nil {
+		t.Errorf("Stock should not return an error if the given symbol is valid.")
+	}
+
+	st, err = m.Stock("SPYSPY")
+	if st != nil {
+		t.Errorf("Stock should not return a stock if the input symbol is invalid.")
+	}
+	if err == nil {
+		t.Errorf("Stock should return an error if the given input symbol is invalid.")
+	}
+
+	c1 := &Chart{Range: OneDay}
+	if err := m.UpdateStockChart("SPY", c1); err != nil {
+		t.Errorf("UpdateStcokChart should not return an error if the inputs are valid.")
+	}
+
+	want := &Stock{
+		Symbol: "SPY",
+		Charts: []*Chart{
+			{
+				Range:          OneDay,
+				LastUpdateTime: time.Date(2019, time.March, 10, 30, 0, 0, 0, time.UTC),
+			},
+		},
+	}
+
+	st, err = m.Stock("SPY")
+	if err != nil {
+		t.Errorf("Stock should not return an error if the given symbol is valid.")
+	}
+	if diff := cmp.Diff(want, st); diff != "" {
+		t.Errorf("diff (-want, +got)\n%s", diff)
+	}
+
+	c2 := &Chart{Range: OneYear}
+	if err := m.UpdateStockChart("SPY", c2); err != nil {
+		t.Errorf("UpdateStockChart should not return an error if the inputs are valid.")
+	}
+
+	want = &Stock{
+		Symbol: "SPY",
+		Charts: []*Chart{
+			{
+				Range:          OneDay,
+				LastUpdateTime: time.Date(2019, time.March, 10, 30, 0, 0, 0, time.UTC),
+			},
+			{
+				Range:          OneYear,
+				LastUpdateTime: time.Date(2019, time.March, 10, 30, 0, 0, 0, time.UTC),
+			},
+		},
+	}
+
+	st, err = m.Stock("SPY")
+	if err != nil {
+		t.Errorf("Stock should not return an error if the given symbol is valid.")
+	}
+	if diff := cmp.Diff(want, st); diff != "" {
+		t.Errorf("diff (-want, +got)\n%s", diff)
+	}
+
+	c3 := &Chart{
+		Quote: &Quote{CompanyName: "S&P 500"},
+		Range: OneYear,
+	}
+	if err := m.UpdateStockChart("SPY", c3); err != nil {
+		t.Errorf("UpdateStockChart should not return an error if the inputs are valid.")
+	}
+
+	want = &Stock{
+		Symbol: "SPY",
+		Charts: []*Chart{
+			{
+				Range:          OneDay,
+				LastUpdateTime: time.Date(2019, time.March, 10, 30, 0, 0, 0, time.UTC),
+			},
+			{
+				Quote:          &Quote{CompanyName: "S&P 500"},
+				Range:          OneYear,
+				LastUpdateTime: time.Date(2019, time.March, 10, 30, 0, 0, 0, time.UTC),
+			},
+		},
+	}
+
+	st, err = m.Stock("SPY")
+	if err != nil {
+		t.Errorf("Stock should not return an error if the given symbol is valid.")
+	}
+	if diff := cmp.Diff(want, st); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 }

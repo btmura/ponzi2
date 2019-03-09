@@ -364,7 +364,11 @@ func (c *Controller) chartData(symbol string, dataRange model.Range) (*view.Char
 
 	data := &view.ChartData{Symbol: symbol}
 
-	st := c.model.Stock(symbol)
+	st, err := c.model.Stock(symbol)
+	if err != nil {
+		return nil, err
+	}
+
 	if st == nil {
 		return data, nil
 	}
