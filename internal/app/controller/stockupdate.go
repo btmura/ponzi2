@@ -230,7 +230,7 @@ func (c *Controller) processStockUpdates(ctx context.Context) error {
 			}
 
 		case u.chart != nil:
-			if err := c.model.UpdateChart(u.symbol, u.chart); err != nil {
+			if err := c.model.UpdateStockChart(u.symbol, u.chart); err != nil {
 				return err
 			}
 

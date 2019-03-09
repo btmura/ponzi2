@@ -134,7 +134,7 @@ func TestRemoveSidebarSymbol(t *testing.T) {
 		t.Errorf("RemoveSidebarSymbol should return false if the input symbol is not in the sidebar.")
 	}
 	if err != nil {
-		t.Errorf("RemoveSidebarSypmbol should not return an error if the given symbol is valid.")
+		t.Errorf("RemoveSidebarSymbol should not return an error if the given symbol is valid.")
 	}
 
 	if diff := cmp.Diff([]string{"SPY", "CEF"}, m.SidebarSymbols()); diff != "" {
@@ -168,11 +168,6 @@ func TestValidateSymbol(t *testing.T) {
 		{
 			desc:    "too long",
 			input:   "SPYSPY",
-			wantErr: true,
-		},
-		{
-			desc:    "too short",
-			input:   "SP",
 			wantErr: true,
 		},
 		{

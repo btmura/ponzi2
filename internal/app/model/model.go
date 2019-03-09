@@ -8,10 +8,11 @@ import (
 	"gitlab.com/btmura/ponzi2/internal/status"
 )
 
-// TODO(btmura): add validation functions for symbol, quote, etc.
-
 // now is a function to get the current time. Mocked out in tests to return a fixed time.
 var now = time.Now
+
+// symbolRegexp is a regexp that accepts valid stock symbols. Examples: X, FB, SPY, AAPL
+var symbolRegexp = regexp.MustCompile("^[A-Z]{1,4}$")
 
 // Model models the app's state.
 type Model struct {
@@ -210,8 +211,8 @@ func (m *Model) RemoveSidebarSymbol(symbol string) (removed bool, err error) {
 	return false, nil
 }
 
-// UpdateChart inserts or updates the chart for a stock if it is in the model.
-func (m *Model) UpdateChart(symbol string, chart *Chart) error {
+// UpdateStockChart inserts or updates the chart for a stock if it is in the model.
+func (m *Model) UpdateStockChart(symbol string, chart *Chart) error {
 	if err := validateSymbol(symbol); err != nil {
 		return err
 	}
@@ -245,8 +246,6 @@ func (m *Model) UpdateChart(symbol string, chart *Chart) error {
 func (m *Model) Stock(symbol string) *Stock {
 	return m.symbol2Stock[symbol]
 }
-
-var symbolRegexp = regexp.MustCompile("^[A-Z]{3,4}$")
 
 func validateSymbol(symbol string) error {
 	if !symbolRegexp.MatchString(symbol) {
