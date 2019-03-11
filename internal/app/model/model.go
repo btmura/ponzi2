@@ -12,7 +12,7 @@ import (
 var now = time.Now
 
 // symbolRegexp is a regexp that accepts valid stock symbols. Examples: X, FB, SPY, AAPL
-var symbolRegexp = regexp.MustCompile("^[A-Z]{1,4}$")
+var symbolRegexp = regexp.MustCompile("^[A-Z]{1,5}$")
 
 // Model models the app's state.
 type Model struct {
