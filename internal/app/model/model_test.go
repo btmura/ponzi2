@@ -255,6 +255,39 @@ func TestUpdateStockChart(t *testing.T) {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 }
+
+func TestContainsSymbol(t *testing.T) {
+	m := New()
+
+	if m.containsSymbol("SPY") {
+		t.Errorf("containsSymbol should return false, since nothing was added yet.")
+	}
+
+	m.SetCurrentSymbol("SPY")
+
+	if !m.containsSymbol("SPY") {
+		t.Errorf("containsSymbol should return true, since the current symbol was set to SPY.")
+	}
+
+	m.SetCurrentSymbol("AAPL")
+
+	if m.containsSymbol("SPY") {
+		t.Errorf("containsSymbol should return false, since the current symbol changed to AAPL.")
+	}
+
+	m.AddSidebarSymbol("SPY")
+
+	if !m.containsSymbol("SPY") {
+		t.Errorf("containsSymbol should return true, since the sidebar now has SPY.")
+	}
+
+	m.RemoveSidebarSymbol("SPY")
+
+	if m.containsSymbol("SPY") {
+		t.Errorf("containsSymbol should return false, since the sidebar no longer has SPY.")
+	}
+}
+
 func TestValidateSymbol(t *testing.T) {
 	for _, tt := range []struct {
 		desc    string

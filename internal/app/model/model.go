@@ -167,7 +167,14 @@ func (m *Model) SetCurrentSymbol(symbol string) (changed bool, err error) {
 		return false, nil
 	}
 
+	old := m.currentSymbol
+
 	m.currentSymbol = symbol
+
+	if !m.containsSymbol(old) {
+		delete(m.symbol2Stock, old)
+	}
+
 	return true, nil
 }
 
@@ -193,6 +200,7 @@ func (m *Model) AddSidebarSymbol(symbol string) (added bool, err error) {
 	}
 
 	m.sidebarSymbols = append(m.sidebarSymbols, symbol)
+
 	return true, nil
 }
 
@@ -205,9 +213,13 @@ func (m *Model) RemoveSidebarSymbol(symbol string) (removed bool, err error) {
 	for i, s := range m.sidebarSymbols {
 		if s == symbol {
 			m.sidebarSymbols = append(m.sidebarSymbols[:i], m.sidebarSymbols[i+1:]...)
+			if !m.containsSymbol(symbol) {
+				delete(m.symbol2Stock, symbol)
+			}
 			return true, nil
 		}
 	}
+
 	return false, nil
 }
 
@@ -247,12 +259,28 @@ func (m *Model) UpdateStockChart(symbol string, chart *Chart) error {
 	}
 
 	st.Charts = append(st.Charts, ch)
+
 	return nil
+}
+
+// containsSymbol return true if the symbol is either the current symbol or in the sidebar.
+func (m *Model) containsSymbol(symbol string) bool {
+	if m.currentSymbol == symbol {
+		return true
+	}
+
+	for _, s := range m.sidebarSymbols {
+		if s == symbol {
+			return true
+		}
+	}
+
+	return false
 }
 
 func validateSymbol(symbol string) error {
 	if !symbolRegexp.MatchString(symbol) {
-		return status.Errorf("bad symbol, want: %v", symbolRegexp)
+		return status.Errorf("bad symbol: got %s, want: %v", symbol, symbolRegexp)
 	}
 	return nil
 }
