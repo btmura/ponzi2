@@ -171,8 +171,14 @@ func (m *Model) SetCurrentSymbol(symbol string) (changed bool, err error) {
 
 	m.currentSymbol = symbol
 
+	// Remove the old stock if it's not in the model.
 	if !m.containsSymbol(old) {
 		delete(m.symbol2Stock, old)
+	}
+
+	// Add a stock placeholder for the new symbol if it doesn't exist.
+	if m.symbol2Stock[symbol] == nil {
+		m.symbol2Stock[symbol] = &Stock{Symbol: symbol}
 	}
 
 	return true, nil
@@ -200,6 +206,11 @@ func (m *Model) AddSidebarSymbol(symbol string) (added bool, err error) {
 	}
 
 	m.sidebarSymbols = append(m.sidebarSymbols, symbol)
+
+	// Add a stock placeholder for the new symbol if it doesn't exist.
+	if m.symbol2Stock[symbol] == nil {
+		m.symbol2Stock[symbol] = &Stock{Symbol: symbol}
+	}
 
 	return true, nil
 }
@@ -242,9 +253,10 @@ func (m *Model) UpdateStockChart(symbol string, chart *Chart) error {
 	}
 
 	st := m.symbol2Stock[symbol]
+
+	// Don't do anything if the stock isn't in the model.
 	if st == nil {
-		st = &Stock{Symbol: symbol}
-		m.symbol2Stock[symbol] = st
+		return nil
 	}
 
 	ch := &Chart{}

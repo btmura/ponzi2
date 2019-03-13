@@ -150,28 +150,15 @@ func TestUpdateStockChart(t *testing.T) {
 
 	m := New()
 
+	// Add SPY to the model so UpdateStockChart works.
+	m.SetCurrentSymbol("SPY")
+
 	if err := m.UpdateStockChart("", &Chart{Range: OneDay}); err == nil {
 		t.Errorf("UpdateStockChart should return an error when the input symbol is invalid.")
 	}
 
-	if err := m.UpdateStockChart("SPY", nil); err == nil {
+	if err := m.UpdateStockChart("SPY", nil /* chart can't be nil */); err == nil {
 		t.Errorf("UpdateStockChart should return an error when the input chart is invalid.")
-	}
-
-	st, err := m.Stock("SPY")
-	if st != nil {
-		t.Errorf("Stock should not return a stock if UpdateStockChart hasn't added a chart yet.")
-	}
-	if err != nil {
-		t.Errorf("Stock should not return an error if the given symbol is valid.")
-	}
-
-	st, err = m.Stock("SPYSPY")
-	if st != nil {
-		t.Errorf("Stock should not return a stock if the input symbol is invalid.")
-	}
-	if err == nil {
-		t.Errorf("Stock should return an error if the given input symbol is invalid.")
 	}
 
 	c1 := &Chart{Range: OneDay}
@@ -189,7 +176,7 @@ func TestUpdateStockChart(t *testing.T) {
 		},
 	}
 
-	st, err = m.Stock("SPY")
+	st, err := m.Stock("SPY")
 	if err != nil {
 		t.Errorf("Stock should not return an error if the given symbol is valid.")
 	}
@@ -253,6 +240,33 @@ func TestUpdateStockChart(t *testing.T) {
 	}
 	if diff := cmp.Diff(want, st); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
+	}
+}
+
+func TestStockBookkeeping(t *testing.T) {
+	m := New()
+	if st, _ := m.Stock("SPY"); st != nil {
+		t.Errorf("Stock should return nil if the symbol is not in the model.")
+	}
+
+	m.SetCurrentSymbol("SPY")
+	if st, _ := m.Stock("SPY"); st == nil {
+		t.Errorf("SetCurrentSymbol should insert the new Stock.")
+	}
+
+	m.SetCurrentSymbol("AAPL")
+	if st, _ := m.Stock("SPY"); st != nil {
+		t.Error("SetCurrentSymbol should remove the unused Stock.")
+	}
+
+	m.AddSidebarSymbol("FB")
+	if st, _ := m.Stock("FB"); st == nil {
+		t.Errorf("AddSidebarSymbol should insert the new Stock.")
+	}
+
+	m.RemoveSidebarSymbol("FB")
+	if st, _ := m.Stock("FB"); st != nil {
+		t.Error("RemoveSidebarSymbol should remove the unused Stock.")
 	}
 }
 
