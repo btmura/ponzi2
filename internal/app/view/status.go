@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gitlab.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/model"
 )
 
 var displaySources = map[model.Source]string{

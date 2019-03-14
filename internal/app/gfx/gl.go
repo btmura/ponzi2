@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 
-	"gitlab.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/status"
 )
 
 func glProgram(vertexShaderSrc, fragmentShaderSrc string) (uint32, error) {

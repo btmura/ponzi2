@@ -9,11 +9,11 @@ import (
 
 	"github.com/golang/glog"
 
-	"gitlab.com/btmura/ponzi2/internal/app/config"
-	"gitlab.com/btmura/ponzi2/internal/app/model"
-	"gitlab.com/btmura/ponzi2/internal/app/view"
-	"gitlab.com/btmura/ponzi2/internal/status"
-	"gitlab.com/btmura/ponzi2/internal/stock/iex"
+	"github.com/btmura/ponzi2/internal/app/config"
+	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view"
+	"github.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
 // loc is the timezone to use when parsing dates.

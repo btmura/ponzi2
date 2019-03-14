@@ -3,7 +3,7 @@ package view
 import (
 	math "math"
 
-	"gitlab.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/gfx"
 )
 
 type button struct {

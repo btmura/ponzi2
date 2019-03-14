@@ -5,8 +5,8 @@ import (
 	"math"
 	"strconv"
 
-	"gitlab.com/btmura/ponzi2/internal/app/gfx"
-	"gitlab.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/model"
 )
 
 // chartPrices shows the candlesticks and price labels for a single stock.

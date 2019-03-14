@@ -3,9 +3,9 @@ package view
 import (
 	"golang.org/x/image/font/gofont/goregular"
 
-	"gitlab.com/btmura/ponzi2/internal/app/gfx"
-	"gitlab.com/btmura/ponzi2/internal/app/model"
-	"gitlab.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/status"
 )
 
 const (

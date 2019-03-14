@@ -10,7 +10,7 @@ import (
 
 	"github.com/golang/glog"
 
-	"gitlab.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/status"
 )
 
 // PLY has the elements parsed from a file in the Polygon File Format (PLY).

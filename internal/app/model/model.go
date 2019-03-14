@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"time"
 
-	"gitlab.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/status"
 )
 
 // now is a function to get the current time. Mocked out in tests to return a fixed time.

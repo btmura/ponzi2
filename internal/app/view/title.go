@@ -3,7 +3,7 @@ package view
 import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 
-	"gitlab.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/status"
 )
 
 // Title renders the the title bar.

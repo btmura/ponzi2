@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	"gitlab.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/status"
 )
 
 // Internal package variables used for the implementation.

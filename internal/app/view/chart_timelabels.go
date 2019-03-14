@@ -5,8 +5,8 @@ import (
 	"math"
 	"time"
 
-	"gitlab.com/btmura/ponzi2/internal/app/model"
-	"gitlab.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/status"
 )
 
 // longTime is a time that takes the most display width for measuring purposes.

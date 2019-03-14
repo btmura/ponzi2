@@ -5,9 +5,9 @@ import (
 
 	"github.com/golang/glog"
 
-	"gitlab.com/btmura/ponzi2/internal/app/model"
-	"gitlab.com/btmura/ponzi2/internal/status"
-	"gitlab.com/btmura/ponzi2/internal/stock/iex"
+	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
 type stockUpdate struct {

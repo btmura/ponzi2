@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"image"
 
-	"gitlab.com/btmura/ponzi2/internal/app/gfx"
-	"gitlab.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/model"
 )
 
 var chartStochasticHorizRuleSet = horizRuleSetVAO([]float32{0.2, 0.8}, [2]float32{0, 1}, gray)

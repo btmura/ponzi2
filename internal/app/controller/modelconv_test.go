@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"gitlab.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/model"
 
-	"gitlab.com/btmura/ponzi2/internal/stock/iex"
+	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
 func TestModelOneDayChart(t *testing.T) {
