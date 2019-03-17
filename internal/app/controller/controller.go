@@ -18,6 +18,14 @@ import (
 // loc is the timezone to use when parsing dates.
 var loc = mustLoadLocation("America/New_York")
 
+func mustLoadLocation(name string) *time.Location {
+	loc, err := time.LoadLocation(name)
+	if err != nil {
+		log.Fatalf("time.LoadLocation(%s) failed: %v", name, err)
+	}
+	return loc
+}
+
 // zoomRanges are the ranges from most zoomed out to most zoomed in.
 var zoomRanges = []model.Range{
 	model.OneYear,
@@ -62,7 +70,7 @@ type Controller struct {
 
 // New creates a new Controller.
 func New(iexClient *iex.Client) *Controller {
-	return &Controller{
+	c := &Controller{
 		model:                 model.New(),
 		view:                  view.New(),
 		title:                 view.NewTitle(),
@@ -70,10 +78,14 @@ func New(iexClient *iex.Client) *Controller {
 		symbolToChartThumbMap: map[string]*view.ChartThumb{},
 		chartRange:            model.OneYear,
 		chartThumbRange:       model.OneYear,
-		eventController:       newEventController(),
-		configController:      newConfigController(),
-		iexClient:             iexClient,
+
+		configController: newConfigController(),
+		iexClient:        iexClient,
 	}
+
+	c.eventController = newEventController(c)
+
+	return c
 }
 
 // RunLoop runs the loop until the user exits the app.
@@ -186,7 +198,7 @@ func (c *Controller) RunLoop() error {
 	}
 
 	return c.view.RunLoop(ctx, func(ctx context.Context) error {
-		if err := c.processStockUpdates(ctx); err != nil {
+		if err := c.eventController.process(ctx); err != nil {
 			return err
 		}
 
@@ -352,10 +364,59 @@ func (c *Controller) chartData(symbol string, dataRange model.Range) (*view.Char
 	return data, nil
 }
 
-func mustLoadLocation(name string) *time.Location {
-	loc, err := time.LoadLocation(name)
-	if err != nil {
-		log.Fatalf("time.LoadLocation(%s) failed: %v", name, err)
+// processStockChartUpdate implements the eventProcessor interface.
+func (c *Controller) processStockChartUpdate(symbol string, ch *model.Chart) error {
+	if err := c.model.UpdateStockChart(symbol, ch); err != nil {
+		return err
 	}
-	return loc
+
+	if ch, ok := c.symbolToChartMap[symbol]; ok {
+		ch.SetLoading(false)
+
+		data, err := c.chartData(symbol, c.chartRange)
+		if err != nil {
+			return err
+		}
+
+		if err := c.title.SetData(data); err != nil {
+			return err
+		}
+
+		if err := ch.SetData(data); err != nil {
+			return err
+		}
+	}
+
+	if th, ok := c.symbolToChartThumbMap[symbol]; ok {
+		th.SetLoading(false)
+
+		data, err := c.chartData(symbol, c.chartThumbRange)
+		if err != nil {
+			return err
+		}
+
+		if err := th.SetData(data); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// processStockChartUpdateError implements the eventProcessor interface.
+func (c *Controller) processStockChartUpdateError(symbol string, updateErr error) error {
+	if ch, ok := c.symbolToChartMap[symbol]; ok {
+		ch.SetLoading(false)
+		ch.SetError(true)
+	}
+	if th, ok := c.symbolToChartThumbMap[symbol]; ok {
+		th.SetLoading(false)
+		th.SetError(true)
+	}
+	return nil
+}
+
+// processRefreshAllStocks implements the eventProcessor interface.
+func (c *Controller) processRefreshAllStocks(ctx context.Context) error {
+	return c.refreshAllStocks(ctx)
 }

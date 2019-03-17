@@ -23,10 +23,23 @@ type eventController struct {
 
 	// queueMutex guards the queue.
 	queueMutex *sync.Mutex
+
+	// proc is the eventProcessor that processes events.
+	proc eventProcessor
 }
 
-func newEventController() *eventController {
-	return &eventController{queueMutex: new(sync.Mutex)}
+// eventProcessor is an interface for handling all event types.
+type eventProcessor interface {
+	processStockChartUpdate(symbol string, ch *model.Chart) error
+	processStockChartUpdateError(symbol string, updateErr error) error
+	processRefreshAllStocks(ctx context.Context) error
+}
+
+func newEventController(proc eventProcessor) *eventController {
+	return &eventController{
+		queueMutex: new(sync.Mutex),
+		proc:       proc,
+	}
 }
 
 // addEventLocked locks the queue and adds the new event to the queue.
@@ -53,58 +66,17 @@ func (c *eventController) takeEventLocked() []event {
 	return es
 }
 
-func (c *Controller) processStockUpdates(ctx context.Context) error {
-	for _, e := range c.eventController.takeEventLocked() {
+func (c *eventController) process(ctx context.Context) error {
+	for _, e := range c.takeEventLocked() {
 		switch {
 		case e.updateErr != nil:
-			if ch, ok := c.symbolToChartMap[e.symbol]; ok {
-				ch.SetLoading(false)
-				ch.SetError(true)
-			}
-			if th, ok := c.symbolToChartThumbMap[e.symbol]; ok {
-				th.SetLoading(false)
-				th.SetError(true)
-			}
-
-		case e.refreshAllStocks:
-			if err := c.refreshAllStocks(ctx); err != nil {
-				return err
-			}
+			return c.proc.processStockChartUpdateError(e.symbol, e.updateErr)
 
 		case e.chart != nil:
-			if err := c.model.UpdateStockChart(e.symbol, e.chart); err != nil {
-				return err
-			}
+			return c.proc.processStockChartUpdate(e.symbol, e.chart)
 
-			if ch, ok := c.symbolToChartMap[e.symbol]; ok {
-				ch.SetLoading(false)
-
-				data, err := c.chartData(e.symbol, c.chartRange)
-				if err != nil {
-					return err
-				}
-
-				if err := c.title.SetData(data); err != nil {
-					return err
-				}
-
-				if err := ch.SetData(data); err != nil {
-					return err
-				}
-			}
-
-			if th, ok := c.symbolToChartThumbMap[e.symbol]; ok {
-				th.SetLoading(false)
-
-				data, err := c.chartData(e.symbol, c.chartThumbRange)
-				if err != nil {
-					return err
-				}
-
-				if err := th.SetData(data); err != nil {
-					return err
-				}
-			}
+		case e.refreshAllStocks:
+			return c.proc.processRefreshAllStocks(ctx)
 
 		default:
 			return status.Errorf("bad event: %v", e)
