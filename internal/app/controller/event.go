@@ -11,9 +11,11 @@ import (
 // event is a single event that the Controller should process on the main thread.
 type event struct {
 	symbol           string
+	dataRange        model.Range
 	chart            *model.Chart
 	updateErr        error
 	refreshAllStocks bool
+	refreshStarted   bool
 }
 
 // eventController collects events in a queue. It is thread-safe.
@@ -30,9 +32,11 @@ type eventController struct {
 
 // eventProcessor is an interface for handling all event types.
 type eventProcessor interface {
+	processStockRefreshStarted(symbol string, dataRange model.Range) error
 	processStockChartUpdate(symbol string, ch *model.Chart) error
 	processStockChartUpdateError(symbol string, updateErr error) error
 	processRefreshAllStocks(ctx context.Context) error
+	notifyProcessor()
 }
 
 func newEventController(proc eventProcessor) *eventController {
@@ -51,6 +55,7 @@ func (c *eventController) addEventLocked(es ...event) {
 	c.queueMutex.Lock()
 	defer c.queueMutex.Unlock()
 	c.queue = append(c.queue, es...)
+	c.proc.notifyProcessor()
 }
 
 // takeEventLocked locks the queue, takes an event from the queue, an returns it.
@@ -70,13 +75,24 @@ func (c *eventController) process(ctx context.Context) error {
 	for _, e := range c.takeEventLocked() {
 		switch {
 		case e.updateErr != nil:
-			return c.proc.processStockChartUpdateError(e.symbol, e.updateErr)
+			if err := c.proc.processStockChartUpdateError(e.symbol, e.updateErr); err != nil {
+				return err
+			}
 
 		case e.chart != nil:
-			return c.proc.processStockChartUpdate(e.symbol, e.chart)
+			if err := c.proc.processStockChartUpdate(e.symbol, e.chart); err != nil {
+				return err
+			}
 
 		case e.refreshAllStocks:
-			return c.proc.processRefreshAllStocks(ctx)
+			if err := c.proc.processRefreshAllStocks(ctx); err != nil {
+				return err
+			}
+
+		case e.refreshStarted:
+			if err := c.proc.processStockRefreshStarted(e.symbol, e.dataRange); err != nil {
+				return err
+			}
 
 		default:
 			return status.Errorf("bad event: %v", e)

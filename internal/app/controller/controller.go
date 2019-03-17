@@ -55,17 +55,14 @@ type Controller struct {
 	// chartThumbRange is the current data range to use for ChartThumbnails.
 	chartThumbRange model.Range
 
+	// stockRefresher handles refreshing stock data.
+	stockRefresher *stockRefresher
+
 	// eventController offers methods to manage events like stock updates.
 	eventController *eventController
 
 	// configController controls loading and saving configs.
 	configController *configController
-
-	// iexClient fetches stock data to update the model.
-	iexClient *iex.Client
-
-	// enableRefreshingStocks enables refreshing stocks.
-	enableRefreshingStocks bool
 }
 
 // New creates a new Controller.
@@ -78,13 +75,10 @@ func New(iexClient *iex.Client) *Controller {
 		symbolToChartThumbMap: map[string]*view.ChartThumb{},
 		chartRange:            model.OneYear,
 		chartThumbRange:       model.OneYear,
-
-		configController: newConfigController(),
-		iexClient:        iexClient,
+		configController:      newConfigController(),
 	}
-
 	c.eventController = newEventController(c)
-
+	c.stockRefresher = newStockRefresher(iexClient, c.eventController)
 	return c
 }
 
@@ -173,23 +167,16 @@ func (c *Controller) RunLoop() error {
 			}
 
 			c.eventController.addEventLocked(event{refreshAllStocks: true})
-
-			c.view.WakeLoop()
 		}
 	}()
 
 	defer func() {
 		ticker.Stop()
-
-		// Disable refreshing stocks to avoid unnecessary work.
-		c.enableRefreshingStocks = false
-
-		// Disable config changes to start shutting down save processor.
+		c.stockRefresher.stop()
 		c.configController.stop()
 	}()
 
-	// Enable refreshing stocks and saving configs after the UI is setup and go routines launched.
-	c.enableRefreshingStocks = true
+	c.stockRefresher.start()
 	c.configController.start()
 
 	// Fire requests to get data for the entire UI.
@@ -197,13 +184,7 @@ func (c *Controller) RunLoop() error {
 		return err
 	}
 
-	return c.view.RunLoop(ctx, func(ctx context.Context) error {
-		if err := c.eventController.process(ctx); err != nil {
-			return err
-		}
-
-		return nil
-	})
+	return c.view.RunLoop(ctx, c.eventController.process)
 }
 
 func (c *Controller) setChart(ctx context.Context, symbol string) error {
@@ -276,7 +257,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 
 	// If the stock is already added, just refresh it.
 	if !added {
-		return c.refreshStock(ctx, symbol, c.chartThumbRange)
+		return c.stockRefresher.refreshOne(ctx, symbol, c.chartThumbRange)
 	}
 
 	th := view.NewChartThumb()
@@ -304,7 +285,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 
 	c.view.AddChartThumb(th)
 
-	if err := c.refreshStock(ctx, symbol, c.chartThumbRange); err != nil {
+	if err := c.stockRefresher.refreshOne(ctx, symbol, c.chartThumbRange); err != nil {
 		return err
 	}
 
@@ -364,8 +345,69 @@ func (c *Controller) chartData(symbol string, dataRange model.Range) (*view.Char
 	return data, nil
 }
 
+func (c *Controller) refreshCurrentStock(ctx context.Context) error {
+	d := new(dataRequestBuilder)
+	if s := c.model.CurrentSymbol(); s != "" {
+		if err := d.add([]string{s}, c.chartRange); err != nil {
+			return err
+		}
+	}
+	return c.stockRefresher.refresh(ctx, d)
+}
+
+func (c *Controller) refreshAllStocks(ctx context.Context) error {
+	d := new(dataRequestBuilder)
+
+	if s := c.model.CurrentSymbol(); s != "" {
+		if err := d.add([]string{s}, c.chartRange); err != nil {
+			return err
+		}
+	}
+
+	if err := d.add(c.model.SidebarSymbols(), c.chartThumbRange); err != nil {
+		return err
+	}
+
+	return c.stockRefresher.refresh(ctx, d)
+}
+
+// processStockRefreshStarted implements the eventProcessor interface.
+func (c *Controller) processStockRefreshStarted(symbol string, dataRange model.Range) error {
+	if err := model.ValidateSymbol(symbol); err != nil {
+		return err
+	}
+
+	if dataRange == model.RangeUnspecified {
+		return status.Error("range not set")
+	}
+
+	for s, ch := range c.symbolToChartMap {
+		if s == symbol && c.chartRange == dataRange {
+			ch.SetLoading(true)
+			ch.SetError(false)
+		}
+	}
+
+	for s, th := range c.symbolToChartThumbMap {
+		if s == symbol && c.chartThumbRange == dataRange {
+			th.SetLoading(true)
+			th.SetError(false)
+		}
+	}
+
+	return nil
+}
+
 // processStockChartUpdate implements the eventProcessor interface.
 func (c *Controller) processStockChartUpdate(symbol string, ch *model.Chart) error {
+	if err := model.ValidateSymbol(symbol); err != nil {
+		return err
+	}
+
+	if err := model.ValidateChart(ch); err != nil {
+		return err
+	}
+
 	if err := c.model.UpdateStockChart(symbol, ch); err != nil {
 		return err
 	}
@@ -405,18 +447,29 @@ func (c *Controller) processStockChartUpdate(symbol string, ch *model.Chart) err
 
 // processStockChartUpdateError implements the eventProcessor interface.
 func (c *Controller) processStockChartUpdateError(symbol string, updateErr error) error {
+	if err := model.ValidateSymbol(symbol); err != nil {
+		return err
+	}
+
 	if ch, ok := c.symbolToChartMap[symbol]; ok {
 		ch.SetLoading(false)
 		ch.SetError(true)
 	}
+
 	if th, ok := c.symbolToChartThumbMap[symbol]; ok {
 		th.SetLoading(false)
 		th.SetError(true)
 	}
+
 	return nil
 }
 
 // processRefreshAllStocks implements the eventProcessor interface.
 func (c *Controller) processRefreshAllStocks(ctx context.Context) error {
 	return c.refreshAllStocks(ctx)
+}
+
+// notifyProcessor implements the eventProcessor interface.
+func (c *Controller) notifyProcessor() {
+	c.view.WakeLoop()
 }

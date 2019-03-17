@@ -10,7 +10,33 @@ import (
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
-func (c *Controller) refreshStock(ctx context.Context, symbol string, dataRange model.Range) error {
+type stockRefresher struct {
+	// iexClient fetches stock data to update the model.
+	iexClient *iex.Client
+
+	// enableRefreshingStocks enables refreshing stocks.
+	enableRefreshingStocks bool
+
+	// eventController allows the stockRefresher to post stock updates.
+	eventController *eventController
+}
+
+func newStockRefresher(iexClient *iex.Client, eventController *eventController) *stockRefresher {
+	return &stockRefresher{
+		iexClient:       iexClient,
+		eventController: eventController,
+	}
+}
+
+func (s *stockRefresher) start() {
+	s.enableRefreshingStocks = true
+}
+
+func (s *stockRefresher) stop() {
+	s.enableRefreshingStocks = false
+}
+
+func (s *stockRefresher) refreshOne(ctx context.Context, symbol string, dataRange model.Range) error {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		return err
 	}
@@ -23,61 +49,13 @@ func (c *Controller) refreshStock(ctx context.Context, symbol string, dataRange 
 	if err := d.add([]string{symbol}, dataRange); err != nil {
 		return err
 	}
-	return c.refreshStockInternal(ctx, d)
+	return s.refresh(ctx, d)
 }
 
-func (c *Controller) refreshCurrentStock(ctx context.Context) error {
-	d := new(dataRequestBuilder)
-	if s := c.model.CurrentSymbol(); s != "" {
-		if err := d.add([]string{s}, c.chartRange); err != nil {
-			return err
-		}
-	}
-	return c.refreshStockInternal(ctx, d)
-}
-
-func (c *Controller) refreshAllStocks(ctx context.Context) error {
-	d := new(dataRequestBuilder)
-
-	if s := c.model.CurrentSymbol(); s != "" {
-		if err := d.add([]string{s}, c.chartRange); err != nil {
-			return err
-		}
-	}
-
-	if err := d.add(c.model.SidebarSymbols(), c.chartThumbRange); err != nil {
-		return err
-	}
-
-	return c.refreshStockInternal(ctx, d)
-}
-
-func (c *Controller) refreshStockInternal(ctx context.Context, d *dataRequestBuilder) error {
-	if !c.enableRefreshingStocks {
+func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) error {
+	if !s.enableRefreshingStocks {
 		glog.V(2).Infof("ignoring stock refresh request, refreshing disabled")
 		return nil
-	}
-
-	for s, ch := range c.symbolToChartMap {
-		ok, err := d.contains(s, c.chartRange)
-		if err != nil {
-			return err
-		}
-		if ok {
-			ch.SetLoading(true)
-			ch.SetError(false)
-		}
-	}
-
-	for s, th := range c.symbolToChartThumbMap {
-		ok, err := d.contains(s, c.chartThumbRange)
-		if err != nil {
-			return err
-		}
-		if ok {
-			th.SetLoading(true)
-			th.SetError(false)
-		}
 	}
 
 	reqs, err := d.dataRequests()
@@ -86,20 +64,29 @@ func (c *Controller) refreshStockInternal(ctx context.Context, d *dataRequestBui
 	}
 
 	for _, req := range reqs {
+		for _, sym := range req.symbols {
+			s.eventController.addEventLocked(event{
+				symbol:         sym,
+				dataRange:      req.dataRange,
+				refreshStarted: true,
+			})
+		}
+	}
+
+	for _, req := range reqs {
 		go func(req *dataRequest) {
 			handleErr := func(err error) {
 				var es []event
-				for _, s := range req.symbols {
+				for _, sym := range req.symbols {
 					es = append(es, event{
-						symbol:    s,
+						symbol:    sym,
 						updateErr: err,
 					})
 				}
-				c.eventController.addEventLocked(es...)
-				c.view.WakeLoop()
+				s.eventController.addEventLocked(es...)
 			}
 
-			stocks, err := c.iexClient.GetStocks(ctx, req.iexRequest)
+			stocks, err := s.iexClient.GetStocks(ctx, req.iexRequest)
 			if err != nil {
 				handleErr(err)
 				return
@@ -130,19 +117,17 @@ func (c *Controller) refreshStockInternal(ctx context.Context, d *dataRequestBui
 				}
 			}
 
-			for _, s := range req.symbols {
-				if found[s] {
+			for _, sym := range req.symbols {
+				if found[sym] {
 					continue
 				}
 				es = append(es, event{
-					symbol:    s,
-					updateErr: status.Errorf("no stock data for %q", s),
+					symbol:    sym,
+					updateErr: status.Errorf("no stock data for %q", sym),
 				})
 			}
 
-			c.eventController.addEventLocked(es...)
-			c.view.WakeLoop()
-
+			s.eventController.addEventLocked(es...)
 		}(req)
 	}
 
@@ -188,23 +173,6 @@ func (d *dataRequestBuilder) add(symbols []string, dataRange model.Range) error 
 	d.range2Symbols[dataRange] = ss
 
 	return nil
-}
-
-func (d *dataRequestBuilder) contains(symbol string, dataRange model.Range) (bool, error) {
-	if err := model.ValidateSymbol(symbol); err != nil {
-		return false, err
-	}
-
-	if dataRange == model.RangeUnspecified {
-		return false, status.Error("range not set")
-	}
-
-	for _, s := range d.range2Symbols[dataRange] {
-		if s == symbol {
-			return true, nil
-		}
-	}
-	return false, nil
 }
 
 type dataRequest struct {
