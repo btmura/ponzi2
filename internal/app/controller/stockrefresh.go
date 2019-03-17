@@ -11,7 +11,14 @@ import (
 )
 
 func (c *Controller) refreshStock(ctx context.Context, symbol string, dataRange model.Range) error {
-	// TODO(btmura): validate symbols
+	if err := model.ValidateSymbol(symbol); err != nil {
+		return err
+	}
+
+	if dataRange == model.RangeUnspecified {
+		return status.Error("range not set")
+	}
+
 	d := new(dataRequestBuilder)
 	if err := d.add([]string{symbol}, dataRange); err != nil {
 		return err
@@ -148,7 +155,11 @@ type dataRequestBuilder struct {
 }
 
 func (d *dataRequestBuilder) add(symbols []string, dataRange model.Range) error {
-	// TODO(btmura): validate symbols
+	for _, s := range symbols {
+		if err := model.ValidateSymbol(s); err != nil {
+			return err
+		}
+	}
 
 	if dataRange == model.RangeUnspecified {
 		return status.Error("range not set")
@@ -180,7 +191,14 @@ func (d *dataRequestBuilder) add(symbols []string, dataRange model.Range) error 
 }
 
 func (d *dataRequestBuilder) contains(symbol string, dataRange model.Range) (bool, error) {
-	// TODO(btmura): validate symbols
+	if err := model.ValidateSymbol(symbol); err != nil {
+		return false, err
+	}
+
+	if dataRange == model.RangeUnspecified {
+		return false, status.Error("range not set")
+	}
+
 	for _, s := range d.range2Symbols[dataRange] {
 		if s == symbol {
 			return true, nil

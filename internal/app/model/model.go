@@ -11,8 +11,8 @@ import (
 // now is a function to get the current time. Mocked out in tests to return a fixed time.
 var now = time.Now
 
-// symbolRegexp is a regexp that accepts valid stock symbols. Examples: X, FB, SPY, AAPL
-var symbolRegexp = regexp.MustCompile("^[A-Z]{1,5}$")
+// validSymbolRegexp is a regexp that accepts valid stock symbols. Examples: X, FB, SPY, AAPL
+var validSymbolRegexp = regexp.MustCompile("^[A-Z]{1,5}$")
 
 // Model models the app's state.
 type Model struct {
@@ -159,7 +159,7 @@ func (m *Model) CurrentSymbol() string {
 
 // SetCurrentSymbol sets the current stock symbol and returns true if the current symbol changed.
 func (m *Model) SetCurrentSymbol(symbol string) (changed bool, err error) {
-	if err := validateSymbol(symbol); err != nil {
+	if err := ValidateSymbol(symbol); err != nil {
 		return false, err
 	}
 
@@ -195,7 +195,7 @@ func (m *Model) SidebarSymbols() []string {
 
 // AddSidebarSymbol adds a symbol to the sidebar and returns true if the stock was newly added.
 func (m *Model) AddSidebarSymbol(symbol string) (added bool, err error) {
-	if err := validateSymbol(symbol); err != nil {
+	if err := ValidateSymbol(symbol); err != nil {
 		return false, err
 	}
 
@@ -217,7 +217,7 @@ func (m *Model) AddSidebarSymbol(symbol string) (added bool, err error) {
 
 // RemoveSidebarSymbol removes a symbol from the sidebar and returns true if removed.
 func (m *Model) RemoveSidebarSymbol(symbol string) (removed bool, err error) {
-	if err := validateSymbol(symbol); err != nil {
+	if err := ValidateSymbol(symbol); err != nil {
 		return false, err
 	}
 
@@ -236,7 +236,7 @@ func (m *Model) RemoveSidebarSymbol(symbol string) (removed bool, err error) {
 
 // Stock returns the stock for the symbol if it is in the model. Nil otherwise.
 func (m *Model) Stock(symbol string) (*Stock, error) {
-	if err := validateSymbol(symbol); err != nil {
+	if err := ValidateSymbol(symbol); err != nil {
 		return nil, err
 	}
 	return m.symbol2Stock[symbol], nil
@@ -244,11 +244,11 @@ func (m *Model) Stock(symbol string) (*Stock, error) {
 
 // UpdateStockChart inserts or updates the chart for a stock if it is in the model.
 func (m *Model) UpdateStockChart(symbol string, chart *Chart) error {
-	if err := validateSymbol(symbol); err != nil {
+	if err := ValidateSymbol(symbol); err != nil {
 		return err
 	}
 
-	if err := validateChart(chart); err != nil {
+	if err := ValidateChart(chart); err != nil {
 		return err
 	}
 
@@ -290,14 +290,16 @@ func (m *Model) containsSymbol(symbol string) bool {
 	return false
 }
 
-func validateSymbol(symbol string) error {
-	if !symbolRegexp.MatchString(symbol) {
-		return status.Errorf("bad symbol: got %s, want: %v", symbol, symbolRegexp)
+// ValidateSymbol validates a symbol and returns an error if it's invalid.
+func ValidateSymbol(symbol string) error {
+	if !validSymbolRegexp.MatchString(symbol) {
+		return status.Errorf("bad symbol: got %s, want: %v", symbol, validSymbolRegexp)
 	}
 	return nil
 }
 
-func validateChart(ch *Chart) error {
+// ValidateChart validates a Chart and returns an error if it's invalid.
+func ValidateChart(ch *Chart) error {
 	if ch == nil {
 		return status.Error("missing chart")
 	}
