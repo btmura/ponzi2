@@ -153,7 +153,7 @@ func (c *Controller) RunLoop() error {
 		// Set zoom and refresh the current stock.
 		c.chartRange = zoomRanges[i]
 
-		if err := c.refreshStocks(ctx, c.currentStockRefreshRequests()); err != nil {
+		if err := c.refreshCurrentStock(ctx); err != nil {
 			glog.Fatalf("TODO(btmura): remove log fatal, refreshStocks: %v", err)
 		}
 	})
@@ -203,7 +203,7 @@ func (c *Controller) RunLoop() error {
 	c.enableSavingConfigs = true
 
 	// Fire requests to get data for the entire UI.
-	if err := c.refreshStocks(ctx, c.allStockRefreshRequests()); err != nil {
+	if err := c.refreshAllStocks(ctx); err != nil {
 		return err
 	}
 
@@ -232,7 +232,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 
 	// If the stock is already the current one, just refresh it.
 	if !changed {
-		return c.refreshStocks(ctx, c.currentStockRefreshRequests())
+		return c.refreshCurrentStock(ctx)
 	}
 
 	for symbol, ch := range c.symbolToChartMap {
@@ -257,7 +257,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 	}
 
 	ch.SetRefreshButtonClickCallback(func() {
-		if err := c.refreshStocks(ctx, c.allStockRefreshRequests()); err != nil {
+		if err := c.refreshAllStocks(ctx); err != nil {
 			glog.Fatalf("TODO(btmura): remove log fatal, refreshStocks: %v", err)
 		}
 	})
@@ -269,7 +269,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 
 	c.view.SetChart(ch)
 
-	if err := c.refreshStocks(ctx, c.currentStockRefreshRequests()); err != nil {
+	if err := c.refreshCurrentStock(ctx); err != nil {
 		return err
 	}
 
@@ -290,10 +290,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 
 	// If the stock is already added, just refresh it.
 	if !added {
-		return c.refreshStocks(ctx, []stockRefreshRequest{{
-			symbols:   []string{symbol},
-			dataRange: c.chartThumbRange,
-		}})
+		return c.refreshStock(ctx, symbol, c.chartThumbRange)
 	}
 
 	th := view.NewChartThumb()
@@ -321,10 +318,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 
 	c.view.AddChartThumb(th)
 
-	if err := c.refreshStocks(ctx, []stockRefreshRequest{{
-		symbols:   []string{symbol},
-		dataRange: c.chartThumbRange,
-	}}); err != nil {
+	if err := c.refreshStock(ctx, symbol, c.chartThumbRange); err != nil {
 		return err
 	}
 
