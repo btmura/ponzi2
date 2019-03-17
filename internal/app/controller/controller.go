@@ -50,9 +50,6 @@ type Controller struct {
 	// stockUpdateController offers methods to manage stock updates.
 	stockUpdateController *stockUpdateController
 
-	// signalController offers methods to manage signals.
-	signalController *signalController
-
 	// configController controls loading and saving configs.
 	configController *configController
 
@@ -74,7 +71,6 @@ func New(iexClient *iex.Client) *Controller {
 		chartRange:            model.OneYear,
 		chartThumbRange:       model.OneYear,
 		stockUpdateController: newStockUpdateController(),
-		signalController:      newSignalController(),
 		configController:      newConfigController(),
 		iexClient:             iexClient,
 	}
@@ -164,7 +160,10 @@ func (c *Controller) RunLoop() error {
 				continue
 			}
 
-			c.signalController.addPendingSignalsLocked([]signal{refreshAllStocks})
+			c.stockUpdateController.addPendingStockUpdatesLocked([]stockUpdate{
+				{refreshAllStocks: true},
+			})
+
 			c.view.WakeLoop()
 		}
 	}()
@@ -190,10 +189,6 @@ func (c *Controller) RunLoop() error {
 
 	return c.view.RunLoop(ctx, func(ctx context.Context) error {
 		if err := c.processStockUpdates(ctx); err != nil {
-			return err
-		}
-
-		if err := c.processPendingSignals(ctx); err != nil {
 			return err
 		}
 

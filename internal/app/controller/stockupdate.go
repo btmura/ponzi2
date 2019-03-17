@@ -9,9 +9,10 @@ import (
 )
 
 type stockUpdate struct {
-	symbol    string
-	chart     *model.Chart
-	updateErr error
+	symbol           string
+	chart            *model.Chart
+	updateErr        error
+	refreshAllStocks bool
 }
 
 type stockUpdateController struct {
@@ -59,6 +60,11 @@ func (c *Controller) processStockUpdates(ctx context.Context) error {
 			if th, ok := c.symbolToChartThumbMap[u.symbol]; ok {
 				th.SetLoading(false)
 				th.SetError(true)
+			}
+
+		case u.refreshAllStocks:
+			if err := c.refreshAllStocks(ctx); err != nil {
+				return err
 			}
 
 		case u.chart != nil:
