@@ -7,7 +7,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 )
 
-type configController struct {
+type configSaver struct {
 	// enableSavingConfigs enables saving config changes.
 	enableSavingConfigs bool
 
@@ -18,14 +18,14 @@ type configController struct {
 	doneSavingConfigs chan bool
 }
 
-func newConfigController() *configController {
-	return &configController{
+func newConfigController() *configSaver {
+	return &configSaver{
 		pendingConfigSaves: make(chan *config.Config),
 		doneSavingConfigs:  make(chan bool),
 	}
 }
 
-func (c *configController) saveLoop() {
+func (c *configSaver) saveLoop() {
 	for cfg := range c.pendingConfigSaves {
 		if err := config.Save(cfg); err != nil {
 			glog.V(2).Infof("failed to save config: %v", err)
@@ -34,11 +34,11 @@ func (c *configController) saveLoop() {
 	c.doneSavingConfigs <- true
 }
 
-func (c *configController) start() {
+func (c *configSaver) start() {
 	c.enableSavingConfigs = true
 }
 
-func (c *configController) save(model *model.Model) {
+func (c *configSaver) save(model *model.Model) {
 	if !c.enableSavingConfigs {
 		glog.V(2).Infof("ignoring save request, saving disabled")
 		return
@@ -59,7 +59,7 @@ func (c *configController) save(model *model.Model) {
 	}()
 }
 
-func (c *configController) stop() {
+func (c *configSaver) stop() {
 	c.enableSavingConfigs = false
 	close(c.pendingConfigSaves)
 	<-c.doneSavingConfigs

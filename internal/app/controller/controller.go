@@ -61,8 +61,8 @@ type Controller struct {
 	// eventController offers methods to manage events like stock updates.
 	eventController *eventController
 
-	// configController controls loading and saving configs.
-	configController *configController
+	// configSaver controls saving configs.
+	configSaver *configSaver
 }
 
 // New creates a new Controller.
@@ -75,7 +75,7 @@ func New(iexClient *iex.Client) *Controller {
 		symbolToChartThumbMap: map[string]*view.ChartThumb{},
 		chartRange:            model.OneYear,
 		chartThumbRange:       model.OneYear,
-		configController:      newConfigController(),
+		configSaver:           newConfigController(),
 	}
 	c.eventController = newEventController(c)
 	c.stockRefresher = newStockRefresher(iexClient, c.eventController)
@@ -151,7 +151,7 @@ func (c *Controller) RunLoop() error {
 	})
 
 	// Process config changes in the background until the program ends.
-	go c.configController.saveLoop()
+	go c.configSaver.saveLoop()
 
 	// Refresh stocks during market hours.
 	ticker := time.NewTicker(5 * time.Minute)
@@ -173,11 +173,11 @@ func (c *Controller) RunLoop() error {
 	defer func() {
 		ticker.Stop()
 		c.stockRefresher.stop()
-		c.configController.stop()
+		c.configSaver.stop()
 	}()
 
 	c.stockRefresher.start()
-	c.configController.start()
+	c.configSaver.start()
 
 	// Fire requests to get data for the entire UI.
 	if err := c.refreshAllStocks(ctx); err != nil {
@@ -240,7 +240,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 		return err
 	}
 
-	c.configController.save(c.model)
+	c.configSaver.save(c.model)
 
 	return nil
 }
@@ -289,7 +289,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 		return err
 	}
 
-	c.configController.save(c.model)
+	c.configSaver.save(c.model)
 
 	return nil
 }
@@ -313,7 +313,7 @@ func (c *Controller) removeChartThumb(symbol string) error {
 	th.Close()
 
 	c.view.RemoveChartThumb(th)
-	c.configController.save(c.model)
+	c.configSaver.save(c.model)
 
 	return nil
 }
