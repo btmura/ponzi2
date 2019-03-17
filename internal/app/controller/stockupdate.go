@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"sync"
 
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/status"
@@ -13,9 +14,21 @@ type stockUpdate struct {
 	updateErr error
 }
 
+type stockUpdateController struct {
+	// pendingStockUpdates are the updates to be processed by the main thread.
+	pendingStockUpdates []stockUpdate
+
+	// pendingMutex guards pendingUpdates.
+	pendingMutex *sync.Mutex
+}
+
+func newStockUpdateController() *stockUpdateController {
+	return &stockUpdateController{pendingMutex: new(sync.Mutex)}
+}
+
 // addPendingStockUpdatesLocked locks the pendingStockUpdates slice
 // and adds the new stock updates to the existing slice.
-func (c *Controller) addPendingStockUpdatesLocked(us []stockUpdate) {
+func (c *stockUpdateController) addPendingStockUpdatesLocked(us []stockUpdate) {
 	c.pendingMutex.Lock()
 	defer c.pendingMutex.Unlock()
 	c.pendingStockUpdates = append(c.pendingStockUpdates, us...)
@@ -23,7 +36,7 @@ func (c *Controller) addPendingStockUpdatesLocked(us []stockUpdate) {
 
 // takePendingStockUpdatesLocked locks the pendingStockUpdates slice,
 // returns a copy of the updates, and empties the existing updates.
-func (c *Controller) takePendingStockUpdatesLocked() []stockUpdate {
+func (c *stockUpdateController) takePendingStockUpdatesLocked() []stockUpdate {
 	c.pendingMutex.Lock()
 	defer c.pendingMutex.Unlock()
 

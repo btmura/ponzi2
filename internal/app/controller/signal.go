@@ -1,6 +1,9 @@
 package controller
 
-import "context"
+import (
+	"context"
+	"sync"
+)
 
 //go:generate stringer -type=signal
 type signal int
@@ -10,9 +13,21 @@ const (
 	refreshAllStocks
 )
 
+type signalController struct {
+	// pendingSignals are the signals to be processed by the main thread.
+	pendingSignals []signal
+
+	// pendingMutex guards pendingSignals.
+	pendingMutex *sync.Mutex
+}
+
+func newSignalController() *signalController {
+	return &signalController{pendingMutex: new(sync.Mutex)}
+}
+
 // addPendingSignalsLocked locks the pendingSignals slice
 // and adds the new signals to the existing slice.
-func (c *Controller) addPendingSignalsLocked(signals []signal) {
+func (c *signalController) addPendingSignalsLocked(signals []signal) {
 	c.pendingMutex.Lock()
 	defer c.pendingMutex.Unlock()
 	c.pendingSignals = append(c.pendingSignals, signals...)
@@ -20,7 +35,7 @@ func (c *Controller) addPendingSignalsLocked(signals []signal) {
 
 // takePendingSignalsLocked locks the pendingSignals slice,
 // returns a copy of the current signals, and empties the existing signals.
-func (c *Controller) takePendingSignalsLocked() []signal {
+func (c *signalController) takePendingSignalsLocked() []signal {
 	c.pendingMutex.Lock()
 	defer c.pendingMutex.Unlock()
 

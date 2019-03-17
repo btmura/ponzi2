@@ -4,7 +4,6 @@ package controller
 import (
 	"context"
 	"log"
-	"sync"
 	"time"
 
 	"github.com/golang/glog"
@@ -33,15 +32,6 @@ type Controller struct {
 	// iexClient fetches stock data to update the model.
 	iexClient *iex.Client
 
-	// pendingStockUpdates are the updates to be processed by the main thread.
-	pendingStockUpdates []stockUpdate
-
-	// pendingSignals are the signals to be processed by the main thread.
-	pendingSignals []signal
-
-	// pendingMutex guards pendingUpdates and pendingSignals.
-	pendingMutex *sync.Mutex
-
 	// view is the UI that the Controller updates.
 	view *view.View
 
@@ -59,6 +49,12 @@ type Controller struct {
 
 	// chartThumbRange is the current data range to use for ChartThumbnails.
 	chartThumbRange model.Range
+
+	// stockUpdateController offers methods to manage stock updates.
+	*stockUpdateController
+
+	// signalController offers methods to manage signals.
+	*signalController
 
 	// enableRefreshingStocks enables refreshing stocks.
 	enableRefreshingStocks bool
@@ -78,7 +74,8 @@ func New(iexClient *iex.Client) *Controller {
 	return &Controller{
 		model:                 model.New(),
 		iexClient:             iexClient,
-		pendingMutex:          &sync.Mutex{},
+		stockUpdateController: newStockUpdateController(),
+		signalController:      newSignalController(),
 		view:                  view.New(),
 		title:                 view.NewTitle(),
 		symbolToChartMap:      map[string]*view.Chart{},
