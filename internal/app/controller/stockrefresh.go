@@ -81,14 +81,14 @@ func (c *Controller) refreshStockInternal(ctx context.Context, d *dataRequestBui
 	for _, req := range reqs {
 		go func(req *dataRequest) {
 			handleErr := func(err error) {
-				var us []stockUpdate
+				var es []event
 				for _, s := range req.symbols {
-					us = append(us, stockUpdate{
+					es = append(es, event{
 						symbol:    s,
 						updateErr: err,
 					})
 				}
-				c.stockUpdateController.addPendingStockUpdatesLocked(us)
+				c.eventController.addEventLocked(es...)
 				c.view.WakeLoop()
 			}
 
@@ -98,7 +98,7 @@ func (c *Controller) refreshStockInternal(ctx context.Context, d *dataRequestBui
 				return
 			}
 
-			var us []stockUpdate
+			var es []event
 
 			found := map[string]bool{}
 			for _, st := range stocks {
@@ -107,7 +107,7 @@ func (c *Controller) refreshStockInternal(ctx context.Context, d *dataRequestBui
 				switch req.dataRange {
 				case model.OneDay:
 					ch, err := modelOneDayChart(st)
-					us = append(us, stockUpdate{
+					es = append(es, event{
 						symbol:    st.Symbol,
 						chart:     ch,
 						updateErr: err,
@@ -115,7 +115,7 @@ func (c *Controller) refreshStockInternal(ctx context.Context, d *dataRequestBui
 
 				case model.OneYear:
 					ch, err := modelOneYearChart(st)
-					us = append(us, stockUpdate{
+					es = append(es, event{
 						symbol:    st.Symbol,
 						chart:     ch,
 						updateErr: err,
@@ -127,13 +127,13 @@ func (c *Controller) refreshStockInternal(ctx context.Context, d *dataRequestBui
 				if found[s] {
 					continue
 				}
-				us = append(us, stockUpdate{
+				es = append(es, event{
 					symbol:    s,
 					updateErr: status.Errorf("no stock data for %q", s),
 				})
 			}
 
-			c.stockUpdateController.addPendingStockUpdatesLocked(us)
+			c.eventController.addEventLocked(es...)
 			c.view.WakeLoop()
 
 		}(req)

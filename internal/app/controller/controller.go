@@ -47,8 +47,8 @@ type Controller struct {
 	// chartThumbRange is the current data range to use for ChartThumbnails.
 	chartThumbRange model.Range
 
-	// stockUpdateController offers methods to manage stock updates.
-	stockUpdateController *stockUpdateController
+	// eventController offers methods to manage events like stock updates.
+	eventController *eventController
 
 	// configController controls loading and saving configs.
 	configController *configController
@@ -70,7 +70,7 @@ func New(iexClient *iex.Client) *Controller {
 		symbolToChartThumbMap: map[string]*view.ChartThumb{},
 		chartRange:            model.OneYear,
 		chartThumbRange:       model.OneYear,
-		stockUpdateController: newStockUpdateController(),
+		eventController:       newEventController(),
 		configController:      newConfigController(),
 		iexClient:             iexClient,
 	}
@@ -160,9 +160,7 @@ func (c *Controller) RunLoop() error {
 				continue
 			}
 
-			c.stockUpdateController.addPendingStockUpdatesLocked([]stockUpdate{
-				{refreshAllStocks: true},
-			})
+			c.eventController.addEventLocked(event{refreshAllStocks: true})
 
 			c.view.WakeLoop()
 		}
