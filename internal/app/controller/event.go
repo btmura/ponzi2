@@ -54,6 +54,7 @@ func (c *eventController) addEventLocked(es ...event) {
 
 	c.queueMutex.Lock()
 	defer c.queueMutex.Unlock()
+
 	c.queue = append(c.queue, es...)
 	c.proc.notifyProcessor()
 }
@@ -63,11 +64,14 @@ func (c *eventController) takeEventLocked() []event {
 	c.queueMutex.Lock()
 	defer c.queueMutex.Unlock()
 
-	var es []event
-	for _, u := range c.queue {
-		es = append(es, u)
+	if len(c.queue) == 0 {
+		return nil
 	}
-	c.queue = nil
+
+	var es []event
+	es = append(es, c.queue[0])
+	c.queue = c.queue[1:]
+
 	return es
 }
 
