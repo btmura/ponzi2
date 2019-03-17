@@ -88,7 +88,7 @@ func (c *Controller) refreshStockInternal(ctx context.Context, d *dataRequestBui
 						updateErr: err,
 					})
 				}
-				c.addPendingStockUpdatesLocked(us)
+				c.stockUpdateController.addPendingStockUpdatesLocked(us)
 				c.view.WakeLoop()
 			}
 
@@ -133,7 +133,7 @@ func (c *Controller) refreshStockInternal(ctx context.Context, d *dataRequestBui
 				})
 			}
 
-			c.addPendingStockUpdatesLocked(us)
+			c.stockUpdateController.addPendingStockUpdatesLocked(us)
 			c.view.WakeLoop()
 
 		}(req)

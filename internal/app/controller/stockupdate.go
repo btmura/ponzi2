@@ -49,7 +49,7 @@ func (c *stockUpdateController) takePendingStockUpdatesLocked() []stockUpdate {
 }
 
 func (c *Controller) processStockUpdates(ctx context.Context) error {
-	for _, u := range c.takePendingStockUpdatesLocked() {
+	for _, u := range c.stockUpdateController.takePendingStockUpdatesLocked() {
 		switch {
 		case u.updateErr != nil:
 			if ch, ok := c.symbolToChartMap[u.symbol]; ok {

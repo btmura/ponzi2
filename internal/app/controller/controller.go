@@ -29,9 +29,6 @@ type Controller struct {
 	// model is the data that the Controller connects to the View.
 	model *model.Model
 
-	// iexClient fetches stock data to update the model.
-	iexClient *iex.Client
-
 	// view is the UI that the Controller updates.
 	view *view.View
 
@@ -51,39 +48,35 @@ type Controller struct {
 	chartThumbRange model.Range
 
 	// stockUpdateController offers methods to manage stock updates.
-	*stockUpdateController
+	stockUpdateController *stockUpdateController
 
 	// signalController offers methods to manage signals.
-	*signalController
+	signalController *signalController
+
+	// configController controls loading and saving configs.
+	configController *configController
+
+	// iexClient fetches stock data to update the model.
+	iexClient *iex.Client
 
 	// enableRefreshingStocks enables refreshing stocks.
 	enableRefreshingStocks bool
-
-	// enableSavingConfigs enables saving config changes.
-	enableSavingConfigs bool
-
-	// pendingConfigSaves is a channel with configs to save.
-	pendingConfigSaves chan *config.Config
-
-	// doneSavingConfigs indicates saving is done and the program may quit.
-	doneSavingConfigs chan bool
 }
 
 // New creates a new Controller.
 func New(iexClient *iex.Client) *Controller {
 	return &Controller{
 		model:                 model.New(),
-		iexClient:             iexClient,
-		stockUpdateController: newStockUpdateController(),
-		signalController:      newSignalController(),
 		view:                  view.New(),
 		title:                 view.NewTitle(),
 		symbolToChartMap:      map[string]*view.Chart{},
 		symbolToChartThumbMap: map[string]*view.ChartThumb{},
 		chartRange:            model.OneYear,
 		chartThumbRange:       model.OneYear,
-		pendingConfigSaves:    make(chan *config.Config),
-		doneSavingConfigs:     make(chan bool),
+		stockUpdateController: newStockUpdateController(),
+		signalController:      newSignalController(),
+		configController:      newConfigController(),
+		iexClient:             iexClient,
 	}
 }
 
@@ -156,14 +149,7 @@ func (c *Controller) RunLoop() error {
 	})
 
 	// Process config changes in the background until the program ends.
-	go func() {
-		for cfg := range c.pendingConfigSaves {
-			if err := config.Save(cfg); err != nil {
-				glog.V(2).Infof("failed to save config: %v", err)
-			}
-		}
-		c.doneSavingConfigs <- true
-	}()
+	go c.configController.saveLoop()
 
 	// Refresh stocks during market hours.
 	ticker := time.NewTicker(5 * time.Minute)
@@ -178,7 +164,7 @@ func (c *Controller) RunLoop() error {
 				continue
 			}
 
-			c.addPendingSignalsLocked([]signal{refreshAllStocks})
+			c.signalController.addPendingSignalsLocked([]signal{refreshAllStocks})
 			c.view.WakeLoop()
 		}
 	}()
@@ -190,14 +176,12 @@ func (c *Controller) RunLoop() error {
 		c.enableRefreshingStocks = false
 
 		// Disable config changes to start shutting down save processor.
-		c.enableSavingConfigs = false
-		close(c.pendingConfigSaves)
-		<-c.doneSavingConfigs
+		c.configController.stop()
 	}()
 
 	// Enable refreshing stocks and saving configs after the UI is setup and go routines launched.
 	c.enableRefreshingStocks = true
-	c.enableSavingConfigs = true
+	c.configController.start()
 
 	// Fire requests to get data for the entire UI.
 	if err := c.refreshAllStocks(ctx); err != nil {
@@ -270,7 +254,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 		return err
 	}
 
-	c.saveConfig()
+	c.configController.save(c.model)
 
 	return nil
 }
@@ -319,7 +303,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 		return err
 	}
 
-	c.saveConfig()
+	c.configController.save(c.model)
 
 	return nil
 }
@@ -343,7 +327,7 @@ func (c *Controller) removeChartThumb(symbol string) error {
 	th.Close()
 
 	c.view.RemoveChartThumb(th)
-	c.saveConfig()
+	c.configController.save(c.model)
 
 	return nil
 }
@@ -373,27 +357,6 @@ func (c *Controller) chartData(symbol string, dataRange model.Range) (*view.Char
 	}
 
 	return data, nil
-}
-
-func (c *Controller) saveConfig() {
-	if !c.enableSavingConfigs {
-		glog.V(2).Infof("ignoring save request, saving disabled")
-		return
-	}
-
-	// Make the config on the main thread to save the exact config at the time.
-	cfg := &config.Config{}
-	if s := c.model.CurrentSymbol(); s != "" {
-		cfg.CurrentStock = &config.Stock{Symbol: s}
-	}
-	for _, s := range c.model.SidebarSymbols() {
-		cfg.Stocks = append(cfg.Stocks, &config.Stock{Symbol: s})
-	}
-
-	// Queue the config for saving.
-	go func() {
-		c.pendingConfigSaves <- cfg
-	}()
 }
 
 func mustLoadLocation(name string) *time.Location {

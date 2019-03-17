@@ -48,7 +48,7 @@ func (c *signalController) takePendingSignalsLocked() []signal {
 }
 
 func (c *Controller) processPendingSignals(ctx context.Context) error {
-	for _, s := range c.takePendingSignalsLocked() {
+	for _, s := range c.signalController.takePendingSignalsLocked() {
 		switch s {
 		case refreshAllStocks:
 			if err := c.refreshAllStocks(ctx); err != nil {
