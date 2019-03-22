@@ -4,10 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/btmura/ponzi2/internal/app/model"
-
 	"github.com/btmura/ponzi2/internal/stock/iex"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestModelOneDayChart(t *testing.T) {
