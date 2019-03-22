@@ -65,12 +65,6 @@ const (
 const viewPadding = 10
 
 var (
-	chartThumbSize         = image.Pt(155, 105)
-	chartThumbRenderOffset = image.Pt(0, viewPadding+chartThumbSize.Y)
-	sidebarScrollAmount    = chartThumbRenderOffset
-)
-
-var (
 	inputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
 	instructionsText        = newCenteredText(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER...")
 )
@@ -101,8 +95,8 @@ type View struct {
 	// charts renders the charts in the main area.
 	charts []*viewChart
 
-	// chartThumbs renders the stocks in the sidebar.
-	chartThumbs []*viewChartThumb
+	// sidebar is the sidebar of chart thumbnails on the side.
+	sidebar *sidebar
 
 	// inputSymbol stores and renders the symbol being entered by the user.
 	inputSymbol *centeredText
@@ -124,10 +118,6 @@ type View struct {
 
 	// mouseLeftButtonClicked is whether the left mouse button was clicked.
 	mouseLeftButtonClicked bool
-
-	// sidebarScrollOffset stores the Y offset accumulated from scroll events
-	// that should be used to calculate the sidebar's bounds.
-	sidebarScrollOffset image.Point
 }
 
 type viewChart struct {
@@ -139,18 +129,6 @@ func newViewChart(ch *Chart) *viewChart {
 	return &viewChart{
 		chart:        ch,
 		viewAnimator: newViewAnimator(ch),
-	}
-}
-
-type viewChartThumb struct {
-	chartThumb *ChartThumb
-	*viewAnimator
-}
-
-func newViewChartThumb(th *ChartThumb) *viewChartThumb {
-	return &viewChartThumb{
-		chartThumb:   th,
-		viewAnimator: newViewAnimator(th),
 	}
 }
 
@@ -239,6 +217,7 @@ func (vc viewContext) LeftClickInBounds() bool {
 func New() *View {
 	return &View{
 		title:                        NewTitle(),
+		sidebar:                      new(sidebar),
 		inputSymbol:                  newCenteredText(inputSymbolTextRenderer, "", centeredTextBubble(chartRounding, chartPadding)),
 		inputSymbolSubmittedCallback: func(symbol string) {},
 		chartZoomChangeCallback:      func(zoomChange ZoomChange) {},
@@ -337,7 +316,7 @@ func (v *View) handleSizeEvent(width, height int) {
 	// Reset the sidebar scroll offset if the sidebar is shorter than the window.
 	m := v.metrics()
 	if m.sidebarBounds.Dy() < m.sidebarRegion.Dy() {
-		v.sidebarScrollOffset = image.ZP
+		v.sidebar.sidebarScrollOffset = image.ZP
 	}
 }
 
@@ -372,7 +351,7 @@ func (v *View) metrics() viewMetrics {
 	// |   | padding |   |
 	// +---+---------+---+
 
-	if len(v.chartThumbs) == 0 {
+	if len(v.sidebar.chartThumbs) == 0 {
 		cb := image.Rect(0, 0, v.winSize.X, v.winSize.Y)
 		cb = cb.Inset(viewPadding)
 		return viewMetrics{chartBounds: cb, chartRegion: cb}
@@ -393,13 +372,13 @@ func (v *View) metrics() viewMetrics {
 	// |   | padding |   | padding |   |
 	// +---+---------+---+---------+---+
 
-	sh := (viewPadding+chartThumbSize.Y)*len(v.chartThumbs) + viewPadding
+	sh := (viewPadding+chartThumbSize.Y)*len(v.sidebar.chartThumbs) + viewPadding
 
 	sb := image.Rect(
 		viewPadding, v.winSize.Y-sh,
 		viewPadding+chartThumbSize.X, v.winSize.Y,
 	)
-	sb = sb.Add(v.sidebarScrollOffset)
+	sb = sb.Add(v.sidebar.sidebarScrollOffset)
 
 	fb := image.Rect(
 		sb.Min.X, sb.Max.Y-viewPadding-chartThumbSize.Y,
@@ -481,7 +460,7 @@ func (v *View) handleScrollEvent(yoff float64) {
 		return
 	}
 
-	if len(v.chartThumbs) == 0 {
+	if len(v.sidebar.chartThumbs) == 0 {
 		return
 	}
 
@@ -504,7 +483,7 @@ func (v *View) handleScrollEvent(yoff float64) {
 			off.Y += topGap
 		}
 
-		v.sidebarScrollOffset = v.sidebarScrollOffset.Add(off)
+		v.sidebar.sidebarScrollOffset = v.sidebar.sidebarScrollOffset.Add(off)
 
 	case v.mousePos.In(m.chartRegion):
 		switch {
@@ -581,16 +560,8 @@ func (v *View) update() (dirty bool) {
 		}
 	}
 
-	for i := 0; i < len(v.chartThumbs); i++ {
-		th := v.chartThumbs[i]
-		if th.Update() {
-			dirty = true
-		}
-		if th.Remove() {
-			v.chartThumbs = append(v.chartThumbs[:i], v.chartThumbs[i+1:]...)
-			th.Close()
-			i--
-		}
+	if v.sidebar.Update() {
+		dirty = true
 	}
 
 	return dirty
@@ -625,13 +596,7 @@ func (v *View) render(fudge float32) (dirty bool) {
 	v.inputSymbol.Render(vc.Bounds)
 
 	// Render the sidebar thumbnails.
-	if len(v.chartThumbs) != 0 {
-		vc.Bounds = m.firstThumbBounds
-		for _, th := range v.chartThumbs {
-			th.Render(vc)
-			vc.Bounds = vc.Bounds.Sub(chartThumbRenderOffset)
-		}
-	}
+	v.sidebar.Render(vc, m)
 
 	// Call any callbacks scheduled by views.
 	for _, cb := range *vc.ScheduledCallbacks {
@@ -673,16 +638,11 @@ func (v *View) SetChart(ch *Chart) {
 // AddChartThumb adds the ChartThumbnail to the side bar.
 func (v *View) AddChartThumb(th *ChartThumb) {
 	defer v.WakeLoop()
-	v.chartThumbs = append(v.chartThumbs, newViewChartThumb(th))
+	v.sidebar.AddChartThumb(th)
 }
 
 // RemoveChartThumb removes the ChartThumbnail from the side bar.
 func (v *View) RemoveChartThumb(th *ChartThumb) {
 	defer v.WakeLoop()
-	for _, vth := range v.chartThumbs {
-		if vth.chartThumb == th {
-			vth.Exit()
-			break
-		}
-	}
+	v.sidebar.RemoveChartThumb(th)
 }
