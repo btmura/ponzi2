@@ -3,8 +3,6 @@ package controller
 
 import (
 	"context"
-	"log"
-	"time"
 
 	"github.com/golang/glog"
 
@@ -14,23 +12,6 @@ import (
 	"github.com/btmura/ponzi2/internal/status"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
-
-// loc is the timezone to use when parsing dates.
-var loc = mustLoadLocation("America/New_York")
-
-func mustLoadLocation(name string) *time.Location {
-	loc, err := time.LoadLocation(name)
-	if err != nil {
-		log.Fatalf("time.LoadLocation(%s) failed: %v", name, err)
-	}
-	return loc
-}
-
-// zoomRanges are the ranges from most zoomed out to most zoomed in.
-var zoomRanges = []model.Range{
-	model.OneYear,
-	model.OneDay,
-}
 
 // Controller runs the program in a "game loop".
 type Controller struct {
@@ -75,7 +56,7 @@ func New(iexClient *iex.Client) *Controller {
 		symbolToChartThumbMap: map[string]*view.ChartThumb{},
 		chartRange:            model.OneYear,
 		chartThumbRange:       model.OneYear,
-		configSaver:           newConfigController(),
+		configSaver:           newConfigSaver(),
 	}
 	c.eventController = newEventController(c)
 	c.stockRefresher = newStockRefresher(iexClient, c.eventController)
@@ -117,61 +98,24 @@ func (c *Controller) RunLoop() error {
 	})
 
 	c.view.SetChartZoomChangeCallback(func(zoomChange view.ZoomChange) {
-		// Find the current zoom range.
-		i := 0
-		for j := range zoomRanges {
-			if zoomRanges[j] == c.chartRange {
-				i = j
-			}
-		}
+		r := nextRange(c.chartRange, zoomChange)
 
-		// Adjust the zoom one increment.
-		switch zoomChange {
-		case view.ZoomIn:
-			if i+1 < len(zoomRanges) {
-				i++
-			}
-		case view.ZoomOut:
-			if i-1 >= 0 {
-				i--
-			}
-		}
-
-		// Ignore if no change in zoom.
-		if c.chartRange == zoomRanges[i] {
+		if c.chartRange == r {
 			return
 		}
 
-		// Set zoom and refresh the current stock.
-		c.chartRange = zoomRanges[i]
+		c.chartRange = r
 
 		if err := c.refreshCurrentStock(ctx); err != nil {
 			glog.Fatalf("TODO(btmura): remove log fatal, refreshStocks: %v", err)
 		}
 	})
 
-	// Process config changes in the background until the program ends.
+	// Process stock refreshes and config changes in the background until the program ends.
+	go c.stockRefresher.refreshLoop()
 	go c.configSaver.saveLoop()
 
-	// Refresh stocks during market hours.
-	ticker := time.NewTicker(5 * time.Minute)
-	go func() {
-		for t := range ticker.C {
-			n := time.Now()
-			open := time.Date(n.Year(), n.Month(), n.Day(), 9, 30, 0, 0, loc)
-			close := time.Date(n.Year(), n.Month(), n.Day(), 16, 0, 0, 0, loc)
-
-			if t.Before(open) || t.After(close) {
-				glog.V(2).Infof("ignoring refresh ticker at %v", t.Format("1/2/2006 3:04:05 PM"))
-				continue
-			}
-
-			c.eventController.addEventLocked(event{refreshAllStocks: true})
-		}
-	}()
-
 	defer func() {
-		ticker.Stop()
 		c.stockRefresher.stop()
 		c.configSaver.stop()
 	}()
@@ -240,7 +184,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 		return err
 	}
 
-	c.configSaver.save(c.model)
+	c.configSaver.save(toConfig(c.model))
 
 	return nil
 }
@@ -289,7 +233,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 		return err
 	}
 
-	c.configSaver.save(c.model)
+	c.configSaver.save(toConfig(c.model))
 
 	return nil
 }
@@ -313,7 +257,7 @@ func (c *Controller) removeChartThumb(symbol string) error {
 	th.Close()
 
 	c.view.RemoveChartThumb(th)
-	c.configSaver.save(c.model)
+	c.configSaver.save(toConfig(c.model))
 
 	return nil
 }
@@ -371,8 +315,8 @@ func (c *Controller) refreshAllStocks(ctx context.Context) error {
 	return c.stockRefresher.refresh(ctx, d)
 }
 
-// processStockRefreshStarted implements the eventProcessor interface.
-func (c *Controller) processStockRefreshStarted(symbol string, dataRange model.Range) error {
+// onStockRefreshStarted implements the eventHandler interface.
+func (c *Controller) onStockRefreshStarted(symbol string, dataRange model.Range) error {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		return err
 	}
@@ -398,8 +342,8 @@ func (c *Controller) processStockRefreshStarted(symbol string, dataRange model.R
 	return nil
 }
 
-// processStockChartUpdate implements the eventProcessor interface.
-func (c *Controller) processStockChartUpdate(symbol string, ch *model.Chart) error {
+// onStockChartUpdate implements the eventHandler interface.
+func (c *Controller) onStockChartUpdate(symbol string, ch *model.Chart) error {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		return err
 	}
@@ -445,8 +389,8 @@ func (c *Controller) processStockChartUpdate(symbol string, ch *model.Chart) err
 	return nil
 }
 
-// processStockChartUpdateError implements the eventProcessor interface.
-func (c *Controller) processStockChartUpdateError(symbol string, updateErr error) error {
+// onStockChartUpdateError implements the eventHandler interface.
+func (c *Controller) onStockChartUpdateError(symbol string, updateErr error) error {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		return err
 	}
@@ -464,12 +408,53 @@ func (c *Controller) processStockChartUpdateError(symbol string, updateErr error
 	return nil
 }
 
-// processRefreshAllStocks implements the eventProcessor interface.
-func (c *Controller) processRefreshAllStocks(ctx context.Context) error {
+// onRefreshAllStocksRequest implements the eventHandler interface.
+func (c *Controller) onRefreshAllStocksRequest(ctx context.Context) error {
 	return c.refreshAllStocks(ctx)
 }
 
-// notifyProcessor implements the eventProcessor interface.
+// notifyProcessor implements the eventHandler interface.
 func (c *Controller) notifyProcessor() {
 	c.view.WakeLoop()
+}
+
+func nextRange(r model.Range, zoomChange view.ZoomChange) model.Range {
+	// zoomRanges are the ranges from most zoomed out to most zoomed in.
+	var zoomRanges = []model.Range{
+		model.OneYear,
+		model.OneDay,
+	}
+
+	// Find the current zoom range.
+	i := 0
+	for j := range zoomRanges {
+		if zoomRanges[j] == r {
+			i = j
+		}
+	}
+
+	// Adjust the zoom one increment.
+	switch zoomChange {
+	case view.ZoomIn:
+		if i+1 < len(zoomRanges) {
+			i++
+		}
+	case view.ZoomOut:
+		if i-1 >= 0 {
+			i--
+		}
+	}
+
+	return zoomRanges[i]
+}
+
+func toConfig(model *model.Model) *config.Config {
+	cfg := &config.Config{}
+	if s := model.CurrentSymbol(); s != "" {
+		cfg.CurrentStock = &config.Stock{Symbol: s}
+	}
+	for _, s := range model.SidebarSymbols() {
+		cfg.Stocks = append(cfg.Stocks, &config.Stock{Symbol: s})
+	}
+	return cfg
 }

@@ -2,6 +2,8 @@ package controller
 
 import (
 	"context"
+	"log"
+	"time"
 
 	"github.com/golang/glog"
 
@@ -10,30 +12,62 @@ import (
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
+// loc is the timezone to use when parsing dates.
+var loc = mustLoadLocation("America/New_York")
+
+func mustLoadLocation(name string) *time.Location {
+	loc, err := time.LoadLocation(name)
+	if err != nil {
+		log.Fatalf("time.LoadLocation(%s) failed: %v", name, err)
+	}
+	return loc
+}
+
 type stockRefresher struct {
 	// iexClient fetches stock data to update the model.
 	iexClient *iex.Client
 
-	// enableRefreshingStocks enables refreshing stocks.
-	enableRefreshingStocks bool
-
 	// eventController allows the stockRefresher to post stock updates.
 	eventController *eventController
+
+	// refreshTicker ticks to trigger refreshes during market hours.
+	refreshTicker *time.Ticker
+
+	// enabled enables refreshing stocks when set to true.
+	enabled bool
 }
 
 func newStockRefresher(iexClient *iex.Client, eventController *eventController) *stockRefresher {
 	return &stockRefresher{
 		iexClient:       iexClient,
 		eventController: eventController,
+		refreshTicker:   time.NewTicker(5 * time.Minute),
+	}
+}
+
+// refreshLoop refreshes stocks during market hours.
+func (s *stockRefresher) refreshLoop() {
+	for t := range s.refreshTicker.C {
+		n := time.Now()
+		open := time.Date(n.Year(), n.Month(), n.Day(), 9, 30, 0, 0, loc)
+		close := time.Date(n.Year(), n.Month(), n.Day(), 16, 0, 0, 0, loc)
+
+		if t.Before(open) || t.After(close) {
+			glog.V(2).Infof("ignoring refresh ticker at %v", t.Format("1/2/2006 3:04:05 PM"))
+			continue
+		}
+
+		s.eventController.addEventLocked(event{refreshAllStocks: true})
 	}
 }
 
 func (s *stockRefresher) start() {
-	s.enableRefreshingStocks = true
+	s.enabled = true
 }
 
 func (s *stockRefresher) stop() {
-	s.enableRefreshingStocks = false
+	s.enabled = false
+	s.refreshTicker.Stop()
 }
 
 func (s *stockRefresher) refreshOne(ctx context.Context, symbol string, dataRange model.Range) error {
@@ -53,7 +87,7 @@ func (s *stockRefresher) refreshOne(ctx context.Context, symbol string, dataRang
 }
 
 func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) error {
-	if !s.enableRefreshingStocks {
+	if !s.enabled {
 		glog.V(2).Infof("ignoring stock refresh request, refreshing disabled")
 		return nil
 	}

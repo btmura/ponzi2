@@ -26,23 +26,23 @@ type eventController struct {
 	// queueMutex guards the queue.
 	queueMutex *sync.Mutex
 
-	// proc is the eventProcessor that processes events.
-	proc eventProcessor
+	// handler is the eventHandler that handles events.
+	handler eventHandler
 }
 
-// eventProcessor is an interface for handling all event types.
-type eventProcessor interface {
-	processStockRefreshStarted(symbol string, dataRange model.Range) error
-	processStockChartUpdate(symbol string, ch *model.Chart) error
-	processStockChartUpdateError(symbol string, updateErr error) error
-	processRefreshAllStocks(ctx context.Context) error
+// eventHandler is an interface for handling all event types.
+type eventHandler interface {
+	onStockRefreshStarted(symbol string, dataRange model.Range) error
+	onStockChartUpdate(symbol string, ch *model.Chart) error
+	onStockChartUpdateError(symbol string, updateErr error) error
+	onRefreshAllStocksRequest(ctx context.Context) error
 	notifyProcessor()
 }
 
-func newEventController(proc eventProcessor) *eventController {
+func newEventController(handler eventHandler) *eventController {
 	return &eventController{
 		queueMutex: new(sync.Mutex),
-		proc:       proc,
+		handler:    handler,
 	}
 }
 
@@ -56,7 +56,7 @@ func (c *eventController) addEventLocked(es ...event) {
 	defer c.queueMutex.Unlock()
 
 	c.queue = append(c.queue, es...)
-	c.proc.notifyProcessor()
+	c.handler.notifyProcessor()
 }
 
 // takeEventLocked locks the queue, takes an event from the queue, an returns it.
@@ -75,26 +75,27 @@ func (c *eventController) takeEventLocked() []event {
 	return es
 }
 
+// process takes an event fromt he queue and processes it.
 func (c *eventController) process(ctx context.Context) error {
 	for _, e := range c.takeEventLocked() {
 		switch {
 		case e.updateErr != nil:
-			if err := c.proc.processStockChartUpdateError(e.symbol, e.updateErr); err != nil {
+			if err := c.handler.onStockChartUpdateError(e.symbol, e.updateErr); err != nil {
 				return err
 			}
 
 		case e.chart != nil:
-			if err := c.proc.processStockChartUpdate(e.symbol, e.chart); err != nil {
+			if err := c.handler.onStockChartUpdate(e.symbol, e.chart); err != nil {
 				return err
 			}
 
 		case e.refreshAllStocks:
-			if err := c.proc.processRefreshAllStocks(ctx); err != nil {
+			if err := c.handler.onRefreshAllStocksRequest(ctx); err != nil {
 				return err
 			}
 
 		case e.refreshStarted:
-			if err := c.proc.processStockRefreshStarted(e.symbol, e.dataRange); err != nil {
+			if err := c.handler.onStockRefreshStarted(e.symbol, e.dataRange); err != nil {
 				return err
 			}
 

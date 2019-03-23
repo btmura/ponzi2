@@ -4,63 +4,53 @@ import (
 	"github.com/golang/glog"
 
 	"github.com/btmura/ponzi2/internal/app/config"
-	"github.com/btmura/ponzi2/internal/app/model"
 )
 
 type configSaver struct {
-	// enableSavingConfigs enables saving config changes.
-	enableSavingConfigs bool
+	// queue is a queue of configs to save.
+	queue chan *config.Config
 
-	// pendingConfigSaves is a channel with configs to save.
-	pendingConfigSaves chan *config.Config
+	// done indicates saving is done and the program may quit.
+	done chan bool
 
-	// doneSavingConfigs indicates saving is done and the program may quit.
-	doneSavingConfigs chan bool
+	// enabled enables saving configs when set to true.
+	enabled bool
 }
 
-func newConfigController() *configSaver {
+func newConfigSaver() *configSaver {
 	return &configSaver{
-		pendingConfigSaves: make(chan *config.Config),
-		doneSavingConfigs:  make(chan bool),
+		queue: make(chan *config.Config),
+		done:  make(chan bool),
 	}
 }
 
 func (c *configSaver) saveLoop() {
-	for cfg := range c.pendingConfigSaves {
+	for cfg := range c.queue {
 		if err := config.Save(cfg); err != nil {
 			glog.V(2).Infof("failed to save config: %v", err)
 		}
 	}
-	c.doneSavingConfigs <- true
+	c.done <- true
 }
 
 func (c *configSaver) start() {
-	c.enableSavingConfigs = true
+	c.enabled = true
 }
 
-func (c *configSaver) save(model *model.Model) {
-	if !c.enableSavingConfigs {
+func (c *configSaver) save(cfg *config.Config) {
+	if !c.enabled {
 		glog.V(2).Infof("ignoring save request, saving disabled")
 		return
 	}
 
-	// Make the config on the main thread to save the exact config at the time.
-	cfg := &config.Config{}
-	if s := model.CurrentSymbol(); s != "" {
-		cfg.CurrentStock = &config.Stock{Symbol: s}
-	}
-	for _, s := range model.SidebarSymbols() {
-		cfg.Stocks = append(cfg.Stocks, &config.Stock{Symbol: s})
-	}
-
 	// Queue the config for saving.
 	go func() {
-		c.pendingConfigSaves <- cfg
+		c.queue <- cfg
 	}()
 }
 
 func (c *configSaver) stop() {
-	c.enableSavingConfigs = false
-	close(c.pendingConfigSaves)
-	<-c.doneSavingConfigs
+	c.enabled = false
+	close(c.queue)
+	<-c.done
 }
