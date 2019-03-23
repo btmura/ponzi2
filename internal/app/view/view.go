@@ -142,7 +142,6 @@ type viewAnimator struct {
 	updateRenderCloser viewUpdateRenderCloser
 	exiting            bool
 	fade               *animation
-	inset              *animation
 }
 
 func newViewAnimator(updateRenderer viewUpdateRenderCloser) *viewAnimator {
@@ -158,12 +157,8 @@ func (v *viewAnimator) Exit() {
 	v.fade.Start()
 }
 
-func (v *viewAnimator) Animating() bool {
-	return v.fade.Animating()
-}
-
-func (v *viewAnimator) Remove() bool {
-	return v.exiting && !v.Animating()
+func (v *viewAnimator) DoneExiting() bool {
+	return v.exiting && !v.fade.Animating()
 }
 
 func (v *viewAnimator) Update() (dirty bool) {
@@ -351,7 +346,7 @@ func (v *View) metrics() viewMetrics {
 	// |   | padding |   |
 	// +---+---------+---+
 
-	if len(v.sidebar.chartThumbs) == 0 {
+	if len(v.sidebar.thumbs) == 0 {
 		cb := image.Rect(0, 0, v.winSize.X, v.winSize.Y)
 		cb = cb.Inset(viewPadding)
 		return viewMetrics{chartBounds: cb, chartRegion: cb}
@@ -372,7 +367,7 @@ func (v *View) metrics() viewMetrics {
 	// |   | padding |   | padding |   |
 	// +---+---------+---+---------+---+
 
-	sh := (viewPadding+chartThumbSize.Y)*len(v.sidebar.chartThumbs) + viewPadding
+	sh := (viewPadding+chartThumbSize.Y)*len(v.sidebar.thumbs) + viewPadding
 
 	sb := image.Rect(
 		viewPadding, v.winSize.Y-sh,
@@ -460,7 +455,7 @@ func (v *View) handleScrollEvent(yoff float64) {
 		return
 	}
 
-	if len(v.sidebar.chartThumbs) == 0 {
+	if len(v.sidebar.thumbs) == 0 {
 		return
 	}
 
@@ -553,7 +548,7 @@ func (v *View) update() (dirty bool) {
 		if ch.Update() {
 			dirty = true
 		}
-		if ch.Remove() {
+		if ch.DoneExiting() {
 			v.charts = append(v.charts[:i], v.charts[i+1:]...)
 			ch.Close()
 			i--

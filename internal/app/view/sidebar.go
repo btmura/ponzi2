@@ -9,28 +9,28 @@ var (
 )
 
 type sidebar struct {
-	// chartThumbs renders the stocks in the sidebar.
-	chartThumbs []*viewChartThumb
+	// thumbs renders the stocks in the sidebar.
+	thumbs []*sidebarThumb
 
 	// sidebarScrollOffset stores the Y offset accumulated from scroll events
 	// that should be used to calculate the sidebar's bounds.
 	sidebarScrollOffset image.Point
 }
 
-type viewChartThumb struct {
+type sidebarThumb struct {
 	chartThumb *ChartThumb
 	*viewAnimator
 }
 
 func (s *sidebar) AddChartThumb(th *ChartThumb) {
-	s.chartThumbs = append(s.chartThumbs, &viewChartThumb{
+	s.thumbs = append(s.thumbs, &sidebarThumb{
 		chartThumb:   th,
 		viewAnimator: newViewAnimator(th),
 	})
 }
 
 func (s *sidebar) RemoveChartThumb(th *ChartThumb) {
-	for _, vth := range s.chartThumbs {
+	for _, vth := range s.thumbs {
 		if vth.chartThumb == th {
 			vth.Exit()
 			break
@@ -39,13 +39,13 @@ func (s *sidebar) RemoveChartThumb(th *ChartThumb) {
 }
 
 func (s *sidebar) Update() (dirty bool) {
-	for i := 0; i < len(s.chartThumbs); i++ {
-		th := s.chartThumbs[i]
+	for i := 0; i < len(s.thumbs); i++ {
+		th := s.thumbs[i]
 		if th.Update() {
 			dirty = true
 		}
-		if th.Remove() {
-			s.chartThumbs = append(s.chartThumbs[:i], s.chartThumbs[i+1:]...)
+		if th.DoneExiting() {
+			s.thumbs = append(s.thumbs[:i], s.thumbs[i+1:]...)
 			th.Close()
 			i--
 		}
@@ -54,12 +54,12 @@ func (s *sidebar) Update() (dirty bool) {
 }
 
 func (s *sidebar) Render(vc viewContext, m viewMetrics) error {
-	if len(s.chartThumbs) == 0 {
+	if len(s.thumbs) == 0 {
 		return nil
 	}
 
 	vc.Bounds = m.firstThumbBounds
-	for _, th := range s.chartThumbs {
+	for _, th := range s.thumbs {
 		th.Render(vc)
 		vc.Bounds = vc.Bounds.Sub(chartThumbRenderOffset)
 	}
