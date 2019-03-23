@@ -36,14 +36,14 @@ type Controller struct {
 	// chartThumbRange is the current data range to use for ChartThumbnails.
 	chartThumbRange model.Range
 
-	// stockRefresher handles refreshing stock data.
+	// stockRefresher offers methods to refresh one or many stocks.
 	stockRefresher *stockRefresher
 
-	// eventController offers methods to manage events like stock updates.
-	eventController *eventController
-
-	// configSaver controls saving configs.
+	// configSaver offers methods to save configs in the background.
 	configSaver *configSaver
+
+	// eventController offers methods to queue and process events in the main loop.
+	eventController *eventController
 }
 
 // New creates a new Controller.
@@ -413,8 +413,8 @@ func (c *Controller) onRefreshAllStocksRequest(ctx context.Context) error {
 	return c.refreshAllStocks(ctx)
 }
 
-// notifyProcessor implements the eventHandler interface.
-func (c *Controller) notifyProcessor() {
+// onEventAdded implements the eventHandler interface.
+func (c *Controller) onEventAdded() {
 	c.view.WakeLoop()
 }
 

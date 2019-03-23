@@ -36,7 +36,7 @@ type eventHandler interface {
 	onStockChartUpdate(symbol string, ch *model.Chart) error
 	onStockChartUpdateError(symbol string, updateErr error) error
 	onRefreshAllStocksRequest(ctx context.Context) error
-	notifyProcessor()
+	onEventAdded()
 }
 
 func newEventController(handler eventHandler) *eventController {
@@ -56,7 +56,7 @@ func (c *eventController) addEventLocked(es ...event) {
 	defer c.queueMutex.Unlock()
 
 	c.queue = append(c.queue, es...)
-	c.handler.notifyProcessor()
+	c.handler.onEventAdded()
 }
 
 // takeEventLocked locks the queue, takes an event from the queue, an returns it.
