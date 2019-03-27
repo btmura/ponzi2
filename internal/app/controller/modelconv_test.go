@@ -21,7 +21,7 @@ func TestModelOneDayChart(t *testing.T) {
 				Quote: &iex.Quote{CompanyName: "Apple Inc."},
 				Chart: []*iex.ChartPoint{
 					{
-						Date:   time.Date(2018, time.September, 18, 15, 57, 0, 0, loc),
+						Date:   time.Date(2018, time.September, 18, 15, 57, 0, 0, time.UTC),
 						Open:   218.44,
 						High:   218.49,
 						Low:    218.37,
@@ -36,7 +36,7 @@ func TestModelOneDayChart(t *testing.T) {
 				TradingSessionSeries: &model.TradingSessionSeries{
 					TradingSessions: []*model.TradingSession{
 						{
-							Date:   time.Date(2018, time.September, 18, 15, 57, 0, 0, loc),
+							Date:   time.Date(2018, time.September, 18, 15, 57, 0, 0, time.UTC),
 							Open:   218.44,
 							High:   218.49,
 							Low:    218.37,

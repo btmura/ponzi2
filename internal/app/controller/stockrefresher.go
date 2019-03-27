@@ -12,17 +12,6 @@ import (
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
-// loc is the timezone to use when parsing dates.
-var loc = mustLoadLocation("America/New_York")
-
-func mustLoadLocation(name string) *time.Location {
-	loc, err := time.LoadLocation(name)
-	if err != nil {
-		log.Fatalf("time.LoadLocation(%s) failed: %v", name, err)
-	}
-	return loc
-}
-
 type stockRefresher struct {
 	// iexClient fetches stock data to update the model.
 	iexClient *iex.Client
@@ -47,6 +36,11 @@ func newStockRefresher(iexClient *iex.Client, eventController *eventController) 
 
 // refreshLoop refreshes stocks during market hours.
 func (s *stockRefresher) refreshLoop() {
+	loc, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		log.Fatalf("time.LoadLocation: %v", err)
+	}
+
 	for t := range s.refreshTicker.C {
 		n := time.Now()
 		open := time.Date(n.Year(), n.Month(), n.Day(), 9, 30, 0, 0, loc)
