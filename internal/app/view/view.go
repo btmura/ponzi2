@@ -133,6 +133,7 @@ func newViewChart(ch *Chart) *viewChart {
 }
 
 type viewUpdateRenderCloser interface {
+	ProcessInput(inputContext) error
 	Update() (dirty bool)
 	Render(viewContext) error
 	Close()
@@ -159,6 +160,10 @@ func (v *viewAnimator) Exit() {
 
 func (v *viewAnimator) DoneExiting() bool {
 	return v.exiting && !v.fade.Animating()
+}
+
+func (v *viewAnimator) ProcessInput(ic inputContext) error {
+	return v.updateRenderCloser.ProcessInput(ic)
 }
 
 func (v *viewAnimator) Update() (dirty bool) {
@@ -502,6 +507,10 @@ start:
 		prevTime = currTime
 		lag += elapsed
 
+		if err := v.processInput(); err != nil {
+			return err
+		}
+
 		i := 0
 		for ; i < minUpdates || i < maxUpdates && lag >= updateSec; i++ {
 			if err := preupdate(ctx); err != nil {
@@ -540,6 +549,29 @@ start:
 // WakeLoop wakes up the loop if it is asleep.
 func (v *View) WakeLoop() {
 	glfw.PostEmptyEvent()
+}
+
+type inputContext struct {
+	MousePos                image.Point
+	MouseLeftButtonPressed  bool
+	MouseLeftButtonDragging bool
+	MouseLeftButtonReleased bool
+}
+
+func (v *View) processInput() error {
+	ic := inputContext{
+		MousePos:                v.mousePos,
+		MouseLeftButtonReleased: v.mouseLeftButtonClicked,
+	}
+
+	for i := 0; i < len(v.charts); i++ {
+		ch := v.charts[i]
+		if err := ch.ProcessInput(ic); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (v *View) update() (dirty bool) {

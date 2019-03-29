@@ -111,6 +111,11 @@ func (ch *ChartThumb) SetData(data *ChartData) error {
 	return nil
 }
 
+// ProcessInput processes input.
+func (ch *ChartThumb) ProcessInput(ic inputContext) error {
+	return nil
+}
+
 // Update updates the ChartThumb.
 func (ch *ChartThumb) Update() (dirty bool) {
 	if ch.header.Update() {

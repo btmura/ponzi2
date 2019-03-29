@@ -156,6 +156,11 @@ func (ch *chartHeader) SetData(data *ChartData) error {
 	return nil
 }
 
+// ProcessInput processes input.
+func (ch *chartHeader) ProcessInput(ic inputContext) error {
+	return nil
+}
+
 func (ch *chartHeader) Update() (dirty bool) {
 	if ch.refreshButton.Update() {
 		dirty = true

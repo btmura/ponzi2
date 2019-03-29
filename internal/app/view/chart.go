@@ -213,6 +213,11 @@ func (ch *Chart) SetData(data *ChartData) error {
 	return nil
 }
 
+// ProcessInput processes input.
+func (ch *Chart) ProcessInput(ic inputContext) error {
+	return ch.header.ProcessInput(ic)
+}
+
 // Update updates the Chart.
 func (ch *Chart) Update() (dirty bool) {
 	if ch.header.Update() {
