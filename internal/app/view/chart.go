@@ -214,8 +214,8 @@ func (ch *Chart) SetData(data *ChartData) error {
 }
 
 // ProcessInput processes input.
-func (ch *Chart) ProcessInput(ic inputContext) error {
-	return ch.header.ProcessInput(ic)
+func (ch *Chart) ProcessInput(ic inputContext) {
+	ch.header.ProcessInput(ic)
 }
 
 // Update updates the Chart.
@@ -230,12 +230,12 @@ func (ch *Chart) Update() (dirty bool) {
 }
 
 // Render renders the Chart.
-func (ch *Chart) Render(vc viewContext) error {
+func (ch *Chart) Render(rc renderContext) error {
 	// Render the border around the chart.
-	strokeRoundedRect(vc.Bounds, chartRounding)
+	strokeRoundedRect(rc.Bounds, chartRounding)
 
 	// Render the header and the line below it.
-	r, _ := ch.header.Render(vc)
+	r := ch.header.Render(rc)
 	renderRectTopDivider(r, horizLine)
 
 	// Only show messages if no prior data to show.
@@ -252,7 +252,7 @@ func (ch *Chart) Render(vc viewContext) error {
 	}
 
 	old := gfx.Alpha()
-	gfx.SetAlpha(old * ch.fadeIn.Value(vc.Fudge))
+	gfx.SetAlpha(old * ch.fadeIn.Value(rc.Fudge))
 	defer gfx.SetAlpha(old)
 
 	// Calculate percentage needed for each section.
@@ -361,29 +361,29 @@ func (ch *Chart) Render(vc viewContext) error {
 		ch.weeklyStochastics.RenderAxisLabels(wlr)
 	}
 
-	renderCursorLines(pr, vc.MousePos)
-	renderCursorLines(vr, vc.MousePos)
+	renderCursorLines(pr, rc.MousePos)
+	renderCursorLines(vr, rc.MousePos)
 	if ch.showStochastics {
-		renderCursorLines(dr, vc.MousePos)
-		renderCursorLines(wr, vc.MousePos)
+		renderCursorLines(dr, rc.MousePos)
+		renderCursorLines(wr, rc.MousePos)
 	}
 
-	ch.prices.RenderCursorLabels(pr, plr, vc.MousePos)
-	ch.volume.RenderCursorLabels(vr, vlr, vc.MousePos)
+	ch.prices.RenderCursorLabels(pr, plr, rc.MousePos)
+	ch.volume.RenderCursorLabels(vr, vlr, rc.MousePos)
 	if ch.showStochastics {
-		ch.dailyStochastics.RenderCursorLabels(dr, dlr, vc.MousePos)
-		ch.weeklyStochastics.RenderCursorLabels(wr, wlr, vc.MousePos)
+		ch.dailyStochastics.RenderCursorLabels(dr, dlr, rc.MousePos)
+		ch.weeklyStochastics.RenderCursorLabels(wr, wlr, rc.MousePos)
 	}
 
-	if err := ch.timeLabels.RenderCursorLabels(tr, tlr, vc.MousePos); err != nil {
+	if err := ch.timeLabels.RenderCursorLabels(tr, tlr, rc.MousePos); err != nil {
 		return err
 	}
 
 	// Renders trackline legend. To display inline comment out the two lines below and uncomment the last line.
 	if ch.showMovingAverages {
-		ch.renderMATrackLineLegend(pr, llr, vc.MousePos)
+		ch.renderMATrackLineLegend(pr, llr, rc.MousePos)
 	}
-	ch.renderCandleTrackLineLegend(pr, llr, vc.MousePos)
+	ch.renderCandleTrackLineLegend(pr, llr, rc.MousePos)
 	//ch.renderTrackLineLegendInline(pr, llr, vc.MousePos) // Stocks that have higher prices tend to overflow the chart on default window size
 
 	return nil

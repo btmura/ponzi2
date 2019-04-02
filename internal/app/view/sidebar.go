@@ -38,6 +38,15 @@ func (s *sidebar) RemoveChartThumb(th *ChartThumb) {
 	}
 }
 
+// ProcessInput processes input.
+func (s *sidebar) ProcessInput(ic inputContext, m viewMetrics) {
+	ic.Bounds = m.firstThumbBounds
+	for _, th := range s.thumbs {
+		th.ProcessInput(ic)
+		ic.Bounds = ic.Bounds.Sub(chartThumbRenderOffset)
+	}
+}
+
 func (s *sidebar) Update() (dirty bool) {
 	for i := 0; i < len(s.thumbs); i++ {
 		th := s.thumbs[i]
@@ -53,15 +62,15 @@ func (s *sidebar) Update() (dirty bool) {
 	return dirty
 }
 
-func (s *sidebar) Render(vc viewContext, m viewMetrics) error {
+func (s *sidebar) Render(rc renderContext, m viewMetrics) error {
 	if len(s.thumbs) == 0 {
 		return nil
 	}
 
-	vc.Bounds = m.firstThumbBounds
+	rc.Bounds = m.firstThumbBounds
 	for _, th := range s.thumbs {
-		th.Render(vc)
-		vc.Bounds = vc.Bounds.Sub(chartThumbRenderOffset)
+		th.Render(rc)
+		rc.Bounds = rc.Bounds.Sub(chartThumbRenderOffset)
 	}
 
 	return nil

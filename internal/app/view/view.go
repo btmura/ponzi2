@@ -133,9 +133,9 @@ func newViewChart(ch *Chart) *viewChart {
 }
 
 type viewUpdateRenderCloser interface {
-	ProcessInput(inputContext) error
+	ProcessInput(inputContext)
 	Update() (dirty bool)
-	Render(viewContext) error
+	Render(renderContext) error
 	Close()
 }
 
@@ -162,8 +162,8 @@ func (v *viewAnimator) DoneExiting() bool {
 	return v.exiting && !v.fade.Animating()
 }
 
-func (v *viewAnimator) ProcessInput(ic inputContext) error {
-	return v.updateRenderCloser.ProcessInput(ic)
+func (v *viewAnimator) ProcessInput(ic inputContext) {
+	v.updateRenderCloser.ProcessInput(ic)
 }
 
 func (v *viewAnimator) Update() (dirty bool) {
@@ -176,41 +176,15 @@ func (v *viewAnimator) Update() (dirty bool) {
 	return dirty
 }
 
-func (v *viewAnimator) Render(vc viewContext) {
+func (v *viewAnimator) Render(rc renderContext) {
 	old := gfx.Alpha()
 	defer gfx.SetAlpha(old)
-	gfx.SetAlpha(v.fade.Value(vc.Fudge))
-	v.updateRenderCloser.Render(vc)
+	gfx.SetAlpha(v.fade.Value(rc.Fudge))
+	v.updateRenderCloser.Render(rc)
 }
 
 func (v *viewAnimator) Close() {
 	v.updateRenderCloser.Close()
-}
-
-// viewContext is passed down the view hierarchy providing drawing hints and
-// event information. Meant to be passed around like a Rectangle or Point rather
-// than a pointer to avoid mistakes.
-type viewContext struct {
-	// Bounds is the rectangle with global coords that should be drawn within.
-	Bounds image.Rectangle
-
-	// MousePos is the current global mouse position.
-	MousePos image.Point
-
-	// MouseLeftButtonClicked is whether the left mouse button was clicked.
-	MouseLeftButtonClicked bool
-
-	// Fudge is the position from 0 to 1 between the current and next frame.
-	Fudge float32
-
-	// ScheduledCallbacks are callbacks to be called at the end of Render.
-	ScheduledCallbacks *[]func()
-}
-
-// LeftClickInBounds returns true if the left mouse button was clicked within
-// the context's bounds. Doesn't take into account overlapping view parts.
-func (vc viewContext) LeftClickInBounds() bool {
-	return vc.MouseLeftButtonClicked && vc.MousePos.In(vc.Bounds)
 }
 
 // New creates a new View.
@@ -507,9 +481,7 @@ start:
 		prevTime = currTime
 		lag += elapsed
 
-		if err := v.processInput(); err != nil {
-			return err
-		}
+		v.processInput()
 
 		i := 0
 		for ; i < minUpdates || i < maxUpdates && lag >= updateSec; i++ {
@@ -529,9 +501,8 @@ start:
 		}
 
 		now := time.Now()
-		if v.render(fudge) {
-			dirty = true
-		}
+		v.render(fudge)
+
 		v.win.SwapBuffers()
 		glog.V(3).Infof("updates:%o lag(%f)/updateSec(%f)=fudge(%f) dirty:%t render:%v", i, lag, updateSec, fudge, dirty, time.Since(now).Seconds())
 
@@ -552,26 +523,55 @@ func (v *View) WakeLoop() {
 }
 
 type inputContext struct {
-	MousePos                image.Point
-	MouseLeftButtonPressed  bool
+	// Bounds is the rectangle with global coords that should be drawn within.
+	Bounds image.Rectangle
+
+	// MousePos is the current global mouse position.
+	MousePos image.Point
+
+	// MouseLeftButtonPressed is whether the left mouse button was pressed.
+	MouseLeftButtonPressed bool
+
+	// MouseLeftButtonDragging is whether the left mouse button is dragging.
 	MouseLeftButtonDragging bool
+
+	// MouseLeftButtonReleased is whether the left mouse button was released.
 	MouseLeftButtonReleased bool
+
+	// ScheduledCallbacks are callbacks to be called at the end of Render.
+	ScheduledCallbacks *[]func()
 }
 
-func (v *View) processInput() error {
+// LeftClickInBounds returns true if the left mouse button was clicked within
+// the context's bounds. Doesn't take into account overlapping view parts.
+func (ic inputContext) LeftClickInBounds() bool {
+	return ic.MouseLeftButtonReleased && ic.MousePos.In(ic.Bounds)
+}
+
+func (v *View) processInput() {
+	m := v.metrics()
+
 	ic := inputContext{
+		Bounds:                  m.chartBounds,
 		MousePos:                v.mousePos,
 		MouseLeftButtonReleased: v.mouseLeftButtonClicked,
+		ScheduledCallbacks:      new([]func()),
 	}
 
 	for i := 0; i < len(v.charts); i++ {
 		ch := v.charts[i]
-		if err := ch.ProcessInput(ic); err != nil {
-			return err
-		}
+		ch.ProcessInput(ic)
 	}
 
-	return nil
+	v.sidebar.ProcessInput(ic, m)
+
+	// Call any callbacks scheduled by views.
+	for _, cb := range *ic.ScheduledCallbacks {
+		cb()
+	}
+
+	// Reset any flags for the next inputContext.
+	v.mouseLeftButtonClicked = false
 }
 
 func (v *View) update() (dirty bool) {
@@ -594,47 +594,48 @@ func (v *View) update() (dirty bool) {
 	return dirty
 }
 
-func (v *View) render(fudge float32) (dirty bool) {
+// renderContext is passed down the view hierarchy providing drawing hints and
+// event information. Meant to be passed around like a Rectangle or Point rather
+// than a pointer to avoid mistakes.
+type renderContext struct {
+	// Bounds is the rectangle with global coords that should be drawn within.
+	Bounds image.Rectangle
+
+	// MousePos is the current global mouse position.
+	MousePos image.Point
+
+	// Fudge is the position from 0 to 1 between the current and next frame.
+	Fudge float32
+}
+
+func (v *View) render(fudge float32) {
 	v.title.Render(v.win)
 
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	m := v.metrics()
 
-	vc := viewContext{
-		Bounds:                 m.chartBounds,
-		MousePos:               v.mousePos,
-		MouseLeftButtonClicked: v.mouseLeftButtonClicked,
-		Fudge:              fudge,
-		ScheduledCallbacks: new([]func()),
+	rc := renderContext{
+		Bounds:   m.chartBounds,
+		MousePos: v.mousePos,
+		Fudge:    fudge,
 	}
 
 	// Render the main chart.
 	for _, ch := range v.charts {
-		ch.Render(vc)
+		ch.Render(rc)
 	}
 
 	// Render instructions if there are no charts to show.
 	if len(v.charts) == 0 {
-		instructionsText.Render(vc.Bounds)
+		instructionsText.Render(rc.Bounds)
 	}
 
 	// Render the input symbol over the chart.
-	v.inputSymbol.Render(vc.Bounds)
+	v.inputSymbol.Render(rc.Bounds)
 
 	// Render the sidebar thumbnails.
-	v.sidebar.Render(vc, m)
-
-	// Call any callbacks scheduled by views.
-	for _, cb := range *vc.ScheduledCallbacks {
-		cb()
-	}
-
-	// Reset any flags for the next viewContext.
-	v.mouseLeftButtonClicked = false
-
-	// Return dirty if some callbacks were scheduled.
-	return len(*vc.ScheduledCallbacks) != 0
+	v.sidebar.Render(rc, m)
 }
 
 // SetInputSymbolSubmittedCallback sets the callback for when a new symbol is entered.

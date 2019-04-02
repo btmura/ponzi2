@@ -156,9 +156,55 @@ func (ch *chartHeader) SetData(data *ChartData) error {
 	return nil
 }
 
+// chartHeaderClicks reports what buttons were clicked.
+type chartHeaderClicks struct {
+	// AddButtonClicked is true if the add button was clicked.
+	AddButtonClicked bool
+
+	// RefreshButtonClicked is true if the refresh button was clicked.
+	RefreshButtonClicked bool
+
+	// RemoveButtonClicked is true if the remove button was clicked.
+	RemoveButtonClicked bool
+}
+
+// HasClicks returns true if a clickable part of the header was clicked.
+func (c chartHeaderClicks) HasClicks() bool {
+	return c.AddButtonClicked || c.RefreshButtonClicked || c.RemoveButtonClicked
+}
+
 // ProcessInput processes input.
-func (ch *chartHeader) ProcessInput(ic inputContext) error {
-	return nil
+func (ch *chartHeader) ProcessInput(ic inputContext) chartHeaderClicks {
+	var clicks chartHeaderClicks
+
+	h := ch.padding + ch.symbolQuoteTextRenderer.LineHeight() + ch.padding
+	buttonSize := image.Pt(h, h)
+
+	// Render buttons in the upper right corner from right to left.
+	r := ic.Bounds
+	ic.Bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
+
+	if ch.removeButton.enabled {
+		clicks.RemoveButtonClicked = ch.removeButton.ProcessInput(ic)
+		ic.Bounds = transRect(ic.Bounds, -buttonSize.X, 0)
+	}
+
+	if ch.addButton.enabled {
+		clicks.AddButtonClicked = ch.addButton.ProcessInput(ic)
+		ic.Bounds = transRect(ic.Bounds, -buttonSize.X, 0)
+	}
+
+	if ch.refreshButton.enabled || ch.refreshButton.Spinning() {
+		clicks.RefreshButtonClicked = ch.refreshButton.ProcessInput(ic)
+		ic.Bounds = transRect(ic.Bounds, -buttonSize.X, 0)
+	}
+
+	// Don't report clicks when the refresh button is just an indicator.
+	if !ch.refreshButton.enabled {
+		clicks.RefreshButtonClicked = false
+	}
+
+	return clicks
 }
 
 func (ch *chartHeader) Update() (dirty bool) {
@@ -177,59 +223,37 @@ func (ch *chartHeader) Update() (dirty bool) {
 	return dirty
 }
 
-// chartHeaderClicks reports what buttons were clicked.
-type chartHeaderClicks struct {
-	// AddButtonClicked is true if the add button was clicked.
-	AddButtonClicked bool
-
-	// RefreshButtonClicked is true if the refresh button was clicked.
-	RefreshButtonClicked bool
-
-	// RemoveButtonClicked is true if the remove button was clicked.
-	RemoveButtonClicked bool
-}
-
-// HasClicks returns true if a clickable part of the header was clicked.
-func (c chartHeaderClicks) HasClicks() bool {
-	return c.AddButtonClicked || c.RefreshButtonClicked || c.RemoveButtonClicked
-}
-
 // Render renders the ChartHeader.
-func (ch *chartHeader) Render(vc viewContext) (body image.Rectangle, clicks chartHeaderClicks) {
+func (ch *chartHeader) Render(rc renderContext) (body image.Rectangle) {
 	h := ch.padding + ch.symbolQuoteTextRenderer.LineHeight() + ch.padding
 	buttonSize := image.Pt(h, h)
 
 	// Render buttons in the upper right corner from right to left.
-	r := vc.Bounds
-	vc.Bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
+	r := rc.Bounds
+	rc.Bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
 
 	if ch.removeButton.enabled {
-		clicks.RemoveButtonClicked = ch.removeButton.Render(vc)
-		vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
+		ch.removeButton.Render(rc)
+		rc.Bounds = transRect(rc.Bounds, -buttonSize.X, 0)
 	}
 
 	if ch.addButton.enabled {
-		clicks.AddButtonClicked = ch.addButton.Render(vc)
-		vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
+		ch.addButton.Render(rc)
+		rc.Bounds = transRect(rc.Bounds, -buttonSize.X, 0)
 	}
 
 	if ch.refreshButton.enabled || ch.refreshButton.Spinning() {
-		clicks.RefreshButtonClicked = ch.refreshButton.Render(vc)
-		vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
-	}
-
-	// Don't report clicks when the refresh button is just an indicator.
-	if !ch.refreshButton.enabled {
-		clicks.RefreshButtonClicked = false
+		ch.refreshButton.Render(rc)
+		rc.Bounds = transRect(rc.Bounds, -buttonSize.X, 0)
 	}
 
 	if ch.hasError {
-		gfx.SetModelMatrixRect(vc.Bounds)
+		gfx.SetModelMatrixRect(rc.Bounds)
 		chartErrorIconVAO.Render()
-		vc.Bounds = transRect(vc.Bounds, -buttonSize.X, 0)
+		rc.Bounds = transRect(rc.Bounds, -buttonSize.X, 0)
 	}
 
-	buttonEdge := vc.Bounds.Min.X + buttonSize.X
+	buttonEdge := rc.Bounds.Min.X + buttonSize.X
 
 	// Start rendering from the top left. Track position with point.
 	pt := image.Pt(r.Min.X, r.Max.Y)
@@ -242,7 +266,7 @@ func (ch *chartHeader) Render(vc viewContext) (body image.Rectangle, clicks char
 
 		if w := buttonEdge - pt.X; w > 0 {
 			old := gfx.Alpha()
-			gfx.SetAlpha(old * ch.fadeIn.Value(vc.Fudge))
+			gfx.SetAlpha(old * ch.fadeIn.Value(rc.Fudge))
 			pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteText, pt, ch.quoteColor, gfx.TextRenderMaxWidth(w))
 			gfx.SetAlpha(old)
 		}
@@ -251,7 +275,7 @@ func (ch *chartHeader) Render(vc viewContext) (body image.Rectangle, clicks char
 
 	r.Max.Y = pt.Y
 
-	return r, clicks
+	return r
 }
 
 // SetRefreshButtonClickCallback sets the callback for refresh button clicks.

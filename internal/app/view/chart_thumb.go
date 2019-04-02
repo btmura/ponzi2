@@ -112,8 +112,11 @@ func (ch *ChartThumb) SetData(data *ChartData) error {
 }
 
 // ProcessInput processes input.
-func (ch *ChartThumb) ProcessInput(ic inputContext) error {
-	return nil
+func (ch *ChartThumb) ProcessInput(ic inputContext) {
+	clicks := ch.header.ProcessInput(ic)
+	if !clicks.HasClicks() && ic.LeftClickInBounds() {
+		*ic.ScheduledCallbacks = append(*ic.ScheduledCallbacks, ch.thumbClickCallback)
+	}
 }
 
 // Update updates the ChartThumb.
@@ -128,17 +131,13 @@ func (ch *ChartThumb) Update() (dirty bool) {
 }
 
 // Render renders the ChartThumb.
-func (ch *ChartThumb) Render(vc viewContext) error {
+func (ch *ChartThumb) Render(rc renderContext) error {
 	// Render the border around the chart.
-	strokeRoundedRect(vc.Bounds, thumbChartRounding)
+	strokeRoundedRect(rc.Bounds, thumbChartRounding)
 
 	// Render the header and the line below it.
-	r, clicks := ch.header.Render(vc)
+	r := ch.header.Render(rc)
 	renderRectTopDivider(r, horizLine)
-
-	if !clicks.HasClicks() && vc.LeftClickInBounds() {
-		*vc.ScheduledCallbacks = append(*vc.ScheduledCallbacks, ch.thumbClickCallback)
-	}
 
 	// Only show messages if no prior data to show.
 	if !ch.hasStockUpdated {
@@ -154,7 +153,7 @@ func (ch *ChartThumb) Render(vc viewContext) error {
 	}
 
 	old := gfx.Alpha()
-	gfx.SetAlpha(old * ch.fadeIn.Value(vc.Fudge))
+	gfx.SetAlpha(old * ch.fadeIn.Value(rc.Fudge))
 	defer gfx.SetAlpha(old)
 
 	rects := sliceRect(r, 0.5)
@@ -172,11 +171,11 @@ func (ch *ChartThumb) Render(vc viewContext) error {
 	ch.dailyStochastics.Render(dr)
 	ch.weeklyStochastics.Render(wr)
 
-	renderCursorLines(dr, vc.MousePos)
-	renderCursorLines(wr, vc.MousePos)
+	renderCursorLines(dr, rc.MousePos)
+	renderCursorLines(wr, rc.MousePos)
 
-	ch.dailyStochastics.RenderCursorLabels(dr, dr, vc.MousePos)
-	ch.weeklyStochastics.RenderCursorLabels(wr, wr, vc.MousePos)
+	ch.dailyStochastics.RenderCursorLabels(dr, dr, rc.MousePos)
+	ch.weeklyStochastics.RenderCursorLabels(wr, wr, rc.MousePos)
 
 	return nil
 }

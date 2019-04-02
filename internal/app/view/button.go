@@ -31,21 +31,22 @@ func (b *button) StopSpinning() {
 	b.spinning.Stop()
 }
 
+func (b *button) ProcessInput(ic inputContext) (clicked bool) {
+	if ic.LeftClickInBounds() {
+		*ic.ScheduledCallbacks = append(*ic.ScheduledCallbacks, b.clickCallback)
+		return true
+	}
+	return false
+}
+
 func (b *button) Update() (dirty bool) {
 	return b.spinning.Update()
 }
 
-func (b *button) Render(vc viewContext) (clicked bool) {
-	if vc.LeftClickInBounds() {
-		*vc.ScheduledCallbacks = append(*vc.ScheduledCallbacks, b.clickCallback)
-		clicked = true
-	}
-
-	spinRadians := b.spinning.Value(vc.Fudge) * -2 * math.Pi
-	gfx.SetModelMatrixRotatedRect(vc.Bounds, spinRadians)
+func (b *button) Render(rc renderContext) {
+	spinRadians := b.spinning.Value(rc.Fudge) * -2 * math.Pi
+	gfx.SetModelMatrixRotatedRect(rc.Bounds, spinRadians)
 	b.icon.Render()
-
-	return clicked
 }
 
 func (b *button) SetClickCallback(cb func()) {
