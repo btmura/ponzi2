@@ -105,6 +105,12 @@ type Chart struct {
 
 	// showStochastics is whether to show stochastics.
 	showStochastics bool
+
+	// bounds is the rectangle with global coords that should be drawn within.
+	bounds image.Rectangle
+
+	// mousePos is the current mouse position.
+	mousePos image.Point
 }
 
 // NewChart creates a new Chart.
@@ -215,6 +221,8 @@ func (ch *Chart) SetData(data *ChartData) error {
 
 // ProcessInput processes input.
 func (ch *Chart) ProcessInput(ic inputContext) {
+	ch.bounds = ic.Bounds
+	ch.mousePos = ic.MousePos
 	ch.header.ProcessInput(ic)
 }
 
@@ -232,7 +240,7 @@ func (ch *Chart) Update() (dirty bool) {
 // Render renders the Chart.
 func (ch *Chart) Render(rc renderContext) error {
 	// Render the border around the chart.
-	strokeRoundedRect(rc.Bounds, chartRounding)
+	strokeRoundedRect(ch.bounds, chartRounding)
 
 	// Render the header and the line below it.
 	r := ch.header.Render(rc)
@@ -361,29 +369,29 @@ func (ch *Chart) Render(rc renderContext) error {
 		ch.weeklyStochastics.RenderAxisLabels(wlr)
 	}
 
-	renderCursorLines(pr, rc.MousePos)
-	renderCursorLines(vr, rc.MousePos)
+	renderCursorLines(pr, ch.mousePos)
+	renderCursorLines(vr, ch.mousePos)
 	if ch.showStochastics {
-		renderCursorLines(dr, rc.MousePos)
-		renderCursorLines(wr, rc.MousePos)
+		renderCursorLines(dr, ch.mousePos)
+		renderCursorLines(wr, ch.mousePos)
 	}
 
-	ch.prices.RenderCursorLabels(pr, plr, rc.MousePos)
-	ch.volume.RenderCursorLabels(vr, vlr, rc.MousePos)
+	ch.prices.RenderCursorLabels(pr, plr, ch.mousePos)
+	ch.volume.RenderCursorLabels(vr, vlr, ch.mousePos)
 	if ch.showStochastics {
-		ch.dailyStochastics.RenderCursorLabels(dr, dlr, rc.MousePos)
-		ch.weeklyStochastics.RenderCursorLabels(wr, wlr, rc.MousePos)
+		ch.dailyStochastics.RenderCursorLabels(dr, dlr, ch.mousePos)
+		ch.weeklyStochastics.RenderCursorLabels(wr, wlr, ch.mousePos)
 	}
 
-	if err := ch.timeLabels.RenderCursorLabels(tr, tlr, rc.MousePos); err != nil {
+	if err := ch.timeLabels.RenderCursorLabels(tr, tlr, ch.mousePos); err != nil {
 		return err
 	}
 
 	// Renders trackline legend. To display inline comment out the two lines below and uncomment the last line.
 	if ch.showMovingAverages {
-		ch.renderMATrackLineLegend(pr, llr, rc.MousePos)
+		ch.renderMATrackLineLegend(pr, llr, ch.mousePos)
 	}
-	ch.renderCandleTrackLineLegend(pr, llr, rc.MousePos)
+	ch.renderCandleTrackLineLegend(pr, llr, ch.mousePos)
 	//ch.renderTrackLineLegendInline(pr, llr, vc.MousePos) // Stocks that have higher prices tend to overflow the chart on default window size
 
 	return nil

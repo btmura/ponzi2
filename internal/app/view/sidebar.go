@@ -62,15 +62,13 @@ func (s *sidebar) Update() (dirty bool) {
 	return dirty
 }
 
-func (s *sidebar) Render(rc renderContext, m viewMetrics) error {
+func (s *sidebar) Render(rc renderContext) error {
 	if len(s.thumbs) == 0 {
 		return nil
 	}
 
-	rc.Bounds = m.firstThumbBounds
 	for _, th := range s.thumbs {
 		th.Render(rc)
-		rc.Bounds = rc.Bounds.Sub(chartThumbRenderOffset)
 	}
 
 	return nil

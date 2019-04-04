@@ -59,6 +59,9 @@ type chartHeader struct {
 
 	// fadeIn fades in the quote text after data loads.
 	fadeIn *animation
+
+	// Bounds is the rectangle with global coords that should be drawn within.
+	bounds image.Rectangle
 }
 
 // chartHeaderButton is a button with an additional enabled flag.
@@ -175,6 +178,8 @@ func (c chartHeaderClicks) HasClicks() bool {
 
 // ProcessInput processes input.
 func (ch *chartHeader) ProcessInput(ic inputContext) chartHeaderClicks {
+	ch.bounds = ic.Bounds
+
 	var clicks chartHeaderClicks
 
 	h := ch.padding + ch.symbolQuoteTextRenderer.LineHeight() + ch.padding
@@ -229,31 +234,31 @@ func (ch *chartHeader) Render(rc renderContext) (body image.Rectangle) {
 	buttonSize := image.Pt(h, h)
 
 	// Render buttons in the upper right corner from right to left.
-	r := rc.Bounds
-	rc.Bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
+	r := ch.bounds
+	ch.bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
 
 	if ch.removeButton.enabled {
 		ch.removeButton.Render(rc)
-		rc.Bounds = transRect(rc.Bounds, -buttonSize.X, 0)
+		ch.bounds = transRect(ch.bounds, -buttonSize.X, 0)
 	}
 
 	if ch.addButton.enabled {
 		ch.addButton.Render(rc)
-		rc.Bounds = transRect(rc.Bounds, -buttonSize.X, 0)
+		ch.bounds = transRect(ch.bounds, -buttonSize.X, 0)
 	}
 
 	if ch.refreshButton.enabled || ch.refreshButton.Spinning() {
 		ch.refreshButton.Render(rc)
-		rc.Bounds = transRect(rc.Bounds, -buttonSize.X, 0)
+		ch.bounds = transRect(ch.bounds, -buttonSize.X, 0)
 	}
 
 	if ch.hasError {
-		gfx.SetModelMatrixRect(rc.Bounds)
+		gfx.SetModelMatrixRect(ch.bounds)
 		chartErrorIconVAO.Render()
-		rc.Bounds = transRect(rc.Bounds, -buttonSize.X, 0)
+		ch.bounds = transRect(ch.bounds, -buttonSize.X, 0)
 	}
 
-	buttonEdge := rc.Bounds.Min.X + buttonSize.X
+	buttonEdge := ch.bounds.Min.X + buttonSize.X
 
 	// Start rendering from the top left. Track position with point.
 	pt := image.Pt(r.Min.X, r.Max.Y)

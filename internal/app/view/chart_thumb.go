@@ -1,6 +1,8 @@
 package view
 
 import (
+	"image"
+
 	"golang.org/x/image/font/gofont/goregular"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
@@ -48,6 +50,12 @@ type ChartThumb struct {
 
 	// fadeIn fades in the data after it loads.
 	fadeIn *animation
+
+	// bounds is the rectangle with global coords that should be drawn within.
+	bounds image.Rectangle
+
+	// mousePos is the current mouse position.
+	mousePos image.Point
 }
 
 // NewChartThumb creates a ChartThumb.
@@ -113,6 +121,8 @@ func (ch *ChartThumb) SetData(data *ChartData) error {
 
 // ProcessInput processes input.
 func (ch *ChartThumb) ProcessInput(ic inputContext) {
+	ch.bounds = ic.Bounds
+	ch.mousePos = ic.MousePos
 	clicks := ch.header.ProcessInput(ic)
 	if !clicks.HasClicks() && ic.LeftClickInBounds() {
 		*ic.ScheduledCallbacks = append(*ic.ScheduledCallbacks, ch.thumbClickCallback)
@@ -133,7 +143,7 @@ func (ch *ChartThumb) Update() (dirty bool) {
 // Render renders the ChartThumb.
 func (ch *ChartThumb) Render(rc renderContext) error {
 	// Render the border around the chart.
-	strokeRoundedRect(rc.Bounds, thumbChartRounding)
+	strokeRoundedRect(ch.bounds, thumbChartRounding)
 
 	// Render the header and the line below it.
 	r := ch.header.Render(rc)
@@ -171,11 +181,11 @@ func (ch *ChartThumb) Render(rc renderContext) error {
 	ch.dailyStochastics.Render(dr)
 	ch.weeklyStochastics.Render(wr)
 
-	renderCursorLines(dr, rc.MousePos)
-	renderCursorLines(wr, rc.MousePos)
+	renderCursorLines(dr, ch.mousePos)
+	renderCursorLines(wr, ch.mousePos)
 
-	ch.dailyStochastics.RenderCursorLabels(dr, dr, rc.MousePos)
-	ch.weeklyStochastics.RenderCursorLabels(wr, wr, rc.MousePos)
+	ch.dailyStochastics.RenderCursorLabels(dr, dr, ch.mousePos)
+	ch.weeklyStochastics.RenderCursorLabels(wr, wr, ch.mousePos)
 
 	return nil
 }

@@ -1,6 +1,7 @@
 package view
 
 import (
+	"image"
 	math "math"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
@@ -10,6 +11,7 @@ type button struct {
 	icon          *gfx.VAO
 	clickCallback func()
 	spinning      *animation
+	bounds        image.Rectangle
 }
 
 func newButton(icon *gfx.VAO) *button {
@@ -32,6 +34,7 @@ func (b *button) StopSpinning() {
 }
 
 func (b *button) ProcessInput(ic inputContext) (clicked bool) {
+	b.bounds = ic.Bounds
 	if ic.LeftClickInBounds() {
 		*ic.ScheduledCallbacks = append(*ic.ScheduledCallbacks, b.clickCallback)
 		return true
@@ -45,7 +48,7 @@ func (b *button) Update() (dirty bool) {
 
 func (b *button) Render(rc renderContext) {
 	spinRadians := b.spinning.Value(rc.Fudge) * -2 * math.Pi
-	gfx.SetModelMatrixRotatedRect(rc.Bounds, spinRadians)
+	gfx.SetModelMatrixRotatedRect(b.bounds, spinRadians)
 	b.icon.Render()
 }
 

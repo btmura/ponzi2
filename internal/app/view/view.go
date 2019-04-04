@@ -615,12 +615,6 @@ func (v *View) update() (dirty bool) {
 // event information. Meant to be passed around like a Rectangle or Point rather
 // than a pointer to avoid mistakes.
 type renderContext struct {
-	// Bounds is the rectangle with global coords that should be drawn within.
-	Bounds image.Rectangle
-
-	// MousePos is the current global mouse position.
-	MousePos image.Point
-
 	// Fudge is the position from 0 to 1 between the current and next frame.
 	Fudge float32
 }
@@ -633,9 +627,7 @@ func (v *View) render(fudge float32) {
 	m := v.metrics()
 
 	rc := renderContext{
-		Bounds:   m.chartBounds,
-		MousePos: v.mousePos,
-		Fudge:    fudge,
+		Fudge: fudge,
 	}
 
 	// Render the main chart.
@@ -645,14 +637,14 @@ func (v *View) render(fudge float32) {
 
 	// Render instructions if there are no charts to show.
 	if len(v.charts) == 0 {
-		instructionsText.Render(rc.Bounds)
+		instructionsText.Render(m.chartBounds)
 	}
 
 	// Render the input symbol over the chart.
-	v.inputSymbol.Render(rc.Bounds)
+	v.inputSymbol.Render(m.chartBounds)
 
 	// Render the sidebar thumbnails.
-	v.sidebar.Render(rc, m)
+	v.sidebar.Render(rc)
 }
 
 // SetInputSymbolSubmittedCallback sets the callback for when a new symbol is entered.
