@@ -4,6 +4,7 @@ package view
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"image"
 	"image/png"
 	"runtime"
@@ -116,8 +117,12 @@ type View struct {
 	// mousePos is the current global mouse position.
 	mousePos image.Point
 
-	// mouseLeftButtonClicked is whether the left mouse button was clicked.
-	mouseLeftButtonClicked bool
+	// mouseLeftButtonPressedCount is the number of loop iterations the left
+	// mouse button has been pressed. Used to determine dragging.
+	mouseLeftButtonPressedCount int
+
+	// mouseLeftButtonReleased is whether the left mouse button was clicked.
+	mouseLeftButtonReleased bool
 }
 
 type viewChart struct {
@@ -423,7 +428,14 @@ func (v *View) handleMouseButtonEvent(button glfw.MouseButton, action glfw.Actio
 		return
 	}
 
-	v.mouseLeftButtonClicked = action == glfw.Release
+	switch action {
+	case glfw.Press:
+		v.mouseLeftButtonPressedCount = 1
+	case glfw.Release:
+		v.mouseLeftButtonPressedCount = 0
+	}
+
+	v.mouseLeftButtonReleased = action == glfw.Release
 }
 
 func (v *View) handleScrollEvent(yoff float64) {
@@ -529,9 +541,6 @@ type inputContext struct {
 	// MousePos is the current global mouse position.
 	MousePos image.Point
 
-	// MouseLeftButtonPressed is whether the left mouse button was pressed.
-	MouseLeftButtonPressed bool
-
 	// MouseLeftButtonDragging is whether the left mouse button is dragging.
 	MouseLeftButtonDragging bool
 
@@ -554,8 +563,13 @@ func (v *View) processInput() {
 	ic := inputContext{
 		Bounds:                  m.chartBounds,
 		MousePos:                v.mousePos,
-		MouseLeftButtonReleased: v.mouseLeftButtonClicked,
+		MouseLeftButtonDragging: v.mouseLeftButtonPressedCount > fps/2,
+		MouseLeftButtonReleased: v.mouseLeftButtonReleased,
 		ScheduledCallbacks:      new([]func()),
+	}
+
+	if ic.MouseLeftButtonDragging {
+		fmt.Printf("drag: %t count: %d\n", ic.MouseLeftButtonDragging, v.mouseLeftButtonPressedCount)
 	}
 
 	for i := 0; i < len(v.charts); i++ {
@@ -571,7 +585,10 @@ func (v *View) processInput() {
 	}
 
 	// Reset any flags for the next inputContext.
-	v.mouseLeftButtonClicked = false
+	if v.mouseLeftButtonPressedCount > 0 {
+		v.mouseLeftButtonPressedCount++
+	}
+	v.mouseLeftButtonReleased = false
 }
 
 func (v *View) update() (dirty bool) {
