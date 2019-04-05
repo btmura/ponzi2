@@ -48,8 +48,8 @@ func (b *button) Update() (dirty bool) {
 	return b.spinning.Update()
 }
 
-func (b *button) Render(rc renderContext) {
-	spinRadians := b.spinning.Value(rc.Fudge) * -2 * math.Pi
+func (b *button) Render(fudge float32) {
+	spinRadians := b.spinning.Value(fudge) * -2 * math.Pi
 	gfx.SetModelMatrixRotatedRect(b.bounds, spinRadians)
 	b.icon.Render()
 }

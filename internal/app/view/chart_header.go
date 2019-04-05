@@ -229,7 +229,7 @@ func (ch *chartHeader) Update() (dirty bool) {
 }
 
 // Render renders the ChartHeader.
-func (ch *chartHeader) Render(rc renderContext) (body image.Rectangle) {
+func (ch *chartHeader) Render(fudge float32) (body image.Rectangle) {
 	h := ch.padding + ch.symbolQuoteTextRenderer.LineHeight() + ch.padding
 	buttonSize := image.Pt(h, h)
 
@@ -238,17 +238,17 @@ func (ch *chartHeader) Render(rc renderContext) (body image.Rectangle) {
 	ch.bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
 
 	if ch.removeButton.enabled {
-		ch.removeButton.Render(rc)
+		ch.removeButton.Render(fudge)
 		ch.bounds = transRect(ch.bounds, -buttonSize.X, 0)
 	}
 
 	if ch.addButton.enabled {
-		ch.addButton.Render(rc)
+		ch.addButton.Render(fudge)
 		ch.bounds = transRect(ch.bounds, -buttonSize.X, 0)
 	}
 
 	if ch.refreshButton.enabled || ch.refreshButton.Spinning() {
-		ch.refreshButton.Render(rc)
+		ch.refreshButton.Render(fudge)
 		ch.bounds = transRect(ch.bounds, -buttonSize.X, 0)
 	}
 
@@ -271,7 +271,7 @@ func (ch *chartHeader) Render(rc renderContext) (body image.Rectangle) {
 
 		if w := buttonEdge - pt.X; w > 0 {
 			old := gfx.Alpha()
-			gfx.SetAlpha(old * ch.fadeIn.Value(rc.Fudge))
+			gfx.SetAlpha(old * ch.fadeIn.Value(fudge))
 			pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteText, pt, ch.quoteColor, gfx.TextRenderMaxWidth(w))
 			gfx.SetAlpha(old)
 		}

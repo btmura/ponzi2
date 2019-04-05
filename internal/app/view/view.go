@@ -142,7 +142,7 @@ func newViewChart(ch *Chart) *viewChart {
 type viewUpdateRenderCloser interface {
 	ProcessInput(inputContext)
 	Update() (dirty bool)
-	Render(renderContext) error
+	Render(fudge float32) error
 	Close()
 }
 
@@ -183,11 +183,11 @@ func (v *viewAnimator) Update() (dirty bool) {
 	return dirty
 }
 
-func (v *viewAnimator) Render(rc renderContext) {
+func (v *viewAnimator) Render(fudge float32) {
 	old := gfx.Alpha()
 	defer gfx.SetAlpha(old)
-	gfx.SetAlpha(v.fade.Value(rc.Fudge))
-	v.updateRenderCloser.Render(rc)
+	gfx.SetAlpha(v.fade.Value(fudge))
+	v.updateRenderCloser.Render(fudge)
 }
 
 func (v *viewAnimator) Close() {
@@ -617,38 +617,26 @@ func (v *View) update() (dirty bool) {
 	return dirty
 }
 
-// renderContext is passed down the view hierarchy providing drawing hints and
-// event information. Meant to be passed around like a Rectangle or Point rather
-// than a pointer to avoid mistakes.
-type renderContext struct {
-	// Fudge is the position from 0 to 1 between the current and next frame.
-	Fudge float32
-}
-
 func (v *View) render(fudge float32) {
 	v.title.Render(v.win)
 
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	rc := renderContext{
-		Fudge: fudge,
-	}
-
 	// Render the main chart.
 	for _, ch := range v.charts {
-		ch.Render(rc)
+		ch.Render(fudge)
 	}
 
 	// Render instructions if there are no charts to show.
 	if len(v.charts) == 0 {
-		v.instructionsText.Render()
+		v.instructionsText.Render(fudge)
 	}
 
 	// Render the input symbol over the chart.
-	v.inputSymbolText.Render()
+	v.inputSymbolText.Render(fudge)
 
 	// Render the sidebar thumbnails.
-	v.sidebar.Render(rc)
+	v.sidebar.Render(fudge)
 }
 
 // SetInputSymbolSubmittedCallback sets the callback for when a new symbol is entered.

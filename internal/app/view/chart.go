@@ -247,29 +247,29 @@ func (ch *Chart) Update() (dirty bool) {
 }
 
 // Render renders the Chart.
-func (ch *Chart) Render(rc renderContext) error {
+func (ch *Chart) Render(fudge float32) error {
 	// Render the border around the chart.
 	strokeRoundedRect(ch.bounds, chartRounding)
 
 	// Render the header and the line below it.
-	r := ch.header.Render(rc)
+	r := ch.header.Render(fudge)
 	renderRectTopDivider(r, horizLine)
 
 	// Only show messages if no prior data to show.
 	if !ch.hasStockUpdated {
 		if ch.loading {
-			ch.loadingText.Render()
+			ch.loadingText.Render(fudge)
 			return nil
 		}
 
 		if ch.hasError {
-			ch.errorText.Render()
+			ch.errorText.Render(fudge)
 			return nil
 		}
 	}
 
 	old := gfx.Alpha()
-	gfx.SetAlpha(old * ch.fadeIn.Value(rc.Fudge))
+	gfx.SetAlpha(old * ch.fadeIn.Value(fudge))
 	defer gfx.SetAlpha(old)
 
 	// Calculate percentage needed for each section.

@@ -147,29 +147,29 @@ func (ch *ChartThumb) Update() (dirty bool) {
 }
 
 // Render renders the ChartThumb.
-func (ch *ChartThumb) Render(rc renderContext) error {
+func (ch *ChartThumb) Render(fudge float32) error {
 	// Render the border around the chart.
 	strokeRoundedRect(ch.bounds, thumbChartRounding)
 
 	// Render the header and the line below it.
-	r := ch.header.Render(rc)
+	r := ch.header.Render(fudge)
 	renderRectTopDivider(r, horizLine)
 
 	// Only show messages if no prior data to show.
 	if !ch.hasStockUpdated {
 		if ch.loading {
-			ch.loadingText.Render()
+			ch.loadingText.Render(fudge)
 			return nil
 		}
 
 		if ch.hasError {
-			ch.errorText.Render()
+			ch.errorText.Render(fudge)
 			return nil
 		}
 	}
 
 	old := gfx.Alpha()
-	gfx.SetAlpha(old * ch.fadeIn.Value(rc.Fudge))
+	gfx.SetAlpha(old * ch.fadeIn.Value(fudge))
 	defer gfx.SetAlpha(old)
 
 	rects := sliceRect(r, 0.5)

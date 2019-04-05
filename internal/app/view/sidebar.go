@@ -62,13 +62,13 @@ func (s *sidebar) Update() (dirty bool) {
 	return dirty
 }
 
-func (s *sidebar) Render(rc renderContext) error {
+func (s *sidebar) Render(fudge float32) error {
 	if len(s.thumbs) == 0 {
 		return nil
 	}
 
 	for _, th := range s.thumbs {
-		th.Render(rc)
+		th.Render(fudge)
 	}
 
 	return nil

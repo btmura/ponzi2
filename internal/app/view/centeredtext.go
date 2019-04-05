@@ -72,7 +72,7 @@ func (c *centeredText) ProcessInput(ic inputContext) {
 }
 
 // Render renders the CenteredText.
-func (c *centeredText) Render() {
+func (c *centeredText) Render(fudge float32) {
 	if c.Text == "" {
 		return
 	}
