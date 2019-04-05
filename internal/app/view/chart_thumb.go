@@ -18,8 +18,6 @@ const (
 var (
 	thumbSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
 	thumbQuotePrinter            = func(q *model.Quote) string { return priceStatus(q) }
-	thumbLoadingText             = newCenteredText(thumbSymbolQuoteTextRenderer, "LOADING...")
-	thumbErrorText               = newCenteredText(thumbSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange))
 )
 
 // ChartThumb shows a thumbnail for a stock.
@@ -35,6 +33,12 @@ type ChartThumb struct {
 
 	// weeklyStochastics renders the weekly stochastics.
 	weeklyStochastics *chartStochastics
+
+	// loadingText is the text shown when loading from a fresh state.
+	loadingText *centeredText
+
+	// errorText is the text shown when an error occurs from a fresh state.
+	errorText *centeredText
 
 	// thumbClickCallback is the callback to schedule when the thumb is clicked.
 	thumbClickCallback func()
@@ -71,6 +75,8 @@ func NewChartThumb() *ChartThumb {
 		timeLines:         newChartTimeLines(),
 		dailyStochastics:  newChartStochastics(yellow),
 		weeklyStochastics: newChartStochastics(purple),
+		loadingText:       newCenteredText(thumbSymbolQuoteTextRenderer, "LOADING..."),
+		errorText:         newCenteredText(thumbSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange)),
 		loading:           true,
 		fadeIn:            newAnimation(1 * fps),
 	}
@@ -152,12 +158,12 @@ func (ch *ChartThumb) Render(rc renderContext) error {
 	// Only show messages if no prior data to show.
 	if !ch.hasStockUpdated {
 		if ch.loading {
-			thumbLoadingText.Render(r)
+			ch.loadingText.Render()
 			return nil
 		}
 
 		if ch.hasError {
-			thumbErrorText.Render(r)
+			ch.errorText.Render()
 			return nil
 		}
 	}

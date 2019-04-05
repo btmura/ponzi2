@@ -60,7 +60,7 @@ type chartHeader struct {
 	// fadeIn fades in the quote text after data loads.
 	fadeIn *animation
 
-	// Bounds is the rectangle with global coords that should be drawn within.
+	// bounds is the rectangle with global coords that should be drawn within.
 	bounds image.Rectangle
 }
 

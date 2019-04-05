@@ -11,7 +11,9 @@ type button struct {
 	icon          *gfx.VAO
 	clickCallback func()
 	spinning      *animation
-	bounds        image.Rectangle
+
+	// bounds is the rectangle with global coords that should be drawn within.
+	bounds image.Rectangle
 }
 
 func newButton(icon *gfx.VAO) *button {

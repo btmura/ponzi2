@@ -67,7 +67,6 @@ const viewPadding = 10
 
 var (
 	inputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
-	instructionsText        = newCenteredText(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER...")
 )
 
 func init() {
@@ -99,8 +98,11 @@ type View struct {
 	// sidebar is the sidebar of chart thumbnails on the side.
 	sidebar *sidebar
 
-	// inputSymbol stores and renders the symbol being entered by the user.
-	inputSymbol *centeredText
+	// instructionsText is instructional text show when no chart is shown.
+	instructionsText *centeredText
+
+	// inputSymbolText stores and renders the symbol being entered by the user.
+	inputSymbolText *centeredText
 
 	// inputSymbolSubmittedCallback is called when a new symbol is entered.
 	inputSymbolSubmittedCallback func(symbol string)
@@ -197,7 +199,8 @@ func New() *View {
 	return &View{
 		title:                        NewTitle(),
 		sidebar:                      new(sidebar),
-		inputSymbol:                  newCenteredText(inputSymbolTextRenderer, "", centeredTextBubble(chartRounding, chartPadding)),
+		instructionsText:             newCenteredText(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER..."),
+		inputSymbolText:              newCenteredText(inputSymbolTextRenderer, "", centeredTextBubble(chartRounding, chartPadding)),
 		inputSymbolSubmittedCallback: func(symbol string) {},
 		chartZoomChangeCallback:      func(zoomChange ZoomChange) {},
 	}
@@ -385,7 +388,7 @@ func (v *View) handleCharEvent(char rune) {
 
 	char = unicode.ToUpper(char)
 	if _, ok := acceptedChars[char]; ok {
-		v.inputSymbol.Text += string(char)
+		v.inputSymbolText.Text += string(char)
 	}
 }
 
@@ -399,16 +402,16 @@ func (v *View) handleKeyEvent(key glfw.Key, action glfw.Action) {
 
 	switch key {
 	case glfw.KeyEscape:
-		v.inputSymbol.Text = ""
+		v.inputSymbolText.Text = ""
 
 	case glfw.KeyBackspace:
-		if l := len(v.inputSymbol.Text); l > 0 {
-			v.inputSymbol.Text = v.inputSymbol.Text[:l-1]
+		if l := len(v.inputSymbolText.Text); l > 0 {
+			v.inputSymbolText.Text = v.inputSymbolText.Text[:l-1]
 		}
 
 	case glfw.KeyEnter:
-		v.inputSymbolSubmittedCallback(v.inputSymbol.Text)
-		v.inputSymbol.Text = ""
+		v.inputSymbolSubmittedCallback(v.inputSymbolText.Text)
+		v.inputSymbolText.Text = ""
 	}
 }
 
@@ -572,6 +575,9 @@ func (v *View) processInput() {
 		fmt.Printf("drag: %t count: %d\n", ic.MouseLeftButtonDragging, v.mouseLeftButtonPressedCount)
 	}
 
+	v.instructionsText.ProcessInput(ic)
+	v.inputSymbolText.ProcessInput(ic)
+
 	for i := 0; i < len(v.charts); i++ {
 		ch := v.charts[i]
 		ch.ProcessInput(ic)
@@ -624,8 +630,6 @@ func (v *View) render(fudge float32) {
 
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	m := v.metrics()
-
 	rc := renderContext{
 		Fudge: fudge,
 	}
@@ -637,11 +641,11 @@ func (v *View) render(fudge float32) {
 
 	// Render instructions if there are no charts to show.
 	if len(v.charts) == 0 {
-		instructionsText.Render(m.chartBounds)
+		v.instructionsText.Render()
 	}
 
 	// Render the input symbol over the chart.
-	v.inputSymbol.Render(m.chartBounds)
+	v.inputSymbolText.Render()
 
 	// Render the sidebar thumbnails.
 	v.sidebar.Render(rc)

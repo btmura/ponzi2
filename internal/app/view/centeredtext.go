@@ -19,6 +19,12 @@ type centeredText struct {
 
 	// bubbleSpec specifies the bubble to render behind the text. Nil for none.
 	bubbleSpec *bubbleSpec
+
+	// size is the measured size of the rendered text.
+	size image.Point
+
+	// pt is the location to render the text.
+	pt image.Point
 }
 
 // centeredTextOpt is an option to pass to NewCenteredText.
@@ -54,22 +60,26 @@ func centeredTextBubble(rounding, padding int) centeredTextOpt {
 	}
 }
 
+func (c *centeredText) ProcessInput(ic inputContext) {
+	c.size = c.textRenderer.Measure(c.Text)
+
+	r := ic.Bounds
+
+	c.pt = image.Point{
+		X: r.Min.X + r.Dx()/2 - c.size.X/2,
+		Y: r.Min.Y + r.Dy()/2 - c.size.Y/2,
+	}
+}
+
 // Render renders the CenteredText.
-func (c *centeredText) Render(r image.Rectangle) {
+func (c *centeredText) Render() {
 	if c.Text == "" {
 		return
 	}
 
-	sz := c.textRenderer.Measure(c.Text)
-
-	pt := image.Point{
-		X: r.Min.X + r.Dx()/2 - sz.X/2,
-		Y: r.Min.Y + r.Dy()/2 - sz.Y/2,
-	}
-
 	if c.bubbleSpec != nil {
-		renderBubble(pt, sz, *c.bubbleSpec)
+		renderBubble(c.pt, c.size, *c.bubbleSpec)
 	}
 
-	c.textRenderer.Render(c.Text, pt, c.color)
+	c.textRenderer.Render(c.Text, c.pt, c.color)
 }

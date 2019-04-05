@@ -23,8 +23,6 @@ const (
 var (
 	chartSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 24)
 	chartQuotePrinter            = func(q *model.Quote) string { return join(priceStatus(q), updateStatus(q)) }
-	chartLoadingText             = newCenteredText(chartSymbolQuoteTextRenderer, "LOADING...")
-	chartErrorText               = newCenteredText(chartSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange))
 )
 
 // Constants for rendering a bubble behind an axis-label.
@@ -81,6 +79,12 @@ type Chart struct {
 	// timeLabels renders the time labels.
 	timeLabels *chartTimeLabels
 
+	// loadingText is the text shown when loading from a fresh state.
+	loadingText *centeredText
+
+	// errorText is the text shown when an error occurs from a fresh state.
+	errorText *centeredText
+
 	// loading is true when data for the stock is being retrieved.
 	loading bool
 
@@ -133,6 +137,8 @@ func NewChart() *Chart {
 		dailyStochastics:  newChartStochastics(yellow),
 		weeklyStochastics: newChartStochastics(purple),
 		timeLabels:        newChartTimeLabels(),
+		loadingText:       newCenteredText(chartSymbolQuoteTextRenderer, "LOADING..."),
+		errorText:         newCenteredText(chartSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange)),
 		loading:           true,
 		fadeIn:            newAnimation(1 * fps),
 	}
@@ -223,7 +229,10 @@ func (ch *Chart) SetData(data *ChartData) error {
 func (ch *Chart) ProcessInput(ic inputContext) {
 	ch.bounds = ic.Bounds
 	ch.mousePos = ic.MousePos
+
 	ch.header.ProcessInput(ic)
+	ch.loadingText.ProcessInput(ic)
+	ch.errorText.ProcessInput(ic)
 }
 
 // Update updates the Chart.
@@ -249,12 +258,12 @@ func (ch *Chart) Render(rc renderContext) error {
 	// Only show messages if no prior data to show.
 	if !ch.hasStockUpdated {
 		if ch.loading {
-			chartLoadingText.Render(r)
+			ch.loadingText.Render()
 			return nil
 		}
 
 		if ch.hasError {
-			chartErrorText.Render(r)
+			ch.errorText.Render()
 			return nil
 		}
 	}
