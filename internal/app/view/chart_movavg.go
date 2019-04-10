@@ -3,13 +3,14 @@ package view
 import (
 	"image"
 
-	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/model"
 )
 
 type chartMovingAverage struct {
-	color [3]float32
-	line  *gfx.VAO
+	color  [3]float32
+	line   *gfx.VAO
+	bounds image.Rectangle
 }
 
 func newChartMovingAverage(color [3]float32) *chartMovingAverage {
@@ -33,11 +34,16 @@ func (ch *chartMovingAverage) SetData(ts *model.TradingSessionSeries, ms *model.
 	ch.line = dataLineVAO(values, priceRange(ts.TradingSessions), ch.color)
 }
 
-func (ch *chartMovingAverage) Render(r image.Rectangle) {
+// ProcessInput processes input.
+func (ch *chartMovingAverage) ProcessInput(ic inputContext) {
+	ch.bounds = ic.Bounds
+}
+
+func (ch *chartMovingAverage) Render(fudge float32) {
 	if ch.line == nil {
 		return
 	}
-	gfx.SetModelMatrixRect(r)
+	gfx.SetModelMatrixRect(ch.bounds)
 	ch.line.Render()
 }
 

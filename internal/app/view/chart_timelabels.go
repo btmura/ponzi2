@@ -28,6 +28,9 @@ type chartTimeLabels struct {
 
 	// dates are session dates shown for the cursor.
 	dates []time.Time
+
+	// bounds is the rectangle with global coords that should be drawn within.
+	bounds image.Rectangle
 }
 
 func newChartTimeLabels() *chartTimeLabels {
@@ -67,10 +70,17 @@ func (ch *chartTimeLabels) SetData(r model.Range, ts *model.TradingSessionSeries
 	return nil
 }
 
-func (ch *chartTimeLabels) Render(r image.Rectangle) {
+// ProcessInput processes input.
+func (ch *chartTimeLabels) ProcessInput(ic inputContext) {
+	ch.bounds = ic.Bounds
+}
+
+func (ch *chartTimeLabels) Render(fudge float32) {
 	if !ch.renderable {
 		return
 	}
+
+	r := ch.bounds
 
 	for _, l := range ch.labels {
 		tp := image.Point{

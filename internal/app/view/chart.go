@@ -49,32 +49,22 @@ var (
 
 // Chart shows a stock chart for a single stock.
 type Chart struct {
-	// header renders the header with the symbol, quote, and buttons.
 	header *chartHeader
 
-	// timeLines renders the vertical time lines.
-	timeLines *chartTimeLines
-
-	// prices renders the candlesticks.
-	prices *chartPrices
-
-	// movingAverage renders the 25 day moving average.
-	movingAverage25 *chartMovingAverage
-
-	// movingAverage50 renders the 50 day moving average.
-	movingAverage50 *chartMovingAverage
-
-	// movingAverage200 renders the 200 day moving average.
+	priceTimeLines   *chartTimeLines
+	prices           *chartPrices
+	movingAverage25  *chartMovingAverage
+	movingAverage50  *chartMovingAverage
 	movingAverage200 *chartMovingAverage
 
-	// volume renders the volume bars.
-	volume *chartVolume
+	volumeTimeLines *chartTimeLines
+	volume          *chartVolume
 
-	// dailyStochastics renders the daily stochastics.
-	dailyStochastics *chartStochastics
+	dailyStochasticsTimeLines *chartTimeLines
+	dailyStochastics          *chartStochastics
 
-	// weeklyStochastics renders the weekly stochastics.
-	weeklyStochastics *chartStochastics
+	weeklyStochasticsTimeLines *chartTimeLines
+	weeklyStochastics          *chartStochastics
 
 	// timeLabels renders the time labels.
 	timeLabels *chartTimeLabels
@@ -110,8 +100,11 @@ type Chart struct {
 	// showStochastics is whether to show stochastics.
 	showStochastics bool
 
-	// bounds is the rectangle with global coords that should be drawn within.
-	bounds image.Rectangle
+	// fullBounds is the rect with global coords that should be drawn within.
+	fullBounds image.Rectangle
+
+	// bodyBounds is a sub-rect of fullBounds without the header.
+	bodyBounds image.Rectangle
 
 	// mousePos is the current mouse position.
 	mousePos image.Point
@@ -128,19 +121,28 @@ func NewChart() *Chart {
 			Rounding:                chartRounding,
 			Padding:                 chartPadding,
 		}),
-		timeLines:         newChartTimeLines(),
-		prices:            newChartPrices(),
-		movingAverage25:   newChartMovingAverage(purple),
-		movingAverage50:   newChartMovingAverage(yellow),
-		movingAverage200:  newChartMovingAverage(white),
-		volume:            newChartVolume(),
-		dailyStochastics:  newChartStochastics(yellow),
-		weeklyStochastics: newChartStochastics(purple),
-		timeLabels:        newChartTimeLabels(),
-		loadingText:       newCenteredText(chartSymbolQuoteTextRenderer, "LOADING..."),
-		errorText:         newCenteredText(chartSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange)),
-		loading:           true,
-		fadeIn:            newAnimation(1 * fps),
+
+		priceTimeLines:   newChartTimeLines(),
+		prices:           newChartPrices(),
+		movingAverage25:  newChartMovingAverage(purple),
+		movingAverage50:  newChartMovingAverage(yellow),
+		movingAverage200: newChartMovingAverage(white),
+
+		volumeTimeLines: newChartTimeLines(),
+		volume:          newChartVolume(),
+
+		dailyStochasticsTimeLines: newChartTimeLines(),
+		dailyStochastics:          newChartStochastics(yellow),
+
+		weeklyStochasticsTimeLines: newChartTimeLines(),
+		weeklyStochastics:          newChartStochastics(purple),
+
+		timeLabels: newChartTimeLabels(),
+
+		loadingText: newCenteredText(chartSymbolQuoteTextRenderer, "LOADING..."),
+		errorText:   newCenteredText(chartSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange)),
+		loading:     true,
+		fadeIn:      newAnimation(1 * fps),
 	}
 }
 
@@ -197,7 +199,7 @@ func (ch *Chart) SetData(data *ChartData) error {
 
 	ts := dc.TradingSessionSeries
 
-	if err := ch.timeLines.SetData(dc.Range, ts); err != nil {
+	if err := ch.priceTimeLines.SetData(dc.Range, ts); err != nil {
 		return err
 	}
 
@@ -209,10 +211,23 @@ func (ch *Chart) SetData(data *ChartData) error {
 		ch.movingAverage200.SetData(ts, dc.MovingAverageSeries200)
 	}
 
+	if err := ch.volumeTimeLines.SetData(dc.Range, ts); err != nil {
+		return err
+	}
+
 	ch.volume.SetData(ts)
 
 	if ch.showStochastics {
+		if err := ch.dailyStochasticsTimeLines.SetData(dc.Range, ts); err != nil {
+			return err
+		}
+
 		ch.dailyStochastics.SetData(dc.DailyStochasticSeries)
+
+		if err := ch.weeklyStochasticsTimeLines.SetData(dc.Range, ts); err != nil {
+			return err
+		}
+
 		ch.weeklyStochastics.SetData(dc.WeeklyStochasticSeries)
 	}
 
@@ -227,12 +242,110 @@ func (ch *Chart) SetData(data *ChartData) error {
 
 // ProcessInput processes input.
 func (ch *Chart) ProcessInput(ic inputContext) {
-	ch.bounds = ic.Bounds
+	ch.fullBounds = ic.Bounds
 	ch.mousePos = ic.MousePos
 
-	ch.header.ProcessInput(ic)
+	r, _ := ch.header.ProcessInput(ic)
+	ch.bodyBounds = r
+
 	ch.loadingText.ProcessInput(ic)
 	ch.errorText.ProcessInput(ic)
+
+	// Calculate percentage needed for each section.
+	const (
+		volumePercent            = 0.13
+		dailyStochasticsPercent  = 0.13
+		weeklyStochasticsPercent = 0.13
+	)
+	timeLabelsPercent := float32(ch.timeLabels.MaxLabelSize.Y+chartPadding*2) / float32(r.Dy())
+
+	// Divide up the rectangle into sections.
+	var rects []image.Rectangle
+	if ch.showStochastics {
+		rects = sliceRect(r, timeLabelsPercent, weeklyStochasticsPercent, dailyStochasticsPercent, volumePercent)
+	} else {
+		rects = sliceRect(r, timeLabelsPercent, volumePercent)
+	}
+
+	var pr, vr, dr, wr, tr image.Rectangle
+	if ch.showStochastics {
+		pr, vr, dr, wr, tr = rects[4], rects[3], rects[2], rects[1], rects[0]
+	} else {
+		pr, vr, tr = rects[2], rects[1], rects[0]
+	}
+
+	// Create separate rects for each section's labels shown on the right.
+	plr, vlr, dlr, wlr := pr, vr, dr, wr
+
+	// Figure out width to trim off on the right of each rect for the labels.
+	maxWidth := ch.prices.MaxLabelSize.X
+	if w := ch.volume.MaxLabelSize.X; w > maxWidth {
+		maxWidth = w
+	}
+	if ch.showStochastics {
+		if w := ch.dailyStochastics.MaxLabelSize.X; w > maxWidth {
+			maxWidth = w
+		}
+		if w := ch.weeklyStochastics.MaxLabelSize.X; w > maxWidth {
+			maxWidth = w
+		}
+	}
+	maxWidth += chartPadding
+
+	// Set left side of label rects.
+	plr.Min.X = pr.Max.X - maxWidth
+	vlr.Min.X = vr.Max.X - maxWidth
+	dlr.Min.X = dr.Max.X - maxWidth
+	wlr.Min.X = wr.Max.X - maxWidth
+
+	// Trim off the label rects from the main rects.
+	pr.Max.X = plr.Min.X
+	vr.Max.X = vlr.Min.X
+	dr.Max.X = dlr.Min.X
+	wr.Max.X = wlr.Min.X
+
+	// Legend labels and its cursors labels overlap and use the same rect.
+	// pr.Max.X = plr.Min.X
+	// llr := pr
+
+	// Time labels and its cursors labels overlap and use the same rect.
+	tr.Max.X = plr.Min.X
+	tlr := tr
+
+	// Pad all the rects.
+	pr = pr.Inset(chartPadding)
+	vr = vr.Inset(chartPadding)
+	dr = dr.Inset(chartPadding)
+	wr = wr.Inset(chartPadding)
+	tr = tr.Inset(chartPadding)
+
+	plr = plr.Inset(chartPadding)
+	vlr = vlr.Inset(chartPadding)
+	dlr = dlr.Inset(chartPadding)
+	wlr = wlr.Inset(chartPadding)
+	tlr = tlr.Inset(chartPadding)
+
+	ic.Bounds = pr
+	ch.priceTimeLines.ProcessInput(ic)
+	ch.prices.ProcessInput(ic)
+	ch.movingAverage25.ProcessInput(ic)
+	ch.movingAverage50.ProcessInput(ic)
+	ch.movingAverage200.ProcessInput(ic)
+
+	ic.Bounds = vr
+	ch.volumeTimeLines.ProcessInput(ic)
+	ch.volume.ProcessInput(ic)
+
+	ic.Bounds = dr
+	ch.dailyStochasticsTimeLines.ProcessInput(ic)
+	ch.dailyStochastics.ProcessInput(ic)
+
+	ic.Bounds = wr
+	ch.weeklyStochasticsTimeLines.ProcessInput(ic)
+	ch.weeklyStochastics.ProcessInput(ic)
+
+	ic.Bounds = tr
+	ch.timeLabels.ProcessInput(ic)
 }
 
 // Update updates the Chart.
@@ -249,10 +362,12 @@ func (ch *Chart) Update() (dirty bool) {
 // Render renders the Chart.
 func (ch *Chart) Render(fudge float32) error {
 	// Render the border around the chart.
-	strokeRoundedRect(ch.bounds, chartRounding)
+	strokeRoundedRect(ch.fullBounds, chartRounding)
 
 	// Render the header and the line below it.
-	r := ch.header.Render(fudge)
+	ch.header.Render(fudge)
+
+	r := ch.bodyBounds
 	renderRectTopDivider(r, horizLine)
 
 	// Only show messages if no prior data to show.
@@ -351,25 +466,25 @@ func (ch *Chart) Render(fudge float32) error {
 	wlr = wlr.Inset(chartPadding)
 	tlr = tlr.Inset(chartPadding)
 
-	ch.timeLines.Render(pr)
-	ch.timeLines.Render(vr)
+	ch.priceTimeLines.Render(fudge)
+	ch.volumeTimeLines.Render(fudge)
 	if ch.showStochastics {
-		ch.timeLines.Render(dr)
-		ch.timeLines.Render(wr)
+		ch.dailyStochasticsTimeLines.Render(fudge)
+		ch.weeklyStochasticsTimeLines.Render(fudge)
 	}
 
-	ch.prices.Render(pr)
+	ch.prices.Render(fudge)
 	if ch.showMovingAverages {
-		ch.movingAverage25.Render(pr)
-		ch.movingAverage50.Render(pr)
-		ch.movingAverage200.Render(pr)
+		ch.movingAverage25.Render(fudge)
+		ch.movingAverage50.Render(fudge)
+		ch.movingAverage200.Render(fudge)
 	}
-	ch.volume.Render(vr)
+	ch.volume.Render(fudge)
 	if ch.showStochastics {
-		ch.dailyStochastics.Render(dr)
-		ch.weeklyStochastics.Render(wr)
+		ch.dailyStochastics.Render(fudge)
+		ch.weeklyStochastics.Render(fudge)
 	}
-	ch.timeLabels.Render(tr)
+	ch.timeLabels.Render(fudge)
 
 	ch.prices.RenderAxisLabels(plr)
 	ch.volume.RenderAxisLabels(vlr)
@@ -421,8 +536,9 @@ func (ch *Chart) Close() {
 	if ch.header != nil {
 		ch.header.Close()
 	}
-	if ch.timeLines != nil {
-		ch.timeLines.Close()
+
+	if ch.priceTimeLines != nil {
+		ch.priceTimeLines.Close()
 	}
 	if ch.prices != nil {
 		ch.prices.Close()
@@ -436,15 +552,28 @@ func (ch *Chart) Close() {
 	if ch.movingAverage200 != nil {
 		ch.movingAverage200.Close()
 	}
+
+	if ch.volumeTimeLines != nil {
+		ch.volumeTimeLines.Close()
+	}
 	if ch.volume != nil {
 		ch.volume.Close()
+	}
+
+	if ch.dailyStochasticsTimeLines != nil {
+		ch.dailyStochasticsTimeLines.Close()
 	}
 	if ch.dailyStochastics != nil {
 		ch.dailyStochastics.Close()
 	}
+
+	if ch.weeklyStochasticsTimeLines != nil {
+		ch.weeklyStochasticsTimeLines.Close()
+	}
 	if ch.weeklyStochastics != nil {
 		ch.weeklyStochastics.Close()
 	}
+
 	if ch.timeLabels != nil {
 		ch.timeLabels.Close()
 	}

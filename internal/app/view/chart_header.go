@@ -177,10 +177,8 @@ func (c chartHeaderClicks) HasClicks() bool {
 }
 
 // ProcessInput processes input.
-func (ch *chartHeader) ProcessInput(ic inputContext) chartHeaderClicks {
+func (ch *chartHeader) ProcessInput(ic inputContext) (body image.Rectangle, clicks chartHeaderClicks) {
 	ch.bounds = ic.Bounds
-
-	var clicks chartHeaderClicks
 
 	h := ch.padding + ch.symbolQuoteTextRenderer.LineHeight() + ch.padding
 	buttonSize := image.Pt(h, h)
@@ -209,7 +207,9 @@ func (ch *chartHeader) ProcessInput(ic inputContext) chartHeaderClicks {
 		clicks.RefreshButtonClicked = false
 	}
 
-	return clicks
+	r.Max.Y -= ch.padding + ch.symbolQuoteTextRenderer.LineHeight() + ch.padding
+
+	return r, clicks
 }
 
 func (ch *chartHeader) Update() (dirty bool) {
@@ -229,7 +229,7 @@ func (ch *chartHeader) Update() (dirty bool) {
 }
 
 // Render renders the ChartHeader.
-func (ch *chartHeader) Render(fudge float32) (body image.Rectangle) {
+func (ch *chartHeader) Render(fudge float32) {
 	h := ch.padding + ch.symbolQuoteTextRenderer.LineHeight() + ch.padding
 	buttonSize := image.Pt(h, h)
 
@@ -276,11 +276,6 @@ func (ch *chartHeader) Render(fudge float32) (body image.Rectangle) {
 			gfx.SetAlpha(old)
 		}
 	}
-	pt.Y -= ch.padding
-
-	r.Max.Y = pt.Y
-
-	return r
 }
 
 // SetRefreshButtonClickCallback sets the callback for refresh button clicks.

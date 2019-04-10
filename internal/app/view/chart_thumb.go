@@ -25,14 +25,11 @@ type ChartThumb struct {
 	// header renders the header with the symbol, quote, and buttons.
 	header *chartHeader
 
-	// timeLines renders the vertical time lines.
-	timeLines *chartTimeLines
+	dailyStochasticsTimeLines *chartTimeLines
+	dailyStochastics          *chartStochastics
 
-	// dailyStochastics renders the daily stochastics.
-	dailyStochastics *chartStochastics
-
-	// weeklyStochastics renders the weekly stochastics.
-	weeklyStochastics *chartStochastics
+	weeklyStochasticsTimeLines *chartTimeLines
+	weeklyStochastics          *chartStochastics
 
 	// loadingText is the text shown when loading from a fresh state.
 	loadingText *centeredText
@@ -55,8 +52,11 @@ type ChartThumb struct {
 	// fadeIn fades in the data after it loads.
 	fadeIn *animation
 
-	// bounds is the rectangle with global coords that should be drawn within.
-	bounds image.Rectangle
+	// fullBounds is the rect with global coords that should be drawn within.
+	fullBounds image.Rectangle
+
+	// bodyBounds is a sub-rect of fullBounds without the header.
+	bodyBounds image.Rectangle
 
 	// mousePos is the current mouse position.
 	mousePos image.Point
@@ -72,13 +72,17 @@ func NewChartThumb() *ChartThumb {
 			Rounding:                thumbChartRounding,
 			Padding:                 thumbChartPadding,
 		}),
-		timeLines:         newChartTimeLines(),
-		dailyStochastics:  newChartStochastics(yellow),
-		weeklyStochastics: newChartStochastics(purple),
-		loadingText:       newCenteredText(thumbSymbolQuoteTextRenderer, "LOADING..."),
-		errorText:         newCenteredText(thumbSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange)),
-		loading:           true,
-		fadeIn:            newAnimation(1 * fps),
+
+		dailyStochasticsTimeLines: newChartTimeLines(),
+		dailyStochastics:          newChartStochastics(yellow),
+
+		weeklyStochasticsTimeLines: newChartTimeLines(),
+		weeklyStochastics:          newChartStochastics(purple),
+
+		loadingText: newCenteredText(thumbSymbolQuoteTextRenderer, "LOADING..."),
+		errorText:   newCenteredText(thumbSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange)),
+		loading:     true,
+		fadeIn:      newAnimation(1 * fps),
 	}
 }
 
@@ -115,11 +119,16 @@ func (ch *ChartThumb) SetData(data *ChartData) error {
 		return nil
 	}
 
-	if err := ch.timeLines.SetData(dc.Range, dc.TradingSessionSeries); err != nil {
+	if err := ch.dailyStochasticsTimeLines.SetData(dc.Range, dc.TradingSessionSeries); err != nil {
 		return err
 	}
 
 	ch.dailyStochastics.SetData(dc.DailyStochasticSeries)
+
+	if err := ch.weeklyStochasticsTimeLines.SetData(dc.Range, dc.TradingSessionSeries); err != nil {
+		return err
+	}
+
 	ch.weeklyStochastics.SetData(dc.WeeklyStochasticSeries)
 
 	return nil
@@ -127,12 +136,29 @@ func (ch *ChartThumb) SetData(data *ChartData) error {
 
 // ProcessInput processes input.
 func (ch *ChartThumb) ProcessInput(ic inputContext) {
-	ch.bounds = ic.Bounds
+	ch.fullBounds = ic.Bounds
 	ch.mousePos = ic.MousePos
-	clicks := ch.header.ProcessInput(ic)
+
+	r, clicks := ch.header.ProcessInput(ic)
+	ch.bodyBounds = r
 	if !clicks.HasClicks() && ic.LeftClickInBounds() {
 		*ic.ScheduledCallbacks = append(*ic.ScheduledCallbacks, ch.thumbClickCallback)
 	}
+
+	rects := sliceRect(r, 0.5)
+	for i := range rects {
+		rects[i] = rects[i].Inset(thumbChartPadding)
+	}
+
+	dr, wr := rects[1], rects[0]
+
+	ic.Bounds = dr
+	ch.dailyStochasticsTimeLines.ProcessInput(ic)
+	ch.dailyStochastics.ProcessInput(ic)
+
+	ic.Bounds = wr
+	ch.weeklyStochasticsTimeLines.ProcessInput(ic)
+	ch.weeklyStochastics.ProcessInput(ic)
 }
 
 // Update updates the ChartThumb.
@@ -149,10 +175,12 @@ func (ch *ChartThumb) Update() (dirty bool) {
 // Render renders the ChartThumb.
 func (ch *ChartThumb) Render(fudge float32) error {
 	// Render the border around the chart.
-	strokeRoundedRect(ch.bounds, thumbChartRounding)
+	strokeRoundedRect(ch.fullBounds, thumbChartRounding)
 
 	// Render the header and the line below it.
-	r := ch.header.Render(fudge)
+	ch.header.Render(fudge)
+
+	r := ch.bodyBounds
 	renderRectTopDivider(r, horizLine)
 
 	// Only show messages if no prior data to show.
@@ -181,11 +209,11 @@ func (ch *ChartThumb) Render(fudge float32) error {
 
 	dr, wr := rects[1], rects[0]
 
-	ch.timeLines.Render(dr)
-	ch.timeLines.Render(wr)
+	ch.dailyStochasticsTimeLines.Render(fudge)
+	ch.weeklyStochasticsTimeLines.Render(fudge)
 
-	ch.dailyStochastics.Render(dr)
-	ch.weeklyStochastics.Render(wr)
+	ch.dailyStochastics.Render(fudge)
+	ch.weeklyStochastics.Render(fudge)
 
 	renderCursorLines(dr, ch.mousePos)
 	renderCursorLines(wr, ch.mousePos)
@@ -211,14 +239,20 @@ func (ch *ChartThumb) Close() {
 	if ch.header != nil {
 		ch.header.Close()
 	}
-	if ch.timeLines != nil {
-		ch.timeLines.Close()
+
+	if ch.dailyStochasticsTimeLines != nil {
+		ch.dailyStochasticsTimeLines.Close()
 	}
 	if ch.dailyStochastics != nil {
 		ch.dailyStochastics.Close()
 	}
+
+	if ch.weeklyStochasticsTimeLines != nil {
+		ch.weeklyStochasticsTimeLines.Close()
+	}
 	if ch.weeklyStochastics != nil {
 		ch.weeklyStochastics.Close()
 	}
+
 	ch.thumbClickCallback = nil
 }

@@ -25,6 +25,9 @@ type chartPrices struct {
 
 	// stickRects ithe VAO with the candlestick boxes without the lines.
 	stickRects *gfx.VAO
+
+	// bounds is the rectangle with global coords that should be drawn within.
+	bounds image.Rectangle
 }
 
 func newChartPrices() *chartPrices {
@@ -50,10 +53,17 @@ func (ch *chartPrices) SetData(ts *model.TradingSessionSeries) {
 	ch.renderable = true
 }
 
-func (ch *chartPrices) Render(r image.Rectangle) {
+// ProcessInput processes input.
+func (ch *chartPrices) ProcessInput(ic inputContext) {
+	ch.bounds = ic.Bounds
+}
+
+func (ch *chartPrices) Render(fudge float32) {
 	if !ch.renderable {
 		return
 	}
+
+	r := ch.bounds
 
 	labelPaddingY := ch.MaxLabelSize.Y / 2
 	y := r.Max.Y - labelPaddingY - ch.MaxLabelSize.Y/2

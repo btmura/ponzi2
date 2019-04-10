@@ -16,6 +16,7 @@ type chartStochastics struct {
 	lineDVAO     *gfx.VAO
 	labels       []chartStochasticsLabel
 	MaxLabelSize image.Point
+	bounds       image.Rectangle
 }
 
 func newChartStochastics(dColor [3]float32) *chartStochastics {
@@ -51,12 +52,17 @@ func (ch *chartStochastics) SetData(ss *model.StochasticSeries) {
 	ch.lineDVAO = dataLineVAO(dvals, valRange, ch.dColor)
 }
 
-func (ch *chartStochastics) Render(r image.Rectangle) {
+// ProcessInput processes input.
+func (ch *chartStochastics) ProcessInput(ic inputContext) {
+	ch.bounds = ic.Bounds
+}
+
+func (ch *chartStochastics) Render(fudge float32) {
 	if !ch.renderable() {
 		return
 	}
 
-	gfx.SetModelMatrixRect(r)
+	gfx.SetModelMatrixRect(ch.bounds)
 
 	// Render lines for the 20% and 80% levels.
 	chartStochasticHorizRuleSet.Render()

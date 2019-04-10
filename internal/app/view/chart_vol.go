@@ -5,8 +5,8 @@ import (
 	"image"
 	"strconv"
 
-	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/model"
 )
 
 var chartVolumeHorizRuleSet = horizRuleSetVAO([]float32{0.2, 0.8}, [2]float32{0, 1}, gray)
@@ -27,6 +27,8 @@ type chartVolume struct {
 
 	// volBars is the VAO with the colored volume bars.
 	volBars *gfx.VAO
+
+	bounds image.Rectangle
 }
 
 func newChartVolume() *chartVolume {
@@ -64,12 +66,16 @@ func (ch *chartVolume) SetData(ts *model.TradingSessionSeries) {
 	ch.renderable = true
 }
 
-func (ch *chartVolume) Render(r image.Rectangle) {
+func (ch *chartVolume) ProcessInput(ic inputContext) {
+	ch.bounds = ic.Bounds
+}
+
+func (ch *chartVolume) Render(fudge float32) {
 	if !ch.renderable {
 		return
 	}
 
-	gfx.SetModelMatrixRect(r)
+	gfx.SetModelMatrixRect(ch.bounds)
 
 	// Render lines for the 20% and 80% levels.
 	chartVolumeHorizRuleSet.Render()

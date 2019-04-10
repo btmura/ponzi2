@@ -9,7 +9,8 @@ import (
 )
 
 type chartTimeLines struct {
-	vao *gfx.VAO
+	vao    *gfx.VAO
+	bounds image.Rectangle
 }
 
 func newChartTimeLines() *chartTimeLines {
@@ -71,12 +72,17 @@ func weekLineValues(r model.Range, ts []*model.TradingSession) ([]float32, error
 	return values, nil
 }
 
+// ProcessInput processes input.
+func (ch *chartTimeLines) ProcessInput(ic inputContext) {
+	ch.bounds = ic.Bounds
+}
+
 // Render renders the chart lines.
-func (ch *chartTimeLines) Render(r image.Rectangle) {
+func (ch *chartTimeLines) Render(fudge float32) {
 	if ch.vao == nil {
 		return
 	}
-	gfx.SetModelMatrixRect(r)
+	gfx.SetModelMatrixRect(ch.bounds)
 	ch.vao.Render()
 }
 
