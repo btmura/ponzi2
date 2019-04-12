@@ -86,43 +86,6 @@ func (ch *chartPrices) Render(fudge float32) {
 	ch.stickRects.Render()
 }
 
-func (ch *chartPrices) RenderAxisLabels(r image.Rectangle) {
-	if !ch.renderable {
-		return
-	}
-
-	labelPaddingY := ch.MaxLabelSize.Y / 2
-	pricePerPixel := (ch.priceRange[1] - ch.priceRange[0]) / float32(r.Dy())
-
-	// Start at top and decrement one label with top and bottom padding.
-	pt := r.Max
-	dp := image.Pt(0, labelPaddingY+ch.MaxLabelSize.Y+labelPaddingY)
-
-	// Start at top with max price and decrement change in price of a label with padding.
-	v := ch.priceRange[1]
-	dv := pricePerPixel * float32(dp.Y)
-
-	// Offets to the cursor and price value when drawing.
-	dpy := labelPaddingY + ch.MaxLabelSize.Y   // Puts point at the baseline of the text.
-	dvy := labelPaddingY + ch.MaxLabelSize.Y/2 // Uses value in the middle of the label.
-
-	for {
-		{
-			l := makeChartPriceLabel(v - pricePerPixel*float32(dvy))
-
-			pt := image.Pt(pt.X-l.size.X, pt.Y-dpy)
-			if pt.Y < r.Min.Y {
-				break
-			}
-
-			chartAxisLabelTextRenderer.Render(l.text, pt, white)
-		}
-
-		pt = pt.Sub(dp)
-		v -= dv
-	}
-}
-
 func (ch *chartPrices) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {
 	if !ch.renderable {
 		return

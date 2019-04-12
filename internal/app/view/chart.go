@@ -53,6 +53,7 @@ type Chart struct {
 
 	priceTimeLines   *chartTimeLines
 	prices           *chartPrices
+	priceAxisLabels  *chartPriceAxisLabels
 	movingAverage25  *chartMovingAverage
 	movingAverage50  *chartMovingAverage
 	movingAverage200 *chartMovingAverage
@@ -124,6 +125,7 @@ func NewChart() *Chart {
 
 		priceTimeLines:   newChartTimeLines(),
 		prices:           newChartPrices(),
+		priceAxisLabels:  newChartPriceAxisLabels(),
 		movingAverage25:  newChartMovingAverage(purple),
 		movingAverage50:  newChartMovingAverage(yellow),
 		movingAverage200: newChartMovingAverage(white),
@@ -204,6 +206,7 @@ func (ch *Chart) SetData(data *ChartData) error {
 	}
 
 	ch.prices.SetData(ts)
+	ch.priceAxisLabels.SetData(ts)
 
 	if ch.showMovingAverages {
 		ch.movingAverage25.SetData(ts, dc.MovingAverageSeries25)
@@ -346,6 +349,9 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 
 	ic.Bounds = tr
 	ch.timeLabels.ProcessInput(ic)
+
+	ic.Bounds = plr
+	ch.priceAxisLabels.ProcessInput(ic)
 }
 
 // Update updates the Chart.
@@ -486,7 +492,7 @@ func (ch *Chart) Render(fudge float32) error {
 	}
 	ch.timeLabels.Render(fudge)
 
-	ch.prices.RenderAxisLabels(plr)
+	ch.priceAxisLabels.Render(fudge)
 	ch.volume.RenderAxisLabels(vlr)
 	if ch.showStochastics {
 		ch.dailyStochastics.RenderAxisLabels(dlr)
