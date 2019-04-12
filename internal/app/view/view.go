@@ -485,7 +485,7 @@ func (v *View) handleScrollEvent(yoff float64) {
 }
 
 // RunLoop runs the "game loop".
-func (v *View) RunLoop(ctx context.Context, preupdate func(context.Context) error) error {
+func (v *View) RunLoop(ctx context.Context, runLoopHook func(context.Context) error) error {
 start:
 	var lag float64
 	dirty := false
@@ -496,13 +496,14 @@ start:
 		prevTime = currTime
 		lag += elapsed
 
+		if err := runLoopHook(ctx); err != nil {
+			return err
+		}
+
 		v.processInput()
 
 		i := 0
 		for ; i < minUpdates || i < maxUpdates && lag >= updateSec; i++ {
-			if err := preupdate(ctx); err != nil {
-				return err
-			}
 			dirty = v.update()
 			lag -= updateSec
 		}

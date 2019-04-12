@@ -21,11 +21,6 @@ func newChartPriceAxisLabels() *chartPriceAxisLabels {
 	return &chartPriceAxisLabels{}
 }
 
-// ProcessInput processes input.
-func (ch *chartPriceAxisLabels) ProcessInput(ic inputContext) {
-	ch.bounds = ic.Bounds
-}
-
 func (ch *chartPriceAxisLabels) SetData(ts *model.TradingSessionSeries) {
 	// Bail out if there is no data yet.
 	if ts == nil {
@@ -36,6 +31,11 @@ func (ch *chartPriceAxisLabels) SetData(ts *model.TradingSessionSeries) {
 
 	// Measure the max label size by creating a label with the max value.
 	ch.MaxLabelSize = makeChartPriceLabel(ch.priceRange[1]).size
+}
+
+// ProcessInput processes input.
+func (ch *chartPriceAxisLabels) ProcessInput(ic inputContext) {
+	ch.bounds = ic.Bounds
 }
 
 func (ch *chartPriceAxisLabels) Render(fudge float32) {
