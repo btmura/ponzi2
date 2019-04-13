@@ -14,7 +14,6 @@ type chartStochastics struct {
 	dColor       [3]float32
 	lineKVAO     *gfx.VAO
 	lineDVAO     *gfx.VAO
-	labels       []chartStochasticsLabel
 	MaxLabelSize image.Point
 	bounds       image.Rectangle
 }
@@ -34,12 +33,6 @@ func (ch *chartStochastics) SetData(ss *model.StochasticSeries) {
 
 	// Measure the max label size by creating a label with the max value.
 	ch.MaxLabelSize = makeChartStochasticLabel(1).size
-
-	// Create Y-axis labels for key percentages.
-	ch.labels = []chartStochasticsLabel{
-		makeChartStochasticLabel(.8),
-		makeChartStochasticLabel(.2),
-	}
 
 	// Create the graph line VAOs.
 	var kvals, dvals []float32
@@ -70,18 +63,6 @@ func (ch *chartStochastics) Render(fudge float32) {
 	// Render the stochastic lines.
 	ch.lineKVAO.Render()
 	ch.lineDVAO.Render()
-}
-
-func (ch *chartStochastics) RenderAxisLabels(r image.Rectangle) {
-	if !ch.renderable() {
-		return
-	}
-
-	for _, l := range ch.labels {
-		x := r.Max.X - l.size.X
-		y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
-		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
-	}
 }
 
 func (ch *chartStochastics) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {

@@ -51,22 +51,25 @@ var (
 type Chart struct {
 	header *chartHeader
 
-	priceTimeLines   *chartTimeLines
-	prices           *chartPrices
-	priceAxisLabels  *chartPriceAxisLabels
+	prices          *chartPrices
+	priceAxisLabels *chartPriceAxisLabels
+	priceTimeLines  *chartTimeLines
+
 	movingAverage25  *chartMovingAverage
 	movingAverage50  *chartMovingAverage
 	movingAverage200 *chartMovingAverage
 
-	volumeTimeLines  *chartTimeLines
 	volume           *chartVolume
 	volumeAxisLabels *chartVolumeAxisLabels
+	volumeTimeLines  *chartTimeLines
 
-	dailyStochasticsTimeLines *chartTimeLines
-	dailyStochastics          *chartStochastics
+	dailyStochastics           *chartStochastics
+	dailyStochasticsAxisLabels *chartStochasticsAxisLabels
+	dailyStochasticsTimeLines  *chartTimeLines
 
-	weeklyStochasticsTimeLines *chartTimeLines
-	weeklyStochastics          *chartStochastics
+	weeklyStochastics           *chartStochastics
+	weeklyStochasticsAxisLabels *chartStochasticsAxisLabels
+	weeklyStochasticsTimeLines  *chartTimeLines
 
 	// timeLabels renders the time labels.
 	timeLabels *chartTimeLabels
@@ -124,22 +127,25 @@ func NewChart() *Chart {
 			Padding:                 chartPadding,
 		}),
 
-		priceTimeLines:   newChartTimeLines(),
-		prices:           newChartPrices(),
-		priceAxisLabels:  newChartPriceAxisLabels(),
+		prices:          newChartPrices(),
+		priceAxisLabels: newChartPriceAxisLabels(),
+		priceTimeLines:  newChartTimeLines(),
+
 		movingAverage25:  newChartMovingAverage(purple),
 		movingAverage50:  newChartMovingAverage(yellow),
 		movingAverage200: newChartMovingAverage(white),
 
-		volumeTimeLines:  newChartTimeLines(),
 		volume:           newChartVolume(),
 		volumeAxisLabels: newChartVolumeAxisLabels(),
+		volumeTimeLines:  newChartTimeLines(),
 
-		dailyStochasticsTimeLines: newChartTimeLines(),
-		dailyStochastics:          newChartStochastics(yellow),
+		dailyStochastics:           newChartStochastics(yellow),
+		dailyStochasticsAxisLabels: newChartStochasticsAxisLabels(),
+		dailyStochasticsTimeLines:  newChartTimeLines(),
 
-		weeklyStochasticsTimeLines: newChartTimeLines(),
-		weeklyStochastics:          newChartStochastics(purple),
+		weeklyStochastics:           newChartStochastics(purple),
+		weeklyStochasticsAxisLabels: newChartStochasticsAxisLabels(),
+		weeklyStochasticsTimeLines:  newChartTimeLines(),
 
 		timeLabels: newChartTimeLabels(),
 
@@ -203,12 +209,11 @@ func (ch *Chart) SetData(data *ChartData) error {
 
 	ts := dc.TradingSessionSeries
 
+	ch.prices.SetData(ts)
+	ch.priceAxisLabels.SetData(ts)
 	if err := ch.priceTimeLines.SetData(dc.Range, ts); err != nil {
 		return err
 	}
-
-	ch.prices.SetData(ts)
-	ch.priceAxisLabels.SetData(ts)
 
 	if ch.showMovingAverages {
 		ch.movingAverage25.SetData(ts, dc.MovingAverageSeries25)
@@ -216,25 +221,24 @@ func (ch *Chart) SetData(data *ChartData) error {
 		ch.movingAverage200.SetData(ts, dc.MovingAverageSeries200)
 	}
 
+	ch.volume.SetData(ts)
+	ch.volumeAxisLabels.SetData(ts)
 	if err := ch.volumeTimeLines.SetData(dc.Range, ts); err != nil {
 		return err
 	}
 
-	ch.volume.SetData(ts)
-	ch.volumeAxisLabels.SetData(ts)
-
 	if ch.showStochastics {
+		ch.dailyStochastics.SetData(dc.DailyStochasticSeries)
+		ch.dailyStochasticsAxisLabels.SetData(dc.DailyStochasticSeries)
 		if err := ch.dailyStochasticsTimeLines.SetData(dc.Range, ts); err != nil {
 			return err
 		}
 
-		ch.dailyStochastics.SetData(dc.DailyStochasticSeries)
-
+		ch.weeklyStochastics.SetData(dc.WeeklyStochasticSeries)
+		ch.weeklyStochasticsAxisLabels.SetData(dc.WeeklyStochasticSeries)
 		if err := ch.weeklyStochasticsTimeLines.SetData(dc.Range, ts); err != nil {
 			return err
 		}
-
-		ch.weeklyStochastics.SetData(dc.WeeklyStochasticSeries)
 	}
 
 	if err := ch.timeLabels.SetData(dc.Range, ts); err != nil {
@@ -332,23 +336,23 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 	tlr = tlr.Inset(chartPadding)
 
 	ic.Bounds = pr
-	ch.priceTimeLines.ProcessInput(ic)
 	ch.prices.ProcessInput(ic)
+	ch.priceTimeLines.ProcessInput(ic)
 	ch.movingAverage25.ProcessInput(ic)
 	ch.movingAverage50.ProcessInput(ic)
 	ch.movingAverage200.ProcessInput(ic)
 
 	ic.Bounds = vr
-	ch.volumeTimeLines.ProcessInput(ic)
 	ch.volume.ProcessInput(ic)
+	ch.volumeTimeLines.ProcessInput(ic)
 
 	ic.Bounds = dr
-	ch.dailyStochasticsTimeLines.ProcessInput(ic)
 	ch.dailyStochastics.ProcessInput(ic)
+	ch.dailyStochasticsTimeLines.ProcessInput(ic)
 
 	ic.Bounds = wr
-	ch.weeklyStochasticsTimeLines.ProcessInput(ic)
 	ch.weeklyStochastics.ProcessInput(ic)
+	ch.weeklyStochasticsTimeLines.ProcessInput(ic)
 
 	ic.Bounds = tr
 	ch.timeLabels.ProcessInput(ic)
@@ -358,6 +362,12 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 
 	ic.Bounds = vlr
 	ch.volumeAxisLabels.ProcessInput(ic)
+
+	ic.Bounds = dlr
+	ch.dailyStochasticsAxisLabels.ProcessInput(ic)
+
+	ic.Bounds = wlr
+	ch.weeklyStochasticsAxisLabels.ProcessInput(ic)
 }
 
 // Update updates the Chart.
@@ -501,8 +511,8 @@ func (ch *Chart) Render(fudge float32) error {
 	ch.priceAxisLabels.Render(fudge)
 	ch.volumeAxisLabels.Render(fudge)
 	if ch.showStochastics {
-		ch.dailyStochastics.RenderAxisLabels(dlr)
-		ch.weeklyStochastics.RenderAxisLabels(wlr)
+		ch.dailyStochasticsAxisLabels.Render(fudge)
+		ch.weeklyStochasticsAxisLabels.Render(fudge)
 	}
 
 	renderCursorLines(pr, ch.mousePos)
