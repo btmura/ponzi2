@@ -86,28 +86,6 @@ func (ch *chartPrices) Render(fudge float32) {
 	ch.stickRects.Render()
 }
 
-func (ch *chartPrices) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {
-	if !ch.renderable {
-		return
-	}
-
-	if !mousePos.In(mainRect) {
-		return
-	}
-
-	perc := float32(mousePos.Y-mainRect.Min.Y) / float32(mainRect.Dy())
-	v := ch.priceRange[0] + (ch.priceRange[1]-ch.priceRange[0])*perc
-	l := makeChartPriceLabel(v)
-
-	tp := image.Point{
-		X: labelRect.Max.X - l.size.X,
-		Y: labelRect.Min.Y + int(float32(labelRect.Dy())*perc) - l.size.Y/2,
-	}
-
-	renderBubble(tp, l.size, chartAxisLabelBubbleSpec)
-	chartAxisLabelTextRenderer.Render(l.text, tp, white)
-}
-
 func (ch *chartPrices) Close() {
 	ch.renderable = false
 	if ch.stickLines != nil {

@@ -51,9 +51,10 @@ var (
 type Chart struct {
 	header *chartHeader
 
-	prices          *chartPrices
-	priceAxisLabels *chartPriceAxisLabels
-	priceTimeLines  *chartTimeLines
+	prices            *chartPrices
+	priceAxisLabels   *chartPriceAxisLabels
+	priceCursorLabels *chartPriceCursorLabels
+	priceTimeLines    *chartTimeLines
 
 	movingAverage25  *chartMovingAverage
 	movingAverage50  *chartMovingAverage
@@ -127,9 +128,10 @@ func NewChart() *Chart {
 			Padding:                 chartPadding,
 		}),
 
-		prices:          newChartPrices(),
-		priceAxisLabels: newChartPriceAxisLabels(),
-		priceTimeLines:  newChartTimeLines(),
+		prices:            newChartPrices(),
+		priceAxisLabels:   newChartPriceAxisLabels(),
+		priceCursorLabels: newChartPriceCursorLabels(),
+		priceTimeLines:    newChartTimeLines(),
 
 		movingAverage25:  newChartMovingAverage(purple),
 		movingAverage50:  newChartMovingAverage(yellow),
@@ -211,6 +213,7 @@ func (ch *Chart) SetData(data *ChartData) error {
 
 	ch.prices.SetData(ts)
 	ch.priceAxisLabels.SetData(ts)
+	ch.priceCursorLabels.SetData(ts)
 	if err := ch.priceTimeLines.SetData(dc.Range, ts); err != nil {
 		return err
 	}
@@ -337,6 +340,7 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 
 	ic.Bounds = pr
 	ch.prices.ProcessInput(ic)
+	ch.priceCursorLabels.ProcessInput(ic, plr)
 	ch.priceTimeLines.ProcessInput(ic)
 	ch.movingAverage25.ProcessInput(ic)
 	ch.movingAverage50.ProcessInput(ic)
@@ -496,24 +500,27 @@ func (ch *Chart) Render(fudge float32) error {
 	}
 
 	ch.prices.Render(fudge)
+	ch.priceAxisLabels.Render(fudge)
+	ch.priceCursorLabels.Render(fudge)
+
 	if ch.showMovingAverages {
 		ch.movingAverage25.Render(fudge)
 		ch.movingAverage50.Render(fudge)
 		ch.movingAverage200.Render(fudge)
 	}
+
 	ch.volume.Render(fudge)
+	ch.volumeAxisLabels.Render(fudge)
+
 	if ch.showStochastics {
 		ch.dailyStochastics.Render(fudge)
-		ch.weeklyStochastics.Render(fudge)
-	}
-	ch.timeLabels.Render(fudge)
-
-	ch.priceAxisLabels.Render(fudge)
-	ch.volumeAxisLabels.Render(fudge)
-	if ch.showStochastics {
 		ch.dailyStochasticsAxisLabels.Render(fudge)
+
+		ch.weeklyStochastics.Render(fudge)
 		ch.weeklyStochasticsAxisLabels.Render(fudge)
 	}
+
+	ch.timeLabels.Render(fudge)
 
 	renderCursorLines(pr, ch.mousePos)
 	renderCursorLines(vr, ch.mousePos)
@@ -522,7 +529,6 @@ func (ch *Chart) Render(fudge float32) error {
 		renderCursorLines(wr, ch.mousePos)
 	}
 
-	ch.prices.RenderCursorLabels(pr, plr, ch.mousePos)
 	ch.volume.RenderCursorLabels(vr, vlr, ch.mousePos)
 	if ch.showStochastics {
 		ch.dailyStochastics.RenderCursorLabels(dr, dlr, ch.mousePos)
