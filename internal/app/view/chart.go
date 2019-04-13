@@ -60,9 +60,10 @@ type Chart struct {
 	movingAverage50  *chartMovingAverage
 	movingAverage200 *chartMovingAverage
 
-	volume           *chartVolume
-	volumeAxisLabels *chartVolumeAxisLabels
-	volumeTimeLines  *chartTimeLines
+	volume             *chartVolume
+	volumeAxisLabels   *chartVolumeAxisLabels
+	volumeCursorLabels *chartVolumeCursorLabels
+	volumeTimeLines    *chartTimeLines
 
 	dailyStochastics           *chartStochastics
 	dailyStochasticsAxisLabels *chartStochasticsAxisLabels
@@ -137,9 +138,10 @@ func NewChart() *Chart {
 		movingAverage50:  newChartMovingAverage(yellow),
 		movingAverage200: newChartMovingAverage(white),
 
-		volume:           newChartVolume(),
-		volumeAxisLabels: newChartVolumeAxisLabels(),
-		volumeTimeLines:  newChartTimeLines(),
+		volume:             newChartVolume(),
+		volumeAxisLabels:   newChartVolumeAxisLabels(),
+		volumeCursorLabels: newChartVolumeCursorLabels(),
+		volumeTimeLines:    newChartTimeLines(),
 
 		dailyStochastics:           newChartStochastics(yellow),
 		dailyStochasticsAxisLabels: newChartStochasticsAxisLabels(),
@@ -226,6 +228,7 @@ func (ch *Chart) SetData(data *ChartData) error {
 
 	ch.volume.SetData(ts)
 	ch.volumeAxisLabels.SetData(ts)
+	ch.volumeCursorLabels.SetData(ts)
 	if err := ch.volumeTimeLines.SetData(dc.Range, ts); err != nil {
 		return err
 	}
@@ -348,6 +351,7 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 
 	ic.Bounds = vr
 	ch.volume.ProcessInput(ic)
+	ch.volumeCursorLabels.ProcessInput(ic, vlr)
 	ch.volumeTimeLines.ProcessInput(ic)
 
 	ic.Bounds = dr
@@ -511,6 +515,7 @@ func (ch *Chart) Render(fudge float32) error {
 
 	ch.volume.Render(fudge)
 	ch.volumeAxisLabels.Render(fudge)
+	ch.volumeCursorLabels.Render(fudge)
 
 	if ch.showStochastics {
 		ch.dailyStochastics.Render(fudge)
@@ -529,7 +534,6 @@ func (ch *Chart) Render(fudge float32) error {
 		renderCursorLines(wr, ch.mousePos)
 	}
 
-	ch.volume.RenderCursorLabels(vr, vlr, ch.mousePos)
 	if ch.showStochastics {
 		ch.dailyStochastics.RenderCursorLabels(dr, dlr, ch.mousePos)
 		ch.weeklyStochastics.RenderCursorLabels(wr, wlr, ch.mousePos)

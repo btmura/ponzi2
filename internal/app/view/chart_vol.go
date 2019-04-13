@@ -76,26 +76,6 @@ func (ch *chartVolume) Render(fudge float32) {
 	ch.volBars.Render()
 }
 
-func (ch *chartVolume) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {
-	if !ch.renderable {
-		return
-	}
-
-	if !mousePos.In(mainRect) {
-		return
-	}
-
-	perc := float32(mousePos.Y-mainRect.Min.Y) / float32(mainRect.Dy())
-	l := makeChartVolumeLabel(ch.maxVolume, perc)
-	tp := image.Point{
-		X: labelRect.Max.X - l.size.X,
-		Y: labelRect.Min.Y + int(float32(labelRect.Dy())*l.percent) - l.size.Y/2,
-	}
-
-	renderBubble(tp, l.size, chartAxisLabelBubbleSpec)
-	chartAxisLabelTextRenderer.Render(l.text, tp, white)
-}
-
 func (ch *chartVolume) Close() {
 	ch.renderable = false
 	if ch.volBars != nil {
