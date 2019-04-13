@@ -22,12 +22,10 @@ type chartVolume struct {
 	// MaxLabelSize is the maximum label size useful for rendering measurements.
 	MaxLabelSize image.Point
 
-	// labels bundle rendering measurements for volume labels.
-	labels []chartVolumeLabel
-
 	// volBars is the VAO with the colored volume bars.
 	volBars *gfx.VAO
 
+	// bounds is the rectangle with global coords that should be drawn within.
 	bounds image.Rectangle
 }
 
@@ -55,12 +53,6 @@ func (ch *chartVolume) SetData(ts *model.TradingSessionSeries) {
 	// Measure the max label size by creating a label with the max value.
 	ch.MaxLabelSize = makeChartVolumeLabel(ch.maxVolume, 1).size
 
-	// Create Y-axis labels for key percentages.
-	ch.labels = []chartVolumeLabel{
-		makeChartVolumeLabel(ch.maxVolume, .8),
-		makeChartVolumeLabel(ch.maxVolume, .2),
-	}
-
 	ch.volBars = chartVolumeBarsVAO(ts.TradingSessions, ch.maxVolume)
 
 	ch.renderable = true
@@ -82,18 +74,6 @@ func (ch *chartVolume) Render(fudge float32) {
 
 	// Render the volume bars.
 	ch.volBars.Render()
-}
-
-func (ch *chartVolume) RenderAxisLabels(r image.Rectangle) {
-	if !ch.renderable {
-		return
-	}
-
-	for _, l := range ch.labels {
-		x := r.Max.X - l.size.X
-		y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
-		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
-	}
 }
 
 func (ch *chartVolume) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {

@@ -58,8 +58,9 @@ type Chart struct {
 	movingAverage50  *chartMovingAverage
 	movingAverage200 *chartMovingAverage
 
-	volumeTimeLines *chartTimeLines
-	volume          *chartVolume
+	volumeTimeLines  *chartTimeLines
+	volume           *chartVolume
+	volumeAxisLabels *chartVolumeAxisLabels
 
 	dailyStochasticsTimeLines *chartTimeLines
 	dailyStochastics          *chartStochastics
@@ -130,8 +131,9 @@ func NewChart() *Chart {
 		movingAverage50:  newChartMovingAverage(yellow),
 		movingAverage200: newChartMovingAverage(white),
 
-		volumeTimeLines: newChartTimeLines(),
-		volume:          newChartVolume(),
+		volumeTimeLines:  newChartTimeLines(),
+		volume:           newChartVolume(),
+		volumeAxisLabels: newChartVolumeAxisLabels(),
 
 		dailyStochasticsTimeLines: newChartTimeLines(),
 		dailyStochastics:          newChartStochastics(yellow),
@@ -219,6 +221,7 @@ func (ch *Chart) SetData(data *ChartData) error {
 	}
 
 	ch.volume.SetData(ts)
+	ch.volumeAxisLabels.SetData(ts)
 
 	if ch.showStochastics {
 		if err := ch.dailyStochasticsTimeLines.SetData(dc.Range, ts); err != nil {
@@ -352,6 +355,9 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 
 	ic.Bounds = plr
 	ch.priceAxisLabels.ProcessInput(ic)
+
+	ic.Bounds = vlr
+	ch.volumeAxisLabels.ProcessInput(ic)
 }
 
 // Update updates the Chart.
@@ -493,7 +499,7 @@ func (ch *Chart) Render(fudge float32) error {
 	ch.timeLabels.Render(fudge)
 
 	ch.priceAxisLabels.Render(fudge)
-	ch.volume.RenderAxisLabels(vlr)
+	ch.volumeAxisLabels.Render(fudge)
 	if ch.showStochastics {
 		ch.dailyStochastics.RenderAxisLabels(dlr)
 		ch.weeklyStochastics.RenderAxisLabels(wlr)
