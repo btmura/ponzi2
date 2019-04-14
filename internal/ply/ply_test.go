@@ -9,9 +9,10 @@ import (
 
 func TestDecode(t *testing.T) {
 	for _, tt := range []struct {
-		desc  string
-		input string
-		want  *PLY
+		desc    string
+		input   string
+		want    *PLY
+		wantErr bool
 	}{
 		{
 			desc: "vertices and faces",
@@ -360,12 +361,13 @@ end_header
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
 			got, gotErr := Decode(strings.NewReader(tt.input))
-			if gotErr != nil {
-				t.Fatalf("Decode returned an error (%v), want success", gotErr)
-			}
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("differs:\n%s", diff)
+				t.Errorf("diff (-want, +got)\n%s", diff)
+			}
+
+			if (gotErr != nil) != tt.wantErr {
+				t.Errorf("got error: %v, wanted err: %t", gotErr, tt.wantErr)
 			}
 		})
 	}

@@ -338,9 +338,10 @@ func TestValidateSymbol(t *testing.T) {
 		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
-			gotErr := ValidateSymbol(tt.input) != nil
-			if gotErr != tt.wantErr {
-				t.Errorf("gotErr: %t, wantErr: %t", gotErr, tt.wantErr)
+			gotErr := ValidateSymbol(tt.input)
+
+			if (gotErr != nil) != tt.wantErr {
+				t.Errorf("got error: %v, wanted err: %t", gotErr, tt.wantErr)
 			}
 		})
 	}
@@ -368,9 +369,10 @@ func TestValidateChart(t *testing.T) {
 		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
-			gotErr := ValidateChart(tt.input) != nil
-			if gotErr != tt.wantErr {
-				t.Errorf("gotErr: %t, wantErr: %t", gotErr, tt.wantErr)
+			gotErr := ValidateChart(tt.input)
+
+			if (gotErr != nil) != tt.wantErr {
+				t.Errorf("got error: %v, wanted err: %t", gotErr, tt.wantErr)
 			}
 		})
 	}

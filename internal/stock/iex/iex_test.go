@@ -1,7 +1,6 @@
 package iex
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -18,7 +17,7 @@ func TestDecodeStocks(t *testing.T) {
 		desc    string
 		data    string
 		want    []*Stock
-		wantErr error
+		wantErr bool
 	}{
 		{
 			desc: "real time quote",
@@ -193,11 +192,11 @@ func TestDecodeStocks(t *testing.T) {
 			got, gotErr := decodeStocks(strings.NewReader(tt.data))
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("resp differs:\n%s", diff)
+				t.Errorf("diff (-want, +got)\n%s", diff)
 			}
 
-			if diff := cmp.Diff(fmt.Sprint(tt.wantErr), fmt.Sprint(gotErr)); diff != "" {
-				t.Errorf("error differs:\n%s", diff)
+			if (gotErr != nil) != tt.wantErr {
+				t.Errorf("got error: %v, wanted err: %t", gotErr, tt.wantErr)
 			}
 		})
 	}
@@ -213,6 +212,7 @@ func TestQuoteDate(t *testing.T) {
 		inputLatestSource Source
 		inputLatestTime   string
 		want              time.Time
+		wantErr           bool
 	}{
 		{
 			desc:              "IEX real time price",
@@ -241,12 +241,13 @@ func TestQuoteDate(t *testing.T) {
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
 			got, gotErr := quoteDate(tt.inputLatestSource, tt.inputLatestTime)
-			if gotErr != nil {
-				t.Fatalf("returned error (%v), want success", gotErr)
-			}
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("differs:\n%s", diff)
+				t.Errorf("diff (-want, +got)\n%s", diff)
+			}
+
+			if (gotErr != nil) != tt.wantErr {
+				t.Errorf("got error: %v, wanted err: %t", gotErr, tt.wantErr)
 			}
 		})
 	}
@@ -258,6 +259,7 @@ func TestChartDate(t *testing.T) {
 		inputDate   string
 		inputMinute string
 		want        time.Time
+		wantErr     bool
 	}{
 		{
 			desc:      "date",
@@ -273,12 +275,13 @@ func TestChartDate(t *testing.T) {
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
 			got, gotErr := chartDate(tt.inputDate, tt.inputMinute)
-			if gotErr != nil {
-				t.Fatalf("returned error (%v), want success", gotErr)
-			}
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("differs:\n%s", diff)
+				t.Errorf("diff (-want, +got)\n%s", diff)
+			}
+
+			if (gotErr != nil) != tt.wantErr {
+				t.Errorf("got error: %v, wanted err: %t", gotErr, tt.wantErr)
 			}
 		})
 	}

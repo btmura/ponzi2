@@ -14,7 +14,7 @@ func TestModelOneDayChart(t *testing.T) {
 		desc    string
 		input   *iex.Stock
 		want    *model.Chart
-		wantErr error
+		wantErr bool
 	}{
 		{
 			input: &iex.Stock{
@@ -48,14 +48,16 @@ func TestModelOneDayChart(t *testing.T) {
 			},
 		},
 	} {
-		got, gotErr := modelOneDayChart(tt.input)
+		t.Run(tt.desc, func(t *testing.T) {
+			got, gotErr := modelOneDayChart(tt.input)
 
-		if diff := cmp.Diff(tt.want, got); diff != "" {
-			t.Errorf("diff (-want, +got)\n%s", diff)
-		}
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("diff (-want, +got)\n%s", diff)
+			}
 
-		if diff := cmp.Diff(tt.wantErr, gotErr); diff != "" {
-			t.Errorf("diff (-wantErr, +gotErr)\n%s", diff)
-		}
+			if (gotErr != nil) != tt.wantErr {
+				t.Errorf("got error: %v, wanted err: %t", gotErr, tt.wantErr)
+			}
+		})
 	}
 }
