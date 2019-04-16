@@ -65,13 +65,15 @@ type Chart struct {
 	volumeCursorLabels *chartVolumeCursorLabels
 	volumeTimeLines    *chartTimeLines
 
-	dailyStochastics           *chartStochastics
-	dailyStochasticsAxisLabels *chartStochasticsAxisLabels
-	dailyStochasticsTimeLines  *chartTimeLines
+	dailyStochastics             *chartStochastics
+	dailyStochasticsAxisLabels   *chartStochasticsAxisLabels
+	dailyStochasticsCursorLabels *chartStochasticsCursorLabels
+	dailyStochasticsTimeLines    *chartTimeLines
 
-	weeklyStochastics           *chartStochastics
-	weeklyStochasticsAxisLabels *chartStochasticsAxisLabels
-	weeklyStochasticsTimeLines  *chartTimeLines
+	weeklyStochastics             *chartStochastics
+	weeklyStochasticsAxisLabels   *chartStochasticsAxisLabels
+	weeklyStochasticsCursorLabels *chartStochasticsCursorLabels
+	weeklyStochasticsTimeLines    *chartTimeLines
 
 	// timeLabels renders the time labels.
 	timeLabels *chartTimeLabels
@@ -143,13 +145,15 @@ func NewChart() *Chart {
 		volumeCursorLabels: newChartVolumeCursorLabels(),
 		volumeTimeLines:    newChartTimeLines(),
 
-		dailyStochastics:           newChartStochastics(yellow),
-		dailyStochasticsAxisLabels: newChartStochasticsAxisLabels(),
-		dailyStochasticsTimeLines:  newChartTimeLines(),
+		dailyStochastics:             newChartStochastics(yellow),
+		dailyStochasticsAxisLabels:   newChartStochasticsAxisLabels(),
+		dailyStochasticsCursorLabels: newChartStochasticsCursorLabels(),
+		dailyStochasticsTimeLines:    newChartTimeLines(),
 
-		weeklyStochastics:           newChartStochastics(purple),
-		weeklyStochasticsAxisLabels: newChartStochasticsAxisLabels(),
-		weeklyStochasticsTimeLines:  newChartTimeLines(),
+		weeklyStochastics:             newChartStochastics(purple),
+		weeklyStochasticsAxisLabels:   newChartStochasticsAxisLabels(),
+		weeklyStochasticsCursorLabels: newChartStochasticsCursorLabels(),
+		weeklyStochasticsTimeLines:    newChartTimeLines(),
 
 		timeLabels: newChartTimeLabels(),
 
@@ -356,10 +360,12 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 
 	ic.Bounds = dr
 	ch.dailyStochastics.ProcessInput(ic)
+	ch.dailyStochasticsCursorLabels.ProcessInput(ic, dlr)
 	ch.dailyStochasticsTimeLines.ProcessInput(ic)
 
 	ic.Bounds = wr
 	ch.weeklyStochastics.ProcessInput(ic)
+	ch.weeklyStochasticsCursorLabels.ProcessInput(ic, wlr)
 	ch.weeklyStochasticsTimeLines.ProcessInput(ic)
 
 	ic.Bounds = tr
@@ -520,9 +526,11 @@ func (ch *Chart) Render(fudge float32) error {
 	if ch.showStochastics {
 		ch.dailyStochastics.Render(fudge)
 		ch.dailyStochasticsAxisLabels.Render(fudge)
+		ch.dailyStochasticsCursorLabels.Render(fudge)
 
 		ch.weeklyStochastics.Render(fudge)
 		ch.weeklyStochasticsAxisLabels.Render(fudge)
+		ch.weeklyStochasticsCursorLabels.Render(fudge)
 	}
 
 	ch.timeLabels.Render(fudge)
@@ -532,11 +540,6 @@ func (ch *Chart) Render(fudge float32) error {
 	if ch.showStochastics {
 		renderCursorLines(dr, ch.mousePos)
 		renderCursorLines(wr, ch.mousePos)
-	}
-
-	if ch.showStochastics {
-		ch.dailyStochastics.RenderCursorLabels(dr, dlr, ch.mousePos)
-		ch.weeklyStochastics.RenderCursorLabels(wr, wlr, ch.mousePos)
 	}
 
 	if err := ch.timeLabels.RenderCursorLabels(tr, tlr, ch.mousePos); err != nil {

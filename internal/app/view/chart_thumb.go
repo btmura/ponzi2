@@ -25,11 +25,13 @@ type ChartThumb struct {
 	// header renders the header with the symbol, quote, and buttons.
 	header *chartHeader
 
-	dailyStochasticsTimeLines *chartTimeLines
-	dailyStochastics          *chartStochastics
+	dailyStochastics             *chartStochastics
+	dailyStochasticsCursorLabels *chartStochasticsCursorLabels
+	dailyStochasticsTimeLines    *chartTimeLines
 
-	weeklyStochasticsTimeLines *chartTimeLines
-	weeklyStochastics          *chartStochastics
+	weeklyStochastics             *chartStochastics
+	weeklyStochasticsCursorLabels *chartStochasticsCursorLabels
+	weeklyStochasticsTimeLines    *chartTimeLines
 
 	// loadingText is the text shown when loading from a fresh state.
 	loadingText *centeredText
@@ -73,11 +75,13 @@ func NewChartThumb() *ChartThumb {
 			Padding:                 thumbChartPadding,
 		}),
 
-		dailyStochasticsTimeLines: newChartTimeLines(),
-		dailyStochastics:          newChartStochastics(yellow),
+		dailyStochastics:             newChartStochastics(yellow),
+		dailyStochasticsCursorLabels: newChartStochasticsCursorLabels(),
+		dailyStochasticsTimeLines:    newChartTimeLines(),
 
-		weeklyStochasticsTimeLines: newChartTimeLines(),
-		weeklyStochastics:          newChartStochastics(purple),
+		weeklyStochastics:             newChartStochastics(purple),
+		weeklyStochasticsCursorLabels: newChartStochasticsCursorLabels(),
+		weeklyStochasticsTimeLines:    newChartTimeLines(),
 
 		loadingText: newCenteredText(thumbSymbolQuoteTextRenderer, "LOADING..."),
 		errorText:   newCenteredText(thumbSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange)),
@@ -153,12 +157,14 @@ func (ch *ChartThumb) ProcessInput(ic inputContext) {
 	dr, wr := rects[1], rects[0]
 
 	ic.Bounds = dr
-	ch.dailyStochasticsTimeLines.ProcessInput(ic)
 	ch.dailyStochastics.ProcessInput(ic)
+	ch.dailyStochasticsCursorLabels.ProcessInput(ic, dr)
+	ch.dailyStochasticsTimeLines.ProcessInput(ic)
 
 	ic.Bounds = wr
-	ch.weeklyStochasticsTimeLines.ProcessInput(ic)
 	ch.weeklyStochastics.ProcessInput(ic)
+	ch.weeklyStochasticsCursorLabels.ProcessInput(ic, wr)
+	ch.weeklyStochasticsTimeLines.ProcessInput(ic)
 }
 
 // Update updates the ChartThumb.
@@ -218,8 +224,8 @@ func (ch *ChartThumb) Render(fudge float32) error {
 	renderCursorLines(dr, ch.mousePos)
 	renderCursorLines(wr, ch.mousePos)
 
-	ch.dailyStochastics.RenderCursorLabels(dr, dr, ch.mousePos)
-	ch.weeklyStochastics.RenderCursorLabels(wr, wr, ch.mousePos)
+	ch.dailyStochastics.Render(fudge)
+	ch.weeklyStochastics.Render(fudge)
 
 	return nil
 }

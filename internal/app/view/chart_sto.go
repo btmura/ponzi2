@@ -65,36 +65,6 @@ func (ch *chartStochastics) Render(fudge float32) {
 	ch.lineDVAO.Render()
 }
 
-func (ch *chartStochastics) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) {
-	if !ch.renderable() {
-		return
-	}
-
-	if !mousePos.In(mainRect) {
-		return
-	}
-
-	perc := float32(mousePos.Y-mainRect.Min.Y) / float32(mainRect.Dy())
-	l := makeChartStochasticLabel(perc)
-
-	var tp image.Point
-	tp.X = labelRect.Max.X - l.size.X
-	tp.Y = labelRect.Min.Y + int(float32(labelRect.Dy())*l.percent) - l.size.Y/2
-
-	br := image.Rectangle{Min: tp, Max: tp.Add(l.size)}
-	br = br.Inset(-chartAxisLabelBubblePadding)
-
-	if mousePos.In(br) {
-		tp.X = labelRect.Min.X
-		br = image.Rectangle{Min: tp, Max: tp.Add(l.size)}
-		br = br.Inset(-chartAxisLabelBubblePadding)
-	}
-
-	fillRoundedRect(br, chartAxisLabelBubbleRounding)
-	strokeRoundedRect(br, chartAxisLabelBubbleRounding)
-	chartAxisLabelTextRenderer.Render(l.text, tp, white)
-}
-
 func (ch *chartStochastics) Close() {
 	if ch.lineKVAO != nil {
 		ch.lineKVAO.Delete()

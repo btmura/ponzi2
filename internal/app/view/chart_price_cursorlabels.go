@@ -13,8 +13,10 @@ type chartPriceCursorLabels struct {
 	// bounds is the rectangle with global coords that should be drawn within.
 	bounds image.Rectangle
 
+	// labelRect is the rectangle where the axis labels are drawn.
 	labelRect image.Rectangle
 
+	// mousePos is the current mouse position.
 	mousePos image.Point
 }
 
