@@ -12,8 +12,8 @@ import (
 // longTime is a time that takes the most display width for measuring purposes.
 var longTime = time.Date(2019, time.December, 31, 23, 59, 0, 0, time.UTC)
 
-// chartTimeLabels renders the time labels for a single stock.
-type chartTimeLabels struct {
+// chartTimelineAxisLabels renders the time labels for a single stock.
+type chartTimelineAxisLabels struct {
 	// renderable is whether the ChartTimeLabels can be rendered.
 	renderable bool
 
@@ -33,11 +33,11 @@ type chartTimeLabels struct {
 	bounds image.Rectangle
 }
 
-func newChartTimeLabels() *chartTimeLabels {
-	return &chartTimeLabels{}
+func newChartTimelineAxisLabels() *chartTimelineAxisLabels {
+	return &chartTimelineAxisLabels{}
 }
 
-func (ch *chartTimeLabels) SetData(r model.Range, ts *model.TradingSessionSeries) error {
+func (ch *chartTimelineAxisLabels) SetData(r model.Range, ts *model.TradingSessionSeries) error {
 	// Reset everything.
 	ch.Close()
 
@@ -71,11 +71,11 @@ func (ch *chartTimeLabels) SetData(r model.Range, ts *model.TradingSessionSeries
 }
 
 // ProcessInput processes input.
-func (ch *chartTimeLabels) ProcessInput(ic inputContext) {
+func (ch *chartTimelineAxisLabels) ProcessInput(ic inputContext) {
 	ch.bounds = ic.Bounds
 }
 
-func (ch *chartTimeLabels) Render(fudge float32) {
+func (ch *chartTimelineAxisLabels) Render(fudge float32) {
 	if !ch.renderable {
 		return
 	}
@@ -91,7 +91,7 @@ func (ch *chartTimeLabels) Render(fudge float32) {
 	}
 }
 
-func (ch *chartTimeLabels) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) error {
+func (ch *chartTimelineAxisLabels) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) error {
 	if !ch.renderable {
 		return nil
 	}
@@ -131,7 +131,7 @@ func (ch *chartTimeLabels) RenderCursorLabels(mainRect, labelRect image.Rectangl
 	return nil
 }
 
-func (ch *chartTimeLabels) Close() {
+func (ch *chartTimelineAxisLabels) Close() {
 	ch.renderable = false
 }
 

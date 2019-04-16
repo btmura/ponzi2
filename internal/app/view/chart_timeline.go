@@ -8,16 +8,16 @@ import (
 	"github.com/btmura/ponzi2/internal/status"
 )
 
-type chartTimeLines struct {
+type chartTimeline struct {
 	vao    *gfx.VAO
 	bounds image.Rectangle
 }
 
-func newChartTimeLines() *chartTimeLines {
-	return &chartTimeLines{}
+func newChartTimeline() *chartTimeline {
+	return &chartTimeline{}
 }
 
-func (ch *chartTimeLines) SetData(r model.Range, ts *model.TradingSessionSeries) error {
+func (ch *chartTimeline) SetData(r model.Range, ts *model.TradingSessionSeries) error {
 	// Reset everything.
 	ch.Close()
 
@@ -73,12 +73,12 @@ func weekLineValues(r model.Range, ts []*model.TradingSession) ([]float32, error
 }
 
 // ProcessInput processes input.
-func (ch *chartTimeLines) ProcessInput(ic inputContext) {
+func (ch *chartTimeline) ProcessInput(ic inputContext) {
 	ch.bounds = ic.Bounds
 }
 
 // Render renders the chart lines.
-func (ch *chartTimeLines) Render(fudge float32) {
+func (ch *chartTimeline) Render(fudge float32) {
 	if ch.vao == nil {
 		return
 	}
@@ -87,7 +87,7 @@ func (ch *chartTimeLines) Render(fudge float32) {
 }
 
 // Close frees the resources backing the chart lines.
-func (ch *chartTimeLines) Close() {
+func (ch *chartTimeline) Close() {
 	if ch.vao != nil {
 		ch.vao.Delete()
 		ch.vao = nil

@@ -27,11 +27,11 @@ type ChartThumb struct {
 
 	dailyStochastics             *chartStochastics
 	dailyStochasticsCursorLabels *chartStochasticsCursorLabels
-	dailyStochasticsTimeLines    *chartTimeLines
+	dailyStochasticsTimeline     *chartTimeline
 
 	weeklyStochastics             *chartStochastics
 	weeklyStochasticsCursorLabels *chartStochasticsCursorLabels
-	weeklyStochasticsTimeLines    *chartTimeLines
+	weeklyStochasticsTimeline     *chartTimeline
 
 	// loadingText is the text shown when loading from a fresh state.
 	loadingText *centeredText
@@ -77,11 +77,11 @@ func NewChartThumb() *ChartThumb {
 
 		dailyStochastics:             newChartStochastics(yellow),
 		dailyStochasticsCursorLabels: newChartStochasticsCursorLabels(),
-		dailyStochasticsTimeLines:    newChartTimeLines(),
+		dailyStochasticsTimeline:     newChartTimeline(),
 
 		weeklyStochastics:             newChartStochastics(purple),
 		weeklyStochasticsCursorLabels: newChartStochasticsCursorLabels(),
-		weeklyStochasticsTimeLines:    newChartTimeLines(),
+		weeklyStochasticsTimeline:     newChartTimeline(),
 
 		loadingText: newCenteredText(thumbSymbolQuoteTextRenderer, "LOADING..."),
 		errorText:   newCenteredText(thumbSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange)),
@@ -123,13 +123,13 @@ func (ch *ChartThumb) SetData(data *ChartData) error {
 		return nil
 	}
 
-	if err := ch.dailyStochasticsTimeLines.SetData(dc.Range, dc.TradingSessionSeries); err != nil {
+	if err := ch.dailyStochasticsTimeline.SetData(dc.Range, dc.TradingSessionSeries); err != nil {
 		return err
 	}
 
 	ch.dailyStochastics.SetData(dc.DailyStochasticSeries)
 
-	if err := ch.weeklyStochasticsTimeLines.SetData(dc.Range, dc.TradingSessionSeries); err != nil {
+	if err := ch.weeklyStochasticsTimeline.SetData(dc.Range, dc.TradingSessionSeries); err != nil {
 		return err
 	}
 
@@ -159,12 +159,12 @@ func (ch *ChartThumb) ProcessInput(ic inputContext) {
 	ic.Bounds = dr
 	ch.dailyStochastics.ProcessInput(ic)
 	ch.dailyStochasticsCursorLabels.ProcessInput(ic, dr)
-	ch.dailyStochasticsTimeLines.ProcessInput(ic)
+	ch.dailyStochasticsTimeline.ProcessInput(ic)
 
 	ic.Bounds = wr
 	ch.weeklyStochastics.ProcessInput(ic)
 	ch.weeklyStochasticsCursorLabels.ProcessInput(ic, wr)
-	ch.weeklyStochasticsTimeLines.ProcessInput(ic)
+	ch.weeklyStochasticsTimeline.ProcessInput(ic)
 }
 
 // Update updates the ChartThumb.
@@ -215,8 +215,8 @@ func (ch *ChartThumb) Render(fudge float32) error {
 
 	dr, wr := rects[1], rects[0]
 
-	ch.dailyStochasticsTimeLines.Render(fudge)
-	ch.weeklyStochasticsTimeLines.Render(fudge)
+	ch.dailyStochasticsTimeline.Render(fudge)
+	ch.weeklyStochasticsTimeline.Render(fudge)
 
 	ch.dailyStochastics.Render(fudge)
 	ch.weeklyStochastics.Render(fudge)
@@ -245,20 +245,17 @@ func (ch *ChartThumb) Close() {
 	if ch.header != nil {
 		ch.header.Close()
 	}
-
-	if ch.dailyStochasticsTimeLines != nil {
-		ch.dailyStochasticsTimeLines.Close()
-	}
 	if ch.dailyStochastics != nil {
 		ch.dailyStochastics.Close()
 	}
-
-	if ch.weeklyStochasticsTimeLines != nil {
-		ch.weeklyStochasticsTimeLines.Close()
+	if ch.dailyStochasticsTimeline != nil {
+		ch.dailyStochasticsTimeline.Close()
 	}
 	if ch.weeklyStochastics != nil {
 		ch.weeklyStochastics.Close()
 	}
-
+	if ch.weeklyStochasticsTimeline != nil {
+		ch.weeklyStochasticsTimeline.Close()
+	}
 	ch.thumbClickCallback = nil
 }
