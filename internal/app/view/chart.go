@@ -75,8 +75,8 @@ type Chart struct {
 	weeklyStochasticsCursorLabels *chartStochasticsCursorLabels
 	weeklyStochasticsTimeline     *chartTimeline
 
-	// timelineAxisLabels renders the time labels.
-	timelineAxisLabels *chartTimelineAxisLabels
+	timelineAxisLabels   *chartTimelineAxisLabels
+	timelineCursorLabels *chartTimelineCursorLabels
 
 	// loadingText is the text shown when loading from a fresh state.
 	loadingText *centeredText
@@ -155,7 +155,8 @@ func NewChart() *Chart {
 		weeklyStochasticsCursorLabels: newChartStochasticsCursorLabels(),
 		weeklyStochasticsTimeline:     newChartTimeline(),
 
-		timelineAxisLabels: newChartTimelineAxisLabels(),
+		timelineAxisLabels:   newChartTimelineAxisLabels(),
+		timelineCursorLabels: newChartTimelineCursorLabels(),
 
 		loadingText: newCenteredText(chartSymbolQuoteTextRenderer, "LOADING..."),
 		errorText:   newCenteredText(chartSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange)),
@@ -252,6 +253,10 @@ func (ch *Chart) SetData(data *ChartData) error {
 	}
 
 	if err := ch.timelineAxisLabels.SetData(dc.Range, ts); err != nil {
+		return err
+	}
+
+	if err := ch.timelineCursorLabels.SetData(dc.Range, ts); err != nil {
 		return err
 	}
 
@@ -370,6 +375,7 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 
 	ic.Bounds = tr
 	ch.timelineAxisLabels.ProcessInput(ic)
+	ch.timelineCursorLabels.ProcessInput(ic, tlr)
 
 	ic.Bounds = plr
 	ch.priceAxisLabels.ProcessInput(ic)
@@ -534,16 +540,13 @@ func (ch *Chart) Render(fudge float32) error {
 	}
 
 	ch.timelineAxisLabels.Render(fudge)
+	ch.timelineCursorLabels.Render(fudge)
 
 	renderCursorLines(pr, ch.mousePos)
 	renderCursorLines(vr, ch.mousePos)
 	if ch.showStochastics {
 		renderCursorLines(dr, ch.mousePos)
 		renderCursorLines(wr, ch.mousePos)
-	}
-
-	if err := ch.timelineAxisLabels.RenderCursorLabels(tr, tlr, ch.mousePos); err != nil {
-		return err
 	}
 
 	// Renders trackline legend. To display inline comment out the two lines below and uncomment the last line.
@@ -603,9 +606,6 @@ func (ch *Chart) Close() {
 	}
 	if ch.weeklyStochasticsTimeline != nil {
 		ch.weeklyStochasticsTimeline.Close()
-	}
-	if ch.timelineAxisLabels != nil {
-		ch.timelineAxisLabels.Close()
 	}
 }
 

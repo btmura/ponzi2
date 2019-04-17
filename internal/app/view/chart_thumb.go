@@ -123,17 +123,17 @@ func (ch *ChartThumb) SetData(data *ChartData) error {
 		return nil
 	}
 
+	ch.dailyStochastics.SetData(dc.DailyStochasticSeries)
+
 	if err := ch.dailyStochasticsTimeline.SetData(dc.Range, dc.TradingSessionSeries); err != nil {
 		return err
 	}
 
-	ch.dailyStochastics.SetData(dc.DailyStochasticSeries)
+	ch.weeklyStochastics.SetData(dc.WeeklyStochasticSeries)
 
 	if err := ch.weeklyStochasticsTimeline.SetData(dc.Range, dc.TradingSessionSeries); err != nil {
 		return err
 	}
-
-	ch.weeklyStochastics.SetData(dc.WeeklyStochasticSeries)
 
 	return nil
 }
@@ -221,11 +221,11 @@ func (ch *ChartThumb) Render(fudge float32) error {
 	ch.dailyStochastics.Render(fudge)
 	ch.weeklyStochastics.Render(fudge)
 
+	ch.dailyStochasticsCursorLabels.Render(fudge)
+	ch.weeklyStochasticsCursorLabels.Render(fudge)
+
 	renderCursorLines(dr, ch.mousePos)
 	renderCursorLines(wr, ch.mousePos)
-
-	ch.dailyStochastics.Render(fudge)
-	ch.weeklyStochastics.Render(fudge)
 
 	return nil
 }

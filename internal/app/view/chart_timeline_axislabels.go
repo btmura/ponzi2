@@ -2,7 +2,6 @@ package view
 
 import (
 	"image"
-	"math"
 	"time"
 
 	"github.com/btmura/ponzi2/internal/app/model"
@@ -14,9 +13,6 @@ var longTime = time.Date(2019, time.December, 31, 23, 59, 0, 0, time.UTC)
 
 // chartTimelineAxisLabels renders the time labels for a single stock.
 type chartTimelineAxisLabels struct {
-	// renderable is whether the ChartTimeLabels can be rendered.
-	renderable bool
-
 	// dataRange is range of the data being presented.
 	dataRange model.Range
 
@@ -25,9 +21,6 @@ type chartTimelineAxisLabels struct {
 
 	// labels bundle rendering measurements for time labels.
 	labels []chartTimeLabel
-
-	// dates are session dates shown for the cursor.
-	dates []time.Time
 
 	// bounds is the rectangle with global coords that should be drawn within.
 	bounds image.Rectangle
@@ -38,9 +31,6 @@ func newChartTimelineAxisLabels() *chartTimelineAxisLabels {
 }
 
 func (ch *chartTimelineAxisLabels) SetData(r model.Range, ts *model.TradingSessionSeries) error {
-	// Reset everything.
-	ch.Close()
-
 	// Bail out if there is no data yet.
 	if ts == nil {
 		return nil
@@ -60,13 +50,6 @@ func (ch *chartTimelineAxisLabels) SetData(r model.Range, ts *model.TradingSessi
 	}
 	ch.labels = labels
 
-	ch.dates = nil
-	for _, s := range ts.TradingSessions {
-		ch.dates = append(ch.dates, s.Date)
-	}
-
-	ch.renderable = true
-
 	return nil
 }
 
@@ -76,10 +59,6 @@ func (ch *chartTimelineAxisLabels) ProcessInput(ic inputContext) {
 }
 
 func (ch *chartTimelineAxisLabels) Render(fudge float32) {
-	if !ch.renderable {
-		return
-	}
-
 	r := ch.bounds
 
 	for _, l := range ch.labels {
@@ -89,50 +68,6 @@ func (ch *chartTimelineAxisLabels) Render(fudge float32) {
 		}
 		chartAxisLabelTextRenderer.Render(l.text, tp, white)
 	}
-}
-
-func (ch *chartTimelineAxisLabels) RenderCursorLabels(mainRect, labelRect image.Rectangle, mousePos image.Point) error {
-	if !ch.renderable {
-		return nil
-	}
-
-	if mousePos.X < mainRect.Min.X || mousePos.X > mainRect.Max.X {
-		return nil
-	}
-
-	percent := float32(mousePos.X-mainRect.Min.X) / float32(mainRect.Dx())
-
-	i := int(math.Floor(float64(len(ch.dates))*float64(percent) + 0.5))
-	if i >= len(ch.dates) {
-		i = len(ch.dates) - 1
-	}
-
-	var layout string
-	switch ch.dataRange {
-	case model.OneDay:
-		layout = "03:04"
-	case model.OneYear:
-		layout = "1/2/06"
-	default:
-		return status.Errorf("bad range: %v", ch.dataRange)
-	}
-
-	text := ch.dates[i].Format(layout)
-	size := chartAxisLabelTextRenderer.Measure(text)
-
-	tp := image.Point{
-		X: mousePos.X - size.X/2,
-		Y: labelRect.Min.Y + labelRect.Dy()/2 - size.Y/2,
-	}
-
-	renderBubble(tp, size, chartAxisLabelBubbleSpec)
-	chartAxisLabelTextRenderer.Render(text, tp, white)
-
-	return nil
-}
-
-func (ch *chartTimelineAxisLabels) Close() {
-	ch.renderable = false
 }
 
 type chartTimeLabel struct {
