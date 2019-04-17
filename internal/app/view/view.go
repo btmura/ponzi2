@@ -1,4 +1,5 @@
 // Package view contains code for the view in the MVC pattern.
+// TODO(btmura): package should not export mutable types like Chart that could interrupt the game loop
 package view
 
 import (
@@ -500,7 +501,7 @@ start:
 			return err
 		}
 
-		v.processInput()
+		callbacks := v.processInput()
 
 		i := 0
 		for ; i < minUpdates || i < maxUpdates && lag >= updateSec; i++ {
@@ -521,6 +522,16 @@ start:
 
 		v.win.SwapBuffers()
 		glog.V(3).Infof("updates:%o lag(%f)/updateSec(%f)=fudge(%f) dirty:%t render:%v", i, lag, updateSec, fudge, dirty, time.Since(now).Seconds())
+
+		// Call any callbacks scheduled by views.
+		for _, cb := range callbacks {
+			cb()
+		}
+
+		// Mark dirty since new charts or thumbs may have been added.
+		if len(callbacks) != 0 {
+			dirty = true
+		}
 
 		glfw.PollEvents()
 		if !dirty {
@@ -561,7 +572,7 @@ func (ic inputContext) LeftClickInBounds() bool {
 	return ic.MouseLeftButtonReleased && ic.MousePos.In(ic.Bounds)
 }
 
-func (v *View) processInput() {
+func (v *View) processInput() []func() {
 	m := v.metrics()
 
 	ic := inputContext{
@@ -586,16 +597,13 @@ func (v *View) processInput() {
 
 	v.sidebar.ProcessInput(ic, m)
 
-	// Call any callbacks scheduled by views.
-	for _, cb := range *ic.ScheduledCallbacks {
-		cb()
-	}
-
 	// Reset any flags for the next inputContext.
 	if v.mouseLeftButtonPressedCount > 0 {
 		v.mouseLeftButtonPressedCount++
 	}
 	v.mouseLeftButtonReleased = false
+
+	return *ic.ScheduledCallbacks
 }
 
 func (v *View) update() (dirty bool) {
