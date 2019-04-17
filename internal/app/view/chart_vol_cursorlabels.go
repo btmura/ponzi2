@@ -47,6 +47,8 @@ func (ch *chartVolumeCursorLabels) ProcessInput(ic inputContext, labelRect image
 }
 
 func (ch *chartVolumeCursorLabels) Render(fudge float32) {
+	renderCursorLines(ch.bounds, ch.mousePos)
+
 	if !ch.mousePos.In(ch.bounds) {
 		return
 	}

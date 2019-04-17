@@ -41,6 +41,8 @@ func (ch *chartPriceCursorLabels) ProcessInput(ic inputContext, labelRect image.
 }
 
 func (ch *chartPriceCursorLabels) Render(fudge float32) {
+	renderCursorLines(ch.bounds, ch.mousePos)
+
 	if !ch.mousePos.In(ch.bounds) {
 		return
 	}

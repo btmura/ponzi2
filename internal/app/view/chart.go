@@ -542,13 +542,6 @@ func (ch *Chart) Render(fudge float32) error {
 	ch.timelineAxisLabels.Render(fudge)
 	ch.timelineCursorLabels.Render(fudge)
 
-	renderCursorLines(pr, ch.mousePos)
-	renderCursorLines(vr, ch.mousePos)
-	if ch.showStochastics {
-		renderCursorLines(dr, ch.mousePos)
-		renderCursorLines(wr, ch.mousePos)
-	}
-
 	// Renders trackline legend. To display inline comment out the two lines below and uncomment the last line.
 	if ch.showMovingAverages {
 		ch.renderMATrackLineLegend(pr, llr, ch.mousePos)

@@ -25,6 +25,8 @@ func (ch *chartStochasticsCursorLabels) ProcessInput(ic inputContext, labelRect 
 }
 
 func (ch *chartStochasticsCursorLabels) Render(fudge float32) {
+	renderCursorLines(ch.bounds, ch.mousePos)
+
 	if !ch.mousePos.In(ch.bounds) {
 		return
 	}
