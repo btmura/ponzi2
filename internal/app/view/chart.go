@@ -547,7 +547,6 @@ func (ch *Chart) Render(fudge float32) error {
 		ch.renderMATrackLineLegend(pr, llr, ch.mousePos)
 	}
 	ch.renderCandleTrackLineLegend(pr, llr, ch.mousePos)
-	//ch.renderTrackLineLegendInline(pr, llr, vc.MousePos) // Stocks that have higher prices tend to overflow the chart on default window size
 
 	return nil
 }
@@ -704,37 +703,4 @@ func (ch *Chart) renderMATrackLineLegend(mainRect, labelRect image.Rectangle, mo
 
 	renderBubble(MAp, mal.size, chartAxisLabelBubbleSpec)
 	chartAxisLabelTextRenderer.Render(mal.text, MAp, white)
-}
-
-func (ch *Chart) renderTrackLineLegendInline(mainRect, labelRect image.Rectangle, mousePos image.Point) {
-	if !mousePos.In(mainRect) {
-		return
-	}
-
-	// Render inline trackline legend
-	ts := ch.tlTradingSessions.TradingSessions
-	ms25 := ch.tlMovingAverage25.MovingAverages
-	ms50 := ch.tlMovingAverage50.MovingAverages
-	ms200 := ch.tlMovingAverage200.MovingAverages
-
-	l := chartLegendLabel{
-		percent: float32(mousePos.X-mainRect.Min.X) / float32(mainRect.Dx()),
-	}
-
-	i := int(math.Floor(float64(len(ts)) * float64(l.percent)))
-	if i >= len(ts) {
-		i = len(ts) - 1
-	}
-
-	l.text = ch.chartLegendLabelText(ts[i], ms25[i], ms50[i], ms200[i])
-	l.size = chartAxisLabelTextRenderer.Measure(l.text)
-
-	tp := image.Point{
-		X: labelRect.Min.X + labelRect.Dx()/2 - l.size.X/2,
-		Y: labelRect.Min.Y + labelRect.Dy() - l.size.Y,
-	}
-
-	renderBubble(tp, l.size, chartAxisLabelBubbleSpec)
-	chartAxisLabelTextRenderer.Render(l.text, tp, white)
-
 }
