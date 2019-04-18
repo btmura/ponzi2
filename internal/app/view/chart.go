@@ -444,60 +444,6 @@ func (ch *Chart) Render(fudge float32) error {
 		renderRectTopDivider(rects[i], horizLine)
 	}
 
-	var pr, vr, dr, wr, tr image.Rectangle
-	if ch.showStochastics {
-		pr, vr, dr, wr, tr = rects[4], rects[3], rects[2], rects[1], rects[0]
-	} else {
-		pr, vr, tr = rects[2], rects[1], rects[0]
-	}
-
-	// Create separate rects for each section's labels shown on the right.
-	plr, vlr, dlr, wlr := pr, vr, dr, wr
-
-	// Figure out width to trim off on the right of each rect for the labels.
-	maxWidth := ch.prices.MaxLabelSize.X
-	if w := ch.volume.MaxLabelSize.X; w > maxWidth {
-		maxWidth = w
-	}
-	if ch.showStochastics {
-		if w := ch.dailyStochastics.MaxLabelSize.X; w > maxWidth {
-			maxWidth = w
-		}
-		if w := ch.weeklyStochastics.MaxLabelSize.X; w > maxWidth {
-			maxWidth = w
-		}
-	}
-	maxWidth += chartPadding
-
-	// Set left side of label rects.
-	plr.Min.X = pr.Max.X - maxWidth
-	vlr.Min.X = vr.Max.X - maxWidth
-	dlr.Min.X = dr.Max.X - maxWidth
-	wlr.Min.X = wr.Max.X - maxWidth
-
-	// Trim off the label rects from the main rects.
-	pr.Max.X = plr.Min.X
-	vr.Max.X = vlr.Min.X
-	dr.Max.X = dlr.Min.X
-	wr.Max.X = wlr.Min.X
-
-	// Time labels and its cursors labels overlap and use the same rect.
-	tr.Max.X = plr.Min.X
-	tlr := tr
-
-	// Pad all the rects.
-	pr = pr.Inset(chartPadding)
-	vr = vr.Inset(chartPadding)
-	dr = dr.Inset(chartPadding)
-	wr = wr.Inset(chartPadding)
-	tr = tr.Inset(chartPadding)
-
-	plr = plr.Inset(chartPadding)
-	vlr = vlr.Inset(chartPadding)
-	dlr = dlr.Inset(chartPadding)
-	wlr = wlr.Inset(chartPadding)
-	tlr = tlr.Inset(chartPadding)
-
 	ch.priceTimeline.Render(fudge)
 	ch.volumeTimeline.Render(fudge)
 	if ch.showStochastics {
