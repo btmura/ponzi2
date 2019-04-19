@@ -47,10 +47,10 @@ var (
 type Chart struct {
 	header *chartHeader
 
-	prices            *chartPrices
-	priceAxisLabels   *chartPriceAxisLabels
-	priceCursorLabels *chartPriceCursorLabels
-	priceTimeline     *chartTimeline
+	prices          *chartPrices
+	priceAxisLabels *chartPriceAxisLabels
+	priceCursor     *chartPriceCursor
+	priceTimeline   *chartTimeline
 
 	movingAverage25  *chartMovingAverage
 	movingAverage50  *chartMovingAverage
@@ -122,10 +122,10 @@ func NewChart() *Chart {
 			Padding:                 chartPadding,
 		}),
 
-		prices:            newChartPrices(),
-		priceAxisLabels:   newChartPriceAxisLabels(),
-		priceCursorLabels: newChartPriceCursorLabels(),
-		priceTimeline:     newChartTimeline(),
+		prices:          newChartPrices(),
+		priceAxisLabels: newChartPriceAxisLabels(),
+		priceCursor:     new(chartPriceCursor),
+		priceTimeline:   newChartTimeline(),
 
 		movingAverage25:  newChartMovingAverage(purple),
 		movingAverage50:  newChartMovingAverage(yellow),
@@ -213,7 +213,7 @@ func (ch *Chart) SetData(data *ChartData) error {
 
 	ch.prices.SetData(ts)
 	ch.priceAxisLabels.SetData(ts)
-	ch.priceCursorLabels.SetData(ts)
+	ch.priceCursor.SetData(ts)
 	if err := ch.priceTimeline.SetData(dc.Range, ts); err != nil {
 		return err
 	}
@@ -344,7 +344,7 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 
 	ic.Bounds = pr
 	ch.prices.ProcessInput(ic)
-	ch.priceCursorLabels.ProcessInput(ic, plr)
+	ch.priceCursor.ProcessInput(pr, plr, ch.mousePos)
 	ch.priceTimeline.ProcessInput(ic)
 	ch.movingAverage25.ProcessInput(ic)
 	ch.movingAverage50.ProcessInput(ic)
@@ -453,7 +453,7 @@ func (ch *Chart) Render(fudge float32) error {
 
 	ch.prices.Render(fudge)
 	ch.priceAxisLabels.Render(fudge)
-	ch.priceCursorLabels.Render(fudge)
+	ch.priceCursor.Render(fudge)
 
 	if ch.showMovingAverages {
 		ch.movingAverage25.Render(fudge)
@@ -500,6 +500,9 @@ func (ch *Chart) Close() {
 	}
 	if ch.prices != nil {
 		ch.prices.Close()
+	}
+	if ch.priceCursor != nil {
+		ch.priceCursor.Close()
 	}
 	if ch.priceTimeline != nil {
 		ch.priceTimeline.Close()
