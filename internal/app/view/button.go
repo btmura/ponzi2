@@ -57,3 +57,7 @@ func (b *button) Render(fudge float32) {
 func (b *button) SetClickCallback(cb func()) {
 	b.clickCallback = cb
 }
+
+func (b *button) Close() {
+	b.clickCallback = nil
+}

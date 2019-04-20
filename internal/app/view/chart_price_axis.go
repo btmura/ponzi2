@@ -33,6 +33,8 @@ func (ch *chartPriceAxis) SetData(ts *model.TradingSessionSeries) {
 
 	// Measure the max label size by creating a label with the max value.
 	ch.MaxLabelSize = makeChartPriceLabel(ch.priceRange[1]).size
+
+	ch.renderable = true
 }
 
 // ProcessInput processes input.

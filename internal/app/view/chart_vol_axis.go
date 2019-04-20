@@ -42,6 +42,8 @@ func (ch *chartVolumeAxis) SetData(ts *model.TradingSessionSeries) {
 		makeChartVolumeLabel(ch.maxVolume, .8),
 		makeChartVolumeLabel(ch.maxVolume, .2),
 	}
+
+	ch.renderable = true
 }
 
 func (ch *chartVolumeAxis) ProcessInput(labelRect image.Rectangle) {

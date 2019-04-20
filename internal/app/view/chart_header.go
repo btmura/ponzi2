@@ -294,4 +294,8 @@ func (ch *chartHeader) SetRemoveButtonClickCallback(cb func()) {
 }
 
 // Close frees the resources backing the ChartHeader.
-func (ch *chartHeader) Close() {}
+func (ch *chartHeader) Close() {
+	ch.refreshButton.Close()
+	ch.addButton.Close()
+	ch.removeButton.Close()
+}
