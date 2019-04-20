@@ -9,7 +9,12 @@ import (
 	"github.com/btmura/ponzi2/internal/status"
 )
 
-type chartTimelineCursorLabels struct {
+// chartTimelineCursor renders the time corresponding to the mouse pointer
+// on the x-axis.
+type chartTimelineCursor struct {
+	// renderable is true if this should be rendered.
+	renderable bool
+
 	// dates are session dates shown for the cursor.
 	dates []time.Time
 
@@ -26,11 +31,10 @@ type chartTimelineCursorLabels struct {
 	mousePos image.Point
 }
 
-func newChartTimelineCursorLabels() *chartTimelineCursorLabels {
-	return &chartTimelineCursorLabels{}
-}
+func (ch *chartTimelineCursor) SetData(r model.Range, ts *model.TradingSessionSeries) error {
+	// Reset everything.
+	ch.Close()
 
-func (ch *chartTimelineCursorLabels) SetData(r model.Range, ts *model.TradingSessionSeries) error {
 	// Bail out if there is no data yet.
 	if ts == nil {
 		return nil
@@ -50,19 +54,25 @@ func (ch *chartTimelineCursorLabels) SetData(r model.Range, ts *model.TradingSes
 		return status.Errorf("bad range: %v", r)
 	}
 
+	ch.renderable = true
+
 	return nil
 }
 
 // ProcessInput processes input.
-func (ch *chartTimelineCursorLabels) ProcessInput(ic inputContext, labelRect image.Rectangle) {
-	ch.bounds = ic.Bounds
+func (ch *chartTimelineCursor) ProcessInput(timelineRect, labelRect image.Rectangle, mousePos image.Point) {
+	ch.bounds = timelineRect
 	ch.labelRect = labelRect
-	ch.mousePos = ic.MousePos
+	ch.mousePos = mousePos
 }
 
-func (ch *chartTimelineCursorLabels) Render(fudge float32) error {
+func (ch *chartTimelineCursor) Render(fudge float32) {
+	if !ch.renderable {
+		return
+	}
+
 	if ch.mousePos.X < ch.bounds.Min.X || ch.mousePos.X > ch.bounds.Max.X {
-		return nil
+		return
 	}
 
 	percent := float32(ch.mousePos.X-ch.bounds.Min.X) / float32(ch.bounds.Dx())
@@ -82,6 +92,8 @@ func (ch *chartTimelineCursorLabels) Render(fudge float32) error {
 
 	renderBubble(tp, size, chartAxisLabelBubbleSpec)
 	chartAxisLabelTextRenderer.Render(text, tp, white)
+}
 
-	return nil
+func (ch *chartTimelineCursor) Close() {
+	ch.renderable = false
 }

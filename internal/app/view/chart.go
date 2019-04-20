@@ -71,8 +71,8 @@ type Chart struct {
 	weeklyStochasticCursor      *chartStochasticCursor
 	weeklyStochasticsTimeline   *chartTimeline
 
-	timelineAxisLabels   *chartTimelineAxisLabels
-	timelineCursorLabels *chartTimelineCursorLabels
+	timelineAxisLabels *chartTimelineAxisLabels
+	timelineCursor     *chartTimelineCursor
 
 	legend *chartLegend
 
@@ -146,8 +146,8 @@ func NewChart() *Chart {
 		weeklyStochasticCursor:      new(chartStochasticCursor),
 		weeklyStochasticsTimeline:   newChartTimeline(),
 
-		timelineAxisLabels:   newChartTimelineAxisLabels(),
-		timelineCursorLabels: newChartTimelineCursorLabels(),
+		timelineAxisLabels: newChartTimelineAxisLabels(),
+		timelineCursor:     new(chartTimelineCursor),
 
 		legend: newChartLegend(),
 
@@ -251,7 +251,7 @@ func (ch *Chart) SetData(data *ChartData) error {
 		return err
 	}
 
-	if err := ch.timelineCursorLabels.SetData(dc.Range, ts); err != nil {
+	if err := ch.timelineCursor.SetData(dc.Range, ts); err != nil {
 		return err
 	}
 
@@ -369,7 +369,7 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 
 	ic.Bounds = tr
 	ch.timelineAxisLabels.ProcessInput(ic)
-	ch.timelineCursorLabels.ProcessInput(ic, tlr)
+	ch.timelineCursor.ProcessInput(tr, tlr, ch.mousePos)
 
 	ic.Bounds = plr
 	ch.priceAxisLabels.ProcessInput(ic)
@@ -478,7 +478,7 @@ func (ch *Chart) Render(fudge float32) error {
 	}
 
 	ch.timelineAxisLabels.Render(fudge)
-	ch.timelineCursorLabels.Render(fudge)
+	ch.timelineCursor.Render(fudge)
 
 	ch.legend.Render(fudge)
 
@@ -544,6 +544,9 @@ func (ch *Chart) Close() {
 	}
 	if ch.weeklyStochasticsTimeline != nil {
 		ch.weeklyStochasticsTimeline.Close()
+	}
+	if ch.timelineCursor != nil {
+		ch.timelineCursor.Close()
 	}
 }
 
