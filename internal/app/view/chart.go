@@ -61,15 +61,15 @@ type Chart struct {
 	volumeCursor     *chartVolumeCursor
 	volumeTimeline   *chartTimeline
 
-	dailyStochastics           *chartStochastics
-	dailyStochasticsAxisLabels *chartStochasticsAxisLabels
-	dailyStochasticCursor      *chartStochasticCursor
-	dailyStochasticsTimeline   *chartTimeline
+	dailyStochastics         *chartStochastics
+	dailyStochasticAxis      *chartStochasticAxis
+	dailyStochasticCursor    *chartStochasticCursor
+	dailyStochasticsTimeline *chartTimeline
 
-	weeklyStochastics           *chartStochastics
-	weeklyStochasticsAxisLabels *chartStochasticsAxisLabels
-	weeklyStochasticCursor      *chartStochasticCursor
-	weeklyStochasticsTimeline   *chartTimeline
+	weeklyStochastics         *chartStochastics
+	weeklyStochasticAxis      *chartStochasticAxis
+	weeklyStochasticCursor    *chartStochasticCursor
+	weeklyStochasticsTimeline *chartTimeline
 
 	timelineAxisLabels *chartTimelineAxisLabels
 	timelineCursor     *chartTimelineCursor
@@ -136,15 +136,15 @@ func NewChart() *Chart {
 		volumeCursor:     new(chartVolumeCursor),
 		volumeTimeline:   newChartTimeline(),
 
-		dailyStochastics:           newChartStochastics(yellow),
-		dailyStochasticsAxisLabels: newChartStochasticsAxisLabels(),
-		dailyStochasticCursor:      new(chartStochasticCursor),
-		dailyStochasticsTimeline:   newChartTimeline(),
+		dailyStochastics:         newChartStochastics(yellow),
+		dailyStochasticAxis:      new(chartStochasticAxis),
+		dailyStochasticCursor:    new(chartStochasticCursor),
+		dailyStochasticsTimeline: newChartTimeline(),
 
-		weeklyStochastics:           newChartStochastics(purple),
-		weeklyStochasticsAxisLabels: newChartStochasticsAxisLabels(),
-		weeklyStochasticCursor:      new(chartStochasticCursor),
-		weeklyStochasticsTimeline:   newChartTimeline(),
+		weeklyStochastics:         newChartStochastics(purple),
+		weeklyStochasticAxis:      new(chartStochasticAxis),
+		weeklyStochasticCursor:    new(chartStochasticCursor),
+		weeklyStochasticsTimeline: newChartTimeline(),
 
 		timelineAxisLabels: newChartTimelineAxisLabels(),
 		timelineCursor:     new(chartTimelineCursor),
@@ -233,14 +233,14 @@ func (ch *Chart) SetData(data *ChartData) error {
 
 	if ch.showStochastics {
 		ch.dailyStochastics.SetData(dc.DailyStochasticSeries)
-		ch.dailyStochasticsAxisLabels.SetData(dc.DailyStochasticSeries)
+		ch.dailyStochasticAxis.SetData(dc.DailyStochasticSeries)
 		ch.dailyStochasticCursor.SetData()
 		if err := ch.dailyStochasticsTimeline.SetData(dc.Range, ts); err != nil {
 			return err
 		}
 
 		ch.weeklyStochastics.SetData(dc.WeeklyStochasticSeries)
-		ch.weeklyStochasticsAxisLabels.SetData(dc.WeeklyStochasticSeries)
+		ch.weeklyStochasticAxis.SetData(dc.WeeklyStochasticSeries)
 		ch.weeklyStochasticCursor.SetData()
 		if err := ch.weeklyStochasticsTimeline.SetData(dc.Range, ts); err != nil {
 			return err
@@ -376,11 +376,9 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 	ic.Bounds = vlr
 	ch.volumeAxisLabels.ProcessInput(ic)
 
-	ic.Bounds = dlr
-	ch.dailyStochasticsAxisLabels.ProcessInput(ic)
+	ch.dailyStochasticAxis.ProcessInput(dlr)
 
-	ic.Bounds = wlr
-	ch.weeklyStochasticsAxisLabels.ProcessInput(ic)
+	ch.weeklyStochasticAxis.ProcessInput(wlr)
 
 	ch.legend.ProcessInput(pr, llr, ic.MousePos)
 }
@@ -468,11 +466,11 @@ func (ch *Chart) Render(fudge float32) error {
 
 	if ch.showStochastics {
 		ch.dailyStochastics.Render(fudge)
-		ch.dailyStochasticsAxisLabels.Render(fudge)
+		ch.dailyStochasticAxis.Render(fudge)
 		ch.dailyStochasticCursor.Render(fudge)
 
 		ch.weeklyStochastics.Render(fudge)
-		ch.weeklyStochasticsAxisLabels.Render(fudge)
+		ch.weeklyStochasticAxis.Render(fudge)
 		ch.weeklyStochasticCursor.Render(fudge)
 	}
 
@@ -508,9 +506,11 @@ func (ch *Chart) Close() {
 	ch.volumeCursor.Close()
 	ch.volumeTimeline.Close()
 	ch.dailyStochastics.Close()
+	ch.dailyStochasticAxis.Close()
 	ch.dailyStochasticCursor.Close()
 	ch.dailyStochasticsTimeline.Close()
 	ch.weeklyStochastics.Close()
+	ch.weeklyStochasticAxis.Close()
 	ch.weeklyStochasticCursor.Close()
 	ch.weeklyStochasticsTimeline.Close()
 	ch.timelineCursor.Close()
