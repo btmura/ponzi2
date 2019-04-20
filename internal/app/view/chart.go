@@ -61,15 +61,15 @@ type Chart struct {
 	volumeCursor   *chartVolumeCursor
 	volumeTimeline *chartTimeline
 
-	dailyStochastics         *chartStochastics
-	dailyStochasticAxis      *chartStochasticAxis
-	dailyStochasticCursor    *chartStochasticCursor
-	dailyStochasticsTimeline *chartTimeline
+	dailyStochastics        *chartStochastics
+	dailyStochasticAxis     *chartStochasticAxis
+	dailyStochasticCursor   *chartStochasticCursor
+	dailyStochasticTimeline *chartTimeline
 
-	weeklyStochastics         *chartStochastics
-	weeklyStochasticAxis      *chartStochasticAxis
-	weeklyStochasticCursor    *chartStochasticCursor
-	weeklyStochasticsTimeline *chartTimeline
+	weeklyStochastics        *chartStochastics
+	weeklyStochasticAxis     *chartStochasticAxis
+	weeklyStochasticCursor   *chartStochasticCursor
+	weeklyStochasticTimeline *chartTimeline
 
 	timelineAxis   *chartTimelineAxis
 	timelineCursor *chartTimelineCursor
@@ -125,7 +125,7 @@ func NewChart() *Chart {
 		prices:        newChartPrices(),
 		priceAxis:     new(chartPriceAxis),
 		priceCursor:   new(chartPriceCursor),
-		priceTimeline: newChartTimeline(),
+		priceTimeline: new(chartTimeline),
 
 		movingAverage25:  newChartMovingAverage(purple),
 		movingAverage50:  newChartMovingAverage(yellow),
@@ -134,17 +134,17 @@ func NewChart() *Chart {
 		volume:         newChartVolume(),
 		volumeAxis:     new(chartVolumeAxis),
 		volumeCursor:   new(chartVolumeCursor),
-		volumeTimeline: newChartTimeline(),
+		volumeTimeline: new(chartTimeline),
 
-		dailyStochastics:         newChartStochastics(yellow),
-		dailyStochasticAxis:      new(chartStochasticAxis),
-		dailyStochasticCursor:    new(chartStochasticCursor),
-		dailyStochasticsTimeline: newChartTimeline(),
+		dailyStochastics:        newChartStochastics(yellow),
+		dailyStochasticAxis:     new(chartStochasticAxis),
+		dailyStochasticCursor:   new(chartStochasticCursor),
+		dailyStochasticTimeline: new(chartTimeline),
 
-		weeklyStochastics:         newChartStochastics(purple),
-		weeklyStochasticAxis:      new(chartStochasticAxis),
-		weeklyStochasticCursor:    new(chartStochasticCursor),
-		weeklyStochasticsTimeline: newChartTimeline(),
+		weeklyStochastics:        newChartStochastics(purple),
+		weeklyStochasticAxis:     new(chartStochasticAxis),
+		weeklyStochasticCursor:   new(chartStochasticCursor),
+		weeklyStochasticTimeline: new(chartTimeline),
 
 		timelineAxis:   new(chartTimelineAxis),
 		timelineCursor: new(chartTimelineCursor),
@@ -235,14 +235,14 @@ func (ch *Chart) SetData(data *ChartData) error {
 		ch.dailyStochastics.SetData(dc.DailyStochasticSeries)
 		ch.dailyStochasticAxis.SetData(dc.DailyStochasticSeries)
 		ch.dailyStochasticCursor.SetData()
-		if err := ch.dailyStochasticsTimeline.SetData(dc.Range, ts); err != nil {
+		if err := ch.dailyStochasticTimeline.SetData(dc.Range, ts); err != nil {
 			return err
 		}
 
 		ch.weeklyStochastics.SetData(dc.WeeklyStochasticSeries)
 		ch.weeklyStochasticAxis.SetData(dc.WeeklyStochasticSeries)
 		ch.weeklyStochasticCursor.SetData()
-		if err := ch.weeklyStochasticsTimeline.SetData(dc.Range, ts); err != nil {
+		if err := ch.weeklyStochasticTimeline.SetData(dc.Range, ts); err != nil {
 			return err
 		}
 	}
@@ -347,7 +347,7 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 	ic.Bounds = pr
 	ch.prices.ProcessInput(ic)
 	ch.priceCursor.ProcessInput(pr, plr, ch.mousePos)
-	ch.priceTimeline.ProcessInput(ic)
+	ch.priceTimeline.ProcessInput(pr)
 	ch.movingAverage25.ProcessInput(ic)
 	ch.movingAverage50.ProcessInput(ic)
 	ch.movingAverage200.ProcessInput(ic)
@@ -355,17 +355,17 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 	ic.Bounds = vr
 	ch.volume.ProcessInput(ic)
 	ch.volumeCursor.ProcessInput(vr, vlr, ch.mousePos)
-	ch.volumeTimeline.ProcessInput(ic)
+	ch.volumeTimeline.ProcessInput(vr)
 
 	ic.Bounds = dr
 	ch.dailyStochastics.ProcessInput(ic)
 	ch.dailyStochasticCursor.ProcessInput(dr, dlr, ch.mousePos)
-	ch.dailyStochasticsTimeline.ProcessInput(ic)
+	ch.dailyStochasticTimeline.ProcessInput(dr)
 
 	ic.Bounds = wr
 	ch.weeklyStochastics.ProcessInput(ic)
 	ch.weeklyStochasticCursor.ProcessInput(wr, wlr, ch.mousePos)
-	ch.weeklyStochasticsTimeline.ProcessInput(ic)
+	ch.weeklyStochasticTimeline.ProcessInput(wr)
 
 	ch.timelineAxis.ProcessInput(tr)
 	ch.timelineCursor.ProcessInput(tr, tlr, ch.mousePos)
@@ -441,8 +441,8 @@ func (ch *Chart) Render(fudge float32) error {
 	ch.priceTimeline.Render(fudge)
 	ch.volumeTimeline.Render(fudge)
 	if ch.showStochastics {
-		ch.dailyStochasticsTimeline.Render(fudge)
-		ch.weeklyStochasticsTimeline.Render(fudge)
+		ch.dailyStochasticTimeline.Render(fudge)
+		ch.weeklyStochasticTimeline.Render(fudge)
 	}
 
 	ch.prices.Render(fudge)
@@ -504,11 +504,11 @@ func (ch *Chart) Close() {
 	ch.dailyStochastics.Close()
 	ch.dailyStochasticAxis.Close()
 	ch.dailyStochasticCursor.Close()
-	ch.dailyStochasticsTimeline.Close()
+	ch.dailyStochasticTimeline.Close()
 	ch.weeklyStochastics.Close()
 	ch.weeklyStochasticAxis.Close()
 	ch.weeklyStochasticCursor.Close()
-	ch.weeklyStochasticsTimeline.Close()
+	ch.weeklyStochasticTimeline.Close()
 	ch.timelineAxis.Close()
 	ch.timelineCursor.Close()
 }

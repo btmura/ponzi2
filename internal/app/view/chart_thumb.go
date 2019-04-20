@@ -77,11 +77,11 @@ func NewChartThumb() *ChartThumb {
 
 		dailyStochastics:         newChartStochastics(yellow),
 		dailyStochasticCursor:    new(chartStochasticCursor),
-		dailyStochasticsTimeline: newChartTimeline(),
+		dailyStochasticsTimeline: new(chartTimeline),
 
 		weeklyStochastics:         newChartStochastics(purple),
 		weeklyStochasticCursor:    new(chartStochasticCursor),
-		weeklyStochasticsTimeline: newChartTimeline(),
+		weeklyStochasticsTimeline: new(chartTimeline),
 
 		loadingText: newCenteredText(thumbSymbolQuoteTextRenderer, "LOADING..."),
 		errorText:   newCenteredText(thumbSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange)),
@@ -159,12 +159,12 @@ func (ch *ChartThumb) ProcessInput(ic inputContext) {
 	ic.Bounds = dr
 	ch.dailyStochastics.ProcessInput(ic)
 	ch.dailyStochasticCursor.ProcessInput(dr, dr, ch.mousePos)
-	ch.dailyStochasticsTimeline.ProcessInput(ic)
+	ch.dailyStochasticsTimeline.ProcessInput(dr)
 
 	ic.Bounds = wr
 	ch.weeklyStochastics.ProcessInput(ic)
 	ch.weeklyStochasticCursor.ProcessInput(wr, wr, ch.mousePos)
-	ch.weeklyStochasticsTimeline.ProcessInput(ic)
+	ch.weeklyStochasticsTimeline.ProcessInput(wr)
 }
 
 // Update updates the ChartThumb.

@@ -9,12 +9,14 @@ import (
 )
 
 type chartTimeline struct {
-	vao    *gfx.VAO
-	bounds image.Rectangle
-}
+	// renderable is true if this is ready to be rendered.
+	renderable bool
 
-func newChartTimeline() *chartTimeline {
-	return &chartTimeline{}
+	// lineVAO has the vertical lines to be rendered under some technicals.
+	lineVAO *gfx.VAO
+
+	// lineRect is the rectangle to draw the lines within.
+	lineRect image.Rectangle
 }
 
 func (ch *chartTimeline) SetData(r model.Range, ts *model.TradingSessionSeries) error {
@@ -31,8 +33,9 @@ func (ch *chartTimeline) SetData(r model.Range, ts *model.TradingSessionSeries) 
 		return err
 	}
 
-	// Create the line VAO.
-	ch.vao = vertRuleSetVAO(vals, [2]float32{0, 1}, gray)
+	ch.lineVAO = vertRuleSetVAO(vals, [2]float32{0, 1}, gray)
+
+	ch.renderable = true
 
 	return nil
 }
@@ -73,23 +76,25 @@ func weekLineValues(r model.Range, ts []*model.TradingSession) ([]float32, error
 }
 
 // ProcessInput processes input.
-func (ch *chartTimeline) ProcessInput(ic inputContext) {
-	ch.bounds = ic.Bounds
+func (ch *chartTimeline) ProcessInput(lineRect image.Rectangle) {
+	ch.lineRect = lineRect
 }
 
 // Render renders the chart lines.
 func (ch *chartTimeline) Render(fudge float32) {
-	if ch.vao == nil {
+	if !ch.renderable {
 		return
 	}
-	gfx.SetModelMatrixRect(ch.bounds)
-	ch.vao.Render()
+
+	gfx.SetModelMatrixRect(ch.lineRect)
+	ch.lineVAO.Render()
 }
 
 // Close frees the resources backing the chart lines.
 func (ch *chartTimeline) Close() {
-	if ch.vao != nil {
-		ch.vao.Delete()
-		ch.vao = nil
+	ch.renderable = false
+	if ch.lineVAO != nil {
+		ch.lineVAO.Delete()
+		ch.lineVAO = nil
 	}
 }
