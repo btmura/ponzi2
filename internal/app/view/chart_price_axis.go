@@ -6,22 +6,24 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 )
 
-type chartPriceAxisLabels struct {
+type chartPriceAxis struct {
+	// renderable is true if this should be rendered.
+	renderable bool
+
 	// priceRange represents the inclusive range from min to max price.
 	priceRange [2]float32
 
 	// MaxLabelSize is the maximum label size useful for rendering measurements.
 	MaxLabelSize image.Point
 
-	// bounds is the rectangle with global coords that should be drawn within.
-	bounds image.Rectangle
+	// labelRect is the rectangle with global coords that should be drawn within.
+	labelRect image.Rectangle
 }
 
-func newChartPriceAxisLabels() *chartPriceAxisLabels {
-	return &chartPriceAxisLabels{}
-}
+func (ch *chartPriceAxis) SetData(ts *model.TradingSessionSeries) {
+	// Reset everything.
+	ch.Close()
 
-func (ch *chartPriceAxisLabels) SetData(ts *model.TradingSessionSeries) {
 	// Bail out if there is no data yet.
 	if ts == nil {
 		return
@@ -34,12 +36,12 @@ func (ch *chartPriceAxisLabels) SetData(ts *model.TradingSessionSeries) {
 }
 
 // ProcessInput processes input.
-func (ch *chartPriceAxisLabels) ProcessInput(ic inputContext) {
-	ch.bounds = ic.Bounds
+func (ch *chartPriceAxis) ProcessInput(labelRect image.Rectangle) {
+	ch.labelRect = labelRect
 }
 
-func (ch *chartPriceAxisLabels) Render(fudge float32) {
-	r := ch.bounds
+func (ch *chartPriceAxis) Render(fudge float32) {
+	r := ch.labelRect
 
 	labelPaddingY := ch.MaxLabelSize.Y / 2
 	pricePerPixel := (ch.priceRange[1] - ch.priceRange[0]) / float32(r.Dy())
@@ -71,4 +73,8 @@ func (ch *chartPriceAxisLabels) Render(fudge float32) {
 		pt = pt.Sub(dp)
 		v -= dv
 	}
+}
+
+func (ch *chartPriceAxis) Close() {
+	ch.renderable = false
 }

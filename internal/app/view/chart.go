@@ -47,10 +47,10 @@ var (
 type Chart struct {
 	header *chartHeader
 
-	prices          *chartPrices
-	priceAxisLabels *chartPriceAxisLabels
-	priceCursor     *chartPriceCursor
-	priceTimeline   *chartTimeline
+	prices        *chartPrices
+	priceAxis     *chartPriceAxis
+	priceCursor   *chartPriceCursor
+	priceTimeline *chartTimeline
 
 	movingAverage25  *chartMovingAverage
 	movingAverage50  *chartMovingAverage
@@ -122,10 +122,10 @@ func NewChart() *Chart {
 			Padding:                 chartPadding,
 		}),
 
-		prices:          newChartPrices(),
-		priceAxisLabels: newChartPriceAxisLabels(),
-		priceCursor:     new(chartPriceCursor),
-		priceTimeline:   newChartTimeline(),
+		prices:        newChartPrices(),
+		priceAxis:     new(chartPriceAxis),
+		priceCursor:   new(chartPriceCursor),
+		priceTimeline: newChartTimeline(),
 
 		movingAverage25:  newChartMovingAverage(purple),
 		movingAverage50:  newChartMovingAverage(yellow),
@@ -212,7 +212,7 @@ func (ch *Chart) SetData(data *ChartData) error {
 	ts := dc.TradingSessionSeries
 
 	ch.prices.SetData(ts)
-	ch.priceAxisLabels.SetData(ts)
+	ch.priceAxis.SetData(ts)
 	ch.priceCursor.SetData(ts)
 	if err := ch.priceTimeline.SetData(dc.Range, ts); err != nil {
 		return err
@@ -371,8 +371,7 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 	ch.timelineAxisLabels.ProcessInput(ic)
 	ch.timelineCursor.ProcessInput(tr, tlr, ch.mousePos)
 
-	ic.Bounds = plr
-	ch.priceAxisLabels.ProcessInput(ic)
+	ch.priceAxis.ProcessInput(plr)
 
 	ic.Bounds = vlr
 	ch.volumeAxisLabels.ProcessInput(ic)
@@ -454,7 +453,7 @@ func (ch *Chart) Render(fudge float32) error {
 	}
 
 	ch.prices.Render(fudge)
-	ch.priceAxisLabels.Render(fudge)
+	ch.priceAxis.Render(fudge)
 	ch.priceCursor.Render(fudge)
 
 	if ch.showMovingAverages {
@@ -502,6 +501,9 @@ func (ch *Chart) Close() {
 	}
 	if ch.prices != nil {
 		ch.prices.Close()
+	}
+	if ch.priceAxis != nil {
+		ch.priceAxis.Close()
 	}
 	if ch.priceCursor != nil {
 		ch.priceCursor.Close()
