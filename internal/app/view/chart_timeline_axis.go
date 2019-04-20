@@ -11,8 +11,11 @@ import (
 // longTime is a time that takes the most display width for measuring purposes.
 var longTime = time.Date(2019, time.December, 31, 23, 59, 0, 0, time.UTC)
 
-// chartTimelineAxisLabels renders the time labels for a single stock.
-type chartTimelineAxisLabels struct {
+// chartTimelineAxis renders the time labels for a single stock.
+type chartTimelineAxis struct {
+	// renderable is true if this should be rendered.
+	renderable bool
+
 	// dataRange is range of the data being presented.
 	dataRange model.Range
 
@@ -22,15 +25,14 @@ type chartTimelineAxisLabels struct {
 	// labels bundle rendering measurements for time labels.
 	labels []chartTimeLabel
 
-	// bounds is the rectangle with global coords that should be drawn within.
-	bounds image.Rectangle
+	// timelineRect is the rectangle with global coords that should be drawn within.
+	timelineRect image.Rectangle
 }
 
-func newChartTimelineAxisLabels() *chartTimelineAxisLabels {
-	return &chartTimelineAxisLabels{}
-}
+func (ch *chartTimelineAxis) SetData(r model.Range, ts *model.TradingSessionSeries) error {
+	// Reset everything.
+	ch.Close()
 
-func (ch *chartTimelineAxisLabels) SetData(r model.Range, ts *model.TradingSessionSeries) error {
 	// Bail out if there is no data yet.
 	if ts == nil {
 		return nil
@@ -54,13 +56,16 @@ func (ch *chartTimelineAxisLabels) SetData(r model.Range, ts *model.TradingSessi
 }
 
 // ProcessInput processes input.
-func (ch *chartTimelineAxisLabels) ProcessInput(ic inputContext) {
-	ch.bounds = ic.Bounds
+func (ch *chartTimelineAxis) ProcessInput(timelineRect image.Rectangle) {
+	ch.timelineRect = timelineRect
 }
 
-func (ch *chartTimelineAxisLabels) Render(fudge float32) {
-	r := ch.bounds
+func (ch *chartTimelineAxis) Render(fudge float32) {
+	if !ch.renderable {
+		return
+	}
 
+	r := ch.timelineRect
 	for _, l := range ch.labels {
 		tp := image.Point{
 			X: r.Min.X + int(float32(r.Dx())*l.percent) - l.size.X/2,
@@ -68,6 +73,10 @@ func (ch *chartTimelineAxisLabels) Render(fudge float32) {
 		}
 		chartAxisLabelTextRenderer.Render(l.text, tp, white)
 	}
+}
+
+func (ch *chartTimelineAxis) Close() {
+	ch.renderable = false
 }
 
 type chartTimeLabel struct {

@@ -71,8 +71,8 @@ type Chart struct {
 	weeklyStochasticCursor    *chartStochasticCursor
 	weeklyStochasticsTimeline *chartTimeline
 
-	timelineAxisLabels *chartTimelineAxisLabels
-	timelineCursor     *chartTimelineCursor
+	timelineAxis   *chartTimelineAxis
+	timelineCursor *chartTimelineCursor
 
 	legend *chartLegend
 
@@ -146,8 +146,8 @@ func NewChart() *Chart {
 		weeklyStochasticCursor:    new(chartStochasticCursor),
 		weeklyStochasticsTimeline: newChartTimeline(),
 
-		timelineAxisLabels: newChartTimelineAxisLabels(),
-		timelineCursor:     new(chartTimelineCursor),
+		timelineAxis:   new(chartTimelineAxis),
+		timelineCursor: new(chartTimelineCursor),
 
 		legend: newChartLegend(),
 
@@ -247,7 +247,7 @@ func (ch *Chart) SetData(data *ChartData) error {
 		}
 	}
 
-	if err := ch.timelineAxisLabels.SetData(dc.Range, ts); err != nil {
+	if err := ch.timelineAxis.SetData(dc.Range, ts); err != nil {
 		return err
 	}
 
@@ -277,7 +277,7 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 		dailyStochasticsPercent  = 0.13
 		weeklyStochasticsPercent = 0.13
 	)
-	timeLabelsPercent := float32(ch.timelineAxisLabels.MaxLabelSize.Y+chartPadding*2) / float32(r.Dy())
+	timeLabelsPercent := float32(ch.timelineAxis.MaxLabelSize.Y+chartPadding*2) / float32(r.Dy())
 
 	// Divide up the rectangle into sections.
 	var rects []image.Rectangle
@@ -367,8 +367,7 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 	ch.weeklyStochasticCursor.ProcessInput(wr, wlr, ch.mousePos)
 	ch.weeklyStochasticsTimeline.ProcessInput(ic)
 
-	ic.Bounds = tr
-	ch.timelineAxisLabels.ProcessInput(ic)
+	ch.timelineAxis.ProcessInput(tr)
 	ch.timelineCursor.ProcessInput(tr, tlr, ch.mousePos)
 
 	ch.priceAxis.ProcessInput(plr)
@@ -428,7 +427,7 @@ func (ch *Chart) Render(fudge float32) error {
 		dailyStochasticsPercent  = 0.13
 		weeklyStochasticsPercent = 0.13
 	)
-	timeLabelsPercent := float32(ch.timelineAxisLabels.MaxLabelSize.Y+chartPadding*2) / float32(r.Dy())
+	timeLabelsPercent := float32(ch.timelineAxis.MaxLabelSize.Y+chartPadding*2) / float32(r.Dy())
 
 	// Divide up the rectangle into sections.
 	var rects []image.Rectangle
@@ -474,7 +473,7 @@ func (ch *Chart) Render(fudge float32) error {
 		ch.weeklyStochasticCursor.Render(fudge)
 	}
 
-	ch.timelineAxisLabels.Render(fudge)
+	ch.timelineAxis.Render(fudge)
 	ch.timelineCursor.Render(fudge)
 
 	ch.legend.Render(fudge)
@@ -513,6 +512,7 @@ func (ch *Chart) Close() {
 	ch.weeklyStochasticAxis.Close()
 	ch.weeklyStochasticCursor.Close()
 	ch.weeklyStochasticsTimeline.Close()
+	ch.timelineAxis.Close()
 	ch.timelineCursor.Close()
 }
 

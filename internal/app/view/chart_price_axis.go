@@ -41,6 +41,10 @@ func (ch *chartPriceAxis) ProcessInput(labelRect image.Rectangle) {
 }
 
 func (ch *chartPriceAxis) Render(fudge float32) {
+	if !ch.renderable {
+		return
+	}
+
 	r := ch.labelRect
 
 	labelPaddingY := ch.MaxLabelSize.Y / 2
