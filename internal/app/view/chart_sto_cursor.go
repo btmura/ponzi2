@@ -2,9 +2,14 @@ package view
 
 import "image"
 
-type chartStochasticsCursorLabels struct {
-	// bounds is the rectangle with global coords that should be drawn within.
-	bounds image.Rectangle
+// chartStochasticCursor renders crosshairs at the mouse pointer
+// with the corresponding stochastic on the y-axis.
+type chartStochasticCursor struct {
+	// renderable is true if this should be rendered.
+	renderable bool
+
+	// stoRect is the rectangle where the stochastics are drawn.
+	stoRect image.Rectangle
 
 	// labelRect is the rectangle where the axis labels are drawn.
 	labelRect image.Rectangle
@@ -13,25 +18,29 @@ type chartStochasticsCursorLabels struct {
 	mousePos image.Point
 }
 
-func newChartStochasticsCursorLabels() *chartStochasticsCursorLabels {
-	return &chartStochasticsCursorLabels{}
-}
-
 // ProcessInput processes input.
-func (ch *chartStochasticsCursorLabels) ProcessInput(ic inputContext, labelRect image.Rectangle) {
-	ch.bounds = ic.Bounds
+func (ch *chartStochasticCursor) ProcessInput(stoRect, labelRect image.Rectangle, mousePos image.Point) {
+	ch.stoRect = stoRect
 	ch.labelRect = labelRect
-	ch.mousePos = ic.MousePos
+	ch.mousePos = mousePos
 }
 
-func (ch *chartStochasticsCursorLabels) Render(fudge float32) {
-	renderCursorLines(ch.bounds, ch.mousePos)
+func (ch *chartStochasticCursor) SetData() {
+	ch.renderable = true
+}
 
-	if !ch.mousePos.In(ch.bounds) {
+func (ch *chartStochasticCursor) Render(fudge float32) {
+	if !ch.renderable {
 		return
 	}
 
-	perc := float32(ch.mousePos.Y-ch.bounds.Min.Y) / float32(ch.bounds.Dy())
+	renderCursorLines(ch.stoRect, ch.mousePos)
+
+	if !ch.mousePos.In(ch.stoRect) {
+		return
+	}
+
+	perc := float32(ch.mousePos.Y-ch.stoRect.Min.Y) / float32(ch.stoRect.Dy())
 	l := makeChartStochasticLabel(perc)
 
 	var tp image.Point
@@ -50,4 +59,8 @@ func (ch *chartStochasticsCursorLabels) Render(fudge float32) {
 	fillRoundedRect(br, chartAxisLabelBubbleRounding)
 	strokeRoundedRect(br, chartAxisLabelBubbleRounding)
 	chartAxisLabelTextRenderer.Render(l.text, tp, white)
+}
+
+func (ch *chartStochasticCursor) Close() {
+	ch.renderable = false
 }

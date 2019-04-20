@@ -61,15 +61,15 @@ type Chart struct {
 	volumeCursor     *chartVolumeCursor
 	volumeTimeline   *chartTimeline
 
-	dailyStochastics             *chartStochastics
-	dailyStochasticsAxisLabels   *chartStochasticsAxisLabels
-	dailyStochasticsCursorLabels *chartStochasticsCursorLabels
-	dailyStochasticsTimeline     *chartTimeline
+	dailyStochastics           *chartStochastics
+	dailyStochasticsAxisLabels *chartStochasticsAxisLabels
+	dailyStochasticCursor      *chartStochasticCursor
+	dailyStochasticsTimeline   *chartTimeline
 
-	weeklyStochastics             *chartStochastics
-	weeklyStochasticsAxisLabels   *chartStochasticsAxisLabels
-	weeklyStochasticsCursorLabels *chartStochasticsCursorLabels
-	weeklyStochasticsTimeline     *chartTimeline
+	weeklyStochastics           *chartStochastics
+	weeklyStochasticsAxisLabels *chartStochasticsAxisLabels
+	weeklyStochasticCursor      *chartStochasticCursor
+	weeklyStochasticsTimeline   *chartTimeline
 
 	timelineAxisLabels   *chartTimelineAxisLabels
 	timelineCursorLabels *chartTimelineCursorLabels
@@ -136,15 +136,15 @@ func NewChart() *Chart {
 		volumeCursor:     new(chartVolumeCursor),
 		volumeTimeline:   newChartTimeline(),
 
-		dailyStochastics:             newChartStochastics(yellow),
-		dailyStochasticsAxisLabels:   newChartStochasticsAxisLabels(),
-		dailyStochasticsCursorLabels: newChartStochasticsCursorLabels(),
-		dailyStochasticsTimeline:     newChartTimeline(),
+		dailyStochastics:           newChartStochastics(yellow),
+		dailyStochasticsAxisLabels: newChartStochasticsAxisLabels(),
+		dailyStochasticCursor:      new(chartStochasticCursor),
+		dailyStochasticsTimeline:   newChartTimeline(),
 
-		weeklyStochastics:             newChartStochastics(purple),
-		weeklyStochasticsAxisLabels:   newChartStochasticsAxisLabels(),
-		weeklyStochasticsCursorLabels: newChartStochasticsCursorLabels(),
-		weeklyStochasticsTimeline:     newChartTimeline(),
+		weeklyStochastics:           newChartStochastics(purple),
+		weeklyStochasticsAxisLabels: newChartStochasticsAxisLabels(),
+		weeklyStochasticCursor:      new(chartStochasticCursor),
+		weeklyStochasticsTimeline:   newChartTimeline(),
 
 		timelineAxisLabels:   newChartTimelineAxisLabels(),
 		timelineCursorLabels: newChartTimelineCursorLabels(),
@@ -234,12 +234,14 @@ func (ch *Chart) SetData(data *ChartData) error {
 	if ch.showStochastics {
 		ch.dailyStochastics.SetData(dc.DailyStochasticSeries)
 		ch.dailyStochasticsAxisLabels.SetData(dc.DailyStochasticSeries)
+		ch.dailyStochasticCursor.SetData()
 		if err := ch.dailyStochasticsTimeline.SetData(dc.Range, ts); err != nil {
 			return err
 		}
 
 		ch.weeklyStochastics.SetData(dc.WeeklyStochasticSeries)
 		ch.weeklyStochasticsAxisLabels.SetData(dc.WeeklyStochasticSeries)
+		ch.weeklyStochasticCursor.SetData()
 		if err := ch.weeklyStochasticsTimeline.SetData(dc.Range, ts); err != nil {
 			return err
 		}
@@ -357,12 +359,12 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 
 	ic.Bounds = dr
 	ch.dailyStochastics.ProcessInput(ic)
-	ch.dailyStochasticsCursorLabels.ProcessInput(ic, dlr)
+	ch.dailyStochasticCursor.ProcessInput(dr, dlr, ch.mousePos)
 	ch.dailyStochasticsTimeline.ProcessInput(ic)
 
 	ic.Bounds = wr
 	ch.weeklyStochastics.ProcessInput(ic)
-	ch.weeklyStochasticsCursorLabels.ProcessInput(ic, wlr)
+	ch.weeklyStochasticCursor.ProcessInput(wr, wlr, ch.mousePos)
 	ch.weeklyStochasticsTimeline.ProcessInput(ic)
 
 	ic.Bounds = tr
@@ -468,11 +470,11 @@ func (ch *Chart) Render(fudge float32) error {
 	if ch.showStochastics {
 		ch.dailyStochastics.Render(fudge)
 		ch.dailyStochasticsAxisLabels.Render(fudge)
-		ch.dailyStochasticsCursorLabels.Render(fudge)
+		ch.dailyStochasticCursor.Render(fudge)
 
 		ch.weeklyStochastics.Render(fudge)
 		ch.weeklyStochasticsAxisLabels.Render(fudge)
-		ch.weeklyStochasticsCursorLabels.Render(fudge)
+		ch.weeklyStochasticCursor.Render(fudge)
 	}
 
 	ch.timelineAxisLabels.Render(fudge)
@@ -519,17 +521,26 @@ func (ch *Chart) Close() {
 	if ch.volume != nil {
 		ch.volume.Close()
 	}
+	if ch.volumeCursor != nil {
+		ch.volumeCursor.Close()
+	}
 	if ch.volumeTimeline != nil {
 		ch.volumeTimeline.Close()
 	}
 	if ch.dailyStochastics != nil {
 		ch.dailyStochastics.Close()
 	}
+	if ch.dailyStochasticCursor != nil {
+		ch.dailyStochasticCursor.Close()
+	}
 	if ch.dailyStochasticsTimeline != nil {
 		ch.dailyStochasticsTimeline.Close()
 	}
 	if ch.weeklyStochastics != nil {
 		ch.weeklyStochastics.Close()
+	}
+	if ch.weeklyStochasticCursor != nil {
+		ch.weeklyStochasticCursor.Close()
 	}
 	if ch.weeklyStochasticsTimeline != nil {
 		ch.weeklyStochasticsTimeline.Close()
