@@ -56,10 +56,10 @@ type Chart struct {
 	movingAverage50  *chartMovingAverage
 	movingAverage200 *chartMovingAverage
 
-	volume           *chartVolume
-	volumeAxisLabels *chartVolumeAxisLabels
-	volumeCursor     *chartVolumeCursor
-	volumeTimeline   *chartTimeline
+	volume         *chartVolume
+	volumeAxis     *chartVolumeAxis
+	volumeCursor   *chartVolumeCursor
+	volumeTimeline *chartTimeline
 
 	dailyStochastics         *chartStochastics
 	dailyStochasticAxis      *chartStochasticAxis
@@ -131,10 +131,10 @@ func NewChart() *Chart {
 		movingAverage50:  newChartMovingAverage(yellow),
 		movingAverage200: newChartMovingAverage(white),
 
-		volume:           newChartVolume(),
-		volumeAxisLabels: newChartVolumeAxisLabels(),
-		volumeCursor:     new(chartVolumeCursor),
-		volumeTimeline:   newChartTimeline(),
+		volume:         newChartVolume(),
+		volumeAxis:     new(chartVolumeAxis),
+		volumeCursor:   new(chartVolumeCursor),
+		volumeTimeline: newChartTimeline(),
 
 		dailyStochastics:         newChartStochastics(yellow),
 		dailyStochasticAxis:      new(chartStochasticAxis),
@@ -225,7 +225,7 @@ func (ch *Chart) SetData(data *ChartData) error {
 	}
 
 	ch.volume.SetData(ts)
-	ch.volumeAxisLabels.SetData(ts)
+	ch.volumeAxis.SetData(ts)
 	ch.volumeCursor.SetData(ts)
 	if err := ch.volumeTimeline.SetData(dc.Range, ts); err != nil {
 		return err
@@ -371,12 +371,8 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 	ch.timelineCursor.ProcessInput(tr, tlr, ch.mousePos)
 
 	ch.priceAxis.ProcessInput(plr)
-
-	ic.Bounds = vlr
-	ch.volumeAxisLabels.ProcessInput(ic)
-
+	ch.volumeAxis.ProcessInput(vlr)
 	ch.dailyStochasticAxis.ProcessInput(dlr)
-
 	ch.weeklyStochasticAxis.ProcessInput(wlr)
 
 	ch.legend.ProcessInput(pr, llr, ic.MousePos)
@@ -460,7 +456,7 @@ func (ch *Chart) Render(fudge float32) error {
 	}
 
 	ch.volume.Render(fudge)
-	ch.volumeAxisLabels.Render(fudge)
+	ch.volumeAxis.Render(fudge)
 	ch.volumeCursor.Render(fudge)
 
 	if ch.showStochastics {
@@ -502,6 +498,7 @@ func (ch *Chart) Close() {
 	ch.movingAverage50.Close()
 	ch.movingAverage200.Close()
 	ch.volume.Close()
+	ch.volumeAxis.Close()
 	ch.volumeCursor.Close()
 	ch.volumeTimeline.Close()
 	ch.dailyStochastics.Close()

@@ -6,22 +6,24 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 )
 
-type chartVolumeAxisLabels struct {
+type chartVolumeAxis struct {
+	// renderable is true if this should be rendered.
+	renderable bool
+
 	// maxVolume is the maximum volume used for rendering measurements.
 	maxVolume int
 
 	// labels bundle rendering measurements for volume labels.
 	labels []chartVolumeLabel
 
-	// bounds is the rectangle with global coords that should be drawn within.
-	bounds image.Rectangle
+	// labelRect is the rectangle with global coords that should be drawn within.
+	labelRect image.Rectangle
 }
 
-func newChartVolumeAxisLabels() *chartVolumeAxisLabels {
-	return &chartVolumeAxisLabels{}
-}
+func (ch *chartVolumeAxis) SetData(ts *model.TradingSessionSeries) {
+	// Reset everything.
+	ch.Close()
 
-func (ch *chartVolumeAxisLabels) SetData(ts *model.TradingSessionSeries) {
 	// Bail out if there is no data yet.
 	if ts == nil {
 		return
@@ -42,15 +44,23 @@ func (ch *chartVolumeAxisLabels) SetData(ts *model.TradingSessionSeries) {
 	}
 }
 
-func (ch *chartVolumeAxisLabels) ProcessInput(ic inputContext) {
-	ch.bounds = ic.Bounds
+func (ch *chartVolumeAxis) ProcessInput(labelRect image.Rectangle) {
+	ch.labelRect = labelRect
 }
 
-func (ch *chartVolumeAxisLabels) Render(fudge float32) {
-	r := ch.bounds
+func (ch *chartVolumeAxis) Render(fudge float32) {
+	if !ch.renderable {
+		return
+	}
+
+	r := ch.labelRect
 	for _, l := range ch.labels {
 		x := r.Max.X - l.size.X
 		y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
 		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
 	}
+}
+
+func (ch *chartVolumeAxis) Close() {
+	ch.renderable = false
 }
