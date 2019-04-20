@@ -56,10 +56,10 @@ type Chart struct {
 	movingAverage50  *chartMovingAverage
 	movingAverage200 *chartMovingAverage
 
-	volume             *chartVolume
-	volumeAxisLabels   *chartVolumeAxisLabels
-	volumeCursorLabels *chartVolumeCursorLabels
-	volumeTimeline     *chartTimeline
+	volume           *chartVolume
+	volumeAxisLabels *chartVolumeAxisLabels
+	volumeCursor     *chartVolumeCursor
+	volumeTimeline   *chartTimeline
 
 	dailyStochastics             *chartStochastics
 	dailyStochasticsAxisLabels   *chartStochasticsAxisLabels
@@ -131,10 +131,10 @@ func NewChart() *Chart {
 		movingAverage50:  newChartMovingAverage(yellow),
 		movingAverage200: newChartMovingAverage(white),
 
-		volume:             newChartVolume(),
-		volumeAxisLabels:   newChartVolumeAxisLabels(),
-		volumeCursorLabels: newChartVolumeCursorLabels(),
-		volumeTimeline:     newChartTimeline(),
+		volume:           newChartVolume(),
+		volumeAxisLabels: newChartVolumeAxisLabels(),
+		volumeCursor:     new(chartVolumeCursor),
+		volumeTimeline:   newChartTimeline(),
 
 		dailyStochastics:             newChartStochastics(yellow),
 		dailyStochasticsAxisLabels:   newChartStochasticsAxisLabels(),
@@ -226,7 +226,7 @@ func (ch *Chart) SetData(data *ChartData) error {
 
 	ch.volume.SetData(ts)
 	ch.volumeAxisLabels.SetData(ts)
-	ch.volumeCursorLabels.SetData(ts)
+	ch.volumeCursor.SetData(ts)
 	if err := ch.volumeTimeline.SetData(dc.Range, ts); err != nil {
 		return err
 	}
@@ -352,7 +352,7 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 
 	ic.Bounds = vr
 	ch.volume.ProcessInput(ic)
-	ch.volumeCursorLabels.ProcessInput(ic, vlr)
+	ch.volumeCursor.ProcessInput(vr, vlr, ch.mousePos)
 	ch.volumeTimeline.ProcessInput(ic)
 
 	ic.Bounds = dr
@@ -463,7 +463,7 @@ func (ch *Chart) Render(fudge float32) error {
 
 	ch.volume.Render(fudge)
 	ch.volumeAxisLabels.Render(fudge)
-	ch.volumeCursorLabels.Render(fudge)
+	ch.volumeCursor.Render(fudge)
 
 	if ch.showStochastics {
 		ch.dailyStochastics.Render(fudge)
