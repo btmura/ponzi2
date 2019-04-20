@@ -496,60 +496,24 @@ func (ch *Chart) SetAddButtonClickCallback(cb func()) {
 
 // Close frees the resources backing the chart.
 func (ch *Chart) Close() {
-	if ch.header != nil {
-		ch.header.Close()
-	}
-	if ch.prices != nil {
-		ch.prices.Close()
-	}
-	if ch.priceAxis != nil {
-		ch.priceAxis.Close()
-	}
-	if ch.priceCursor != nil {
-		ch.priceCursor.Close()
-	}
-	if ch.priceTimeline != nil {
-		ch.priceTimeline.Close()
-	}
-	if ch.movingAverage25 != nil {
-		ch.movingAverage25.Close()
-	}
-	if ch.movingAverage50 != nil {
-		ch.movingAverage50.Close()
-	}
-	if ch.movingAverage200 != nil {
-		ch.movingAverage200.Close()
-	}
-	if ch.volume != nil {
-		ch.volume.Close()
-	}
-	if ch.volumeCursor != nil {
-		ch.volumeCursor.Close()
-	}
-	if ch.volumeTimeline != nil {
-		ch.volumeTimeline.Close()
-	}
-	if ch.dailyStochastics != nil {
-		ch.dailyStochastics.Close()
-	}
-	if ch.dailyStochasticCursor != nil {
-		ch.dailyStochasticCursor.Close()
-	}
-	if ch.dailyStochasticsTimeline != nil {
-		ch.dailyStochasticsTimeline.Close()
-	}
-	if ch.weeklyStochastics != nil {
-		ch.weeklyStochastics.Close()
-	}
-	if ch.weeklyStochasticCursor != nil {
-		ch.weeklyStochasticCursor.Close()
-	}
-	if ch.weeklyStochasticsTimeline != nil {
-		ch.weeklyStochasticsTimeline.Close()
-	}
-	if ch.timelineCursor != nil {
-		ch.timelineCursor.Close()
-	}
+	ch.header.Close()
+	ch.prices.Close()
+	ch.priceAxis.Close()
+	ch.priceCursor.Close()
+	ch.priceTimeline.Close()
+	ch.movingAverage25.Close()
+	ch.movingAverage50.Close()
+	ch.movingAverage200.Close()
+	ch.volume.Close()
+	ch.volumeCursor.Close()
+	ch.volumeTimeline.Close()
+	ch.dailyStochastics.Close()
+	ch.dailyStochasticCursor.Close()
+	ch.dailyStochasticsTimeline.Close()
+	ch.weeklyStochastics.Close()
+	ch.weeklyStochasticCursor.Close()
+	ch.weeklyStochasticsTimeline.Close()
+	ch.timelineCursor.Close()
 }
 
 func renderCursorLines(r image.Rectangle, mousePos image.Point) {

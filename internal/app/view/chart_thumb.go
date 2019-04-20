@@ -242,20 +242,10 @@ func (ch *ChartThumb) SetThumbClickCallback(cb func()) {
 
 // Close frees the resources backing the chart thumbnail.
 func (ch *ChartThumb) Close() {
-	if ch.header != nil {
-		ch.header.Close()
-	}
-	if ch.dailyStochastics != nil {
-		ch.dailyStochastics.Close()
-	}
-	if ch.dailyStochasticsTimeline != nil {
-		ch.dailyStochasticsTimeline.Close()
-	}
-	if ch.weeklyStochastics != nil {
-		ch.weeklyStochastics.Close()
-	}
-	if ch.weeklyStochasticsTimeline != nil {
-		ch.weeklyStochasticsTimeline.Close()
-	}
+	ch.header.Close()
+	ch.dailyStochastics.Close()
+	ch.dailyStochasticsTimeline.Close()
+	ch.weeklyStochastics.Close()
+	ch.weeklyStochasticsTimeline.Close()
 	ch.thumbClickCallback = nil
 }
