@@ -18,6 +18,7 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/view/animation"
 	"github.com/btmura/ponzi2/internal/matrix"
 )
 
@@ -150,13 +151,13 @@ type viewUpdateRenderCloser interface {
 type viewAnimator struct {
 	updateRenderCloser viewUpdateRenderCloser
 	exiting            bool
-	fade               *animation
+	fade               *animation.Animation
 }
 
 func newViewAnimator(updateRenderer viewUpdateRenderCloser) *viewAnimator {
 	return &viewAnimator{
 		updateRenderCloser: updateRenderer,
-		fade:               newAnimation(1*fps, animationStarted()),
+		fade:               animation.New(1*fps, animation.Started()),
 	}
 }
 

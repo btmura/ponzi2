@@ -1,4 +1,4 @@
-package view
+package animation
 
 import (
 	"testing"
@@ -7,50 +7,50 @@ import (
 )
 
 func TestAnimation_Start_Stop_Update_Value_NoLoop(t *testing.T) {
-	a := newAnimation(3)
+	a := New(3)
 
-	want := &animation{
+	want := &Animation{
 		start:     0,
 		end:       1,
 		currFrame: 0,
 		numFrames: 3,
-		state:     aStopped,
+		state:     Stopped,
 	}
 	checkFields(t, want, a)
 	checkValue(t, 0, a, 0.2) // Fudge has no effect on first frame.
 
 	a.Start()
 
-	want = &animation{
+	want = &Animation{
 		start:     0,
 		end:       1,
 		currFrame: 0,
 		numFrames: 3,
-		state:     aRunning,
+		state:     Running,
 	}
 	checkFields(t, want, a)
 	checkValue(t, 0, a, 0.1) // Fudge still has no effect on first frame.
 
 	checkUpdate(t, true, a)
 
-	want = &animation{
+	want = &Animation{
 		start:     0,
 		end:       1,
 		currFrame: 1,
 		numFrames: 3,
-		state:     aRunning,
+		state:     Running,
 	}
 	checkFields(t, want, a)
 	checkValue(t, 0.55, a, 0.1) // Fudge takes affect.
 
 	a.Stop()
 
-	want = &animation{
+	want = &Animation{
 		start:     0,
 		end:       1,
 		currFrame: 1,
 		numFrames: 3,
-		state:     aFinishing,
+		state:     Finishing,
 	}
 	checkFields(t, want, a)
 	checkValue(t, 0.5, a, 0)
@@ -58,12 +58,12 @@ func TestAnimation_Start_Stop_Update_Value_NoLoop(t *testing.T) {
 	// Animation should finish and stop after.
 	checkUpdate(t, true, a)
 
-	want = &animation{
+	want = &Animation{
 		start:     0,
 		end:       1,
 		currFrame: 2,
 		numFrames: 3,
-		state:     aFinishing,
+		state:     Finishing,
 	}
 	checkFields(t, want, a)
 	checkValue(t, 1.0, a, 0)
@@ -71,26 +71,26 @@ func TestAnimation_Start_Stop_Update_Value_NoLoop(t *testing.T) {
 	// Animation is finished. Update should have no affect.
 	checkUpdate(t, false, a)
 
-	want = &animation{
+	want = &Animation{
 		start:     0,
 		end:       1,
 		currFrame: 2,
 		numFrames: 3,
-		state:     aStopped,
+		state:     Stopped,
 	}
 	checkFields(t, want, a)
 	checkValue(t, 1.0, a, 0.5) // Fudge has no effect on last frame.
 }
 
 func TestAnimation_Start_Stop_Update_Value_Loop(t *testing.T) {
-	a := newAnimation(3, animationLoop())
+	a := New(3, Loop())
 
-	want := &animation{
+	want := &Animation{
 		start:     0,
 		end:       1,
 		currFrame: 0,
 		numFrames: 3,
-		state:     aStopped,
+		state:     Stopped,
 		loop:      true,
 	}
 	checkFields(t, want, a)
@@ -98,12 +98,12 @@ func TestAnimation_Start_Stop_Update_Value_Loop(t *testing.T) {
 
 	a.Start()
 
-	want = &animation{
+	want = &Animation{
 		start:     0,
 		end:       1,
 		currFrame: 0,
 		numFrames: 3,
-		state:     aRunning,
+		state:     Running,
 		loop:      true,
 	}
 	checkFields(t, want, a)
@@ -111,12 +111,12 @@ func TestAnimation_Start_Stop_Update_Value_Loop(t *testing.T) {
 
 	checkUpdate(t, true, a)
 
-	want = &animation{
+	want = &Animation{
 		start:     0,
 		end:       1,
 		currFrame: 1,
 		numFrames: 3,
-		state:     aRunning,
+		state:     Running,
 		loop:      true,
 	}
 	checkFields(t, want, a)
@@ -124,12 +124,12 @@ func TestAnimation_Start_Stop_Update_Value_Loop(t *testing.T) {
 
 	checkUpdate(t, true, a)
 
-	want = &animation{
+	want = &Animation{
 		start:     0,
 		end:       1,
 		currFrame: 2,
 		numFrames: 3,
-		state:     aRunning,
+		state:     Running,
 		loop:      true,
 	}
 	checkFields(t, want, a)
@@ -138,12 +138,12 @@ func TestAnimation_Start_Stop_Update_Value_Loop(t *testing.T) {
 	// Animation should loop around.
 	checkUpdate(t, true, a)
 
-	want = &animation{
+	want = &Animation{
 		start:     0,
 		end:       1,
 		currFrame: 0,
 		numFrames: 3,
-		state:     aRunning,
+		state:     Running,
 		loop:      true,
 	}
 	checkFields(t, want, a)
@@ -151,12 +151,12 @@ func TestAnimation_Start_Stop_Update_Value_Loop(t *testing.T) {
 
 	checkUpdate(t, true, a)
 
-	want = &animation{
+	want = &Animation{
 		start:     0,
 		end:       1,
 		currFrame: 1,
 		numFrames: 3,
-		state:     aRunning,
+		state:     Running,
 		loop:      true,
 	}
 	checkFields(t, want, a)
@@ -164,12 +164,12 @@ func TestAnimation_Start_Stop_Update_Value_Loop(t *testing.T) {
 
 	a.Stop()
 
-	want = &animation{
+	want = &Animation{
 		start:     0,
 		end:       1,
 		currFrame: 1,
 		numFrames: 3,
-		state:     aFinishing,
+		state:     Finishing,
 		loop:      true,
 	}
 	checkFields(t, want, a)
@@ -178,12 +178,12 @@ func TestAnimation_Start_Stop_Update_Value_Loop(t *testing.T) {
 	// Animation should finish and stop after.
 	checkUpdate(t, true, a)
 
-	want = &animation{
+	want = &Animation{
 		start:     0,
 		end:       1,
 		currFrame: 2,
 		numFrames: 3,
-		state:     aFinishing,
+		state:     Finishing,
 		loop:      true,
 	}
 	checkFields(t, want, a)
@@ -192,12 +192,12 @@ func TestAnimation_Start_Stop_Update_Value_Loop(t *testing.T) {
 	// Animation is finished. Update should have no affect.
 	checkUpdate(t, false, a)
 
-	want = &animation{
+	want = &Animation{
 		start:     0,
 		end:       1,
 		currFrame: 2,
 		numFrames: 3,
-		state:     aStopped,
+		state:     Stopped,
 		loop:      true,
 	}
 	checkFields(t, want, a)
@@ -205,15 +205,15 @@ func TestAnimation_Start_Stop_Update_Value_Loop(t *testing.T) {
 }
 
 func TestAnimation_Rewinded(t *testing.T) {
-	a := newAnimation(3)
+	a := New(3)
 	b := a.Rewinded()
 
-	want := &animation{
+	want := &Animation{
 		start:     0,
 		end:       0,
 		currFrame: 0,
 		numFrames: 1,
-		state:     aStopped,
+		state:     Stopped,
 	}
 	checkFields(t, want, b)
 	checkValue(t, 0, b, 0)
@@ -221,12 +221,12 @@ func TestAnimation_Rewinded(t *testing.T) {
 	a.Start()
 	b = a.Rewinded()
 
-	want = &animation{
+	want = &Animation{
 		start:     0,
 		end:       0,
 		currFrame: 0,
 		numFrames: 1,
-		state:     aRunning,
+		state:     Running,
 	}
 	checkFields(t, want, b)
 	checkValue(t, 0, b, 0)
@@ -234,12 +234,12 @@ func TestAnimation_Rewinded(t *testing.T) {
 	checkUpdate(t, true, a)
 	b = a.Rewinded()
 
-	want = &animation{
+	want = &Animation{
 		start:     0.5,
 		end:       0,
 		currFrame: 0,
 		numFrames: 2,
-		state:     aRunning,
+		state:     Running,
 	}
 	checkFields(t, want, b)
 	checkValue(t, 0.5, b, 0)
@@ -247,31 +247,31 @@ func TestAnimation_Rewinded(t *testing.T) {
 	checkUpdate(t, true, a)
 	b = a.Rewinded()
 
-	want = &animation{
+	want = &Animation{
 		start:     1,
 		end:       0,
 		currFrame: 0,
 		numFrames: 3,
-		state:     aRunning,
+		state:     Running,
 	}
 	checkValue(t, 1.0, b, 0)
 }
 
-func checkFields(t *testing.T, a, b *animation) {
+func checkFields(t *testing.T, a, b *Animation) {
 	t.Helper()
-	if diff := cmp.Diff(a, b, cmp.AllowUnexported(animation{})); diff != "" {
+	if diff := cmp.Diff(a, b, cmp.AllowUnexported(Animation{})); diff != "" {
 		t.Errorf("differs (-want, +got):\n%s", diff)
 	}
 }
 
-func checkUpdate(t *testing.T, want bool, a *animation) {
+func checkUpdate(t *testing.T, want bool, a *Animation) {
 	t.Helper()
 	if got := a.Update(); got != want {
 		t.Errorf("Update() = %t, want %t", got, want)
 	}
 }
 
-func checkValue(t *testing.T, want float32, a *animation, fudge float32) {
+func checkValue(t *testing.T, want float32, a *Animation, fudge float32) {
 	t.Helper()
 	if got := a.Value(fudge); got != want {
 		t.Errorf("Value(%f) = %f, want %f", fudge, got, want)

@@ -5,12 +5,13 @@ import (
 	math "math"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/view/animation"
 )
 
 type button struct {
 	icon          *gfx.VAO
 	clickCallback func()
-	spinning      *animation
+	spinning      *animation.Animation
 
 	// bounds is the rectangle with global coords that should be drawn within.
 	bounds image.Rectangle
@@ -19,7 +20,7 @@ type button struct {
 func newButton(icon *gfx.VAO) *button {
 	return &button{
 		icon:     icon,
-		spinning: newAnimation(0.5*fps, animationLoop()),
+		spinning: animation.New(0.5*fps, animation.Loop()),
 	}
 }
 

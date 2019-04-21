@@ -7,6 +7,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view/animation"
 	"github.com/btmura/ponzi2/internal/status"
 )
 
@@ -52,7 +53,7 @@ type ChartThumb struct {
 	hasError bool
 
 	// fadeIn fades in the data after it loads.
-	fadeIn *animation
+	fadeIn *animation.Animation
 
 	// fullBounds is the rect with global coords that should be drawn within.
 	fullBounds image.Rectangle
@@ -86,7 +87,7 @@ func NewChartThumb() *ChartThumb {
 		loadingText: newCenteredText(thumbSymbolQuoteTextRenderer, "LOADING..."),
 		errorText:   newCenteredText(thumbSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange)),
 		loading:     true,
-		fadeIn:      newAnimation(1 * fps),
+		fadeIn:      animation.New(1 * fps),
 	}
 }
 

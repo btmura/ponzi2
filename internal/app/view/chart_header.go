@@ -6,6 +6,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view/animation"
 	"github.com/btmura/ponzi2/internal/status"
 )
 
@@ -58,7 +59,7 @@ type chartHeader struct {
 	hasError bool
 
 	// fadeIn fades in the quote text after data loads.
-	fadeIn *animation
+	fadeIn *animation.Animation
 
 	// bounds is the rectangle with global coords that should be drawn within.
 	bounds image.Rectangle
@@ -102,7 +103,7 @@ func newChartHeader(args *chartHeaderArgs) *chartHeader {
 		},
 		rounding: args.Rounding,
 		padding:  args.Padding,
-		fadeIn:   newAnimation(1 * fps),
+		fadeIn:   animation.New(1 * fps),
 	}
 }
 
