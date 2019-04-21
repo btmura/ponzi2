@@ -36,10 +36,15 @@ func (b *button) StopSpinning() {
 	b.spinning.Stop()
 }
 
-func (b *button) ProcessInput(ic inputContext) (clicked bool) {
-	b.bounds = ic.Bounds
-	if ic.LeftClickInBounds() {
-		*ic.ScheduledCallbacks = append(*ic.ScheduledCallbacks, b.clickCallback)
+func (b *button) ProcessInput(
+	bounds image.Rectangle,
+	mousePos image.Point,
+	mouseLeftButtonReleased bool,
+	scheduledCallbacks *[]func(),
+) (clicked bool) {
+	b.bounds = bounds
+	if mouseLeftButtonReleased && mousePos.In(bounds) {
+		*scheduledCallbacks = append(*scheduledCallbacks, b.clickCallback)
 		return true
 	}
 	return false

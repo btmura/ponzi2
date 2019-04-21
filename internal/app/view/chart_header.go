@@ -189,17 +189,17 @@ func (ch *chartHeader) ProcessInput(ic inputContext) (body image.Rectangle, clic
 	ic.Bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
 
 	if ch.removeButton.enabled {
-		clicks.RemoveButtonClicked = ch.removeButton.ProcessInput(ic)
+		clicks.RemoveButtonClicked = ch.removeButton.ProcessInput(ic.Bounds, ic.MousePos, ic.MouseLeftButtonReleased, ic.ScheduledCallbacks)
 		ic.Bounds = transRect(ic.Bounds, -buttonSize.X, 0)
 	}
 
 	if ch.addButton.enabled {
-		clicks.AddButtonClicked = ch.addButton.ProcessInput(ic)
+		clicks.AddButtonClicked = ch.addButton.ProcessInput(ic.Bounds, ic.MousePos, ic.MouseLeftButtonReleased, ic.ScheduledCallbacks)
 		ic.Bounds = transRect(ic.Bounds, -buttonSize.X, 0)
 	}
 
 	if ch.refreshButton.enabled || ch.refreshButton.Spinning() {
-		clicks.RefreshButtonClicked = ch.refreshButton.ProcessInput(ic)
+		clicks.RefreshButtonClicked = ch.refreshButton.ProcessInput(ic.Bounds, ic.MousePos, ic.MouseLeftButtonReleased, ic.ScheduledCallbacks)
 		ic.Bounds = transRect(ic.Bounds, -buttonSize.X, 0)
 	}
 
