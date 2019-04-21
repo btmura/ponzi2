@@ -123,7 +123,7 @@ func NewChart() *Chart {
 			Padding:                 chartPadding,
 		}),
 
-		prices:        newChartPrices(),
+		prices:        new(chartPrices),
 		priceAxis:     new(chartPriceAxis),
 		priceCursor:   new(chartPriceCursor),
 		priceTimeline: new(chartTimeline),
@@ -132,7 +132,7 @@ func NewChart() *Chart {
 		movingAverage50:  newChartMovingAverage(yellow),
 		movingAverage200: newChartMovingAverage(white),
 
-		volume:         newChartVolume(),
+		volume:         new(chartVolume),
 		volumeAxis:     new(chartVolumeAxis),
 		volumeCursor:   new(chartVolumeCursor),
 		volumeTimeline: new(chartTimeline),
@@ -150,7 +150,7 @@ func NewChart() *Chart {
 		timelineAxis:   new(chartTimelineAxis),
 		timelineCursor: new(chartTimelineCursor),
 
-		legend: newChartLegend(),
+		legend: new(chartLegend),
 
 		loadingText: newCenteredText(chartSymbolQuoteTextRenderer, "LOADING..."),
 		errorText:   newCenteredText(chartSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange)),

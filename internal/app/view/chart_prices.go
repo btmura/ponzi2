@@ -30,10 +30,6 @@ type chartPrices struct {
 	bounds image.Rectangle
 }
 
-func newChartPrices() *chartPrices {
-	return &chartPrices{}
-}
-
 func (ch *chartPrices) SetData(ts *model.TradingSessionSeries) {
 	// Reset everything.
 	ch.Close()

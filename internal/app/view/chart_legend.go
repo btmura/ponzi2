@@ -22,10 +22,6 @@ type chartLegend struct {
 	mousePos  image.Point
 }
 
-func newChartLegend() *chartLegend {
-	return &chartLegend{}
-}
-
 func (ch *chartLegend) SetData(
 	ts *model.TradingSessionSeries,
 	ms25 *model.MovingAverageSeries,

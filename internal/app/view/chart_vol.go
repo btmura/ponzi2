@@ -29,10 +29,6 @@ type chartVolume struct {
 	bounds image.Rectangle
 }
 
-func newChartVolume() *chartVolume {
-	return &chartVolume{}
-}
-
 func (ch *chartVolume) SetData(ts *model.TradingSessionSeries) {
 	// Reset everything.
 	ch.Close()
