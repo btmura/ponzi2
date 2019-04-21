@@ -7,6 +7,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
+	"github.com/btmura/ponzi2/internal/app/view/button"
 	"github.com/btmura/ponzi2/internal/status"
 )
 
@@ -68,7 +69,7 @@ type chartHeader struct {
 // chartHeaderButton is a button with an additional enabled flag.
 type chartHeaderButton struct {
 	// Button is the underlying button.
-	*button
+	*button.Button
 
 	// enabled is whether the button is present and clickable.
 	enabled bool
@@ -90,15 +91,15 @@ func newChartHeader(args *chartHeaderArgs) *chartHeader {
 		symbolQuoteTextRenderer: args.SymbolQuoteTextRenderer,
 		quotePrinter:            args.QuotePrinter,
 		refreshButton: &chartHeaderButton{
-			button:  newButton(chartRefreshButtonVAO),
+			Button:  button.New(chartRefreshButtonVAO, fps),
 			enabled: args.ShowRefreshButton,
 		},
 		addButton: &chartHeaderButton{
-			button:  newButton(chartAddButtonVAO),
+			Button:  button.New(chartAddButtonVAO, fps),
 			enabled: args.ShowAddButton,
 		},
 		removeButton: &chartHeaderButton{
-			button:  newButton(chartRemoveButtonVAO),
+			Button:  button.New(chartRemoveButtonVAO, fps),
 			enabled: args.ShowRemoveButton,
 		},
 		rounding: args.Rounding,

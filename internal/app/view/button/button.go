@@ -1,4 +1,4 @@
-package view
+package button
 
 import (
 	"image"
@@ -8,7 +8,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/animation"
 )
 
-type button struct {
+type Button struct {
 	icon          *gfx.VAO
 	clickCallback func()
 	spinning      *animation.Animation
@@ -17,26 +17,26 @@ type button struct {
 	bounds image.Rectangle
 }
 
-func newButton(icon *gfx.VAO) *button {
-	return &button{
+func New(icon *gfx.VAO, fps int) *Button {
+	return &Button{
 		icon:     icon,
-		spinning: animation.New(0.5*fps, animation.Loop()),
+		spinning: animation.New(int(0.5*float32(fps)), animation.Loop()),
 	}
 }
 
-func (b *button) StartSpinning() {
+func (b *Button) StartSpinning() {
 	b.spinning.Start()
 }
 
-func (b *button) Spinning() bool {
+func (b *Button) Spinning() bool {
 	return b.spinning.Animating()
 }
 
-func (b *button) StopSpinning() {
+func (b *Button) StopSpinning() {
 	b.spinning.Stop()
 }
 
-func (b *button) ProcessInput(
+func (b *Button) ProcessInput(
 	bounds image.Rectangle,
 	mousePos image.Point,
 	mouseLeftButtonReleased bool,
@@ -50,20 +50,20 @@ func (b *button) ProcessInput(
 	return false
 }
 
-func (b *button) Update() (dirty bool) {
+func (b *Button) Update() (dirty bool) {
 	return b.spinning.Update()
 }
 
-func (b *button) Render(fudge float32) {
+func (b *Button) Render(fudge float32) {
 	spinRadians := b.spinning.Value(fudge) * -2 * math.Pi
 	gfx.SetModelMatrixRotatedRect(b.bounds, spinRadians)
 	b.icon.Render()
 }
 
-func (b *button) SetClickCallback(cb func()) {
+func (b *Button) SetClickCallback(cb func()) {
 	b.clickCallback = cb
 }
 
-func (b *button) Close() {
+func (b *Button) Close() {
 	b.clickCallback = nil
 }
