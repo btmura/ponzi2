@@ -588,8 +588,8 @@ func (v *View) processInput() []func() {
 		fmt.Printf("drag: %t count: %d\n", ic.MouseLeftButtonDragging, v.mouseLeftButtonPressedCount)
 	}
 
-	v.instructionsText.ProcessInput(ic)
-	v.inputSymbolText.ProcessInput(ic)
+	v.instructionsText.ProcessInput(ic.Bounds)
+	v.inputSymbolText.ProcessInput(ic.Bounds)
 
 	for i := 0; i < len(v.charts); i++ {
 		ch := v.charts[i]

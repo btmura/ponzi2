@@ -60,14 +60,11 @@ func centeredTextBubble(rounding, padding int) centeredTextOpt {
 	}
 }
 
-func (c *centeredText) ProcessInput(ic inputContext) {
+func (c *centeredText) ProcessInput(bounds image.Rectangle) {
 	c.size = c.textRenderer.Measure(c.Text)
-
-	r := ic.Bounds
-
 	c.pt = image.Point{
-		X: r.Min.X + r.Dx()/2 - c.size.X/2,
-		Y: r.Min.Y + r.Dy()/2 - c.size.Y/2,
+		X: bounds.Min.X + bounds.Dx()/2 - c.size.X/2,
+		Y: bounds.Min.Y + bounds.Dy()/2 - c.size.Y/2,
 	}
 }
 

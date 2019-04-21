@@ -269,8 +269,8 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 	r, _ := ch.header.ProcessInput(ic)
 	ch.bodyBounds = r
 
-	ch.loadingText.ProcessInput(ic)
-	ch.errorText.ProcessInput(ic)
+	ch.loadingText.ProcessInput(ic.Bounds)
+	ch.errorText.ProcessInput(ic.Bounds)
 
 	// Calculate percentage needed for each section.
 	const (
