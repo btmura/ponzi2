@@ -46,8 +46,8 @@ func (ch *chartStochastics) SetData(ss *model.StochasticSeries) {
 }
 
 // ProcessInput processes input.
-func (ch *chartStochastics) ProcessInput(ic inputContext) {
-	ch.bounds = ic.Bounds
+func (ch *chartStochastics) ProcessInput(bounds image.Rectangle) {
+	ch.bounds = bounds
 }
 
 func (ch *chartStochastics) Render(fudge float32) {

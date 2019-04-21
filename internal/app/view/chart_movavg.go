@@ -35,8 +35,8 @@ func (ch *chartMovingAverage) SetData(ts *model.TradingSessionSeries, ms *model.
 }
 
 // ProcessInput processes input.
-func (ch *chartMovingAverage) ProcessInput(ic inputContext) {
-	ch.bounds = ic.Bounds
+func (ch *chartMovingAverage) ProcessInput(bounds image.Rectangle) {
+	ch.bounds = bounds
 }
 
 func (ch *chartMovingAverage) Render(fudge float32) {

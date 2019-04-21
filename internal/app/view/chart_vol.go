@@ -54,8 +54,8 @@ func (ch *chartVolume) SetData(ts *model.TradingSessionSeries) {
 	ch.renderable = true
 }
 
-func (ch *chartVolume) ProcessInput(ic inputContext) {
-	ch.bounds = ic.Bounds
+func (ch *chartVolume) ProcessInput(bounds image.Rectangle) {
+	ch.bounds = bounds
 }
 
 func (ch *chartVolume) Render(fudge float32) {

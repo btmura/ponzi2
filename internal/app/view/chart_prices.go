@@ -50,8 +50,8 @@ func (ch *chartPrices) SetData(ts *model.TradingSessionSeries) {
 }
 
 // ProcessInput processes input.
-func (ch *chartPrices) ProcessInput(ic inputContext) {
-	ch.bounds = ic.Bounds
+func (ch *chartPrices) ProcessInput(bounds image.Rectangle) {
+	ch.bounds = bounds
 }
 
 func (ch *chartPrices) Render(fudge float32) {

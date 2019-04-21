@@ -157,13 +157,11 @@ func (ch *ChartThumb) ProcessInput(ic inputContext) {
 
 	dr, wr := rects[1], rects[0]
 
-	ic.Bounds = dr
-	ch.dailyStochastic.ProcessInput(ic)
+	ch.dailyStochastic.ProcessInput(dr)
 	ch.dailyStochasticCursor.ProcessInput(dr, dr, ch.mousePos)
 	ch.dailyStochasticTimeline.ProcessInput(dr)
 
-	ic.Bounds = wr
-	ch.weeklyStochastic.ProcessInput(ic)
+	ch.weeklyStochastic.ProcessInput(wr)
 	ch.weeklyStochasticCursor.ProcessInput(wr, wr, ch.mousePos)
 	ch.weeklyStochasticTimeline.ProcessInput(wr)
 }

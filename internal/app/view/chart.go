@@ -345,26 +345,22 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 	wlr = wlr.Inset(chartPadding)
 	tlr = tlr.Inset(chartPadding)
 
-	ic.Bounds = pr
-	ch.prices.ProcessInput(ic)
+	ch.prices.ProcessInput(pr)
 	ch.priceCursor.ProcessInput(pr, plr, ch.mousePos)
 	ch.priceTimeline.ProcessInput(pr)
-	ch.movingAverage25.ProcessInput(ic)
-	ch.movingAverage50.ProcessInput(ic)
-	ch.movingAverage200.ProcessInput(ic)
+	ch.movingAverage25.ProcessInput(pr)
+	ch.movingAverage50.ProcessInput(pr)
+	ch.movingAverage200.ProcessInput(pr)
 
-	ic.Bounds = vr
-	ch.volume.ProcessInput(ic)
+	ch.volume.ProcessInput(vr)
 	ch.volumeCursor.ProcessInput(vr, vlr, ch.mousePos)
 	ch.volumeTimeline.ProcessInput(vr)
 
-	ic.Bounds = dr
-	ch.dailyStochastics.ProcessInput(ic)
+	ch.dailyStochastics.ProcessInput(dr)
 	ch.dailyStochasticCursor.ProcessInput(dr, dlr, ch.mousePos)
 	ch.dailyStochasticTimeline.ProcessInput(dr)
 
-	ic.Bounds = wr
-	ch.weeklyStochastics.ProcessInput(ic)
+	ch.weeklyStochastics.ProcessInput(wr)
 	ch.weeklyStochasticCursor.ProcessInput(wr, wlr, ch.mousePos)
 	ch.weeklyStochasticTimeline.ProcessInput(wr)
 
@@ -376,7 +372,7 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 	ch.dailyStochasticAxis.ProcessInput(dlr)
 	ch.weeklyStochasticAxis.ProcessInput(wlr)
 
-	ch.legend.ProcessInput(pr, llr, ic.MousePos)
+	ch.legend.ProcessInput(pr, llr, ch.mousePos)
 }
 
 // Update updates the Chart.
