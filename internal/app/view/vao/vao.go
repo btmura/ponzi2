@@ -1,4 +1,4 @@
-package view
+package vao
 
 import (
 	"bytes"
@@ -7,7 +7,10 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 )
 
-func dataLineVAO(yValues []float32, yRange [2]float32, color [3]float32) *gfx.VAO {
+// Embed resources into the application. Get esc from github.com/mjibson/esc.
+//go:generate esc -o bindata.go -pkg vao -include ".*(ply|png)" -modtime 1337 -private data
+
+func DataLine(yValues []float32, yRange [2]float32, color [3]float32) *gfx.VAO {
 	if len(yValues) < 2 {
 		return gfx.EmptyVAO()
 	}
@@ -42,8 +45,8 @@ func dataLineVAO(yValues []float32, yRange [2]float32, color [3]float32) *gfx.VA
 	return gfx.NewVAO(data)
 }
 
-// horizRuleSetVAO returns a set of horizontal lines at different y values.
-func horizRuleSetVAO(yValues []float32, yRange [2]float32, color [3]float32) *gfx.VAO {
+// HorizRuleSet returns a set of horizontal lines at different y values.
+func HorizRuleSet(yValues []float32, yRange [2]float32, color [3]float32) *gfx.VAO {
 	if len(yValues) < 2 {
 		return gfx.EmptyVAO()
 	}
@@ -75,8 +78,8 @@ func horizRuleSetVAO(yValues []float32, yRange [2]float32, color [3]float32) *gf
 	return gfx.NewVAO(data)
 }
 
-// vertRuleSetVAO returns a set of vertical lines at different x values.
-func vertRuleSetVAO(xValues []float32, xRange [2]float32, color [3]float32) *gfx.VAO {
+// VertRuleSet returns a set of vertical lines at different x values.
+func VertRuleSet(xValues []float32, xRange [2]float32, color [3]float32) *gfx.VAO {
 	if len(xValues) < 2 {
 		return gfx.EmptyVAO()
 	}
@@ -108,8 +111,8 @@ func vertRuleSetVAO(xValues []float32, xRange [2]float32, color [3]float32) *gfx
 	return gfx.NewVAO(data)
 }
 
-// horizLineVAO returns a horizontal line from (-1, 0) to (1, 0).
-func horizLineVAO(color [3]float32) *gfx.VAO {
+// HorizLine returns a horizontal line from (-1, 0) to (1, 0).
+func HorizLine(color [3]float32) *gfx.VAO {
 	return gfx.NewVAO(
 		&gfx.VAOVertexData{
 			Mode: gfx.Lines,
@@ -128,8 +131,8 @@ func horizLineVAO(color [3]float32) *gfx.VAO {
 	)
 }
 
-// vertLineVAO returns a vertical line from (0, -1) to (0, 1).
-func vertLineVAO(color [3]float32) *gfx.VAO {
+// VertLine returns a vertical line from (0, -1) to (0, 1).
+func VertLine(color [3]float32) *gfx.VAO {
 	return gfx.NewVAO(
 		&gfx.VAOVertexData{
 			Mode: gfx.Lines,
@@ -148,7 +151,7 @@ func vertLineVAO(color [3]float32) *gfx.VAO {
 	)
 }
 
-// texturedSquareVAO returns a VAO that renders a square image.
-func texturedSquareVAO(textureReader io.Reader) *gfx.VAO {
+// TexturedSquare returns a VAO that renders a square image.
+func TexturedSquare(textureReader io.Reader) *gfx.VAO {
 	return gfx.TexturedPLYVAO(bytes.NewReader(_escFSMustByte(false, "/data/texturedsquareplane.ply")), textureReader)
 }

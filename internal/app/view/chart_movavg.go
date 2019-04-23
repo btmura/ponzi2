@@ -5,6 +5,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view/vao"
 )
 
 type chartMovingAverage struct {
@@ -31,7 +32,7 @@ func (ch *chartMovingAverage) SetData(ts *model.TradingSessionSeries, ms *model.
 	for _, m := range ms.MovingAverages {
 		values = append(values, m.Value)
 	}
-	ch.line = dataLineVAO(values, priceRange(ts.TradingSessions), ch.color)
+	ch.line = vao.DataLine(values, priceRange(ts.TradingSessions), ch.color)
 }
 
 // ProcessInput processes input.

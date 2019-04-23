@@ -8,6 +8,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
+	"github.com/btmura/ponzi2/internal/app/view/vao"
 	"github.com/btmura/ponzi2/internal/status"
 )
 
@@ -36,12 +37,12 @@ var chartAxisLabelBubbleSpec = bubbleSpec{
 // Shared variables used by multiple chart components.
 var (
 	chartAxisLabelTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
-	chartGridHorizLine         = horizLineVAO(gray)
+	chartGridHorizLine         = vao.HorizLine(gray)
 )
 
 var (
-	chartCursorHorizLine = horizLineVAO(lightGray)
-	chartCursorVertLine  = vertLineVAO(lightGray)
+	chartCursorHorizLine = vao.HorizLine(lightGray)
+	chartCursorVertLine  = vao.VertLine(lightGray)
 )
 
 // Chart shows a stock chart for a single stock.

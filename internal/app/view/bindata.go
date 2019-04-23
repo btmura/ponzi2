@@ -314,19 +314,6 @@ AgAA
 `,
 	},
 
-	"/data/texturedsquareplane.ply": {
-		local:   "data/texturedsquareplane.ply",
-		size:    651,
-		modtime: 1337,
-		compressed: `
-H4sIAAAAAAAC/5yPQU+EMBCF7/0V77aaCAHWRPGoP2RT2sFtUlqctgL+ehMwuytostle+vJm3jczvZ1E
-67mTETIoY1DmhVC+68hFvDHJSBrNhFdLThOjyp+ecRdSg+IeGYZhyJullHt+f0DwiRWhNZZesIs0xsSk
-w0eSTL2Vjpb2nSBL84xP4kgjHkXPvieOE1rrZcS4Nqa18bU23CbjNiG3SYW1EU+7tVIRqnPdmhCR1FEy
-kjntfjBOG0VBkNOHI0lNLLIyL+aHsyr+F797ygshbgbVdV3/CbqVs4iL07ag7LrTfkh7FChRzX+F/XcA
-AAD//zAgyZiLAgAA
-`,
-	},
-
 	"/": {
 		isDir: true,
 		local: "",

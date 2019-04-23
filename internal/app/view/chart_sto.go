@@ -6,9 +6,10 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view/vao"
 )
 
-var chartStochasticHorizRuleSet = horizRuleSetVAO([]float32{0.2, 0.8}, [2]float32{0, 1}, gray)
+var chartStochasticHorizRuleSet = vao.HorizRuleSet([]float32{0.2, 0.8}, [2]float32{0, 1}, gray)
 
 type chartStochastics struct {
 	dColor       [3]float32
@@ -41,8 +42,8 @@ func (ch *chartStochastics) SetData(ss *model.StochasticSeries) {
 		dvals = append(dvals, s.D)
 	}
 	valRange := [2]float32{0, 1}
-	ch.lineKVAO = dataLineVAO(kvals, valRange, red)
-	ch.lineDVAO = dataLineVAO(dvals, valRange, ch.dColor)
+	ch.lineKVAO = vao.DataLine(kvals, valRange, red)
+	ch.lineDVAO = vao.DataLine(dvals, valRange, ch.dColor)
 }
 
 // ProcessInput processes input.

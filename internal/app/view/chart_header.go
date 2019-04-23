@@ -8,14 +8,15 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
 	"github.com/btmura/ponzi2/internal/app/view/button"
+	"github.com/btmura/ponzi2/internal/app/view/vao"
 	"github.com/btmura/ponzi2/internal/status"
 )
 
 var (
-	chartAddButtonVAO     = texturedSquareVAO(bytes.NewReader(_escFSMustByte(false, "/data/addbutton.png")))
-	chartRefreshButtonVAO = texturedSquareVAO(bytes.NewReader(_escFSMustByte(false, "/data/refreshbutton.png")))
-	chartRemoveButtonVAO  = texturedSquareVAO(bytes.NewReader(_escFSMustByte(false, "/data/removebutton.png")))
-	chartErrorIconVAO     = texturedSquareVAO(bytes.NewReader(_escFSMustByte(false, "/data/erroricon.png")))
+	chartAddButtonVAO     = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/addbutton.png")))
+	chartRefreshButtonVAO = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/refreshbutton.png")))
+	chartRemoveButtonVAO  = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/removebutton.png")))
+	chartErrorIconVAO     = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/erroricon.png")))
 )
 
 // chartHeader shows a header for charts and thumbnails with a clickable button.
