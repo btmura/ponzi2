@@ -8,6 +8,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
+	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/status"
 )
 
@@ -150,7 +151,7 @@ func (ch *ChartThumb) ProcessInput(ic inputContext) {
 		*ic.ScheduledCallbacks = append(*ic.ScheduledCallbacks, ch.thumbClickCallback)
 	}
 
-	rects := sliceRect(r, 0.5)
+	rects := rect.Slice(r, 0.5)
 	for i := range rects {
 		rects[i] = rects[i].Inset(thumbChartPadding)
 	}
@@ -180,13 +181,13 @@ func (ch *ChartThumb) Update() (dirty bool) {
 // Render renders the ChartThumb.
 func (ch *ChartThumb) Render(fudge float32) error {
 	// Render the border around the chart.
-	strokeRoundedRect(ch.fullBounds, thumbChartRounding)
+	rect.StrokeRoundedRect(ch.fullBounds, thumbChartRounding)
 
 	// Render the header and the line below it.
 	ch.header.Render(fudge)
 
 	r := ch.bodyBounds
-	renderRectTopDivider(r, horizLine)
+	rect.RenderLineAtTop(r)
 
 	// Only show messages if no prior data to show.
 	if !ch.hasStockUpdated {
@@ -205,8 +206,8 @@ func (ch *ChartThumb) Render(fudge float32) error {
 	gfx.SetAlpha(old * ch.fadeIn.Value(fudge))
 	defer gfx.SetAlpha(old)
 
-	rects := sliceRect(r, 0.5)
-	renderRectTopDivider(rects[0], horizLine)
+	rects := rect.Slice(r, 0.5)
+	rect.RenderLineAtTop(rects[0])
 
 	ch.dailyStochasticTimeline.Render(fudge)
 	ch.weeklyStochasticTimeline.Render(fudge)

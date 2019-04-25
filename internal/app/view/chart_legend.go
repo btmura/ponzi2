@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
 type chartLegend struct {
@@ -78,7 +79,7 @@ func (ch *chartLegend) renderMATrackLineLegend() {
 		Y: ch.labelRect.Min.Y + ch.labelRect.Dy() - int(math.Floor(float64(mal.size.Y)*float64(2.4))),
 	}
 
-	renderBubble(MAp, mal.size, chartAxisLabelBubbleSpec)
+	rect.RenderBubble(MAp, mal.size, chartAxisLabelBubbleSpec)
 	chartAxisLabelTextRenderer.Render(mal.text, MAp, white)
 }
 
@@ -108,7 +109,7 @@ func (ch *chartLegend) renderCandleTrackLineLegend() {
 		Y: ch.labelRect.Min.Y + ch.labelRect.Dy() - pl.size.Y,
 	}
 
-	renderBubble(ohlcvp, pl.size, chartAxisLabelBubbleSpec)
+	rect.RenderBubble(ohlcvp, pl.size, chartAxisLabelBubbleSpec)
 	chartAxisLabelTextRenderer.Render(pl.text, ohlcvp, white)
 }
 

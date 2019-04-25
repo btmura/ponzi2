@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/status"
 )
 
@@ -90,7 +91,7 @@ func (ch *chartTimelineCursor) Render(fudge float32) {
 		Y: ch.labelRect.Min.Y + ch.labelRect.Dy()/2 - size.Y/2,
 	}
 
-	renderBubble(tp, size, chartAxisLabelBubbleSpec)
+	rect.RenderBubble(tp, size, chartAxisLabelBubbleSpec)
 	chartAxisLabelTextRenderer.Render(text, tp, white)
 }
 

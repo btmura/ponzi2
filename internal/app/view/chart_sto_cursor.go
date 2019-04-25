@@ -1,6 +1,10 @@
 package view
 
-import "image"
+import (
+	"image"
+
+	"github.com/btmura/ponzi2/internal/app/view/rect"
+)
 
 // chartStochasticCursor renders crosshairs at the mouse pointer
 // with the corresponding stochastic on the y-axis.
@@ -56,8 +60,8 @@ func (ch *chartStochasticCursor) Render(fudge float32) {
 		br = br.Inset(-chartAxisLabelBubblePadding)
 	}
 
-	fillRoundedRect(br, chartAxisLabelBubbleRounding)
-	strokeRoundedRect(br, chartAxisLabelBubbleRounding)
+	rect.FillRoundedRect(br, chartAxisLabelBubbleRounding)
+	rect.StrokeRoundedRect(br, chartAxisLabelBubbleRounding)
 	chartAxisLabelTextRenderer.Render(l.text, tp, white)
 }
 

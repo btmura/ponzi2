@@ -1,4 +1,4 @@
-package view
+package rect
 
 import (
 	"bytes"
@@ -9,8 +9,12 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 )
 
+// Embed resources into the application. Get esc from github.com/mjibson/esc.
+//go:generate esc -o bindata.go -pkg rect -include ".*(ply|png)" -modtime 1337 -private data
+
 // White horizontal and vertical line VAOs that can be reused anywhere.
 var (
+	white       = [3]float32{1, 1, 1}
 	horizLine   = vao.HorizLine(white)
 	vertLine    = vao.VertLine(white)
 	squarePlane = gfx.PLYVAO(bytes.NewReader(_escFSMustByte(false, "/data/squareplane.ply")))
@@ -26,26 +30,26 @@ var (
 const gapFudge = 2
 
 // TODO(btmura): change from bubbleSpec type to bubble type
-type bubbleSpec struct {
-	// rounding is how much rounding of the bubble's rounded rectangle.
-	rounding int
+type BubbleSpec struct {
+	// Rounding is how much rounding of the bubble's rounded rectangle.
+	Rounding int
 
-	// padding is how much padding of the bubble's text.
-	padding int
+	// Padding is how much padding of the bubble's text.
+	Padding int
 }
 
-func renderBubble(pt, sz image.Point, bs bubbleSpec) {
+func RenderBubble(pt, sz image.Point, bs BubbleSpec) {
 	br := image.Rectangle{
 		Min: pt,
 		Max: pt.Add(sz),
 	}
-	br = br.Inset(-bs.padding)
-	fillRoundedRect(br, bs.rounding)
-	strokeRoundedRect(br, bs.rounding)
+	br = br.Inset(-bs.Padding)
+	FillRoundedRect(br, bs.Rounding)
+	StrokeRoundedRect(br, bs.Rounding)
 }
 
-// fillRoundedRect renders a filled rounded rectangle within r.
-func fillRoundedRect(r image.Rectangle, rounding int) {
+// FillRoundedRect renders a filled rounded rectangle within r.
+func FillRoundedRect(r image.Rectangle, rounding int) {
 	// [+] Render 2 overlapping rects to fill in everything except the corners.
 
 	// 1. [|] Render filled rect from bottom to top but less on the X-Axis.
@@ -60,8 +64,8 @@ func fillRoundedRect(r image.Rectangle, rounding int) {
 	renderRoundedRectCorners(r, roundedCornerNWFaces, rounding)
 }
 
-// strokeRoundedRect renders a stroked rounded rectangle within r.
-func strokeRoundedRect(r image.Rectangle, rounding int) {
+// StrokeRoundedRect renders a stroked rounded rectangle within r.
+func StrokeRoundedRect(r image.Rectangle, rounding int) {
 	// TOP Border
 	hMinX, hMaxX := r.Min.X+rounding-gapFudge, r.Max.X-rounding+gapFudge
 	gfx.SetModelMatrixRect(image.Rect(hMinX, r.Max.Y, hMaxX, r.Max.Y))
@@ -84,8 +88,8 @@ func strokeRoundedRect(r image.Rectangle, rounding int) {
 	renderRoundedRectCorners(r, roundedCornerNWEdges, rounding)
 }
 
-// renderRoundedRectCorners is a helper function for fillRoundedRect
-// and strokeRoundedRect that renders a VAO at r's corners.
+// renderRoundedRectCorners is a helper function for FillRoundedRect
+// and StrokeRoundedRect that renders a VAO at r's corners.
 func renderRoundedRectCorners(r image.Rectangle, nwCornerVAO *gfx.VAO, rounding int) {
 	// NORTHWEST Corner
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y-rounding, r.Min.X+rounding, r.Max.Y))
@@ -104,25 +108,16 @@ func renderRoundedRectCorners(r image.Rectangle, nwCornerVAO *gfx.VAO, rounding 
 	nwCornerVAO.Render()
 }
 
-// renderSlicedRectDividers horizontally cuts a rectangle from the bottom at
-// the percentage amounts and draws the VAO at those percentages.
-func renderSlicedRectDividers(r image.Rectangle, dividerVAO *gfx.VAO, percentages ...float32) {
-	rects := sliceRect(r, percentages...)
-	for _, r := range rects[:len(rects)-1] {
-		renderRectTopDivider(r, dividerVAO)
-	}
-}
-
-// renderRectTopDivider renders a VAO in a single pixel horizontal rectangle
+// RenderLineAtTop renders a VAO in a single pixel horizontal rectangle
 // at the top edge of the rectangle.
-func renderRectTopDivider(r image.Rectangle, dividerVAO *gfx.VAO) {
+func RenderLineAtTop(r image.Rectangle) {
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
-	dividerVAO.Render()
+	horizLine.Render()
 }
 
-// sliceRect horizontally cuts a rectangle from the bottom at the percentage
+// Slice horizontally cuts a rectangle from the bottom at the percentage
 // amounts. It returns n+1 rectangles given n percentages.
-func sliceRect(r image.Rectangle, percentages ...float32) []image.Rectangle {
+func Slice(r image.Rectangle, percentages ...float32) []image.Rectangle {
 	var rs []image.Rectangle
 	addRect := func(minY, maxY int) {
 		rs = append(rs, image.Rect(r.Min.X, minY, r.Max.X, maxY))
@@ -139,7 +134,7 @@ func sliceRect(r image.Rectangle, percentages ...float32) []image.Rectangle {
 	return rs
 }
 
-// transRect returns a rectangle translated by the dx and dy amounts.
-func transRect(r image.Rectangle, dx, dy int) image.Rectangle {
+// Translate returns a rectangle translated by the dx and dy amounts.
+func Translate(r image.Rectangle, dx, dy int) image.Rectangle {
 	return r.Add(image.Pt(dx, dy))
 }

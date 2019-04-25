@@ -67,9 +67,7 @@ const (
 
 const viewPadding = 10
 
-var (
-	inputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
-)
+var inputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
 
 func init() {
 	// This is needed to arrange that main() runs on main thread for GLFW.

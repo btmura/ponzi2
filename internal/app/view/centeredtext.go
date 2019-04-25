@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
 // centeredText draws text that is horizontally and vertically centered.
@@ -18,7 +19,7 @@ type centeredText struct {
 	color [3]float32
 
 	// bubbleSpec specifies the bubble to render behind the text. Nil for none.
-	bubbleSpec *bubbleSpec
+	bubbleSpec *rect.BubbleSpec
 
 	// size is the measured size of the rendered text.
 	size image.Point
@@ -53,9 +54,9 @@ func centeredTextColor(color [3]float32) centeredTextOpt {
 // centeredTextBubble returns an option to configure the background bubble.
 func centeredTextBubble(rounding, padding int) centeredTextOpt {
 	return func(c *centeredText) {
-		c.bubbleSpec = &bubbleSpec{
-			rounding: rounding,
-			padding:  padding,
+		c.bubbleSpec = &rect.BubbleSpec{
+			Rounding: rounding,
+			Padding:  padding,
 		}
 	}
 }
@@ -75,7 +76,7 @@ func (c *centeredText) Render(fudge float32) {
 	}
 
 	if c.bubbleSpec != nil {
-		renderBubble(c.pt, c.size, *c.bubbleSpec)
+		rect.RenderBubble(c.pt, c.size, *c.bubbleSpec)
 	}
 
 	c.textRenderer.Render(c.Text, c.pt, c.color)

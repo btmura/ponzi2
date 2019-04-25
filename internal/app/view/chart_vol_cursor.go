@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
 // chartVolumeCursor renders crosshairs at the mouse pointer
@@ -70,7 +71,7 @@ func (ch *chartVolumeCursor) Render(fudge float32) {
 		Y: ch.labelRect.Min.Y + int(float32(ch.labelRect.Dy())*l.percent) - l.size.Y/2,
 	}
 
-	renderBubble(tp, l.size, chartAxisLabelBubbleSpec)
+	rect.RenderBubble(tp, l.size, chartAxisLabelBubbleSpec)
 	chartAxisLabelTextRenderer.Render(l.text, tp, white)
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
 	"github.com/btmura/ponzi2/internal/app/view/button"
+	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 	"github.com/btmura/ponzi2/internal/status"
 )
@@ -192,17 +193,17 @@ func (ch *chartHeader) ProcessInput(ic inputContext) (body image.Rectangle, clic
 
 	if ch.removeButton.enabled {
 		clicks.RemoveButtonClicked = ch.removeButton.ProcessInput(ic.Bounds, ic.MousePos, ic.MouseLeftButtonReleased, ic.ScheduledCallbacks)
-		ic.Bounds = transRect(ic.Bounds, -buttonSize.X, 0)
+		ic.Bounds = rect.Translate(ic.Bounds, -buttonSize.X, 0)
 	}
 
 	if ch.addButton.enabled {
 		clicks.AddButtonClicked = ch.addButton.ProcessInput(ic.Bounds, ic.MousePos, ic.MouseLeftButtonReleased, ic.ScheduledCallbacks)
-		ic.Bounds = transRect(ic.Bounds, -buttonSize.X, 0)
+		ic.Bounds = rect.Translate(ic.Bounds, -buttonSize.X, 0)
 	}
 
 	if ch.refreshButton.enabled || ch.refreshButton.Spinning() {
 		clicks.RefreshButtonClicked = ch.refreshButton.ProcessInput(ic.Bounds, ic.MousePos, ic.MouseLeftButtonReleased, ic.ScheduledCallbacks)
-		ic.Bounds = transRect(ic.Bounds, -buttonSize.X, 0)
+		ic.Bounds = rect.Translate(ic.Bounds, -buttonSize.X, 0)
 	}
 
 	// Don't report clicks when the refresh button is just an indicator.
@@ -242,23 +243,23 @@ func (ch *chartHeader) Render(fudge float32) {
 
 	if ch.removeButton.enabled {
 		ch.removeButton.Render(fudge)
-		ch.bounds = transRect(ch.bounds, -buttonSize.X, 0)
+		ch.bounds = rect.Translate(ch.bounds, -buttonSize.X, 0)
 	}
 
 	if ch.addButton.enabled {
 		ch.addButton.Render(fudge)
-		ch.bounds = transRect(ch.bounds, -buttonSize.X, 0)
+		ch.bounds = rect.Translate(ch.bounds, -buttonSize.X, 0)
 	}
 
 	if ch.refreshButton.enabled || ch.refreshButton.Spinning() {
 		ch.refreshButton.Render(fudge)
-		ch.bounds = transRect(ch.bounds, -buttonSize.X, 0)
+		ch.bounds = rect.Translate(ch.bounds, -buttonSize.X, 0)
 	}
 
 	if ch.hasError {
 		gfx.SetModelMatrixRect(ch.bounds)
 		chartErrorIconVAO.Render()
-		ch.bounds = transRect(ch.bounds, -buttonSize.X, 0)
+		ch.bounds = rect.Translate(ch.bounds, -buttonSize.X, 0)
 	}
 
 	buttonEdge := ch.bounds.Min.X + buttonSize.X

@@ -8,6 +8,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
+	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 	"github.com/btmura/ponzi2/internal/status"
 )
@@ -29,9 +30,9 @@ const (
 	chartAxisLabelBubbleRounding = 6
 )
 
-var chartAxisLabelBubbleSpec = bubbleSpec{
-	rounding: 6,
-	padding:  4,
+var chartAxisLabelBubbleSpec = rect.BubbleSpec{
+	Rounding: 6,
+	Padding:  4,
 }
 
 // Shared variables used by multiple chart components.
@@ -284,9 +285,9 @@ func (ch *Chart) ProcessInput(ic inputContext) {
 	// Divide up the rectangle into sections.
 	var rects []image.Rectangle
 	if ch.showStochastics {
-		rects = sliceRect(r, timeLabelsPercent, weeklyStochasticsPercent, dailyStochasticsPercent, volumePercent)
+		rects = rect.Slice(r, timeLabelsPercent, weeklyStochasticsPercent, dailyStochasticsPercent, volumePercent)
 	} else {
-		rects = sliceRect(r, timeLabelsPercent, volumePercent)
+		rects = rect.Slice(r, timeLabelsPercent, volumePercent)
 	}
 
 	var pr, vr, dr, wr, tr image.Rectangle
@@ -390,13 +391,13 @@ func (ch *Chart) Update() (dirty bool) {
 // Render renders the Chart.
 func (ch *Chart) Render(fudge float32) error {
 	// Render the border around the chart.
-	strokeRoundedRect(ch.fullBounds, chartRounding)
+	rect.StrokeRoundedRect(ch.fullBounds, chartRounding)
 
 	// Render the header and the line below it.
 	ch.header.Render(fudge)
 
 	r := ch.bodyBounds
-	renderRectTopDivider(r, horizLine)
+	rect.RenderLineAtTop(r)
 
 	// Only show messages if no prior data to show.
 	if !ch.hasStockUpdated {
@@ -426,14 +427,14 @@ func (ch *Chart) Render(fudge float32) error {
 	// Divide up the rectangle into sections.
 	var rects []image.Rectangle
 	if ch.showStochastics {
-		rects = sliceRect(r, timeLabelsPercent, weeklyStochasticsPercent, dailyStochasticsPercent, volumePercent)
+		rects = rect.Slice(r, timeLabelsPercent, weeklyStochasticsPercent, dailyStochasticsPercent, volumePercent)
 	} else {
-		rects = sliceRect(r, timeLabelsPercent, volumePercent)
+		rects = rect.Slice(r, timeLabelsPercent, volumePercent)
 	}
 
 	// Render the dividers between the sections.
 	for i := 0; i < len(rects)-1; i++ {
-		renderRectTopDivider(rects[i], horizLine)
+		rect.RenderLineAtTop(rects[i])
 	}
 
 	ch.priceTimeline.Render(fudge)
