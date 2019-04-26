@@ -1,4 +1,4 @@
-package view
+package centeredtext
 
 import (
 	"image"
@@ -7,8 +7,8 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
-// centeredText draws text that is horizontally and vertically centered.
-type centeredText struct {
+// CenteredText draws text that is horizontally and vertically centered.
+type CenteredText struct {
 	// textRenderer renders the text.
 	textRenderer *gfx.TextRenderer
 
@@ -28,15 +28,15 @@ type centeredText struct {
 	pt image.Point
 }
 
-// centeredTextOpt is an option to pass to NewCenteredText.
-type centeredTextOpt func(c *centeredText)
+// Option is an option to pass to New.
+type Option func(c *CenteredText)
 
-// newCenteredText creates a new CenteredText.
-func newCenteredText(textRenderer *gfx.TextRenderer, text string, opts ...centeredTextOpt) *centeredText {
-	c := &centeredText{
+// New creates a new CenteredText.
+func New(textRenderer *gfx.TextRenderer, text string, opts ...Option) *CenteredText {
+	c := &CenteredText{
 		textRenderer: textRenderer,
 		Text:         text,
-		color:        white,
+		color:        [3]float32{1, 1, 1},
 	}
 	for _, o := range opts {
 		o(c)
@@ -44,16 +44,16 @@ func newCenteredText(textRenderer *gfx.TextRenderer, text string, opts ...center
 	return c
 }
 
-// centeredTextColor returns an option to set the text color.
-func centeredTextColor(color [3]float32) centeredTextOpt {
-	return func(c *centeredText) {
+// Color returns an option to set the text color.
+func Color(color [3]float32) Option {
+	return func(c *CenteredText) {
 		c.color = color
 	}
 }
 
-// centeredTextBubble returns an option to configure the background bubble.
-func centeredTextBubble(rounding, padding int) centeredTextOpt {
-	return func(c *centeredText) {
+// Bubble returns an option to configure the background bubble.
+func Bubble(rounding, padding int) Option {
+	return func(c *CenteredText) {
 		c.bubbleSpec = &rect.BubbleSpec{
 			Rounding: rounding,
 			Padding:  padding,
@@ -61,7 +61,7 @@ func centeredTextBubble(rounding, padding int) centeredTextOpt {
 	}
 }
 
-func (c *centeredText) ProcessInput(bounds image.Rectangle) {
+func (c *CenteredText) ProcessInput(bounds image.Rectangle) {
 	c.size = c.textRenderer.Measure(c.Text)
 	c.pt = image.Point{
 		X: bounds.Min.X + bounds.Dx()/2 - c.size.X/2,
@@ -70,7 +70,7 @@ func (c *centeredText) ProcessInput(bounds image.Rectangle) {
 }
 
 // Render renders the CenteredText.
-func (c *centeredText) Render(fudge float32) {
+func (c *CenteredText) Render(fudge float32) {
 	if c.Text == "" {
 		return
 	}

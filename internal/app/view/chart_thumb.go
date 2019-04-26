@@ -8,6 +8,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
+	"github.com/btmura/ponzi2/internal/app/view/centeredtext"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/status"
 )
@@ -36,10 +37,10 @@ type ChartThumb struct {
 	weeklyStochasticTimeline *chartTimeline
 
 	// loadingText is the text shown when loading from a fresh state.
-	loadingText *centeredText
+	loadingText *centeredtext.CenteredText
 
 	// errorText is the text shown when an error occurs from a fresh state.
-	errorText *centeredText
+	errorText *centeredtext.CenteredText
 
 	// thumbClickCallback is the callback to schedule when the thumb is clicked.
 	thumbClickCallback func()
@@ -85,8 +86,8 @@ func NewChartThumb() *ChartThumb {
 		weeklyStochasticCursor:   new(chartStochasticCursor),
 		weeklyStochasticTimeline: new(chartTimeline),
 
-		loadingText: newCenteredText(thumbSymbolQuoteTextRenderer, "LOADING..."),
-		errorText:   newCenteredText(thumbSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange)),
+		loadingText: centeredtext.New(thumbSymbolQuoteTextRenderer, "LOADING..."),
+		errorText:   centeredtext.New(thumbSymbolQuoteTextRenderer, "ERROR", centeredtext.Color(orange)),
 		loading:     true,
 		fadeIn:      animation.New(1 * fps),
 	}

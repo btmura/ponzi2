@@ -8,6 +8,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
+	"github.com/btmura/ponzi2/internal/app/view/centeredtext"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 	"github.com/btmura/ponzi2/internal/status"
@@ -80,10 +81,10 @@ type Chart struct {
 	legend *chartLegend
 
 	// loadingText is the text shown when loading from a fresh state.
-	loadingText *centeredText
+	loadingText *centeredtext.CenteredText
 
 	// errorText is the text shown when an error occurs from a fresh state.
-	errorText *centeredText
+	errorText *centeredtext.CenteredText
 
 	// loading is true when data for the stock is being retrieved.
 	loading bool
@@ -154,8 +155,8 @@ func NewChart() *Chart {
 
 		legend: new(chartLegend),
 
-		loadingText: newCenteredText(chartSymbolQuoteTextRenderer, "LOADING..."),
-		errorText:   newCenteredText(chartSymbolQuoteTextRenderer, "ERROR", centeredTextColor(orange)),
+		loadingText: centeredtext.New(chartSymbolQuoteTextRenderer, "LOADING..."),
+		errorText:   centeredtext.New(chartSymbolQuoteTextRenderer, "ERROR", centeredtext.Color(orange)),
 		loading:     true,
 		fadeIn:      animation.New(1 * fps),
 	}

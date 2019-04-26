@@ -19,6 +19,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
+	"github.com/btmura/ponzi2/internal/app/view/centeredtext"
 	"github.com/btmura/ponzi2/internal/matrix"
 )
 
@@ -99,10 +100,10 @@ type View struct {
 	sidebar *sidebar
 
 	// instructionsText is instructional text show when no chart is shown.
-	instructionsText *centeredText
+	instructionsText *centeredtext.CenteredText
 
 	// inputSymbolText stores and renders the symbol being entered by the user.
-	inputSymbolText *centeredText
+	inputSymbolText *centeredtext.CenteredText
 
 	// inputSymbolSubmittedCallback is called when a new symbol is entered.
 	inputSymbolSubmittedCallback func(symbol string)
@@ -199,8 +200,8 @@ func New() *View {
 	return &View{
 		title:                        NewTitle(),
 		sidebar:                      new(sidebar),
-		instructionsText:             newCenteredText(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER..."),
-		inputSymbolText:              newCenteredText(inputSymbolTextRenderer, "", centeredTextBubble(chartRounding, chartPadding)),
+		instructionsText:             centeredtext.New(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER..."),
+		inputSymbolText:              centeredtext.New(inputSymbolTextRenderer, "", centeredtext.Bubble(chartRounding, chartPadding)),
 		inputSymbolSubmittedCallback: func(symbol string) {},
 		chartZoomChangeCallback:      func(zoomChange ZoomChange) {},
 	}
