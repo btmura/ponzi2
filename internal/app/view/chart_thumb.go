@@ -10,6 +10,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/animation"
 	"github.com/btmura/ponzi2/internal/app/view/centeredtext"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
+	"github.com/btmura/ponzi2/internal/app/view/status"
 	"github.com/btmura/ponzi2/internal/errors"
 )
 
@@ -20,7 +21,7 @@ const (
 
 var (
 	thumbSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
-	thumbQuotePrinter            = func(q *model.Quote) string { return priceStatus(q) }
+	thumbQuotePrinter            = func(q *model.Quote) string { return status.PriceChange(q) }
 )
 
 // ChartThumb shows a thumbnail for a stock.

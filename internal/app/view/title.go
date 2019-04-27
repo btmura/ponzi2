@@ -3,6 +3,7 @@ package view
 import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 
+	"github.com/btmura/ponzi2/internal/app/view/status"
 	"github.com/btmura/ponzi2/internal/errors"
 )
 
@@ -25,11 +26,11 @@ func (t *Title) SetData(data *ChartData) error {
 	q := data.Quote
 
 	if q == nil {
-		t.text = join(data.Symbol, "-", appName)
+		t.text = status.Join(data.Symbol, "-", appName)
 		return nil
 	}
 
-	t.text = join(data.Symbol, paren(q.CompanyName), priceStatus(q), updateStatus(q), "-", appName)
+	t.text = status.Join(data.Symbol, status.Paren(q.CompanyName), status.PriceChange(q), status.SourceUpdate(q), "-", appName)
 
 	return nil
 }

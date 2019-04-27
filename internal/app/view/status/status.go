@@ -1,4 +1,4 @@
-package view
+package status
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ var displaySources = map[model.Source]string{
 	model.PreviousClose:             "Previous Close",
 }
 
-func join(a ...string) string {
+func Join(a ...string) string {
 	var b []string
 	for _, s := range a {
 		if s != "" {
@@ -24,21 +24,21 @@ func join(a ...string) string {
 	return strings.Join(b, " ")
 }
 
-func paren(a string) string {
+func Paren(a string) string {
 	if a == "" {
 		return ""
 	}
 	return fmt.Sprintf("(%s)", a)
 }
 
-func priceStatus(q *model.Quote) string {
+func PriceChange(q *model.Quote) string {
 	if q == nil {
 		return ""
 	}
 	return fmt.Sprintf("%.2f %+5.2f (%+5.2f%%)", q.LatestPrice, q.Change, q.ChangePercent*100)
 }
 
-func updateStatus(q *model.Quote) string {
+func SourceUpdate(q *model.Quote) string {
 	if q == nil {
 		return ""
 	}
