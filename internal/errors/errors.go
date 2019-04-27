@@ -1,15 +1,10 @@
-package status
+package errors
 
 import (
 	"fmt"
 	"runtime"
 	"strings"
 )
-
-// Error wraps fmt.Error with file and line information.
-func Error(a ...interface{}) error {
-	return fmt.Errorf("%s: %s", fileLinePrefix(), fmt.Sprint(a...))
-}
 
 // Errorf wraps fmt.Errorf with file and line information.
 func Errorf(format string, a ...interface{}) error {

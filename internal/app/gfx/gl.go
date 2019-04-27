@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 
-	"github.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/errors"
 )
 
 func glProgram(vertexShaderSrc, fragmentShaderSrc string) (uint32, error) {
@@ -40,7 +40,7 @@ func glProgram(vertexShaderSrc, fragmentShaderSrc string) (uint32, error) {
 		log := strings.Repeat("\x00", int(logLen)+1)
 		gl.GetProgramInfoLog(p, logLen, nil, gl.Str(log))
 
-		return 0, status.Errorf("failed to create program: %q", log)
+		return 0, errors.Errorf("failed to create program: %q", log)
 	}
 
 	return p, nil
@@ -62,7 +62,7 @@ func glShader(shaderSource string, shaderType uint32) (uint32, error) {
 		log := strings.Repeat("\x00", int(logLen)+1)
 		gl.GetShaderInfoLog(sh, logLen, nil, gl.Str(log))
 
-		return 0, status.Errorf("failed to compile shader:\n\ntype: %d\n\nsource: %q\n\nlog: %q", shaderType, shaderSource, log)
+		return 0, errors.Errorf("failed to compile shader:\n\ntype: %d\n\nsource: %q\n\nlog: %q", shaderType, shaderSource, log)
 	}
 
 	return sh, nil

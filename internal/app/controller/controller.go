@@ -9,7 +9,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/config"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
-	"github.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/errors"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
@@ -133,7 +133,7 @@ func (c *Controller) RunLoop() error {
 
 func (c *Controller) setChart(ctx context.Context, symbol string) error {
 	if symbol == "" {
-		return status.Error("missing symbol")
+		return errors.Errorf("missing symbol")
 	}
 
 	changed, err := c.model.SetCurrentSymbol(symbol)
@@ -191,7 +191,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 
 func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 	if symbol == "" {
-		return status.Error("missing symbol")
+		return errors.Errorf("missing symbol")
 	}
 
 	added, err := c.model.AddSidebarSymbol(symbol)
@@ -264,7 +264,7 @@ func (c *Controller) removeChartThumb(symbol string) error {
 
 func (c *Controller) chartData(symbol string, dataRange model.Range) (*view.ChartData, error) {
 	if symbol == "" {
-		return nil, status.Error("missing symbol")
+		return nil, errors.Errorf("missing symbol")
 	}
 
 	data := &view.ChartData{Symbol: symbol}
@@ -322,7 +322,7 @@ func (c *Controller) onStockRefreshStarted(symbol string, dataRange model.Range)
 	}
 
 	if dataRange == model.RangeUnspecified {
-		return status.Error("range not set")
+		return errors.Errorf("range not set")
 	}
 
 	for s, ch := range c.symbolToChartMap {

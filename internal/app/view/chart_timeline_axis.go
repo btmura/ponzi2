@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/btmura/ponzi2/internal/app/model"
-	"github.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/errors"
 )
 
 // longTime is a time that takes the most display width for measuring purposes.
@@ -92,7 +92,7 @@ func chartTimeLabelText(r model.Range, t time.Time) (string, error) {
 	case model.OneYear:
 		return t.Format("Jan"), nil
 	default:
-		return "", status.Errorf("bad range: %v", r)
+		return "", errors.Errorf("bad range: %v", r)
 	}
 }
 
@@ -122,7 +122,7 @@ func makeChartTimeLabels(r model.Range, ts []*model.TradingSession) ([]chartTime
 			}
 
 		default:
-			return nil, status.Errorf("bad range: %v", r)
+			return nil, errors.Errorf("bad range: %v", r)
 		}
 
 		// Generate the label text and its position.

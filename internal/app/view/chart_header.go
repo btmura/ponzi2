@@ -10,7 +10,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/button"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
-	"github.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/errors"
 )
 
 var (
@@ -132,7 +132,7 @@ func (ch *chartHeader) SetError(error bool) {
 // SetData sets the data to be shown on the chart.
 func (ch *chartHeader) SetData(data *ChartData) error {
 	if data == nil {
-		return status.Error("missing data")
+		return errors.Errorf("missing data")
 	}
 
 	if !ch.hasStockUpdated && data.Chart != nil {

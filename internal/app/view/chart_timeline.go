@@ -6,7 +6,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
-	"github.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/errors"
 )
 
 type chartTimeline struct {
@@ -67,7 +67,7 @@ func weekLineValues(r model.Range, ts []*model.TradingSession) ([]float32, error
 			}
 
 		default:
-			return nil, status.Errorf("bad range: %v", r)
+			return nil, errors.Errorf("bad range: %v", r)
 		}
 
 		values = append(values, float32(i)/float32(len(ts)))

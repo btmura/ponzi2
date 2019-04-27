@@ -10,7 +10,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/animation"
 	"github.com/btmura/ponzi2/internal/app/view/centeredtext"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
-	"github.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/errors"
 )
 
 const (
@@ -108,7 +108,7 @@ func (ch *ChartThumb) SetError(error bool) {
 // SetData sets the data to be shown on the chart.
 func (ch *ChartThumb) SetData(data *ChartData) error {
 	if data == nil {
-		return status.Error("missing data")
+		return errors.Errorf("missing data")
 	}
 
 	if !ch.hasStockUpdated && data.Chart != nil {

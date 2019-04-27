@@ -8,7 +8,7 @@ import (
 	"github.com/golang/glog"
 
 	"github.com/btmura/ponzi2/internal/app/model"
-	"github.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/errors"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
@@ -70,7 +70,7 @@ func (s *stockRefresher) refreshOne(ctx context.Context, symbol string, dataRang
 	}
 
 	if dataRange == model.RangeUnspecified {
-		return status.Error("range not set")
+		return errors.Errorf("range not set")
 	}
 
 	d := new(dataRequestBuilder)
@@ -151,7 +151,7 @@ func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) err
 				}
 				es = append(es, event{
 					symbol:    sym,
-					updateErr: status.Errorf("no stock data for %q", sym),
+					updateErr: errors.Errorf("no stock data for %q", sym),
 				})
 			}
 
@@ -175,7 +175,7 @@ func (d *dataRequestBuilder) add(symbols []string, dataRange model.Range) error 
 	}
 
 	if dataRange == model.RangeUnspecified {
-		return status.Error("range not set")
+		return errors.Errorf("range not set")
 	}
 
 	if len(symbols) == 0 {
@@ -220,7 +220,7 @@ func (d *dataRequestBuilder) dataRequests() ([]*dataRequest, error) {
 		case model.OneYear:
 			ir = iex.TwoYears // Need additional data for weekly stochastics.
 		default:
-			return nil, status.Errorf("bad range: %v", r)
+			return nil, errors.Errorf("bad range: %v", r)
 		}
 
 		reqs = append(reqs, &dataRequest{

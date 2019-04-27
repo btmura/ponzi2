@@ -11,7 +11,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/centeredtext"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
-	"github.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/errors"
 )
 
 const (
@@ -184,7 +184,7 @@ type ChartData struct {
 // SetData sets the data to be shown on the chart.
 func (ch *Chart) SetData(data *ChartData) error {
 	if data == nil {
-		return status.Error("missing data")
+		return errors.Errorf("missing data")
 	}
 
 	if !ch.hasStockUpdated && data.Chart != nil {
@@ -210,7 +210,7 @@ func (ch *Chart) SetData(data *ChartData) error {
 		ch.showMovingAverages = true
 		ch.showStochastics = true
 	default:
-		return status.Errorf("bad range: %v", dc.Range)
+		return errors.Errorf("bad range: %v", dc.Range)
 	}
 
 	ts := dc.TradingSessionSeries

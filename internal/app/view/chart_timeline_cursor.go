@@ -7,7 +7,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
-	"github.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/errors"
 )
 
 // chartTimelineCursor renders the time corresponding to the mouse pointer
@@ -52,7 +52,7 @@ func (ch *chartTimelineCursor) SetData(r model.Range, ts *model.TradingSessionSe
 	case model.OneYear:
 		ch.layout = "1/2/06"
 	default:
-		return status.Errorf("bad range: %v", r)
+		return errors.Errorf("bad range: %v", r)
 	}
 
 	ch.renderable = true

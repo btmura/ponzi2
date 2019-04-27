@@ -3,7 +3,7 @@ package view
 import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 
-	"github.com/btmura/ponzi2/internal/status"
+	"github.com/btmura/ponzi2/internal/errors"
 )
 
 // Title renders the the title bar.
@@ -19,7 +19,7 @@ func NewTitle() *Title {
 // SetData sets the Title's stock.
 func (t *Title) SetData(data *ChartData) error {
 	if data == nil {
-		return status.Error("missing data")
+		return errors.Errorf("missing data")
 	}
 
 	q := data.Quote
