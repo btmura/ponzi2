@@ -9,6 +9,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/config"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
+	"github.com/btmura/ponzi2/internal/app/view/chart"
 	"github.com/btmura/ponzi2/internal/errors"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
@@ -25,10 +26,10 @@ type Controller struct {
 	title *view.Title
 
 	// symbolToChartMap maps symbol to Chart. Only one entry right now.
-	symbolToChartMap map[string]*view.Chart
+	symbolToChartMap map[string]*chart.Chart
 
 	// symbolToChartThumbMap maps symbol to ChartThumbnail.
-	symbolToChartThumbMap map[string]*view.ChartThumb
+	symbolToChartThumbMap map[string]*chart.ChartThumb
 
 	// chartRange is the current data range to use for Charts.
 	chartRange model.Range
@@ -52,8 +53,8 @@ func New(iexClient *iex.Client) *Controller {
 		model:                 model.New(),
 		view:                  view.New(),
 		title:                 view.NewTitle(),
-		symbolToChartMap:      map[string]*view.Chart{},
-		symbolToChartThumbMap: map[string]*view.ChartThumb{},
+		symbolToChartMap:      map[string]*chart.Chart{},
+		symbolToChartThumbMap: map[string]*chart.ChartThumb{},
 		chartRange:            model.OneYear,
 		chartThumbRange:       model.OneYear,
 		configSaver:           newConfigSaver(),
@@ -151,7 +152,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 		ch.Close()
 	}
 
-	ch := view.NewChart()
+	ch := c.view.NewChart()
 	c.symbolToChartMap[symbol] = ch
 
 	data, err := c.chartData(symbol, c.chartRange)
@@ -204,7 +205,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 		return c.stockRefresher.refreshOne(ctx, symbol, c.chartThumbRange)
 	}
 
-	th := view.NewChartThumb()
+	th := c.view.NewChartThumb()
 	c.symbolToChartThumbMap[symbol] = th
 
 	data, err := c.chartData(symbol, c.chartThumbRange)
@@ -262,12 +263,12 @@ func (c *Controller) removeChartThumb(symbol string) error {
 	return nil
 }
 
-func (c *Controller) chartData(symbol string, dataRange model.Range) (*view.ChartData, error) {
+func (c *Controller) chartData(symbol string, dataRange model.Range) (*chart.ChartData, error) {
 	if symbol == "" {
 		return nil, errors.Errorf("missing symbol")
 	}
 
-	data := &view.ChartData{Symbol: symbol}
+	data := &chart.ChartData{Symbol: symbol}
 
 	st, err := c.model.Stock(symbol)
 	if err != nil {

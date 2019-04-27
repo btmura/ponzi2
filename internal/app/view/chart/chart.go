@@ -1,4 +1,4 @@
-package view
+package chart
 
 import (
 	"image"
@@ -13,6 +13,21 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/status"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 	"github.com/btmura/ponzi2/internal/errors"
+)
+
+// Embed resources into the application. Get esc from github.com/mjibson/esc.
+//go:generate esc -o bindata.go -pkg chart -include ".*(ply|png)" -modtime 1337 -private data
+
+// Colors used throughout the UI.
+var (
+	green     = [3]float32{0.25, 1, 0}
+	red       = [3]float32{1, 0.3, 0}
+	yellow    = [3]float32{1, 1, 0}
+	purple    = [3]float32{0.5, 0, 1}
+	white     = [3]float32{1, 1, 1}
+	gray      = [3]float32{0.15, 0.15, 0.15}
+	lightGray = [3]float32{0.35, 0.35, 0.35}
+	orange    = [3]float32{1, 0.5, 0}
 )
 
 const (
@@ -116,7 +131,7 @@ type Chart struct {
 }
 
 // NewChart creates a new Chart.
-func NewChart() *Chart {
+func NewChart(fps int) *Chart {
 	return &Chart{
 		header: newChartHeader(&chartHeaderArgs{
 			SymbolQuoteTextRenderer: chartSymbolQuoteTextRenderer,
@@ -125,6 +140,7 @@ func NewChart() *Chart {
 			ShowAddButton:           true,
 			Rounding:                chartRounding,
 			Padding:                 chartPadding,
+			FPS:                     fps,
 		}),
 
 		prices:        new(chartPrices),
@@ -266,15 +282,20 @@ func (ch *Chart) SetData(data *ChartData) error {
 }
 
 // ProcessInput processes input.
-func (ch *Chart) ProcessInput(ic inputContext) {
-	ch.fullBounds = ic.Bounds
-	ch.mousePos = ic.MousePos
+func (ch *Chart) ProcessInput(
+	bounds image.Rectangle,
+	mousePos image.Point,
+	mouseLeftButtonReleased bool,
+	scheduledCallbacks *[]func(),
+) {
+	ch.fullBounds = bounds
+	ch.mousePos = mousePos
 
-	r, _ := ch.header.ProcessInput(ic)
+	r, _ := ch.header.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
 	ch.bodyBounds = r
 
-	ch.loadingText.ProcessInput(ic.Bounds)
-	ch.errorText.ProcessInput(ic.Bounds)
+	ch.loadingText.ProcessInput(bounds)
+	ch.errorText.ProcessInput(bounds)
 
 	// Calculate percentage needed for each section.
 	const (

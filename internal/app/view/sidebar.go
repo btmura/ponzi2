@@ -1,6 +1,10 @@
 package view
 
-import "image"
+import (
+	"image"
+
+	"github.com/btmura/ponzi2/internal/app/view/chart"
+)
 
 var (
 	chartThumbSize         = image.Pt(155, 105)
@@ -18,18 +22,18 @@ type sidebar struct {
 }
 
 type sidebarThumb struct {
-	chartThumb *ChartThumb
+	chartThumb *chart.ChartThumb
 	*viewAnimator
 }
 
-func (s *sidebar) AddChartThumb(th *ChartThumb) {
+func (s *sidebar) AddChartThumb(th *chart.ChartThumb) {
 	s.thumbs = append(s.thumbs, &sidebarThumb{
 		chartThumb:   th,
 		viewAnimator: newViewAnimator(th),
 	})
 }
 
-func (s *sidebar) RemoveChartThumb(th *ChartThumb) {
+func (s *sidebar) RemoveChartThumb(th *chart.ChartThumb) {
 	for _, vth := range s.thumbs {
 		if vth.chartThumb == th {
 			vth.Exit()
@@ -42,7 +46,7 @@ func (s *sidebar) RemoveChartThumb(th *ChartThumb) {
 func (s *sidebar) ProcessInput(ic inputContext, m viewMetrics) {
 	ic.Bounds = m.firstThumbBounds
 	for _, th := range s.thumbs {
-		th.ProcessInput(ic)
+		th.chartThumb.ProcessInput(ic.Bounds, ic.MousePos, ic.MouseLeftButtonReleased, ic.ScheduledCallbacks)
 		ic.Bounds = ic.Bounds.Sub(chartThumbRenderOffset)
 	}
 }

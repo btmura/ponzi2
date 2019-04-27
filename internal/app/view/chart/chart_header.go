@@ -1,4 +1,4 @@
-package view
+package chart
 
 import (
 	"bytes"
@@ -86,6 +86,7 @@ type chartHeaderArgs struct {
 	ShowRemoveButton        bool
 	Rounding                int
 	Padding                 int
+	FPS                     int
 }
 
 func newChartHeader(args *chartHeaderArgs) *chartHeader {
@@ -93,20 +94,20 @@ func newChartHeader(args *chartHeaderArgs) *chartHeader {
 		symbolQuoteTextRenderer: args.SymbolQuoteTextRenderer,
 		quotePrinter:            args.QuotePrinter,
 		refreshButton: &chartHeaderButton{
-			Button:  button.New(chartRefreshButtonVAO, fps),
+			Button:  button.New(chartRefreshButtonVAO, args.FPS),
 			enabled: args.ShowRefreshButton,
 		},
 		addButton: &chartHeaderButton{
-			Button:  button.New(chartAddButtonVAO, fps),
+			Button:  button.New(chartAddButtonVAO, args.FPS),
 			enabled: args.ShowAddButton,
 		},
 		removeButton: &chartHeaderButton{
-			Button:  button.New(chartRemoveButtonVAO, fps),
+			Button:  button.New(chartRemoveButtonVAO, args.FPS),
 			enabled: args.ShowRemoveButton,
 		},
 		rounding: args.Rounding,
 		padding:  args.Padding,
-		fadeIn:   animation.New(1 * fps),
+		fadeIn:   animation.New(1 * args.FPS),
 	}
 }
 
@@ -181,29 +182,36 @@ func (c chartHeaderClicks) HasClicks() bool {
 }
 
 // ProcessInput processes input.
-func (ch *chartHeader) ProcessInput(ic inputContext) (body image.Rectangle, clicks chartHeaderClicks) {
-	ch.bounds = ic.Bounds
+func (ch *chartHeader) ProcessInput(
+	bounds image.Rectangle,
+	mousePos image.Point,
+	mouseLeftButtonReleased bool,
+	scheduledCallbacks *[]func()) (
+	body image.Rectangle,
+	clicks chartHeaderClicks,
+) {
+	ch.bounds = bounds
 
 	h := ch.padding + ch.symbolQuoteTextRenderer.LineHeight() + ch.padding
 	buttonSize := image.Pt(h, h)
 
 	// Render buttons in the upper right corner from right to left.
-	r := ic.Bounds
-	ic.Bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
+	r := bounds
+	bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
 
 	if ch.removeButton.enabled {
-		clicks.RemoveButtonClicked = ch.removeButton.ProcessInput(ic.Bounds, ic.MousePos, ic.MouseLeftButtonReleased, ic.ScheduledCallbacks)
-		ic.Bounds = rect.Translate(ic.Bounds, -buttonSize.X, 0)
+		clicks.RemoveButtonClicked = ch.removeButton.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
+		bounds = rect.Translate(bounds, -buttonSize.X, 0)
 	}
 
 	if ch.addButton.enabled {
-		clicks.AddButtonClicked = ch.addButton.ProcessInput(ic.Bounds, ic.MousePos, ic.MouseLeftButtonReleased, ic.ScheduledCallbacks)
-		ic.Bounds = rect.Translate(ic.Bounds, -buttonSize.X, 0)
+		clicks.AddButtonClicked = ch.addButton.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
+		bounds = rect.Translate(bounds, -buttonSize.X, 0)
 	}
 
 	if ch.refreshButton.enabled || ch.refreshButton.Spinning() {
-		clicks.RefreshButtonClicked = ch.refreshButton.ProcessInput(ic.Bounds, ic.MousePos, ic.MouseLeftButtonReleased, ic.ScheduledCallbacks)
-		ic.Bounds = rect.Translate(ic.Bounds, -buttonSize.X, 0)
+		clicks.RefreshButtonClicked = ch.refreshButton.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
+		bounds = rect.Translate(bounds, -buttonSize.X, 0)
 	}
 
 	// Don't report clicks when the refresh button is just an indicator.

@@ -20,6 +20,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
 	"github.com/btmura/ponzi2/internal/app/view/centeredtext"
+	"github.com/btmura/ponzi2/internal/app/view/chart"
 	"github.com/btmura/ponzi2/internal/matrix"
 )
 
@@ -67,6 +68,11 @@ const (
 )
 
 const viewPadding = 10
+
+const (
+	chartRounding = 10
+	chartPadding  = 5
+)
 
 var inputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
 
@@ -129,11 +135,11 @@ type View struct {
 }
 
 type viewChart struct {
-	chart *Chart
+	chart *chart.Chart
 	*viewAnimator
 }
 
-func newViewChart(ch *Chart) *viewChart {
+func newViewChart(ch *chart.Chart) *viewChart {
 	return &viewChart{
 		chart:        ch,
 		viewAnimator: newViewAnimator(ch),
@@ -141,7 +147,6 @@ func newViewChart(ch *Chart) *viewChart {
 }
 
 type viewUpdateRenderCloser interface {
-	ProcessInput(inputContext)
 	Update() (dirty bool)
 	Render(fudge float32) error
 	Close()
@@ -168,10 +173,6 @@ func (v *viewAnimator) Exit() {
 
 func (v *viewAnimator) DoneExiting() bool {
 	return v.exiting && !v.fade.Animating()
-}
-
-func (v *viewAnimator) ProcessInput(ic inputContext) {
-	v.updateRenderCloser.ProcessInput(ic)
 }
 
 func (v *viewAnimator) Update() (dirty bool) {
@@ -592,7 +593,7 @@ func (v *View) processInput() []func() {
 
 	for i := 0; i < len(v.charts); i++ {
 		ch := v.charts[i]
-		ch.ProcessInput(ic)
+		ch.chart.ProcessInput(ic.Bounds, ic.MousePos, ic.MouseLeftButtonReleased, ic.ScheduledCallbacks)
 	}
 
 	v.sidebar.ProcessInput(ic, m)
@@ -664,8 +665,18 @@ func (v *View) SetTitle(title *Title) {
 	v.title = title
 }
 
+// NewChart returns a new chart.
+func (v *View) NewChart() *chart.Chart {
+	return chart.NewChart(fps)
+}
+
+// NewChartThumb returns a new chart thumbnail.
+func (v *View) NewChartThumb() *chart.ChartThumb {
+	return chart.NewChartThumb(fps)
+}
+
 // SetChart sets the View's main chart.
-func (v *View) SetChart(ch *Chart) {
+func (v *View) SetChart(ch *chart.Chart) {
 	defer v.WakeLoop()
 	for _, ch := range v.charts {
 		ch.Exit()
@@ -674,13 +685,13 @@ func (v *View) SetChart(ch *Chart) {
 }
 
 // AddChartThumb adds the ChartThumbnail to the side bar.
-func (v *View) AddChartThumb(th *ChartThumb) {
+func (v *View) AddChartThumb(th *chart.ChartThumb) {
 	defer v.WakeLoop()
 	v.sidebar.AddChartThumb(th)
 }
 
 // RemoveChartThumb removes the ChartThumbnail from the side bar.
-func (v *View) RemoveChartThumb(th *ChartThumb) {
+func (v *View) RemoveChartThumb(th *chart.ChartThumb) {
 	defer v.WakeLoop()
 	v.sidebar.RemoveChartThumb(th)
 }

@@ -1,4 +1,4 @@
-package view
+package chart
 
 import (
 	"image"
@@ -69,7 +69,7 @@ type ChartThumb struct {
 }
 
 // NewChartThumb creates a ChartThumb.
-func NewChartThumb() *ChartThumb {
+func NewChartThumb(fps int) *ChartThumb {
 	return &ChartThumb{
 		header: newChartHeader(&chartHeaderArgs{
 			SymbolQuoteTextRenderer: thumbSymbolQuoteTextRenderer,
@@ -77,6 +77,7 @@ func NewChartThumb() *ChartThumb {
 			ShowRemoveButton:        true,
 			Rounding:                thumbChartRounding,
 			Padding:                 thumbChartPadding,
+			FPS:                     fps,
 		}),
 
 		dailyStochastic:         newChartStochastics(yellow),
@@ -143,14 +144,19 @@ func (ch *ChartThumb) SetData(data *ChartData) error {
 }
 
 // ProcessInput processes input.
-func (ch *ChartThumb) ProcessInput(ic inputContext) {
-	ch.fullBounds = ic.Bounds
-	ch.mousePos = ic.MousePos
+func (ch *ChartThumb) ProcessInput(
+	bounds image.Rectangle,
+	mousePos image.Point,
+	mouseLeftButtonReleased bool,
+	scheduledCallbacks *[]func(),
+) {
+	ch.fullBounds = bounds
+	ch.mousePos = mousePos
 
-	r, clicks := ch.header.ProcessInput(ic)
+	r, clicks := ch.header.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
 	ch.bodyBounds = r
-	if !clicks.HasClicks() && ic.LeftClickInBounds() {
-		*ic.ScheduledCallbacks = append(*ic.ScheduledCallbacks, ch.thumbClickCallback)
+	if !clicks.HasClicks() && mousePos.In(bounds) {
+		*scheduledCallbacks = append(*scheduledCallbacks, ch.thumbClickCallback)
 	}
 
 	rects := rect.Slice(r, 0.5)

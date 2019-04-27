@@ -1,4 +1,4 @@
-package view
+package chart
 
 import (
 	"image"

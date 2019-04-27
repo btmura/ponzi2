@@ -3,6 +3,7 @@ package view
 import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 
+	"github.com/btmura/ponzi2/internal/app/view/chart"
 	"github.com/btmura/ponzi2/internal/app/view/status"
 	"github.com/btmura/ponzi2/internal/errors"
 )
@@ -18,7 +19,7 @@ func NewTitle() *Title {
 }
 
 // SetData sets the Title's stock.
-func (t *Title) SetData(data *ChartData) error {
+func (t *Title) SetData(data *chart.ChartData) error {
 	if data == nil {
 		return errors.Errorf("missing data")
 	}
