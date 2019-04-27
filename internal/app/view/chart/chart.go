@@ -191,15 +191,20 @@ func (ch *Chart) SetError(error bool) {
 	ch.header.SetError(error)
 }
 
-// ChartData has the data to be shown on the chart.
-type ChartData struct {
+// Data is argument to SetData.
+type Data struct {
+	// Symbol is a required stock symbol.
 	Symbol string
-	Quote  *model.Quote
-	Chart  *model.Chart
+
+	// Quote is an optional quote. Nil when no data has been received yet.
+	Quote *model.Quote
+
+	// Chart is optional chart data. Nil when data hasn't been received yet.
+	Chart *model.Chart
 }
 
 // SetData sets the data to be shown on the chart.
-func (ch *Chart) SetData(data *ChartData) error {
+func (ch *Chart) SetData(data *Data) error {
 	if data == nil {
 		return errors.Errorf("missing data")
 	}

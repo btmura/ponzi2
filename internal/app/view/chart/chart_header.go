@@ -131,7 +131,7 @@ func (ch *chartHeader) SetError(error bool) {
 }
 
 // SetData sets the data to be shown on the chart.
-func (ch *chartHeader) SetData(data *ChartData) error {
+func (ch *chartHeader) SetData(data *Data) error {
 	if data == nil {
 		return errors.Errorf("missing data")
 	}

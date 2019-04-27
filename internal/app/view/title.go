@@ -19,7 +19,7 @@ func NewTitle() *Title {
 }
 
 // SetData sets the Title's stock.
-func (t *Title) SetData(data *chart.ChartData) error {
+func (t *Title) SetData(data *chart.Data) error {
 	if data == nil {
 		return errors.Errorf("missing data")
 	}

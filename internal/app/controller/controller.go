@@ -263,12 +263,12 @@ func (c *Controller) removeChartThumb(symbol string) error {
 	return nil
 }
 
-func (c *Controller) chartData(symbol string, dataRange model.Range) (*chart.ChartData, error) {
+func (c *Controller) chartData(symbol string, dataRange model.Range) (*chart.Data, error) {
 	if symbol == "" {
 		return nil, errors.Errorf("missing symbol")
 	}
 
-	data := &chart.ChartData{Symbol: symbol}
+	data := &chart.Data{Symbol: symbol}
 
 	st, err := c.model.Stock(symbol)
 	if err != nil {
