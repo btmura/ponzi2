@@ -24,8 +24,8 @@ var (
 	thumbQuotePrinter            = func(q *model.Quote) string { return status.PriceChange(q) }
 )
 
-// ChartThumb shows a thumbnail for a stock.
-type ChartThumb struct {
+// Thumb shows a thumbnail for a stock.
+type Thumb struct {
 	// header renders the header with the symbol, quote, and buttons.
 	header *chartHeader
 
@@ -69,8 +69,8 @@ type ChartThumb struct {
 }
 
 // NewChartThumb creates a ChartThumb.
-func NewChartThumb(fps int) *ChartThumb {
-	return &ChartThumb{
+func NewChartThumb(fps int) *Thumb {
+	return &Thumb{
 		header: newChartHeader(&chartHeaderArgs{
 			SymbolQuoteTextRenderer: thumbSymbolQuoteTextRenderer,
 			QuotePrinter:            thumbQuotePrinter,
@@ -96,19 +96,19 @@ func NewChartThumb(fps int) *ChartThumb {
 }
 
 // SetLoading toggles the Chart's loading indicator.
-func (ch *ChartThumb) SetLoading(loading bool) {
+func (ch *Thumb) SetLoading(loading bool) {
 	ch.loading = loading
 	ch.header.SetLoading(loading)
 }
 
 // SetError toggles the Chart's error indicator.
-func (ch *ChartThumb) SetError(error bool) {
+func (ch *Thumb) SetError(error bool) {
 	ch.hasError = error
 	ch.header.SetError(error)
 }
 
 // SetData sets the data to be shown on the chart.
-func (ch *ChartThumb) SetData(data *Data) error {
+func (ch *Thumb) SetData(data *Data) error {
 	if data == nil {
 		return errors.Errorf("missing data")
 	}
@@ -144,7 +144,7 @@ func (ch *ChartThumb) SetData(data *Data) error {
 }
 
 // ProcessInput processes input.
-func (ch *ChartThumb) ProcessInput(
+func (ch *Thumb) ProcessInput(
 	bounds image.Rectangle,
 	mousePos image.Point,
 	mouseLeftButtonReleased bool,
@@ -176,7 +176,7 @@ func (ch *ChartThumb) ProcessInput(
 }
 
 // Update updates the ChartThumb.
-func (ch *ChartThumb) Update() (dirty bool) {
+func (ch *Thumb) Update() (dirty bool) {
 	if ch.header.Update() {
 		dirty = true
 	}
@@ -187,7 +187,7 @@ func (ch *ChartThumb) Update() (dirty bool) {
 }
 
 // Render renders the ChartThumb.
-func (ch *ChartThumb) Render(fudge float32) error {
+func (ch *Thumb) Render(fudge float32) error {
 	// Render the border around the chart.
 	rect.StrokeRoundedRect(ch.fullBounds, thumbChartRounding)
 
@@ -230,17 +230,17 @@ func (ch *ChartThumb) Render(fudge float32) error {
 }
 
 // SetRemoveButtonClickCallback sets the callback for remove button clicks.
-func (ch *ChartThumb) SetRemoveButtonClickCallback(cb func()) {
+func (ch *Thumb) SetRemoveButtonClickCallback(cb func()) {
 	ch.header.SetRemoveButtonClickCallback(cb)
 }
 
 // SetThumbClickCallback sets the callback for thumbnail clicks.
-func (ch *ChartThumb) SetThumbClickCallback(cb func()) {
+func (ch *Thumb) SetThumbClickCallback(cb func()) {
 	ch.thumbClickCallback = cb
 }
 
 // Close frees the resources backing the chart thumbnail.
-func (ch *ChartThumb) Close() {
+func (ch *Thumb) Close() {
 	ch.header.Close()
 	ch.dailyStochastic.Close()
 	ch.dailyStochasticTimeline.Close()

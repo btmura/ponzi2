@@ -22,18 +22,18 @@ type sidebar struct {
 }
 
 type sidebarThumb struct {
-	chartThumb *chart.ChartThumb
+	chartThumb *chart.Thumb
 	*viewAnimator
 }
 
-func (s *sidebar) AddChartThumb(th *chart.ChartThumb) {
+func (s *sidebar) AddChartThumb(th *chart.Thumb) {
 	s.thumbs = append(s.thumbs, &sidebarThumb{
 		chartThumb:   th,
 		viewAnimator: newViewAnimator(th),
 	})
 }
 
-func (s *sidebar) RemoveChartThumb(th *chart.ChartThumb) {
+func (s *sidebar) RemoveChartThumb(th *chart.Thumb) {
 	for _, vth := range s.thumbs {
 		if vth.chartThumb == th {
 			vth.Exit()

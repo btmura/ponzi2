@@ -671,7 +671,7 @@ func (v *View) NewChart() *chart.Chart {
 }
 
 // NewChartThumb returns a new chart thumbnail.
-func (v *View) NewChartThumb() *chart.ChartThumb {
+func (v *View) NewChartThumb() *chart.Thumb {
 	return chart.NewChartThumb(fps)
 }
 
@@ -685,13 +685,13 @@ func (v *View) SetChart(ch *chart.Chart) {
 }
 
 // AddChartThumb adds the ChartThumbnail to the side bar.
-func (v *View) AddChartThumb(th *chart.ChartThumb) {
+func (v *View) AddChartThumb(th *chart.Thumb) {
 	defer v.WakeLoop()
 	v.sidebar.AddChartThumb(th)
 }
 
 // RemoveChartThumb removes the ChartThumbnail from the side bar.
-func (v *View) RemoveChartThumb(th *chart.ChartThumb) {
+func (v *View) RemoveChartThumb(th *chart.Thumb) {
 	defer v.WakeLoop()
 	v.sidebar.RemoveChartThumb(th)
 }

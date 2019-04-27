@@ -29,7 +29,7 @@ type Controller struct {
 	symbolToChartMap map[string]*chart.Chart
 
 	// symbolToChartThumbMap maps symbol to ChartThumbnail.
-	symbolToChartThumbMap map[string]*chart.ChartThumb
+	symbolToChartThumbMap map[string]*chart.Thumb
 
 	// chartRange is the current data range to use for Charts.
 	chartRange model.Range
@@ -54,7 +54,7 @@ func New(iexClient *iex.Client) *Controller {
 		view:                  view.New(),
 		title:                 view.NewTitle(),
 		symbolToChartMap:      map[string]*chart.Chart{},
-		symbolToChartThumbMap: map[string]*chart.ChartThumb{},
+		symbolToChartThumbMap: map[string]*chart.Thumb{},
 		chartRange:            model.OneYear,
 		chartThumbRange:       model.OneYear,
 		configSaver:           newConfigSaver(),
