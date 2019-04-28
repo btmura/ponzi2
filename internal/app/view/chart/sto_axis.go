@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view/color"
 )
 
 type chartStochasticAxis struct {
@@ -48,7 +49,7 @@ func (ch *chartStochasticAxis) Render(fudge float32) {
 	for _, l := range ch.labels {
 		x := r.Max.X - l.size.X
 		y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
-		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), white)
+		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), color.White)
 	}
 }
 

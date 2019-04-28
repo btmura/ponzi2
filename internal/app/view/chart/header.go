@@ -8,6 +8,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
 	"github.com/btmura/ponzi2/internal/app/view/button"
+	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 	"github.com/btmura/ponzi2/internal/errors"
@@ -152,13 +153,13 @@ func (ch *chartHeader) SetData(data *Data) error {
 
 	switch {
 	case c > 0:
-		ch.quoteColor = green
+		ch.quoteColor = color.Green
 
 	case c < 0:
-		ch.quoteColor = red
+		ch.quoteColor = color.Red
 
 	default:
-		ch.quoteColor = white
+		ch.quoteColor = color.White
 	}
 
 	return nil
@@ -278,7 +279,7 @@ func (ch *chartHeader) Render(fudge float32) {
 	{
 		pt := pt
 		pt.X += ch.rounding
-		pt.X += ch.symbolQuoteTextRenderer.Render(ch.symbol, pt, white)
+		pt.X += ch.symbolQuoteTextRenderer.Render(ch.symbol, pt, color.White)
 		pt.X += ch.padding
 
 		if w := buttonEdge - pt.X; w > 0 {

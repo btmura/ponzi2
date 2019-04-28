@@ -5,6 +5,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 	"github.com/btmura/ponzi2/internal/errors"
 )
@@ -34,7 +35,7 @@ func (ch *chartTimeline) SetData(r model.Range, ts *model.TradingSessionSeries) 
 		return err
 	}
 
-	ch.lineVAO = vao.VertRuleSet(vals, [2]float32{0, 1}, gray)
+	ch.lineVAO = vao.VertRuleSet(vals, [2]float32{0, 1}, color.Gray)
 
 	ch.renderable = true
 

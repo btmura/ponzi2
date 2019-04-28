@@ -7,10 +7,11 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 )
 
-var chartVolumeHorizRuleSet = vao.HorizRuleSet([]float32{0.2, 0.8}, [2]float32{0, 1}, gray)
+var chartVolumeHorizRuleSet = vao.HorizRuleSet([]float32{0.2, 0.8}, [2]float32{0, 1}, color.Gray)
 
 // chartVolume renders the volume bars and labels for a single stock.
 type chartVolume struct {
@@ -137,26 +138,26 @@ func chartVolumeBarsVAO(ds []*model.TradingSession, maxVolume int) *gfx.VAO {
 		switch {
 		case s.Close > s.Open:
 			data.Colors = append(data.Colors,
-				green[0], green[1], green[2],
-				green[0], green[1], green[2],
-				green[0], green[1], green[2],
-				green[0], green[1], green[2],
+				color.Green[0], color.Green[1], color.Green[2],
+				color.Green[0], color.Green[1], color.Green[2],
+				color.Green[0], color.Green[1], color.Green[2],
+				color.Green[0], color.Green[1], color.Green[2],
 			)
 
 		case s.Close < s.Open:
 			data.Colors = append(data.Colors,
-				red[0], red[1], red[2],
-				red[0], red[1], red[2],
-				red[0], red[1], red[2],
-				red[0], red[1], red[2],
+				color.Red[0], color.Red[1], color.Red[2],
+				color.Red[0], color.Red[1], color.Red[2],
+				color.Red[0], color.Red[1], color.Red[2],
+				color.Red[0], color.Red[1], color.Red[2],
 			)
 
 		default:
 			data.Colors = append(data.Colors,
-				yellow[0], yellow[1], yellow[2],
-				yellow[0], yellow[1], yellow[2],
-				yellow[0], yellow[1], yellow[2],
-				yellow[0], yellow[1], yellow[2],
+				color.Yellow[0], color.Yellow[1], color.Yellow[2],
+				color.Yellow[0], color.Yellow[1], color.Yellow[2],
+				color.Yellow[0], color.Yellow[1], color.Yellow[2],
+				color.Yellow[0], color.Yellow[1], color.Yellow[2],
 			)
 		}
 

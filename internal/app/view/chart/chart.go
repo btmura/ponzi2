@@ -9,6 +9,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
 	"github.com/btmura/ponzi2/internal/app/view/centeredtext"
+	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/status"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
@@ -17,18 +18,6 @@ import (
 
 // Embed resources into the application. Get esc from github.com/mjibson/esc.
 //go:generate esc -o bindata.go -pkg chart -include ".*(ply|png)" -modtime 1337 -private data
-
-// Colors used throughout the UI.
-var (
-	green     = [3]float32{0.25, 1, 0}
-	red       = [3]float32{1, 0.3, 0}
-	yellow    = [3]float32{1, 1, 0}
-	purple    = [3]float32{0.5, 0, 1}
-	white     = [3]float32{1, 1, 1}
-	gray      = [3]float32{0.15, 0.15, 0.15}
-	lightGray = [3]float32{0.35, 0.35, 0.35}
-	orange    = [3]float32{1, 0.5, 0}
-)
 
 const (
 	chartRounding                   = 10
@@ -55,12 +44,12 @@ var chartAxisLabelBubbleSpec = rect.BubbleSpec{
 // Shared variables used by multiple chart components.
 var (
 	chartAxisLabelTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
-	chartGridHorizLine         = vao.HorizLine(gray)
+	chartGridHorizLine         = vao.HorizLine(color.Gray)
 )
 
 var (
-	chartCursorHorizLine = vao.HorizLine(lightGray)
-	chartCursorVertLine  = vao.VertLine(lightGray)
+	chartCursorHorizLine = vao.HorizLine(color.LightGray)
+	chartCursorVertLine  = vao.VertLine(color.LightGray)
 )
 
 // Chart shows a stock chart for a single stock.
@@ -148,21 +137,21 @@ func NewChart(fps int) *Chart {
 		priceCursor:   new(chartPriceCursor),
 		priceTimeline: new(chartTimeline),
 
-		movingAverage25:  newChartMovingAverage(purple),
-		movingAverage50:  newChartMovingAverage(yellow),
-		movingAverage200: newChartMovingAverage(white),
+		movingAverage25:  newChartMovingAverage(color.Purple),
+		movingAverage50:  newChartMovingAverage(color.Yellow),
+		movingAverage200: newChartMovingAverage(color.White),
 
 		volume:         new(chartVolume),
 		volumeAxis:     new(chartVolumeAxis),
 		volumeCursor:   new(chartVolumeCursor),
 		volumeTimeline: new(chartTimeline),
 
-		dailyStochastics:        newChartStochastics(yellow),
+		dailyStochastics:        newChartStochastics(color.Yellow),
 		dailyStochasticAxis:     new(chartStochasticAxis),
 		dailyStochasticCursor:   new(chartStochasticCursor),
 		dailyStochasticTimeline: new(chartTimeline),
 
-		weeklyStochastics:        newChartStochastics(purple),
+		weeklyStochastics:        newChartStochastics(color.Purple),
 		weeklyStochasticAxis:     new(chartStochasticAxis),
 		weeklyStochasticCursor:   new(chartStochasticCursor),
 		weeklyStochasticTimeline: new(chartTimeline),
@@ -173,7 +162,7 @@ func NewChart(fps int) *Chart {
 		legend: new(chartLegend),
 
 		loadingText: centeredtext.New(chartSymbolQuoteTextRenderer, "LOADING..."),
-		errorText:   centeredtext.New(chartSymbolQuoteTextRenderer, "ERROR", centeredtext.Color(orange)),
+		errorText:   centeredtext.New(chartSymbolQuoteTextRenderer, "ERROR", centeredtext.Color(color.Orange)),
 		loading:     true,
 		fadeIn:      animation.New(1 * fps),
 	}

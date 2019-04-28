@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view/color"
 )
 
 type chartPriceAxis struct {
@@ -73,7 +74,7 @@ func (ch *chartPriceAxis) Render(fudge float32) {
 				break
 			}
 
-			chartAxisLabelTextRenderer.Render(l.text, pt, white)
+			chartAxisLabelTextRenderer.Render(l.text, pt, color.White)
 		}
 
 		pt = pt.Sub(dp)

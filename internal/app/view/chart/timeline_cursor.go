@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/errors"
 )
@@ -92,7 +93,7 @@ func (ch *chartTimelineCursor) Render(fudge float32) {
 	}
 
 	rect.RenderBubble(tp, size, chartAxisLabelBubbleSpec)
-	chartAxisLabelTextRenderer.Render(text, tp, white)
+	chartAxisLabelTextRenderer.Render(text, tp, color.White)
 }
 
 func (ch *chartTimelineCursor) Close() {

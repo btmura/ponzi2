@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
@@ -72,7 +73,7 @@ func (ch *chartVolumeCursor) Render(fudge float32) {
 	}
 
 	rect.RenderBubble(tp, l.size, chartAxisLabelBubbleSpec)
-	chartAxisLabelTextRenderer.Render(l.text, tp, white)
+	chartAxisLabelTextRenderer.Render(l.text, tp, color.White)
 }
 
 func (ch *chartVolumeCursor) Close() {

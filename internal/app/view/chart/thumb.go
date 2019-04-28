@@ -9,6 +9,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
 	"github.com/btmura/ponzi2/internal/app/view/centeredtext"
+	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/status"
 	"github.com/btmura/ponzi2/internal/errors"
@@ -80,16 +81,16 @@ func NewChartThumb(fps int) *Thumb {
 			FPS:                     fps,
 		}),
 
-		dailyStochastic:         newChartStochastics(yellow),
+		dailyStochastic:         newChartStochastics(color.Yellow),
 		dailyStochasticCursor:   new(chartStochasticCursor),
 		dailyStochasticTimeline: new(chartTimeline),
 
-		weeklyStochastic:         newChartStochastics(purple),
+		weeklyStochastic:         newChartStochastics(color.Purple),
 		weeklyStochasticCursor:   new(chartStochasticCursor),
 		weeklyStochasticTimeline: new(chartTimeline),
 
 		loadingText: centeredtext.New(thumbSymbolQuoteTextRenderer, "LOADING..."),
-		errorText:   centeredtext.New(thumbSymbolQuoteTextRenderer, "ERROR", centeredtext.Color(orange)),
+		errorText:   centeredtext.New(thumbSymbolQuoteTextRenderer, "ERROR", centeredtext.Color(color.Orange)),
 		loading:     true,
 		fadeIn:      animation.New(1 * fps),
 	}

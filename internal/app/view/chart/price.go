@@ -7,6 +7,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view/color"
 )
 
 // chartPrices shows the candlesticks and price labels for a single stock.
@@ -177,11 +178,11 @@ func chartPriceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32
 		var c [3]float32
 		switch {
 		case s.Close > s.Open:
-			c = green
+			c = color.Green
 		case s.Close < s.Open:
-			c = red
+			c = color.Red
 		default:
-			c = yellow
+			c = color.Yellow
 		}
 
 		colors = append(colors,

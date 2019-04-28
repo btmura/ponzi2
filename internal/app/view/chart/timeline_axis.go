@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/errors"
 )
 
@@ -71,7 +72,7 @@ func (ch *chartTimelineAxis) Render(fudge float32) {
 			X: r.Min.X + int(float32(r.Dx())*l.percent) - l.size.X/2,
 			Y: r.Min.Y + r.Dy()/2 - l.size.Y/2,
 		}
-		chartAxisLabelTextRenderer.Render(l.text, tp, white)
+		chartAxisLabelTextRenderer.Render(l.text, tp, color.White)
 	}
 }
 

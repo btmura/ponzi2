@@ -3,6 +3,7 @@ package chart
 import (
 	"image"
 
+	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
@@ -62,7 +63,7 @@ func (ch *chartStochasticCursor) Render(fudge float32) {
 
 	rect.FillRoundedRect(br, chartAxisLabelBubbleRounding)
 	rect.StrokeRoundedRect(br, chartAxisLabelBubbleRounding)
-	chartAxisLabelTextRenderer.Render(l.text, tp, white)
+	chartAxisLabelTextRenderer.Render(l.text, tp, color.White)
 }
 
 func (ch *chartStochasticCursor) Close() {
