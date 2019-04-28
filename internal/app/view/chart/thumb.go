@@ -32,11 +32,11 @@ type Thumb struct {
 
 	dailyStochastic         *chartStochastics
 	dailyStochasticCursor   *chartStochasticCursor
-	dailyStochasticTimeline *chartTimeline
+	dailyStochasticTimeline *timeline
 
 	weeklyStochastic         *chartStochastics
 	weeklyStochasticCursor   *chartStochasticCursor
-	weeklyStochasticTimeline *chartTimeline
+	weeklyStochasticTimeline *timeline
 
 	// loadingText is the text shown when loading from a fresh state.
 	loadingText *centeredtext.CenteredText
@@ -83,11 +83,11 @@ func NewChartThumb(fps int) *Thumb {
 
 		dailyStochastic:         newChartStochastics(color.Yellow),
 		dailyStochasticCursor:   new(chartStochasticCursor),
-		dailyStochasticTimeline: new(chartTimeline),
+		dailyStochasticTimeline: new(timeline),
 
 		weeklyStochastic:         newChartStochastics(color.Purple),
 		weeklyStochasticCursor:   new(chartStochasticCursor),
-		weeklyStochasticTimeline: new(chartTimeline),
+		weeklyStochasticTimeline: new(timeline),
 
 		loadingText: centeredtext.New(thumbSymbolQuoteTextRenderer, "LOADING..."),
 		errorText:   centeredtext.New(thumbSymbolQuoteTextRenderer, "ERROR", centeredtext.Color(color.Orange)),

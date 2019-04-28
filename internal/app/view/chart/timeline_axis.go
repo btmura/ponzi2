@@ -12,8 +12,8 @@ import (
 // longTime is a time that takes the most display width for measuring purposes.
 var longTime = time.Date(2019, time.December, 31, 23, 59, 0, 0, time.UTC)
 
-// chartTimelineAxis renders the time labels for a single stock.
-type chartTimelineAxis struct {
+// timelineAxis renders the time labels for a single stock.
+type timelineAxis struct {
 	// renderable is true if this should be rendered.
 	renderable bool
 
@@ -24,50 +24,50 @@ type chartTimelineAxis struct {
 	MaxLabelSize image.Point
 
 	// labels bundle rendering measurements for time labels.
-	labels []chartTimeLabel
+	labels []timelineLabel
 
 	// timelineRect is the rectangle with global coords that should be drawn within.
 	timelineRect image.Rectangle
 }
 
-func (ch *chartTimelineAxis) SetData(r model.Range, ts *model.TradingSessionSeries) error {
+func (t *timelineAxis) SetData(r model.Range, ts *model.TradingSessionSeries) error {
 	// Reset everything.
-	ch.Close()
+	t.Close()
 
 	// Bail out if there is no data yet.
 	if ts == nil {
 		return nil
 	}
 
-	ch.dataRange = r
+	t.dataRange = r
 
-	txt, err := chartTimeLabelText(r, longTime)
+	txt, err := timelineLabelText(r, longTime)
 	if err != nil {
 		return err
 	}
-	ch.MaxLabelSize = chartAxisLabelTextRenderer.Measure(txt)
+	t.MaxLabelSize = chartAxisLabelTextRenderer.Measure(txt)
 
-	labels, err := makeChartTimeLabels(r, ts.TradingSessions)
+	labels, err := makeTimelineLabels(r, ts.TradingSessions)
 	if err != nil {
 		return err
 	}
-	ch.labels = labels
+	t.labels = labels
 
 	return nil
 }
 
 // ProcessInput processes input.
-func (ch *chartTimelineAxis) ProcessInput(timelineRect image.Rectangle) {
-	ch.timelineRect = timelineRect
+func (t *timelineAxis) ProcessInput(timelineRect image.Rectangle) {
+	t.timelineRect = timelineRect
 }
 
-func (ch *chartTimelineAxis) Render(fudge float32) {
-	if !ch.renderable {
+func (t *timelineAxis) Render(fudge float32) {
+	if !t.renderable {
 		return
 	}
 
-	r := ch.timelineRect
-	for _, l := range ch.labels {
+	r := t.timelineRect
+	for _, l := range t.labels {
 		tp := image.Point{
 			X: r.Min.X + int(float32(r.Dx())*l.percent) - l.size.X/2,
 			Y: r.Min.Y + r.Dy()/2 - l.size.Y/2,
@@ -76,17 +76,17 @@ func (ch *chartTimelineAxis) Render(fudge float32) {
 	}
 }
 
-func (ch *chartTimelineAxis) Close() {
-	ch.renderable = false
+func (t *timelineAxis) Close() {
+	t.renderable = false
 }
 
-type chartTimeLabel struct {
+type timelineLabel struct {
 	percent float32
 	text    string
 	size    image.Point
 }
 
-func chartTimeLabelText(r model.Range, t time.Time) (string, error) {
+func timelineLabelText(r model.Range, t time.Time) (string, error) {
 	switch r {
 	case model.OneDay:
 		return t.Format("3:04"), nil
@@ -97,8 +97,8 @@ func chartTimeLabelText(r model.Range, t time.Time) (string, error) {
 	}
 }
 
-func makeChartTimeLabels(r model.Range, ts []*model.TradingSession) ([]chartTimeLabel, error) {
-	var ls []chartTimeLabel
+func makeTimelineLabels(r model.Range, ts []*model.TradingSession) ([]timelineLabel, error) {
+	var ls []timelineLabel
 
 	for i := range ts {
 		// Skip if we can't check the previous value.
@@ -128,12 +128,12 @@ func makeChartTimeLabels(r model.Range, ts []*model.TradingSession) ([]chartTime
 
 		// Generate the label text and its position.
 
-		txt, err := chartTimeLabelText(r, ts[i].Date)
+		txt, err := timelineLabelText(r, ts[i].Date)
 		if err != nil {
 			return nil, err
 		}
 
-		ls = append(ls, chartTimeLabel{
+		ls = append(ls, timelineLabel{
 			percent: float32(i) / float32(len(ts)),
 			text:    txt,
 			size:    chartAxisLabelTextRenderer.Measure(txt),

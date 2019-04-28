@@ -11,10 +11,10 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 )
 
-var chartVolumeHorizRuleSet = vao.HorizRuleSet([]float32{0.2, 0.8}, [2]float32{0, 1}, color.Gray)
+var volumeHorizRuleSet = vao.HorizRuleSet([]float32{0.2, 0.8}, [2]float32{0, 1}, color.Gray)
 
-// chartVolume renders the volume bars and labels for a single stock.
-type chartVolume struct {
+// volume renders the volume bars and labels for a single stock.
+type volume struct {
 	// renderable is whether the ChartVolume can be rendered.
 	renderable bool
 
@@ -31,9 +31,9 @@ type chartVolume struct {
 	bounds image.Rectangle
 }
 
-func (ch *chartVolume) SetData(ts *model.TradingSessionSeries) {
+func (v *volume) SetData(ts *model.TradingSessionSeries) {
 	// Reset everything.
-	ch.Close()
+	v.Close()
 
 	// Bail out if there is no data yet.
 	if ts == nil {
@@ -41,54 +41,54 @@ func (ch *chartVolume) SetData(ts *model.TradingSessionSeries) {
 	}
 
 	// Find the maximum volume.
-	ch.maxVolume = 0
+	v.maxVolume = 0
 	for _, s := range ts.TradingSessions {
-		if ch.maxVolume < s.Volume {
-			ch.maxVolume = s.Volume
+		if v.maxVolume < s.Volume {
+			v.maxVolume = s.Volume
 		}
 	}
 
 	// Measure the max label size by creating a label with the max value.
-	ch.MaxLabelSize = makeChartVolumeLabel(ch.maxVolume, 1).size
+	v.MaxLabelSize = makeVolumeLabel(v.maxVolume, 1).size
 
-	ch.volBars = chartVolumeBarsVAO(ts.TradingSessions, ch.maxVolume)
+	v.volBars = volumeBarsVAO(ts.TradingSessions, v.maxVolume)
 
-	ch.renderable = true
+	v.renderable = true
 }
 
-func (ch *chartVolume) ProcessInput(bounds image.Rectangle) {
-	ch.bounds = bounds
+func (v *volume) ProcessInput(bounds image.Rectangle) {
+	v.bounds = bounds
 }
 
-func (ch *chartVolume) Render(fudge float32) {
-	if !ch.renderable {
+func (v *volume) Render(fudge float32) {
+	if !v.renderable {
 		return
 	}
 
-	gfx.SetModelMatrixRect(ch.bounds)
+	gfx.SetModelMatrixRect(v.bounds)
 
 	// Render lines for the 20% and 80% levels.
-	chartVolumeHorizRuleSet.Render()
+	volumeHorizRuleSet.Render()
 
 	// Render the volume bars.
-	ch.volBars.Render()
+	v.volBars.Render()
 }
 
-func (ch *chartVolume) Close() {
-	ch.renderable = false
-	if ch.volBars != nil {
-		ch.volBars.Delete()
+func (v *volume) Close() {
+	v.renderable = false
+	if v.volBars != nil {
+		v.volBars.Delete()
 	}
 }
 
-// chartVolumeLabel is a right-justified Y-axis label with the volume.
-type chartVolumeLabel struct {
+// volumeLabel is a right-justified Y-axis label with the volume.
+type volumeLabel struct {
 	percent float32
 	text    string
 	size    image.Point
 }
 
-func makeChartVolumeLabel(maxVolume int, perc float32) chartVolumeLabel {
+func makeVolumeLabel(maxVolume int, perc float32) volumeLabel {
 	v := int(float32(maxVolume) * perc)
 
 	var t string
@@ -103,14 +103,14 @@ func makeChartVolumeLabel(maxVolume int, perc float32) chartVolumeLabel {
 		t = strconv.Itoa(v)
 	}
 
-	return chartVolumeLabel{
+	return volumeLabel{
 		percent: perc,
 		text:    t,
 		size:    chartAxisLabelTextRenderer.Measure(t),
 	}
 }
 
-func chartVolumeBarsVAO(ds []*model.TradingSession, maxVolume int) *gfx.VAO {
+func volumeBarsVAO(ds []*model.TradingSession, maxVolume int) *gfx.VAO {
 	data := &gfx.VAOVertexData{Mode: gfx.Triangles}
 
 	dx := 2.0 / float32(len(ds)) // (-1 to 1) on X-axis

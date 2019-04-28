@@ -7,7 +7,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/color"
 )
 
-type chartVolumeAxis struct {
+type volumeAxis struct {
 	// renderable is true if this should be rendered.
 	renderable bool
 
@@ -15,15 +15,15 @@ type chartVolumeAxis struct {
 	maxVolume int
 
 	// labels bundle rendering measurements for volume labels.
-	labels []chartVolumeLabel
+	labels []volumeLabel
 
 	// labelRect is the rectangle with global coords that should be drawn within.
 	labelRect image.Rectangle
 }
 
-func (ch *chartVolumeAxis) SetData(ts *model.TradingSessionSeries) {
+func (v *volumeAxis) SetData(ts *model.TradingSessionSeries) {
 	// Reset everything.
-	ch.Close()
+	v.Close()
 
 	// Bail out if there is no data yet.
 	if ts == nil {
@@ -31,39 +31,39 @@ func (ch *chartVolumeAxis) SetData(ts *model.TradingSessionSeries) {
 	}
 
 	// Find the maximum volume.
-	ch.maxVolume = 0
+	v.maxVolume = 0
 	for _, s := range ts.TradingSessions {
-		if ch.maxVolume < s.Volume {
-			ch.maxVolume = s.Volume
+		if v.maxVolume < s.Volume {
+			v.maxVolume = s.Volume
 		}
 	}
 
 	// Create Y-axis labels for key percentages.
-	ch.labels = []chartVolumeLabel{
-		makeChartVolumeLabel(ch.maxVolume, .8),
-		makeChartVolumeLabel(ch.maxVolume, .2),
+	v.labels = []volumeLabel{
+		makeVolumeLabel(v.maxVolume, .8),
+		makeVolumeLabel(v.maxVolume, .2),
 	}
 
-	ch.renderable = true
+	v.renderable = true
 }
 
-func (ch *chartVolumeAxis) ProcessInput(labelRect image.Rectangle) {
-	ch.labelRect = labelRect
+func (v *volumeAxis) ProcessInput(labelRect image.Rectangle) {
+	v.labelRect = labelRect
 }
 
-func (ch *chartVolumeAxis) Render(fudge float32) {
-	if !ch.renderable {
+func (v *volumeAxis) Render(fudge float32) {
+	if !v.renderable {
 		return
 	}
 
-	r := ch.labelRect
-	for _, l := range ch.labels {
+	r := v.labelRect
+	for _, l := range v.labels {
 		x := r.Max.X - l.size.X
 		y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
 		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), color.White)
 	}
 }
 
-func (ch *chartVolumeAxis) Close() {
-	ch.renderable = false
+func (v *volumeAxis) Close() {
+	v.renderable = false
 }

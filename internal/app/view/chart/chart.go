@@ -59,29 +59,29 @@ type Chart struct {
 	prices        *chartPrices
 	priceAxis     *chartPriceAxis
 	priceCursor   *chartPriceCursor
-	priceTimeline *chartTimeline
+	priceTimeline *timeline
 
 	movingAverage25  *chartMovingAverage
 	movingAverage50  *chartMovingAverage
 	movingAverage200 *chartMovingAverage
 
-	volume         *chartVolume
-	volumeAxis     *chartVolumeAxis
-	volumeCursor   *chartVolumeCursor
-	volumeTimeline *chartTimeline
+	volume         *volume
+	volumeAxis     *volumeAxis
+	volumeCursor   *volumeCursor
+	volumeTimeline *timeline
 
 	dailyStochastics        *chartStochastics
 	dailyStochasticAxis     *chartStochasticAxis
 	dailyStochasticCursor   *chartStochasticCursor
-	dailyStochasticTimeline *chartTimeline
+	dailyStochasticTimeline *timeline
 
 	weeklyStochastics        *chartStochastics
 	weeklyStochasticAxis     *chartStochasticAxis
 	weeklyStochasticCursor   *chartStochasticCursor
-	weeklyStochasticTimeline *chartTimeline
+	weeklyStochasticTimeline *timeline
 
-	timelineAxis   *chartTimelineAxis
-	timelineCursor *chartTimelineCursor
+	timelineAxis   *timelineAxis
+	timelineCursor *timelineCursor
 
 	legend *chartLegend
 
@@ -135,29 +135,29 @@ func NewChart(fps int) *Chart {
 		prices:        new(chartPrices),
 		priceAxis:     new(chartPriceAxis),
 		priceCursor:   new(chartPriceCursor),
-		priceTimeline: new(chartTimeline),
+		priceTimeline: new(timeline),
 
 		movingAverage25:  newChartMovingAverage(color.Purple),
 		movingAverage50:  newChartMovingAverage(color.Yellow),
 		movingAverage200: newChartMovingAverage(color.White),
 
-		volume:         new(chartVolume),
-		volumeAxis:     new(chartVolumeAxis),
-		volumeCursor:   new(chartVolumeCursor),
-		volumeTimeline: new(chartTimeline),
+		volume:         new(volume),
+		volumeAxis:     new(volumeAxis),
+		volumeCursor:   new(volumeCursor),
+		volumeTimeline: new(timeline),
 
 		dailyStochastics:        newChartStochastics(color.Yellow),
 		dailyStochasticAxis:     new(chartStochasticAxis),
 		dailyStochasticCursor:   new(chartStochasticCursor),
-		dailyStochasticTimeline: new(chartTimeline),
+		dailyStochasticTimeline: new(timeline),
 
 		weeklyStochastics:        newChartStochastics(color.Purple),
 		weeklyStochasticAxis:     new(chartStochasticAxis),
 		weeklyStochasticCursor:   new(chartStochasticCursor),
-		weeklyStochasticTimeline: new(chartTimeline),
+		weeklyStochasticTimeline: new(timeline),
 
-		timelineAxis:   new(chartTimelineAxis),
-		timelineCursor: new(chartTimelineCursor),
+		timelineAxis:   new(timelineAxis),
+		timelineCursor: new(timelineCursor),
 
 		legend: new(chartLegend),
 

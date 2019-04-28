@@ -10,7 +10,8 @@ import (
 	"github.com/btmura/ponzi2/internal/errors"
 )
 
-type chartTimeline struct {
+// timeline renders the vertical lines behind a chart's technicals.
+type timeline struct {
 	// renderable is true if this is ready to be rendered.
 	renderable bool
 
@@ -21,9 +22,9 @@ type chartTimeline struct {
 	lineRect image.Rectangle
 }
 
-func (ch *chartTimeline) SetData(r model.Range, ts *model.TradingSessionSeries) error {
+func (t *timeline) SetData(r model.Range, ts *model.TradingSessionSeries) error {
 	// Reset everything.
-	ch.Close()
+	t.Close()
 
 	// Bail out if there is no data yet.
 	if ts == nil {
@@ -35,9 +36,9 @@ func (ch *chartTimeline) SetData(r model.Range, ts *model.TradingSessionSeries) 
 		return err
 	}
 
-	ch.lineVAO = vao.VertRuleSet(vals, [2]float32{0, 1}, color.Gray)
+	t.lineVAO = vao.VertRuleSet(vals, [2]float32{0, 1}, color.Gray)
 
-	ch.renderable = true
+	t.renderable = true
 
 	return nil
 }
@@ -78,25 +79,25 @@ func weekLineValues(r model.Range, ts []*model.TradingSession) ([]float32, error
 }
 
 // ProcessInput processes input.
-func (ch *chartTimeline) ProcessInput(lineRect image.Rectangle) {
-	ch.lineRect = lineRect
+func (t *timeline) ProcessInput(lineRect image.Rectangle) {
+	t.lineRect = lineRect
 }
 
 // Render renders the chart lines.
-func (ch *chartTimeline) Render(fudge float32) {
-	if !ch.renderable {
+func (t *timeline) Render(fudge float32) {
+	if !t.renderable {
 		return
 	}
 
-	gfx.SetModelMatrixRect(ch.lineRect)
-	ch.lineVAO.Render()
+	gfx.SetModelMatrixRect(t.lineRect)
+	t.lineVAO.Render()
 }
 
 // Close frees the resources backing the chart lines.
-func (ch *chartTimeline) Close() {
-	ch.renderable = false
-	if ch.lineVAO != nil {
-		ch.lineVAO.Delete()
-		ch.lineVAO = nil
+func (t *timeline) Close() {
+	t.renderable = false
+	if t.lineVAO != nil {
+		t.lineVAO.Delete()
+		t.lineVAO = nil
 	}
 }

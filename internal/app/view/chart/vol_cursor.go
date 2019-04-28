@@ -8,9 +8,9 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
-// chartVolumeCursor renders crosshairs at the mouse pointer
+// volumeCursor renders crosshairs at the mouse pointer
 // with the corresponding volume on the y-axis.
-type chartVolumeCursor struct {
+type volumeCursor struct {
 	// renderable is true if this should be rendered.
 	renderable bool
 
@@ -27,9 +27,9 @@ type chartVolumeCursor struct {
 	mousePos image.Point
 }
 
-func (ch *chartVolumeCursor) SetData(ts *model.TradingSessionSeries) {
+func (v *volumeCursor) SetData(ts *model.TradingSessionSeries) {
 	// Reset everything.
-	ch.Close()
+	v.Close()
 
 	// Bail out if there is no data yet.
 	if ts == nil {
@@ -37,45 +37,45 @@ func (ch *chartVolumeCursor) SetData(ts *model.TradingSessionSeries) {
 	}
 
 	// Find the maximum volume.
-	ch.maxVolume = 0
+	v.maxVolume = 0
 	for _, s := range ts.TradingSessions {
-		if ch.maxVolume < s.Volume {
-			ch.maxVolume = s.Volume
+		if v.maxVolume < s.Volume {
+			v.maxVolume = s.Volume
 		}
 	}
 
-	ch.renderable = true
+	v.renderable = true
 }
 
 // ProcessInput processes input.
-func (ch *chartVolumeCursor) ProcessInput(volRect, labelRect image.Rectangle, mousePos image.Point) {
-	ch.volRect = volRect
-	ch.labelRect = labelRect
-	ch.mousePos = mousePos
+func (v *volumeCursor) ProcessInput(volRect, labelRect image.Rectangle, mousePos image.Point) {
+	v.volRect = volRect
+	v.labelRect = labelRect
+	v.mousePos = mousePos
 }
 
-func (ch *chartVolumeCursor) Render(fudge float32) {
-	if !ch.renderable {
+func (v *volumeCursor) Render(fudge float32) {
+	if !v.renderable {
 		return
 	}
 
-	renderCursorLines(ch.volRect, ch.mousePos)
+	renderCursorLines(v.volRect, v.mousePos)
 
-	if !ch.mousePos.In(ch.volRect) {
+	if !v.mousePos.In(v.volRect) {
 		return
 	}
 
-	perc := float32(ch.mousePos.Y-ch.volRect.Min.Y) / float32(ch.volRect.Dy())
-	l := makeChartVolumeLabel(ch.maxVolume, perc)
+	perc := float32(v.mousePos.Y-v.volRect.Min.Y) / float32(v.volRect.Dy())
+	l := makeVolumeLabel(v.maxVolume, perc)
 	tp := image.Point{
-		X: ch.labelRect.Max.X - l.size.X,
-		Y: ch.labelRect.Min.Y + int(float32(ch.labelRect.Dy())*l.percent) - l.size.Y/2,
+		X: v.labelRect.Max.X - l.size.X,
+		Y: v.labelRect.Min.Y + int(float32(v.labelRect.Dy())*l.percent) - l.size.Y/2,
 	}
 
 	rect.RenderBubble(tp, l.size, chartAxisLabelBubbleSpec)
 	chartAxisLabelTextRenderer.Render(l.text, tp, color.White)
 }
 
-func (ch *chartVolumeCursor) Close() {
-	ch.renderable = false
+func (v *volumeCursor) Close() {
+	v.renderable = false
 }

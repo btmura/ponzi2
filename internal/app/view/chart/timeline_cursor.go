@@ -11,9 +11,9 @@ import (
 	"github.com/btmura/ponzi2/internal/errors"
 )
 
-// chartTimelineCursor renders the time corresponding to the mouse pointer
+// timelineCursor renders the time corresponding to the mouse pointer
 // on the x-axis.
-type chartTimelineCursor struct {
+type timelineCursor struct {
 	// renderable is true if this should be rendered.
 	renderable bool
 
@@ -33,69 +33,69 @@ type chartTimelineCursor struct {
 	mousePos image.Point
 }
 
-func (ch *chartTimelineCursor) SetData(r model.Range, ts *model.TradingSessionSeries) error {
+func (t *timelineCursor) SetData(r model.Range, ts *model.TradingSessionSeries) error {
 	// Reset everything.
-	ch.Close()
+	t.Close()
 
 	// Bail out if there is no data yet.
 	if ts == nil {
 		return nil
 	}
 
-	ch.dates = nil
+	t.dates = nil
 	for _, s := range ts.TradingSessions {
-		ch.dates = append(ch.dates, s.Date)
+		t.dates = append(t.dates, s.Date)
 	}
 
 	switch r {
 	case model.OneDay:
-		ch.layout = "03:04"
+		t.layout = "03:04"
 	case model.OneYear:
-		ch.layout = "1/2/06"
+		t.layout = "1/2/06"
 	default:
 		return errors.Errorf("bad range: %v", r)
 	}
 
-	ch.renderable = true
+	t.renderable = true
 
 	return nil
 }
 
 // ProcessInput processes input.
-func (ch *chartTimelineCursor) ProcessInput(timelineRect, labelRect image.Rectangle, mousePos image.Point) {
-	ch.bounds = timelineRect
-	ch.labelRect = labelRect
-	ch.mousePos = mousePos
+func (t *timelineCursor) ProcessInput(timelineRect, labelRect image.Rectangle, mousePos image.Point) {
+	t.bounds = timelineRect
+	t.labelRect = labelRect
+	t.mousePos = mousePos
 }
 
-func (ch *chartTimelineCursor) Render(fudge float32) {
-	if !ch.renderable {
+func (t *timelineCursor) Render(fudge float32) {
+	if !t.renderable {
 		return
 	}
 
-	if ch.mousePos.X < ch.bounds.Min.X || ch.mousePos.X > ch.bounds.Max.X {
+	if t.mousePos.X < t.bounds.Min.X || t.mousePos.X > t.bounds.Max.X {
 		return
 	}
 
-	percent := float32(ch.mousePos.X-ch.bounds.Min.X) / float32(ch.bounds.Dx())
+	percent := float32(t.mousePos.X-t.bounds.Min.X) / float32(t.bounds.Dx())
 
-	i := int(math.Floor(float64(len(ch.dates))*float64(percent) + 0.5))
-	if i >= len(ch.dates) {
-		i = len(ch.dates) - 1
+	i := int(math.Floor(float64(len(t.dates))*float64(percent) + 0.5))
+	if i >= len(t.dates) {
+		i = len(t.dates) - 1
 	}
 
-	text := ch.dates[i].Format(ch.layout)
+	text := t.dates[i].Format(t.layout)
 	size := chartAxisLabelTextRenderer.Measure(text)
 
 	tp := image.Point{
-		X: ch.mousePos.X - size.X/2,
-		Y: ch.labelRect.Min.Y + ch.labelRect.Dy()/2 - size.Y/2,
+		X: t.mousePos.X - size.X/2,
+		Y: t.labelRect.Min.Y + t.labelRect.Dy()/2 - size.Y/2,
 	}
 
 	rect.RenderBubble(tp, size, chartAxisLabelBubbleSpec)
 	chartAxisLabelTextRenderer.Render(text, tp, color.White)
 }
 
-func (ch *chartTimelineCursor) Close() {
-	ch.renderable = false
+func (t *timelineCursor) Close() {
+	t.renderable = false
 }
