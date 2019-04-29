@@ -156,7 +156,7 @@ func (t *Thumb) ProcessInput(
 
 	r, clicks := t.header.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
 	t.bodyBounds = r
-	if !clicks.HasClicks() && mousePos.In(bounds) {
+	if !clicks.HasClicks() && mouseLeftButtonReleased && mousePos.In(bounds) {
 		*scheduledCallbacks = append(*scheduledCallbacks, t.thumbClickCallback)
 	}
 
