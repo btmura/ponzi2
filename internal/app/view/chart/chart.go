@@ -70,14 +70,14 @@ type Chart struct {
 	volumeCursor   *volumeCursor
 	volumeTimeline *timeline
 
-	dailyStochastics        *chartStochastics
-	dailyStochasticAxis     *chartStochasticAxis
-	dailyStochasticCursor   *chartStochasticCursor
+	dailyStochastics        *stochastic
+	dailyStochasticAxis     *stochasticAxis
+	dailyStochasticCursor   *stochasticCursor
 	dailyStochasticTimeline *timeline
 
-	weeklyStochastics        *chartStochastics
-	weeklyStochasticAxis     *chartStochasticAxis
-	weeklyStochasticCursor   *chartStochasticCursor
+	weeklyStochastics        *stochastic
+	weeklyStochasticAxis     *stochasticAxis
+	weeklyStochasticCursor   *stochasticCursor
 	weeklyStochasticTimeline *timeline
 
 	timelineAxis   *timelineAxis
@@ -146,14 +146,14 @@ func NewChart(fps int) *Chart {
 		volumeCursor:   new(volumeCursor),
 		volumeTimeline: new(timeline),
 
-		dailyStochastics:        newChartStochastics(color.Yellow),
-		dailyStochasticAxis:     new(chartStochasticAxis),
-		dailyStochasticCursor:   new(chartStochasticCursor),
+		dailyStochastics:        newStochastic(color.Yellow),
+		dailyStochasticAxis:     new(stochasticAxis),
+		dailyStochasticCursor:   new(stochasticCursor),
 		dailyStochasticTimeline: new(timeline),
 
-		weeklyStochastics:        newChartStochastics(color.Purple),
-		weeklyStochasticAxis:     new(chartStochasticAxis),
-		weeklyStochasticCursor:   new(chartStochasticCursor),
+		weeklyStochastics:        newStochastic(color.Purple),
+		weeklyStochasticAxis:     new(stochasticAxis),
+		weeklyStochasticCursor:   new(stochasticCursor),
 		weeklyStochasticTimeline: new(timeline),
 
 		timelineAxis:   new(timelineAxis),

@@ -30,12 +30,12 @@ type Thumb struct {
 	// header renders the header with the symbol, quote, and buttons.
 	header *chartHeader
 
-	dailyStochastic         *chartStochastics
-	dailyStochasticCursor   *chartStochasticCursor
+	dailyStochastic         *stochastic
+	dailyStochasticCursor   *stochasticCursor
 	dailyStochasticTimeline *timeline
 
-	weeklyStochastic         *chartStochastics
-	weeklyStochasticCursor   *chartStochasticCursor
+	weeklyStochastic         *stochastic
+	weeklyStochasticCursor   *stochasticCursor
 	weeklyStochasticTimeline *timeline
 
 	// loadingText is the text shown when loading from a fresh state.
@@ -69,7 +69,7 @@ type Thumb struct {
 	mousePos image.Point
 }
 
-// NewChartThumb creates a ChartThumb.
+// NewChartThumb creates a Thumb.
 func NewChartThumb(fps int) *Thumb {
 	return &Thumb{
 		header: newChartHeader(&chartHeaderArgs{
@@ -81,12 +81,12 @@ func NewChartThumb(fps int) *Thumb {
 			FPS:                     fps,
 		}),
 
-		dailyStochastic:         newChartStochastics(color.Yellow),
-		dailyStochasticCursor:   new(chartStochasticCursor),
+		dailyStochastic:         newStochastic(color.Yellow),
+		dailyStochasticCursor:   new(stochasticCursor),
 		dailyStochasticTimeline: new(timeline),
 
-		weeklyStochastic:         newChartStochastics(color.Purple),
-		weeklyStochasticCursor:   new(chartStochasticCursor),
+		weeklyStochastic:         newStochastic(color.Purple),
+		weeklyStochasticCursor:   new(stochasticCursor),
 		weeklyStochasticTimeline: new(timeline),
 
 		loadingText: centeredtext.New(thumbSymbolQuoteTextRenderer, "LOADING..."),
@@ -97,29 +97,29 @@ func NewChartThumb(fps int) *Thumb {
 }
 
 // SetLoading toggles the Chart's loading indicator.
-func (ch *Thumb) SetLoading(loading bool) {
-	ch.loading = loading
-	ch.header.SetLoading(loading)
+func (t *Thumb) SetLoading(loading bool) {
+	t.loading = loading
+	t.header.SetLoading(loading)
 }
 
 // SetError toggles the Chart's error indicator.
-func (ch *Thumb) SetError(error bool) {
-	ch.hasError = error
-	ch.header.SetError(error)
+func (t *Thumb) SetError(error bool) {
+	t.hasError = error
+	t.header.SetError(error)
 }
 
 // SetData sets the data to be shown on the chart.
-func (ch *Thumb) SetData(data *Data) error {
+func (t *Thumb) SetData(data *Data) error {
 	if data == nil {
 		return errors.Errorf("missing data")
 	}
 
-	if !ch.hasStockUpdated && data.Chart != nil {
-		ch.fadeIn.Start()
+	if !t.hasStockUpdated && data.Chart != nil {
+		t.fadeIn.Start()
 	}
-	ch.hasStockUpdated = data.Chart != nil
+	t.hasStockUpdated = data.Chart != nil
 
-	if err := ch.header.SetData(data); err != nil {
+	if err := t.header.SetData(data); err != nil {
 		return err
 	}
 
@@ -129,15 +129,15 @@ func (ch *Thumb) SetData(data *Data) error {
 		return nil
 	}
 
-	ch.dailyStochastic.SetData(dc.DailyStochasticSeries)
-	ch.dailyStochasticCursor.SetData()
-	if err := ch.dailyStochasticTimeline.SetData(dc.Range, dc.TradingSessionSeries); err != nil {
+	t.dailyStochastic.SetData(dc.DailyStochasticSeries)
+	t.dailyStochasticCursor.SetData()
+	if err := t.dailyStochasticTimeline.SetData(dc.Range, dc.TradingSessionSeries); err != nil {
 		return err
 	}
 
-	ch.weeklyStochastic.SetData(dc.WeeklyStochasticSeries)
-	ch.weeklyStochasticCursor.SetData()
-	if err := ch.weeklyStochasticTimeline.SetData(dc.Range, dc.TradingSessionSeries); err != nil {
+	t.weeklyStochastic.SetData(dc.WeeklyStochasticSeries)
+	t.weeklyStochasticCursor.SetData()
+	if err := t.weeklyStochasticTimeline.SetData(dc.Range, dc.TradingSessionSeries); err != nil {
 		return err
 	}
 
@@ -145,19 +145,19 @@ func (ch *Thumb) SetData(data *Data) error {
 }
 
 // ProcessInput processes input.
-func (ch *Thumb) ProcessInput(
+func (t *Thumb) ProcessInput(
 	bounds image.Rectangle,
 	mousePos image.Point,
 	mouseLeftButtonReleased bool,
 	scheduledCallbacks *[]func(),
 ) {
-	ch.fullBounds = bounds
-	ch.mousePos = mousePos
+	t.fullBounds = bounds
+	t.mousePos = mousePos
 
-	r, clicks := ch.header.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
-	ch.bodyBounds = r
+	r, clicks := t.header.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
+	t.bodyBounds = r
 	if !clicks.HasClicks() && mousePos.In(bounds) {
-		*scheduledCallbacks = append(*scheduledCallbacks, ch.thumbClickCallback)
+		*scheduledCallbacks = append(*scheduledCallbacks, t.thumbClickCallback)
 	}
 
 	rects := rect.Slice(r, 0.5)
@@ -167,85 +167,85 @@ func (ch *Thumb) ProcessInput(
 
 	dr, wr := rects[1], rects[0]
 
-	ch.dailyStochastic.ProcessInput(dr)
-	ch.dailyStochasticCursor.ProcessInput(dr, dr, ch.mousePos)
-	ch.dailyStochasticTimeline.ProcessInput(dr)
+	t.dailyStochastic.ProcessInput(dr)
+	t.dailyStochasticCursor.ProcessInput(dr, dr, t.mousePos)
+	t.dailyStochasticTimeline.ProcessInput(dr)
 
-	ch.weeklyStochastic.ProcessInput(wr)
-	ch.weeklyStochasticCursor.ProcessInput(wr, wr, ch.mousePos)
-	ch.weeklyStochasticTimeline.ProcessInput(wr)
+	t.weeklyStochastic.ProcessInput(wr)
+	t.weeklyStochasticCursor.ProcessInput(wr, wr, t.mousePos)
+	t.weeklyStochasticTimeline.ProcessInput(wr)
 }
 
-// Update updates the ChartThumb.
-func (ch *Thumb) Update() (dirty bool) {
-	if ch.header.Update() {
+// Update updates the Thumb.
+func (t *Thumb) Update() (dirty bool) {
+	if t.header.Update() {
 		dirty = true
 	}
-	if ch.fadeIn.Update() {
+	if t.fadeIn.Update() {
 		dirty = true
 	}
 	return dirty
 }
 
-// Render renders the ChartThumb.
-func (ch *Thumb) Render(fudge float32) error {
+// Render renders the Thumb.
+func (t *Thumb) Render(fudge float32) error {
 	// Render the border around the chart.
-	rect.StrokeRoundedRect(ch.fullBounds, thumbChartRounding)
+	rect.StrokeRoundedRect(t.fullBounds, thumbChartRounding)
 
 	// Render the header and the line below it.
-	ch.header.Render(fudge)
+	t.header.Render(fudge)
 
-	r := ch.bodyBounds
+	r := t.bodyBounds
 	rect.RenderLineAtTop(r)
 
 	// Only show messages if no prior data to show.
-	if !ch.hasStockUpdated {
-		if ch.loading {
-			ch.loadingText.Render(fudge)
+	if !t.hasStockUpdated {
+		if t.loading {
+			t.loadingText.Render(fudge)
 			return nil
 		}
 
-		if ch.hasError {
-			ch.errorText.Render(fudge)
+		if t.hasError {
+			t.errorText.Render(fudge)
 			return nil
 		}
 	}
 
 	old := gfx.Alpha()
-	gfx.SetAlpha(old * ch.fadeIn.Value(fudge))
+	gfx.SetAlpha(old * t.fadeIn.Value(fudge))
 	defer gfx.SetAlpha(old)
 
 	rects := rect.Slice(r, 0.5)
 	rect.RenderLineAtTop(rects[0])
 
-	ch.dailyStochasticTimeline.Render(fudge)
-	ch.weeklyStochasticTimeline.Render(fudge)
+	t.dailyStochasticTimeline.Render(fudge)
+	t.weeklyStochasticTimeline.Render(fudge)
 
-	ch.dailyStochastic.Render(fudge)
-	ch.weeklyStochastic.Render(fudge)
+	t.dailyStochastic.Render(fudge)
+	t.weeklyStochastic.Render(fudge)
 
-	ch.dailyStochasticCursor.Render(fudge)
-	ch.weeklyStochasticCursor.Render(fudge)
+	t.dailyStochasticCursor.Render(fudge)
+	t.weeklyStochasticCursor.Render(fudge)
 
 	return nil
 }
 
 // SetRemoveButtonClickCallback sets the callback for remove button clicks.
-func (ch *Thumb) SetRemoveButtonClickCallback(cb func()) {
-	ch.header.SetRemoveButtonClickCallback(cb)
+func (t *Thumb) SetRemoveButtonClickCallback(cb func()) {
+	t.header.SetRemoveButtonClickCallback(cb)
 }
 
 // SetThumbClickCallback sets the callback for thumbnail clicks.
-func (ch *Thumb) SetThumbClickCallback(cb func()) {
-	ch.thumbClickCallback = cb
+func (t *Thumb) SetThumbClickCallback(cb func()) {
+	t.thumbClickCallback = cb
 }
 
 // Close frees the resources backing the chart thumbnail.
-func (ch *Thumb) Close() {
-	ch.header.Close()
-	ch.dailyStochastic.Close()
-	ch.dailyStochasticTimeline.Close()
-	ch.weeklyStochastic.Close()
-	ch.weeklyStochasticTimeline.Close()
-	ch.thumbClickCallback = nil
+func (t *Thumb) Close() {
+	t.header.Close()
+	t.dailyStochastic.Close()
+	t.dailyStochasticTimeline.Close()
+	t.weeklyStochastic.Close()
+	t.weeklyStochasticTimeline.Close()
+	t.thumbClickCallback = nil
 }

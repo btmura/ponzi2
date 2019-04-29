@@ -7,9 +7,9 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
-// chartStochasticCursor renders crosshairs at the mouse pointer
+// stochasticCursor renders crosshairs at the mouse pointer
 // with the corresponding stochastic on the y-axis.
-type chartStochasticCursor struct {
+type stochasticCursor struct {
 	// renderable is true if this should be rendered.
 	renderable bool
 
@@ -24,39 +24,39 @@ type chartStochasticCursor struct {
 }
 
 // ProcessInput processes input.
-func (ch *chartStochasticCursor) ProcessInput(stoRect, labelRect image.Rectangle, mousePos image.Point) {
-	ch.stoRect = stoRect
-	ch.labelRect = labelRect
-	ch.mousePos = mousePos
+func (s *stochasticCursor) ProcessInput(stoRect, labelRect image.Rectangle, mousePos image.Point) {
+	s.stoRect = stoRect
+	s.labelRect = labelRect
+	s.mousePos = mousePos
 }
 
-func (ch *chartStochasticCursor) SetData() {
-	ch.renderable = true
+func (s *stochasticCursor) SetData() {
+	s.renderable = true
 }
 
-func (ch *chartStochasticCursor) Render(fudge float32) {
-	if !ch.renderable {
+func (s *stochasticCursor) Render(fudge float32) {
+	if !s.renderable {
 		return
 	}
 
-	renderCursorLines(ch.stoRect, ch.mousePos)
+	renderCursorLines(s.stoRect, s.mousePos)
 
-	if !ch.mousePos.In(ch.stoRect) {
+	if !s.mousePos.In(s.stoRect) {
 		return
 	}
 
-	perc := float32(ch.mousePos.Y-ch.stoRect.Min.Y) / float32(ch.stoRect.Dy())
-	l := makeChartStochasticLabel(perc)
+	perc := float32(s.mousePos.Y-s.stoRect.Min.Y) / float32(s.stoRect.Dy())
+	l := makeStochasticLabel(perc)
 
 	var tp image.Point
-	tp.X = ch.labelRect.Max.X - l.size.X
-	tp.Y = ch.labelRect.Min.Y + int(float32(ch.labelRect.Dy())*l.percent) - l.size.Y/2
+	tp.X = s.labelRect.Max.X - l.size.X
+	tp.Y = s.labelRect.Min.Y + int(float32(s.labelRect.Dy())*l.percent) - l.size.Y/2
 
 	br := image.Rectangle{Min: tp, Max: tp.Add(l.size)}
 	br = br.Inset(-chartAxisLabelBubblePadding)
 
-	if ch.mousePos.In(br) {
-		tp.X = ch.labelRect.Min.X
+	if s.mousePos.In(br) {
+		tp.X = s.labelRect.Min.X
 		br = image.Rectangle{Min: tp, Max: tp.Add(l.size)}
 		br = br.Inset(-chartAxisLabelBubblePadding)
 	}
@@ -66,6 +66,6 @@ func (ch *chartStochasticCursor) Render(fudge float32) {
 	chartAxisLabelTextRenderer.Render(l.text, tp, color.White)
 }
 
-func (ch *chartStochasticCursor) Close() {
-	ch.renderable = false
+func (s *stochasticCursor) Close() {
+	s.renderable = false
 }
