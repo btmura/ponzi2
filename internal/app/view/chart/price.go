@@ -10,8 +10,8 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/color"
 )
 
-// chartPrices shows the candlesticks and price labels for a single stock.
-type chartPrices struct {
+// price shows the candlesticks and price labels for a single stock.
+type price struct {
 	// renderable is whether the ChartPrices can be rendered.
 	renderable bool
 
@@ -31,40 +31,40 @@ type chartPrices struct {
 	bounds image.Rectangle
 }
 
-func (ch *chartPrices) SetData(ts *model.TradingSessionSeries) {
+func (p *price) SetData(ts *model.TradingSessionSeries) {
 	// Reset everything.
-	ch.Close()
+	p.Close()
 
 	// Bail out if there is no data yet.
 	if ts == nil {
 		return
 	}
 
-	ch.priceRange = priceRange(ts.TradingSessions)
+	p.priceRange = priceRange(ts.TradingSessions)
 
 	// Measure the max label size by creating a label with the max value.
-	ch.MaxLabelSize = makeChartPriceLabel(ch.priceRange[1]).size
+	p.MaxLabelSize = makePriceLabel(p.priceRange[1]).size
 
-	ch.stickLines, ch.stickRects = chartPriceCandlestickVAOs(ts.TradingSessions, ch.priceRange)
+	p.stickLines, p.stickRects = priceCandlestickVAOs(ts.TradingSessions, p.priceRange)
 
-	ch.renderable = true
+	p.renderable = true
 }
 
 // ProcessInput processes input.
-func (ch *chartPrices) ProcessInput(bounds image.Rectangle) {
-	ch.bounds = bounds
+func (p *price) ProcessInput(bounds image.Rectangle) {
+	p.bounds = bounds
 }
 
-func (ch *chartPrices) Render(fudge float32) {
-	if !ch.renderable {
+func (p *price) Render(fudge float32) {
+	if !p.renderable {
 		return
 	}
 
-	r := ch.bounds
+	r := p.bounds
 
-	labelPaddingY := ch.MaxLabelSize.Y / 2
-	y := r.Max.Y - labelPaddingY - ch.MaxLabelSize.Y/2
-	dy := ch.MaxLabelSize.Y + labelPaddingY*2
+	labelPaddingY := p.MaxLabelSize.Y / 2
+	y := r.Max.Y - labelPaddingY - p.MaxLabelSize.Y/2
+	dy := p.MaxLabelSize.Y + labelPaddingY*2
 
 	for {
 		{
@@ -79,17 +79,17 @@ func (ch *chartPrices) Render(fudge float32) {
 	}
 
 	gfx.SetModelMatrixRect(r)
-	ch.stickLines.Render()
-	ch.stickRects.Render()
+	p.stickLines.Render()
+	p.stickRects.Render()
 }
 
-func (ch *chartPrices) Close() {
-	ch.renderable = false
-	if ch.stickLines != nil {
-		ch.stickLines.Delete()
+func (p *price) Close() {
+	p.renderable = false
+	if p.stickLines != nil {
+		p.stickLines.Delete()
 	}
-	if ch.stickRects != nil {
-		ch.stickRects.Delete()
+	if p.stickRects != nil {
+		p.stickRects.Delete()
 	}
 }
 
@@ -123,20 +123,20 @@ func priceRange(ts []*model.TradingSession) [2]float32 {
 	return [2]float32{low, high}
 }
 
-type chartPriceLabel struct {
+type priceLabel struct {
 	text string
 	size image.Point
 }
 
-func makeChartPriceLabel(v float32) chartPriceLabel {
+func makePriceLabel(v float32) priceLabel {
 	t := strconv.FormatFloat(float64(v), 'f', 2, 32)
-	return chartPriceLabel{
+	return priceLabel{
 		text: t,
 		size: chartAxisLabelTextRenderer.Measure(t),
 	}
 }
 
-func chartPriceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32) (stickLines, stickRects *gfx.VAO) {
+func priceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32) (stickLines, stickRects *gfx.VAO) {
 	// Calculate vertices and indices for the candlesticks.
 	var vertices []float32
 	var colors []float32

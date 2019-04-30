@@ -8,9 +8,9 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
-// chartPriceCursor renders crosshairs at the mouse pointer
+// priceCursor renders crosshairs at the mouse pointer
 // with corresponding price labels on the y-axis.
-type chartPriceCursor struct {
+type priceCursor struct {
 	// renderable is true if this should be rendered.
 	renderable bool
 
@@ -27,51 +27,51 @@ type chartPriceCursor struct {
 	mousePos image.Point
 }
 
-func (ch *chartPriceCursor) SetData(ts *model.TradingSessionSeries) {
+func (p *priceCursor) SetData(ts *model.TradingSessionSeries) {
 	// Reset everything.
-	ch.Close()
+	p.Close()
 
 	// Bail out if there is no data yet.
 	if ts == nil {
 		return
 	}
 
-	ch.priceRange = priceRange(ts.TradingSessions)
+	p.priceRange = priceRange(ts.TradingSessions)
 
-	ch.renderable = true
+	p.renderable = true
 }
 
 // ProcessInput processes input.
-func (ch *chartPriceCursor) ProcessInput(priceRect, labelRect image.Rectangle, mousePos image.Point) {
-	ch.priceRect = priceRect
-	ch.labelRect = labelRect
-	ch.mousePos = mousePos
+func (p *priceCursor) ProcessInput(priceRect, labelRect image.Rectangle, mousePos image.Point) {
+	p.priceRect = priceRect
+	p.labelRect = labelRect
+	p.mousePos = mousePos
 }
 
-func (ch *chartPriceCursor) Render(fudge float32) {
-	if !ch.renderable {
+func (p *priceCursor) Render(fudge float32) {
+	if !p.renderable {
 		return
 	}
 
-	renderCursorLines(ch.priceRect, ch.mousePos)
+	renderCursorLines(p.priceRect, p.mousePos)
 
-	if !ch.mousePos.In(ch.priceRect) {
+	if !p.mousePos.In(p.priceRect) {
 		return
 	}
 
-	perc := float32(ch.mousePos.Y-ch.priceRect.Min.Y) / float32(ch.priceRect.Dy())
-	v := ch.priceRange[0] + (ch.priceRange[1]-ch.priceRange[0])*perc
-	l := makeChartPriceLabel(v)
+	perc := float32(p.mousePos.Y-p.priceRect.Min.Y) / float32(p.priceRect.Dy())
+	v := p.priceRange[0] + (p.priceRange[1]-p.priceRange[0])*perc
+	l := makePriceLabel(v)
 
 	tp := image.Point{
-		X: ch.labelRect.Max.X - l.size.X,
-		Y: ch.labelRect.Min.Y + int(float32(ch.labelRect.Dy())*perc) - l.size.Y/2,
+		X: p.labelRect.Max.X - l.size.X,
+		Y: p.labelRect.Min.Y + int(float32(p.labelRect.Dy())*perc) - l.size.Y/2,
 	}
 
 	rect.RenderBubble(tp, l.size, chartAxisLabelBubbleSpec)
 	chartAxisLabelTextRenderer.Render(l.text, tp, color.White)
 }
 
-func (ch *chartPriceCursor) Close() {
-	ch.renderable = false
+func (p *priceCursor) Close() {
+	p.renderable = false
 }

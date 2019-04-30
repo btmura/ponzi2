@@ -56,14 +56,14 @@ var (
 type Chart struct {
 	header *chartHeader
 
-	prices        *chartPrices
-	priceAxis     *chartPriceAxis
-	priceCursor   *chartPriceCursor
+	prices        *price
+	priceAxis     *priceAxis
+	priceCursor   *priceCursor
 	priceTimeline *timeline
 
-	movingAverage25  *chartMovingAverage
-	movingAverage50  *chartMovingAverage
-	movingAverage200 *chartMovingAverage
+	movingAverage25  *movingAverage
+	movingAverage50  *movingAverage
+	movingAverage200 *movingAverage
 
 	volume         *volume
 	volumeAxis     *volumeAxis
@@ -83,7 +83,7 @@ type Chart struct {
 	timelineAxis   *timelineAxis
 	timelineCursor *timelineCursor
 
-	legend *chartLegend
+	legend *legend
 
 	// loadingText is the text shown when loading from a fresh state.
 	loadingText *centeredtext.CenteredText
@@ -132,14 +132,14 @@ func NewChart(fps int) *Chart {
 			FPS:                     fps,
 		}),
 
-		prices:        new(chartPrices),
-		priceAxis:     new(chartPriceAxis),
-		priceCursor:   new(chartPriceCursor),
+		prices:        new(price),
+		priceAxis:     new(priceAxis),
+		priceCursor:   new(priceCursor),
 		priceTimeline: new(timeline),
 
-		movingAverage25:  newChartMovingAverage(color.Purple),
-		movingAverage50:  newChartMovingAverage(color.Yellow),
-		movingAverage200: newChartMovingAverage(color.White),
+		movingAverage25:  newMovingAverage(color.Purple),
+		movingAverage50:  newMovingAverage(color.Yellow),
+		movingAverage200: newMovingAverage(color.White),
 
 		volume:         new(volume),
 		volumeAxis:     new(volumeAxis),
@@ -159,7 +159,7 @@ func NewChart(fps int) *Chart {
 		timelineAxis:   new(timelineAxis),
 		timelineCursor: new(timelineCursor),
 
-		legend: new(chartLegend),
+		legend: new(legend),
 
 		loadingText: centeredtext.New(chartSymbolQuoteTextRenderer, "LOADING..."),
 		errorText:   centeredtext.New(chartSymbolQuoteTextRenderer, "ERROR", centeredtext.Color(color.Orange)),

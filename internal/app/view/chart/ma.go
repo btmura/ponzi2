@@ -8,19 +8,20 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 )
 
-type chartMovingAverage struct {
-	color  [3]float32
-	line   *gfx.VAO
-	bounds image.Rectangle
+type movingAverage struct {
+	renderable bool
+	color      [3]float32
+	line       *gfx.VAO
+	bounds     image.Rectangle
 }
 
-func newChartMovingAverage(color [3]float32) *chartMovingAverage {
-	return &chartMovingAverage{color: color}
+func newMovingAverage(color [3]float32) *movingAverage {
+	return &movingAverage{color: color}
 }
 
-func (ch *chartMovingAverage) SetData(ts *model.TradingSessionSeries, ms *model.MovingAverageSeries) {
+func (m *movingAverage) SetData(ts *model.TradingSessionSeries, ms *model.MovingAverageSeries) {
 	// Reset everything.
-	ch.Close()
+	m.Close()
 
 	// Bail out if there is not enough data yet.
 	if ts == nil || ms == nil {
@@ -32,25 +33,27 @@ func (ch *chartMovingAverage) SetData(ts *model.TradingSessionSeries, ms *model.
 	for _, m := range ms.MovingAverages {
 		values = append(values, m.Value)
 	}
-	ch.line = vao.DataLine(values, priceRange(ts.TradingSessions), ch.color)
+	m.line = vao.DataLine(values, priceRange(ts.TradingSessions), m.color)
+
+	m.renderable = true
 }
 
 // ProcessInput processes input.
-func (ch *chartMovingAverage) ProcessInput(bounds image.Rectangle) {
-	ch.bounds = bounds
+func (m *movingAverage) ProcessInput(bounds image.Rectangle) {
+	m.bounds = bounds
 }
 
-func (ch *chartMovingAverage) Render(fudge float32) {
-	if ch.line == nil {
+func (m *movingAverage) Render(fudge float32) {
+	if m.line == nil {
 		return
 	}
-	gfx.SetModelMatrixRect(ch.bounds)
-	ch.line.Render()
+	gfx.SetModelMatrixRect(m.bounds)
+	m.line.Render()
 }
 
-func (ch *chartMovingAverage) Close() {
-	if ch.line != nil {
-		ch.line.Delete()
-		ch.line = nil
+func (m *movingAverage) Close() {
+	m.renderable = false
+	if m.line != nil {
+		m.line.Delete()
 	}
 }

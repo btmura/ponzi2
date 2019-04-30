@@ -7,7 +7,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/color"
 )
 
-type chartPriceAxis struct {
+type priceAxis struct {
 	// renderable is true if this should be rendered.
 	renderable bool
 
@@ -21,53 +21,53 @@ type chartPriceAxis struct {
 	labelRect image.Rectangle
 }
 
-func (ch *chartPriceAxis) SetData(ts *model.TradingSessionSeries) {
+func (p *priceAxis) SetData(ts *model.TradingSessionSeries) {
 	// Reset everything.
-	ch.Close()
+	p.Close()
 
 	// Bail out if there is no data yet.
 	if ts == nil {
 		return
 	}
 
-	ch.priceRange = priceRange(ts.TradingSessions)
+	p.priceRange = priceRange(ts.TradingSessions)
 
 	// Measure the max label size by creating a label with the max value.
-	ch.MaxLabelSize = makeChartPriceLabel(ch.priceRange[1]).size
+	p.MaxLabelSize = makePriceLabel(p.priceRange[1]).size
 
-	ch.renderable = true
+	p.renderable = true
 }
 
 // ProcessInput processes input.
-func (ch *chartPriceAxis) ProcessInput(labelRect image.Rectangle) {
-	ch.labelRect = labelRect
+func (p *priceAxis) ProcessInput(labelRect image.Rectangle) {
+	p.labelRect = labelRect
 }
 
-func (ch *chartPriceAxis) Render(fudge float32) {
-	if !ch.renderable {
+func (p *priceAxis) Render(fudge float32) {
+	if !p.renderable {
 		return
 	}
 
-	r := ch.labelRect
+	r := p.labelRect
 
-	labelPaddingY := ch.MaxLabelSize.Y / 2
-	pricePerPixel := (ch.priceRange[1] - ch.priceRange[0]) / float32(r.Dy())
+	labelPaddingY := p.MaxLabelSize.Y / 2
+	pricePerPixel := (p.priceRange[1] - p.priceRange[0]) / float32(r.Dy())
 
 	// Start at top and decrement one label with top and bottom padding.
 	pt := r.Max
-	dp := image.Pt(0, labelPaddingY+ch.MaxLabelSize.Y+labelPaddingY)
+	dp := image.Pt(0, labelPaddingY+p.MaxLabelSize.Y+labelPaddingY)
 
 	// Start at top with max price and decrement change in price of a label with padding.
-	v := ch.priceRange[1]
+	v := p.priceRange[1]
 	dv := pricePerPixel * float32(dp.Y)
 
 	// Offets to the cursor and price value when drawing.
-	dpy := labelPaddingY + ch.MaxLabelSize.Y   // Puts point at the baseline of the text.
-	dvy := labelPaddingY + ch.MaxLabelSize.Y/2 // Uses value in the middle of the label.
+	dpy := labelPaddingY + p.MaxLabelSize.Y   // Puts point at the baseline of the text.
+	dvy := labelPaddingY + p.MaxLabelSize.Y/2 // Uses value in the middle of the label.
 
 	for {
 		{
-			l := makeChartPriceLabel(v - pricePerPixel*float32(dvy))
+			l := makePriceLabel(v - pricePerPixel*float32(dvy))
 
 			pt := image.Pt(pt.X-l.size.X, pt.Y-dpy)
 			if pt.Y < r.Min.Y {
@@ -82,6 +82,6 @@ func (ch *chartPriceAxis) Render(fudge float32) {
 	}
 }
 
-func (ch *chartPriceAxis) Close() {
-	ch.renderable = false
+func (p *priceAxis) Close() {
+	p.renderable = false
 }

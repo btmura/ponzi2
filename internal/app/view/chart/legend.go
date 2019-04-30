@@ -12,7 +12,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
-type chartLegend struct {
+type legend struct {
 	tradingSessionSeries   *model.TradingSessionSeries
 	movingAverageSeries25  *model.MovingAverageSeries
 	movingAverageSeries50  *model.MovingAverageSeries
@@ -24,47 +24,47 @@ type chartLegend struct {
 	mousePos  image.Point
 }
 
-func (ch *chartLegend) SetData(
+func (l *legend) SetData(
 	ts *model.TradingSessionSeries,
 	ms25 *model.MovingAverageSeries,
 	ms50 *model.MovingAverageSeries,
 	ms200 *model.MovingAverageSeries,
 	showMovingAverages bool) {
 
-	ch.tradingSessionSeries = ts
-	ch.movingAverageSeries25 = ms25
-	ch.movingAverageSeries50 = ms50
-	ch.movingAverageSeries200 = ms200
-	ch.showMovingAverages = showMovingAverages
+	l.tradingSessionSeries = ts
+	l.movingAverageSeries25 = ms25
+	l.movingAverageSeries50 = ms50
+	l.movingAverageSeries200 = ms200
+	l.showMovingAverages = showMovingAverages
 }
 
-func (ch *chartLegend) ProcessInput(priceRect, labelRect image.Rectangle, mousePos image.Point) {
-	ch.priceRect = priceRect
-	ch.labelRect = labelRect
-	ch.mousePos = mousePos
+func (l *legend) ProcessInput(priceRect, labelRect image.Rectangle, mousePos image.Point) {
+	l.priceRect = priceRect
+	l.labelRect = labelRect
+	l.mousePos = mousePos
 }
 
-func (ch *chartLegend) Render(fudge float32) {
+func (l *legend) Render(fudge float32) {
 	// Renders trackline legend. To display inline comment out the two lines below and uncomment the last line.
-	if ch.showMovingAverages {
-		ch.renderMATrackLineLegend()
+	if l.showMovingAverages {
+		l.renderMATrackLineLegend()
 	}
-	ch.renderCandleTrackLineLegend()
+	l.renderCandleTrackLineLegend()
 }
 
-func (ch *chartLegend) renderMATrackLineLegend() {
-	if !ch.mousePos.In(ch.priceRect) {
+func (l *legend) renderMATrackLineLegend() {
+	if !l.mousePos.In(l.priceRect) {
 		return
 	}
 
 	// Render moving average trackline legend
-	ts := ch.tradingSessionSeries.TradingSessions
-	ms25 := ch.movingAverageSeries25.MovingAverages
-	ms50 := ch.movingAverageSeries50.MovingAverages
-	ms200 := ch.movingAverageSeries200.MovingAverages
+	ts := l.tradingSessionSeries.TradingSessions
+	ms25 := l.movingAverageSeries25.MovingAverages
+	ms50 := l.movingAverageSeries50.MovingAverages
+	ms200 := l.movingAverageSeries200.MovingAverages
 
-	mal := chartLegendLabel{
-		percent: float32(ch.mousePos.X-ch.priceRect.Min.X) / float32(ch.priceRect.Dx()),
+	mal := legendLabel{
+		percent: float32(l.mousePos.X-l.priceRect.Min.X) / float32(l.priceRect.Dx()),
 	}
 
 	i := int(math.Floor(float64(len(ts)) * float64(mal.percent)))
@@ -72,19 +72,19 @@ func (ch *chartLegend) renderMATrackLineLegend() {
 		i = len(ts) - 1
 	}
 
-	mal.text = ch.chartLegendMALabelText(ms25[i], ms50[i], ms200[i])
+	mal.text = l.chartLegendMALabelText(ms25[i], ms50[i], ms200[i])
 	mal.size = chartAxisLabelTextRenderer.Measure(mal.text)
 
 	MAp := image.Point{
-		X: ch.labelRect.Min.X + ch.labelRect.Dx()/2 - mal.size.X/2,
-		Y: ch.labelRect.Min.Y + ch.labelRect.Dy() - int(math.Floor(float64(mal.size.Y)*float64(2.4))),
+		X: l.labelRect.Min.X + l.labelRect.Dx()/2 - mal.size.X/2,
+		Y: l.labelRect.Min.Y + l.labelRect.Dy() - int(math.Floor(float64(mal.size.Y)*float64(2.4))),
 	}
 
 	rect.RenderBubble(MAp, mal.size, chartAxisLabelBubbleSpec)
 	chartAxisLabelTextRenderer.Render(mal.text, MAp, color.White)
 }
 
-func (ch *chartLegend) renderCandleTrackLineLegend() {
+func (ch *legend) renderCandleTrackLineLegend() {
 	if !ch.mousePos.In(ch.priceRect) {
 		return
 	}
@@ -92,7 +92,7 @@ func (ch *chartLegend) renderCandleTrackLineLegend() {
 	// Render candle trackline legend
 	ts := ch.tradingSessionSeries.TradingSessions
 
-	pl := chartLegendLabel{
+	pl := legendLabel{
 		percent: float32(ch.mousePos.X-ch.priceRect.Min.X) / float32(ch.priceRect.Dx()),
 	}
 
@@ -114,13 +114,13 @@ func (ch *chartLegend) renderCandleTrackLineLegend() {
 	chartAxisLabelTextRenderer.Render(pl.text, ohlcvp, color.White)
 }
 
-type chartLegendLabel struct {
+type legendLabel struct {
 	percent float32
 	text    string
 	size    image.Point
 }
 
-func (ch *chartLegend) chartLegendMALabelText(ma25 *model.MovingAverage, ma50 *model.MovingAverage, ma200 *model.MovingAverage) string {
+func (l *legend) chartLegendMALabelText(ma25 *model.MovingAverage, ma50 *model.MovingAverage, ma200 *model.MovingAverage) string {
 	legendMA := strings.Join([]string{
 		"MA25:", strconv.FormatFloat(float64(ma25.Value), 'f', 1, 32),
 		"   MA50:", strconv.FormatFloat(float64(ma50.Value), 'f', 1, 32),
@@ -129,7 +129,7 @@ func (ch *chartLegend) chartLegendMALabelText(ma25 *model.MovingAverage, ma50 *m
 	return fmt.Sprintf("%s", legendMA)
 }
 
-func (ch *chartLegend) chartLegendCandleLabelText(candle *model.TradingSession) string {
+func (l *legend) chartLegendCandleLabelText(candle *model.TradingSession) string {
 	legendOHLCVC := string(strings.Join([]string{
 		"O:", strconv.FormatFloat(float64(candle.Open), 'f', 2, 32),
 		"   H:", strconv.FormatFloat(float64(candle.High), 'f', 2, 32),
