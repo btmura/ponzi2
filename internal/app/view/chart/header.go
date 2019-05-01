@@ -15,14 +15,14 @@ import (
 )
 
 var (
-	chartAddButtonVAO     = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/addbutton.png")))
-	chartRefreshButtonVAO = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/refreshbutton.png")))
-	chartRemoveButtonVAO  = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/removebutton.png")))
-	chartErrorIconVAO     = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/erroricon.png")))
+	addButtonVAO     = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/addbutton.png")))
+	refreshButtonVAO = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/refreshbutton.png")))
+	removeButtonVAO  = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/removebutton.png")))
+	errorIconVAO     = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/erroricon.png")))
 )
 
-// chartHeader shows a header for charts and thumbnails with a clickable button.
-type chartHeader struct {
+// header shows a header for charts and thumbnails with a clickable button.
+type header struct {
 	// symbol is the symbol to render.
 	symbol string
 
@@ -39,13 +39,13 @@ type chartHeader struct {
 	quotePrinter func(*model.Quote) string
 
 	// refreshButton is the button to refresh the chart.
-	refreshButton *chartHeaderButton
+	refreshButton *headerButton
 
 	// addButton is the button to add the symbol.
-	addButton *chartHeaderButton
+	addButton *headerButton
 
 	// removeButton is the button to remove the symbol.
-	removeButton *chartHeaderButton
+	removeButton *headerButton
 
 	// rounding is only used to layout the symbol and quote text.
 	rounding int
@@ -69,8 +69,8 @@ type chartHeader struct {
 	bounds image.Rectangle
 }
 
-// chartHeaderButton is a button with an additional enabled flag.
-type chartHeaderButton struct {
+// headerButton is a button with an additional enabled flag.
+type headerButton struct {
 	// Button is the underlying button.
 	*button.Button
 
@@ -78,8 +78,8 @@ type chartHeaderButton struct {
 	enabled bool
 }
 
-// chartHeaderArgs are passed to newChartHeader.
-type chartHeaderArgs struct {
+// headerArgs are passed to newChartHeader.
+type headerArgs struct {
 	SymbolQuoteTextRenderer *gfx.TextRenderer
 	QuotePrinter            func(*model.Quote) string
 	ShowRefreshButton       bool
@@ -90,20 +90,20 @@ type chartHeaderArgs struct {
 	FPS                     int
 }
 
-func newChartHeader(args *chartHeaderArgs) *chartHeader {
-	return &chartHeader{
+func newHeader(args *headerArgs) *header {
+	return &header{
 		symbolQuoteTextRenderer: args.SymbolQuoteTextRenderer,
 		quotePrinter:            args.QuotePrinter,
-		refreshButton: &chartHeaderButton{
-			Button:  button.New(chartRefreshButtonVAO, args.FPS),
+		refreshButton: &headerButton{
+			Button:  button.New(refreshButtonVAO, args.FPS),
 			enabled: args.ShowRefreshButton,
 		},
-		addButton: &chartHeaderButton{
-			Button:  button.New(chartAddButtonVAO, args.FPS),
+		addButton: &headerButton{
+			Button:  button.New(addButtonVAO, args.FPS),
 			enabled: args.ShowAddButton,
 		},
-		removeButton: &chartHeaderButton{
-			Button:  button.New(chartRemoveButtonVAO, args.FPS),
+		removeButton: &headerButton{
+			Button:  button.New(removeButtonVAO, args.FPS),
 			enabled: args.ShowRemoveButton,
 		},
 		rounding: args.Rounding,
@@ -113,38 +113,38 @@ func newChartHeader(args *chartHeaderArgs) *chartHeader {
 }
 
 // SetLoading toggles the Chart's loading indicator.
-func (ch *chartHeader) SetLoading(loading bool) {
+func (h *header) SetLoading(loading bool) {
 	switch {
 	// Not Loading -> Loading
-	case !ch.loading && loading:
-		ch.refreshButton.StartSpinning()
+	case !h.loading && loading:
+		h.refreshButton.StartSpinning()
 
 	// Loading -> Not Loading
-	case ch.loading && !loading:
-		ch.refreshButton.StopSpinning()
+	case h.loading && !loading:
+		h.refreshButton.StopSpinning()
 	}
-	ch.loading = loading
+	h.loading = loading
 }
 
 // SetError toggles the Chart's error indicator.
-func (ch *chartHeader) SetError(error bool) {
-	ch.hasError = error
+func (h *header) SetError(error bool) {
+	h.hasError = error
 }
 
 // SetData sets the data to be shown on the chart.
-func (ch *chartHeader) SetData(data *Data) error {
+func (h *header) SetData(data *Data) error {
 	if data == nil {
 		return errors.Errorf("missing data")
 	}
 
-	if !ch.hasStockUpdated && data.Chart != nil {
-		ch.fadeIn.Start()
+	if !h.hasStockUpdated && data.Chart != nil {
+		h.fadeIn.Start()
 	}
-	ch.hasStockUpdated = data.Chart != nil
+	h.hasStockUpdated = data.Chart != nil
 
-	ch.symbol = data.Symbol
+	h.symbol = data.Symbol
 
-	ch.quoteText = ch.quotePrinter(data.Quote)
+	h.quoteText = h.quotePrinter(data.Quote)
 
 	var c float32
 	if q := data.Quote; q != nil {
@@ -153,20 +153,20 @@ func (ch *chartHeader) SetData(data *Data) error {
 
 	switch {
 	case c > 0:
-		ch.quoteColor = color.Green
+		h.quoteColor = color.Green
 
 	case c < 0:
-		ch.quoteColor = color.Red
+		h.quoteColor = color.Red
 
 	default:
-		ch.quoteColor = color.White
+		h.quoteColor = color.White
 	}
 
 	return nil
 }
 
-// chartHeaderClicks reports what buttons were clicked.
-type chartHeaderClicks struct {
+// headerClicks reports what buttons were clicked.
+type headerClicks struct {
 	// AddButtonClicked is true if the add button was clicked.
 	AddButtonClicked bool
 
@@ -178,137 +178,138 @@ type chartHeaderClicks struct {
 }
 
 // HasClicks returns true if a clickable part of the header was clicked.
-func (c chartHeaderClicks) HasClicks() bool {
+func (c headerClicks) HasClicks() bool {
 	return c.AddButtonClicked || c.RefreshButtonClicked || c.RemoveButtonClicked
 }
 
 // ProcessInput processes input.
-func (ch *chartHeader) ProcessInput(
+func (h *header) ProcessInput(
 	bounds image.Rectangle,
 	mousePos image.Point,
 	mouseLeftButtonReleased bool,
-	scheduledCallbacks *[]func()) (
+	scheduledCallbacks *[]func(),
+) (
 	body image.Rectangle,
-	clicks chartHeaderClicks,
+	clicks headerClicks,
 ) {
-	ch.bounds = bounds
+	h.bounds = bounds
 
-	h := ch.padding + ch.symbolQuoteTextRenderer.LineHeight() + ch.padding
-	buttonSize := image.Pt(h, h)
+	height := h.padding + h.symbolQuoteTextRenderer.LineHeight() + h.padding
+	buttonSize := image.Pt(height, height)
 
 	// Render buttons in the upper right corner from right to left.
 	r := bounds
 	bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
 
-	if ch.removeButton.enabled {
-		clicks.RemoveButtonClicked = ch.removeButton.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
+	if h.removeButton.enabled {
+		clicks.RemoveButtonClicked = h.removeButton.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
 		bounds = rect.Translate(bounds, -buttonSize.X, 0)
 	}
 
-	if ch.addButton.enabled {
-		clicks.AddButtonClicked = ch.addButton.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
+	if h.addButton.enabled {
+		clicks.AddButtonClicked = h.addButton.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
 		bounds = rect.Translate(bounds, -buttonSize.X, 0)
 	}
 
-	if ch.refreshButton.enabled || ch.refreshButton.Spinning() {
-		clicks.RefreshButtonClicked = ch.refreshButton.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
+	if h.refreshButton.enabled || h.refreshButton.Spinning() {
+		clicks.RefreshButtonClicked = h.refreshButton.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
 		bounds = rect.Translate(bounds, -buttonSize.X, 0)
 	}
 
 	// Don't report clicks when the refresh button is just an indicator.
-	if !ch.refreshButton.enabled {
+	if !h.refreshButton.enabled {
 		clicks.RefreshButtonClicked = false
 	}
 
-	r.Max.Y -= ch.padding + ch.symbolQuoteTextRenderer.LineHeight() + ch.padding
+	r.Max.Y -= h.padding + h.symbolQuoteTextRenderer.LineHeight() + h.padding
 
 	return r, clicks
 }
 
-func (ch *chartHeader) Update() (dirty bool) {
-	if ch.refreshButton.Update() {
+func (h *header) Update() (dirty bool) {
+	if h.refreshButton.Update() {
 		dirty = true
 	}
-	if ch.addButton.Update() {
+	if h.addButton.Update() {
 		dirty = true
 	}
-	if ch.removeButton.Update() {
+	if h.removeButton.Update() {
 		dirty = true
 	}
-	if ch.fadeIn.Update() {
+	if h.fadeIn.Update() {
 		dirty = true
 	}
 	return dirty
 }
 
 // Render renders the ChartHeader.
-func (ch *chartHeader) Render(fudge float32) {
-	h := ch.padding + ch.symbolQuoteTextRenderer.LineHeight() + ch.padding
-	buttonSize := image.Pt(h, h)
+func (h *header) Render(fudge float32) {
+	height := h.padding + h.symbolQuoteTextRenderer.LineHeight() + h.padding
+	buttonSize := image.Pt(height, height)
 
 	// Render buttons in the upper right corner from right to left.
-	r := ch.bounds
-	ch.bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
+	r := h.bounds
+	h.bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
 
-	if ch.removeButton.enabled {
-		ch.removeButton.Render(fudge)
-		ch.bounds = rect.Translate(ch.bounds, -buttonSize.X, 0)
+	if h.removeButton.enabled {
+		h.removeButton.Render(fudge)
+		h.bounds = rect.Translate(h.bounds, -buttonSize.X, 0)
 	}
 
-	if ch.addButton.enabled {
-		ch.addButton.Render(fudge)
-		ch.bounds = rect.Translate(ch.bounds, -buttonSize.X, 0)
+	if h.addButton.enabled {
+		h.addButton.Render(fudge)
+		h.bounds = rect.Translate(h.bounds, -buttonSize.X, 0)
 	}
 
-	if ch.refreshButton.enabled || ch.refreshButton.Spinning() {
-		ch.refreshButton.Render(fudge)
-		ch.bounds = rect.Translate(ch.bounds, -buttonSize.X, 0)
+	if h.refreshButton.enabled || h.refreshButton.Spinning() {
+		h.refreshButton.Render(fudge)
+		h.bounds = rect.Translate(h.bounds, -buttonSize.X, 0)
 	}
 
-	if ch.hasError {
-		gfx.SetModelMatrixRect(ch.bounds)
-		chartErrorIconVAO.Render()
-		ch.bounds = rect.Translate(ch.bounds, -buttonSize.X, 0)
+	if h.hasError {
+		gfx.SetModelMatrixRect(h.bounds)
+		errorIconVAO.Render()
+		h.bounds = rect.Translate(h.bounds, -buttonSize.X, 0)
 	}
 
-	buttonEdge := ch.bounds.Min.X + buttonSize.X
+	buttonEdge := h.bounds.Min.X + buttonSize.X
 
 	// Start rendering from the top left. Track position with point.
 	pt := image.Pt(r.Min.X, r.Max.Y)
-	pt.Y -= ch.padding + ch.symbolQuoteTextRenderer.LineHeight()
+	pt.Y -= h.padding + h.symbolQuoteTextRenderer.LineHeight()
 	{
 		pt := pt
-		pt.X += ch.rounding
-		pt.X += ch.symbolQuoteTextRenderer.Render(ch.symbol, pt, color.White)
-		pt.X += ch.padding
+		pt.X += h.rounding
+		pt.X += h.symbolQuoteTextRenderer.Render(h.symbol, pt, color.White)
+		pt.X += h.padding
 
 		if w := buttonEdge - pt.X; w > 0 {
 			old := gfx.Alpha()
-			gfx.SetAlpha(old * ch.fadeIn.Value(fudge))
-			pt.X += ch.symbolQuoteTextRenderer.Render(ch.quoteText, pt, ch.quoteColor, gfx.TextRenderMaxWidth(w))
+			gfx.SetAlpha(old * h.fadeIn.Value(fudge))
+			pt.X += h.symbolQuoteTextRenderer.Render(h.quoteText, pt, h.quoteColor, gfx.TextRenderMaxWidth(w))
 			gfx.SetAlpha(old)
 		}
 	}
 }
 
 // SetRefreshButtonClickCallback sets the callback for refresh button clicks.
-func (ch *chartHeader) SetRefreshButtonClickCallback(cb func()) {
-	ch.refreshButton.SetClickCallback(cb)
+func (h *header) SetRefreshButtonClickCallback(cb func()) {
+	h.refreshButton.SetClickCallback(cb)
 }
 
 // SetAddButtonClickCallback sets the callback for add button clicks.
-func (ch *chartHeader) SetAddButtonClickCallback(cb func()) {
-	ch.addButton.SetClickCallback(cb)
+func (h *header) SetAddButtonClickCallback(cb func()) {
+	h.addButton.SetClickCallback(cb)
 }
 
 // SetRemoveButtonClickCallback sets the callback for remove button clicks.
-func (ch *chartHeader) SetRemoveButtonClickCallback(cb func()) {
-	ch.removeButton.SetClickCallback(cb)
+func (h *header) SetRemoveButtonClickCallback(cb func()) {
+	h.removeButton.SetClickCallback(cb)
 }
 
 // Close frees the resources backing the ChartHeader.
-func (ch *chartHeader) Close() {
-	ch.refreshButton.Close()
-	ch.addButton.Close()
-	ch.removeButton.Close()
+func (h *header) Close() {
+	h.refreshButton.Close()
+	h.addButton.Close()
+	h.removeButton.Close()
 }

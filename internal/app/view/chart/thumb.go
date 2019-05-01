@@ -28,7 +28,7 @@ var (
 // Thumb shows a thumbnail for a stock.
 type Thumb struct {
 	// header renders the header with the symbol, quote, and buttons.
-	header *chartHeader
+	header *header
 
 	dailyStochastic         *stochastic
 	dailyStochasticCursor   *stochasticCursor
@@ -72,7 +72,7 @@ type Thumb struct {
 // NewChartThumb creates a Thumb.
 func NewChartThumb(fps int) *Thumb {
 	return &Thumb{
-		header: newChartHeader(&chartHeaderArgs{
+		header: newHeader(&headerArgs{
 			SymbolQuoteTextRenderer: thumbSymbolQuoteTextRenderer,
 			QuotePrinter:            thumbQuotePrinter,
 			ShowRemoveButton:        true,

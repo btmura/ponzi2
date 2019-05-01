@@ -54,7 +54,7 @@ var (
 
 // Chart shows a stock chart for a single stock.
 type Chart struct {
-	header *chartHeader
+	header *header
 
 	prices        *price
 	priceAxis     *priceAxis
@@ -122,7 +122,7 @@ type Chart struct {
 // NewChart creates a new Chart.
 func NewChart(fps int) *Chart {
 	return &Chart{
-		header: newChartHeader(&chartHeaderArgs{
+		header: newHeader(&headerArgs{
 			SymbolQuoteTextRenderer: chartSymbolQuoteTextRenderer,
 			QuotePrinter:            chartQuotePrinter,
 			ShowRefreshButton:       true,
