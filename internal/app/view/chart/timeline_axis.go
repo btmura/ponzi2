@@ -45,7 +45,7 @@ func (t *timelineAxis) SetData(r model.Range, ts *model.TradingSessionSeries) er
 	if err != nil {
 		return err
 	}
-	t.MaxLabelSize = chartAxisLabelTextRenderer.Measure(txt)
+	t.MaxLabelSize = axisLabelTextRenderer.Measure(txt)
 
 	labels, err := makeTimelineLabels(r, ts.TradingSessions)
 	if err != nil {
@@ -72,7 +72,7 @@ func (t *timelineAxis) Render(fudge float32) {
 			X: r.Min.X + int(float32(r.Dx())*l.percent) - l.size.X/2,
 			Y: r.Min.Y + r.Dy()/2 - l.size.Y/2,
 		}
-		chartAxisLabelTextRenderer.Render(l.text, tp, color.White)
+		axisLabelTextRenderer.Render(l.text, tp, color.White)
 	}
 }
 
@@ -136,7 +136,7 @@ func makeTimelineLabels(r model.Range, ts []*model.TradingSession) ([]timelineLa
 		ls = append(ls, timelineLabel{
 			percent: float32(i) / float32(len(ts)),
 			text:    txt,
-			size:    chartAxisLabelTextRenderer.Measure(txt),
+			size:    axisLabelTextRenderer.Measure(txt),
 		})
 	}
 

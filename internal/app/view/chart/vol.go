@@ -106,7 +106,7 @@ func makeVolumeLabel(maxVolume int, perc float32) volumeLabel {
 	return volumeLabel{
 		percent: perc,
 		text:    t,
-		size:    chartAxisLabelTextRenderer.Measure(t),
+		size:    axisLabelTextRenderer.Measure(t),
 	}
 }
 

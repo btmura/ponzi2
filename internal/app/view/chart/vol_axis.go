@@ -60,7 +60,7 @@ func (v *volumeAxis) Render(fudge float32) {
 	for _, l := range v.labels {
 		x := r.Max.X - l.size.X
 		y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
-		chartAxisLabelTextRenderer.Render(l.text, image.Pt(x, y), color.White)
+		axisLabelTextRenderer.Render(l.text, image.Pt(x, y), color.White)
 	}
 }
 

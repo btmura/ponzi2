@@ -660,7 +660,7 @@ func (v *View) NewChart() *chart.Chart {
 
 // NewChartThumb returns a new chart thumbnail.
 func (v *View) NewChartThumb() *chart.Thumb {
-	return chart.NewChartThumb(fps)
+	return chart.NewThumb(fps)
 }
 
 // SetChart sets the View's main chart.

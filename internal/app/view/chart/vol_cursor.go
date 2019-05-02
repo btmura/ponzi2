@@ -72,8 +72,8 @@ func (v *volumeCursor) Render(fudge float32) {
 		Y: v.labelRect.Min.Y + int(float32(v.labelRect.Dy())*l.percent) - l.size.Y/2,
 	}
 
-	rect.RenderBubble(tp, l.size, chartAxisLabelBubbleSpec)
-	chartAxisLabelTextRenderer.Render(l.text, tp, color.White)
+	rect.RenderBubble(tp, l.size, axisLabelBubbleSpec)
+	axisLabelTextRenderer.Render(l.text, tp, color.White)
 }
 
 func (v *volumeCursor) Close() {

@@ -92,6 +92,6 @@ func makeStochasticLabel(perc float32) stochasticLabel {
 	return stochasticLabel{
 		percent: perc,
 		text:    t,
-		size:    chartAxisLabelTextRenderer.Measure(t),
+		size:    axisLabelTextRenderer.Measure(t),
 	}
 }

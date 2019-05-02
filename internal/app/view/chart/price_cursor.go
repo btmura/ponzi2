@@ -68,8 +68,8 @@ func (p *priceCursor) Render(fudge float32) {
 		Y: p.labelRect.Min.Y + int(float32(p.labelRect.Dy())*perc) - l.size.Y/2,
 	}
 
-	rect.RenderBubble(tp, l.size, chartAxisLabelBubbleSpec)
-	chartAxisLabelTextRenderer.Render(l.text, tp, color.White)
+	rect.RenderBubble(tp, l.size, axisLabelBubbleSpec)
+	axisLabelTextRenderer.Render(l.text, tp, color.White)
 }
 
 func (p *priceCursor) Close() {

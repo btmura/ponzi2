@@ -85,15 +85,15 @@ func (t *timelineCursor) Render(fudge float32) {
 	}
 
 	text := t.dates[i].Format(t.layout)
-	size := chartAxisLabelTextRenderer.Measure(text)
+	size := axisLabelTextRenderer.Measure(text)
 
 	tp := image.Point{
 		X: t.mousePos.X - size.X/2,
 		Y: t.labelRect.Min.Y + t.labelRect.Dy()/2 - size.Y/2,
 	}
 
-	rect.RenderBubble(tp, size, chartAxisLabelBubbleSpec)
-	chartAxisLabelTextRenderer.Render(text, tp, color.White)
+	rect.RenderBubble(tp, size, axisLabelBubbleSpec)
+	axisLabelTextRenderer.Render(text, tp, color.White)
 }
 
 func (t *timelineCursor) Close() {

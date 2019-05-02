@@ -20,9 +20,8 @@ import (
 //go:generate esc -o bindata.go -pkg chart -include ".*(ply|png)" -modtime 1337 -private data
 
 const (
-	chartRounding                   = 10
-	chartPadding                    = 5
-	chartAxisVerticalPaddingPercent = .05
+	chartRounding = 10
+	chartPadding  = 5
 )
 
 var (
@@ -30,26 +29,14 @@ var (
 	chartQuotePrinter            = func(q *model.Quote) string { return status.Join(status.PriceChange(q), status.SourceUpdate(q)) }
 )
 
-// Constants for rendering a bubble behind an axis-label.
-const (
-	chartAxisLabelBubblePadding  = 4
-	chartAxisLabelBubbleRounding = 6
-)
-
-var chartAxisLabelBubbleSpec = rect.BubbleSpec{
-	Rounding: 6,
-	Padding:  4,
-}
-
-// Shared variables used by multiple chart components.
 var (
-	chartAxisLabelTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
-	chartGridHorizLine         = vao.HorizLine(color.Gray)
+	axisLabelBubbleSpec   = rect.BubbleSpec{Rounding: 6, Padding: 4}
+	axisLabelTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
 )
 
 var (
-	chartCursorHorizLine = vao.HorizLine(color.LightGray)
-	chartCursorVertLine  = vao.VertLine(color.LightGray)
+	cursorHorizLine = vao.HorizLine(color.LightGray)
+	cursorVertLine  = vao.VertLine(color.LightGray)
 )
 
 // Chart shows a stock chart for a single stock.
@@ -532,11 +519,11 @@ func (ch *Chart) Close() {
 func renderCursorLines(r image.Rectangle, mousePos image.Point) {
 	if mousePos.In(r) {
 		gfx.SetModelMatrixRect(image.Rect(r.Min.X, mousePos.Y, r.Max.X, mousePos.Y))
-		chartCursorHorizLine.Render()
+		cursorHorizLine.Render()
 	}
 
 	if mousePos.X >= r.Min.X && mousePos.X <= r.Max.X {
 		gfx.SetModelMatrixRect(image.Rect(mousePos.X, r.Min.Y, mousePos.X, r.Max.Y))
-		chartCursorVertLine.Render()
+		cursorVertLine.Render()
 	}
 }

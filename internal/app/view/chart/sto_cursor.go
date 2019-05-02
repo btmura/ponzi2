@@ -47,23 +47,24 @@ func (s *stochasticCursor) Render(fudge float32) {
 
 	perc := float32(s.mousePos.Y-s.stoRect.Min.Y) / float32(s.stoRect.Dy())
 	l := makeStochasticLabel(perc)
-
-	var tp image.Point
-	tp.X = s.labelRect.Max.X - l.size.X
-	tp.Y = s.labelRect.Min.Y + int(float32(s.labelRect.Dy())*l.percent) - l.size.Y/2
+	tp := image.Point{
+		X: s.labelRect.Max.X - l.size.X,
+		Y: s.labelRect.Min.Y + int(float32(s.labelRect.Dy())*l.percent) - l.size.Y/2,
+	}
 
 	br := image.Rectangle{Min: tp, Max: tp.Add(l.size)}
-	br = br.Inset(-chartAxisLabelBubblePadding)
+	br = br.Inset(-axisLabelBubbleSpec.Padding)
 
 	if s.mousePos.In(br) {
 		tp.X = s.labelRect.Min.X
 		br = image.Rectangle{Min: tp, Max: tp.Add(l.size)}
-		br = br.Inset(-chartAxisLabelBubblePadding)
+		br = br.Inset(-axisLabelBubbleSpec.Padding)
 	}
 
-	rect.FillRoundedRect(br, chartAxisLabelBubbleRounding)
-	rect.StrokeRoundedRect(br, chartAxisLabelBubbleRounding)
-	chartAxisLabelTextRenderer.Render(l.text, tp, color.White)
+	rect.FillRoundedRect(br, axisLabelBubbleSpec.Rounding)
+	rect.StrokeRoundedRect(br, axisLabelBubbleSpec.Rounding)
+
+	axisLabelTextRenderer.Render(l.text, tp, color.White)
 }
 
 func (s *stochasticCursor) Close() {

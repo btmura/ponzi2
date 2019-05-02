@@ -74,7 +74,7 @@ func (p *priceAxis) Render(fudge float32) {
 				break
 			}
 
-			chartAxisLabelTextRenderer.Render(l.text, pt, color.White)
+			axisLabelTextRenderer.Render(l.text, pt, color.White)
 		}
 
 		pt = pt.Sub(dp)

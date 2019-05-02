@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	thumbChartRounding = 6
-	thumbChartPadding  = 2
+	thumbRounding = 6
+	thumbPadding  = 2
 )
 
 var (
@@ -69,15 +69,15 @@ type Thumb struct {
 	mousePos image.Point
 }
 
-// NewChartThumb creates a Thumb.
-func NewChartThumb(fps int) *Thumb {
+// NewThumb creates a Thumb.
+func NewThumb(fps int) *Thumb {
 	return &Thumb{
 		header: newHeader(&headerArgs{
 			SymbolQuoteTextRenderer: thumbSymbolQuoteTextRenderer,
 			QuotePrinter:            thumbQuotePrinter,
 			ShowRemoveButton:        true,
-			Rounding:                thumbChartRounding,
-			Padding:                 thumbChartPadding,
+			Rounding:                thumbRounding,
+			Padding:                 thumbPadding,
 			FPS:                     fps,
 		}),
 
@@ -162,7 +162,7 @@ func (t *Thumb) ProcessInput(
 
 	rects := rect.Slice(r, 0.5)
 	for i := range rects {
-		rects[i] = rects[i].Inset(thumbChartPadding)
+		rects[i] = rects[i].Inset(thumbPadding)
 	}
 
 	dr, wr := rects[1], rects[0]
@@ -190,7 +190,7 @@ func (t *Thumb) Update() (dirty bool) {
 // Render renders the Thumb.
 func (t *Thumb) Render(fudge float32) error {
 	// Render the border around the chart.
-	rect.StrokeRoundedRect(t.fullBounds, thumbChartRounding)
+	rect.StrokeRoundedRect(t.fullBounds, thumbRounding)
 
 	// Render the header and the line below it.
 	t.header.Render(fudge)

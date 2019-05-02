@@ -8,7 +8,11 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/color"
+	"github.com/btmura/ponzi2/internal/app/view/vao"
 )
+
+// priceHorizLine is the horizontal lines rendered behind the candlesticks.
+var priceHorizLine = vao.HorizLine(color.Gray)
 
 // price shows the candlesticks and price labels for a single stock.
 type price struct {
@@ -73,7 +77,7 @@ func (p *price) Render(fudge float32) {
 			}
 
 			gfx.SetModelMatrixRect(image.Rect(r.Min.X, y, r.Max.X, y))
-			chartGridHorizLine.Render()
+			priceHorizLine.Render()
 		}
 		y -= dy
 	}
@@ -116,7 +120,8 @@ func priceRange(ts []*model.TradingSession) [2]float32 {
 		return [2]float32{0, 0}
 	}
 
-	padding := (high - low) * chartAxisVerticalPaddingPercent
+	// Pad the high and low, so the candlesticks have space around them.
+	padding := (high - low) * .05
 	low -= padding
 	high += padding
 
@@ -132,7 +137,7 @@ func makePriceLabel(v float32) priceLabel {
 	t := strconv.FormatFloat(float64(v), 'f', 2, 32)
 	return priceLabel{
 		text: t,
-		size: chartAxisLabelTextRenderer.Measure(t),
+		size: axisLabelTextRenderer.Measure(t),
 	}
 }
 

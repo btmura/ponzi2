@@ -73,27 +73,27 @@ func (l *legend) renderMATrackLineLegend() {
 	}
 
 	mal.text = l.chartLegendMALabelText(ms25[i], ms50[i], ms200[i])
-	mal.size = chartAxisLabelTextRenderer.Measure(mal.text)
+	mal.size = axisLabelTextRenderer.Measure(mal.text)
 
 	MAp := image.Point{
 		X: l.labelRect.Min.X + l.labelRect.Dx()/2 - mal.size.X/2,
 		Y: l.labelRect.Min.Y + l.labelRect.Dy() - int(math.Floor(float64(mal.size.Y)*float64(2.4))),
 	}
 
-	rect.RenderBubble(MAp, mal.size, chartAxisLabelBubbleSpec)
-	chartAxisLabelTextRenderer.Render(mal.text, MAp, color.White)
+	rect.RenderBubble(MAp, mal.size, axisLabelBubbleSpec)
+	axisLabelTextRenderer.Render(mal.text, MAp, color.White)
 }
 
-func (ch *legend) renderCandleTrackLineLegend() {
-	if !ch.mousePos.In(ch.priceRect) {
+func (l *legend) renderCandleTrackLineLegend() {
+	if !l.mousePos.In(l.priceRect) {
 		return
 	}
 
 	// Render candle trackline legend
-	ts := ch.tradingSessionSeries.TradingSessions
+	ts := l.tradingSessionSeries.TradingSessions
 
 	pl := legendLabel{
-		percent: float32(ch.mousePos.X-ch.priceRect.Min.X) / float32(ch.priceRect.Dx()),
+		percent: float32(l.mousePos.X-l.priceRect.Min.X) / float32(l.priceRect.Dx()),
 	}
 
 	i := int(math.Floor(float64(len(ts)) * float64(pl.percent)))
@@ -102,16 +102,16 @@ func (ch *legend) renderCandleTrackLineLegend() {
 	}
 
 	// Candlestick and moving average legends stacked as two chartAxisLabelBubbleSpec lines
-	pl.text = ch.chartLegendCandleLabelText(ts[i])
-	pl.size = chartAxisLabelTextRenderer.Measure(pl.text)
+	pl.text = l.chartLegendCandleLabelText(ts[i])
+	pl.size = axisLabelTextRenderer.Measure(pl.text)
 
 	ohlcvp := image.Point{
-		X: ch.labelRect.Min.X + ch.labelRect.Dx()/2 - pl.size.X/2,
-		Y: ch.labelRect.Min.Y + ch.labelRect.Dy() - pl.size.Y,
+		X: l.labelRect.Min.X + l.labelRect.Dx()/2 - pl.size.X/2,
+		Y: l.labelRect.Min.Y + l.labelRect.Dy() - pl.size.Y,
 	}
 
-	rect.RenderBubble(ohlcvp, pl.size, chartAxisLabelBubbleSpec)
-	chartAxisLabelTextRenderer.Render(pl.text, ohlcvp, color.White)
+	rect.RenderBubble(ohlcvp, pl.size, axisLabelBubbleSpec)
+	axisLabelTextRenderer.Render(pl.text, ohlcvp, color.White)
 }
 
 type legendLabel struct {
