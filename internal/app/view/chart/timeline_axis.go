@@ -53,6 +53,7 @@ func (t *timelineAxis) SetData(r model.Range, ts *model.TradingSessionSeries) er
 	}
 	t.labels = labels
 
+	t.renderable = true
 	return nil
 }
 
