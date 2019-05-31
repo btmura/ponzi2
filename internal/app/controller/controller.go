@@ -10,6 +10,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/chart"
+	"github.com/btmura/ponzi2/internal/app/view/title"
 	"github.com/btmura/ponzi2/internal/errors"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
@@ -23,7 +24,7 @@ type Controller struct {
 	view *view.View
 
 	// title controls the title bar.
-	title *view.Title
+	title *title.Title
 
 	// symbolToChartMap maps symbol to Chart. Only one entry right now.
 	symbolToChartMap map[string]*chart.Chart
@@ -52,7 +53,7 @@ func New(iexClient *iex.Client) *Controller {
 	c := &Controller{
 		model:                 model.New(),
 		view:                  view.New(),
-		title:                 view.NewTitle(),
+		title:                 title.New(),
 		symbolToChartMap:      map[string]*chart.Chart{},
 		symbolToChartThumbMap: map[string]*chart.Thumb{},
 		chartRange:            model.OneYear,

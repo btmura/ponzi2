@@ -21,6 +21,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/animation"
 	"github.com/btmura/ponzi2/internal/app/view/centeredtext"
 	"github.com/btmura/ponzi2/internal/app/view/chart"
+	"github.com/btmura/ponzi2/internal/app/view/title"
 	"github.com/btmura/ponzi2/internal/matrix"
 )
 
@@ -85,7 +86,7 @@ const (
 // The View renders the UI to view and edit the model's stocks that it observes.
 type View struct {
 	// title renders the window title.
-	title *Title
+	title *title.Title
 
 	// charts renders the charts in the main area.
 	charts []*viewChart
@@ -187,7 +188,7 @@ func (v *viewAnimator) Close() {
 // New creates a new View.
 func New() *View {
 	return &View{
-		title:                        NewTitle(),
+		title:                        title.New(),
 		sidebar:                      new(sidebar),
 		instructionsText:             centeredtext.New(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER..."),
 		inputSymbolText:              centeredtext.New(inputSymbolTextRenderer, "", centeredtext.Bubble(chartRounding, chartPadding)),
@@ -648,7 +649,7 @@ func (v *View) SetChartZoomChangeCallback(cb func(zoomzoomChange ZoomChange)) {
 }
 
 // SetTitle sets the View's title.
-func (v *View) SetTitle(title *Title) {
+func (v *View) SetTitle(title *title.Title) {
 	defer v.WakeLoop()
 	v.title = title
 }
