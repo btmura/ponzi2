@@ -4,6 +4,17 @@ package iex
 
 import "strconv"
 
+func _() {
+	// An "invalid array index" compiler error signifies that the constant values have changed.
+	// Re-run the stringer command to generate them again.
+	var x [1]struct{}
+	_ = x[SourceUnspecified-0]
+	_ = x[IEXRealTimePrice-1]
+	_ = x[FifteenMinuteDelayedPrice-2]
+	_ = x[Close-3]
+	_ = x[PreviousClose-4]
+}
+
 const _Source_name = "SourceUnspecifiedIEXRealTimePriceFifteenMinuteDelayedPriceClosePreviousClose"
 
 var _Source_index = [...]uint8{0, 17, 33, 58, 63, 76}

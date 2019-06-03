@@ -11,6 +11,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/chart"
 	"github.com/btmura/ponzi2/internal/app/view/title"
+	"github.com/btmura/ponzi2/internal/app/view/ui"
 	"github.com/btmura/ponzi2/internal/errors"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
@@ -21,7 +22,7 @@ type Controller struct {
 	model *model.Model
 
 	// view is the UI that the Controller updates.
-	view *view.View
+	view *ui.View
 
 	// title controls the title bar.
 	title *title.Title
@@ -52,7 +53,7 @@ type Controller struct {
 func New(iexClient *iex.Client) *Controller {
 	c := &Controller{
 		model:                 model.New(),
-		view:                  view.New(),
+		view:                  ui.New(),
 		title:                 title.New(),
 		symbolToChartMap:      map[string]*chart.Chart{},
 		symbolToChartThumbMap: map[string]*chart.Thumb{},

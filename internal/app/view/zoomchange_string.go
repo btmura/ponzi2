@@ -4,6 +4,15 @@ package view
 
 import "strconv"
 
+func _() {
+	// An "invalid array index" compiler error signifies that the constant values have changed.
+	// Re-run the stringer command to generate them again.
+	var x [1]struct{}
+	_ = x[ZoomChangeUnspecified-0]
+	_ = x[ZoomIn-1]
+	_ = x[ZoomOut-2]
+}
+
 const _ZoomChange_name = "ZoomChangeUnspecifiedZoomInZoomOut"
 
 var _ZoomChange_index = [...]uint8{0, 21, 27, 34}

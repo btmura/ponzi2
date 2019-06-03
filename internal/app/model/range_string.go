@@ -4,6 +4,15 @@ package model
 
 import "strconv"
 
+func _() {
+	// An "invalid array index" compiler error signifies that the constant values have changed.
+	// Re-run the stringer command to generate them again.
+	var x [1]struct{}
+	_ = x[RangeUnspecified-0]
+	_ = x[OneDay-1]
+	_ = x[OneYear-2]
+}
+
 const _Range_name = "RangeUnspecifiedOneDayOneYear"
 
 var _Range_index = [...]uint8{0, 16, 22, 29}
