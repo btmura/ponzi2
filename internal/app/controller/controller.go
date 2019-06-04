@@ -22,7 +22,7 @@ type Controller struct {
 	model *model.Model
 
 	// view is the UI that the Controller updates.
-	view *ui.View
+	view *ui.UI
 
 	// title controls the title bar.
 	title *title.Title

@@ -73,8 +73,8 @@ func init() {
 	runtime.LockOSThread()
 }
 
-// The View renders the UI to view and edit the model's stocks that it observes.
-type View struct {
+// The UI renders the UI to view and edit the model's stocks that it observes.
+type UI struct {
 	// title renders the window title.
 	title *title.Title
 
@@ -176,8 +176,8 @@ func (v *viewAnimator) Close() {
 }
 
 // New creates a new View.
-func New() *View {
-	return &View{
+func New() *UI {
+	return &UI{
 		title:                        title.New(),
 		sidebar:                      new(sidebar),
 		instructionsText:             centeredtext.New(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER..."),
@@ -188,7 +188,7 @@ func New() *View {
 }
 
 // Init initializes the View and returns a cleanup function.
-func (v *View) Init(ctx context.Context) (cleanup func(), err error) {
+func (u *UI) Init(ctx context.Context) (cleanup func(), err error) {
 	if err := glfw.Init(); err != nil {
 		return nil, err
 	}
@@ -203,7 +203,7 @@ func (v *View) Init(ctx context.Context) (cleanup func(), err error) {
 	if err != nil {
 		return nil, err
 	}
-	v.win = win
+	u.win = win
 
 	win.MakeContextCurrent()
 
@@ -231,40 +231,40 @@ func (v *View) Init(ctx context.Context) (cleanup func(), err error) {
 
 	// Call the size callback to set the initial viewport.
 	w, h := win.GetSize()
-	v.handleSizeEvent(w, h)
+	u.handleSizeEvent(w, h)
 	win.SetSizeCallback(func(win *glfw.Window, width, height int) {
-		v.handleSizeEvent(width, height)
+		u.handleSizeEvent(width, height)
 	})
 
 	win.SetCharCallback(func(win *glfw.Window, char rune) {
-		v.handleCharEvent(char)
+		u.handleCharEvent(char)
 	})
 
 	win.SetKeyCallback(func(win *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-		v.handleKeyEvent(key, action)
+		u.handleKeyEvent(key, action)
 	})
 
 	win.SetCursorPosCallback(func(win *glfw.Window, xpos, ypos float64) {
-		v.handleCursorPosEvent(xpos, ypos)
+		u.handleCursorPosEvent(xpos, ypos)
 	})
 
 	win.SetMouseButtonCallback(func(win *glfw.Window, button glfw.MouseButton, action glfw.Action, mods glfw.ModifierKey) {
-		v.handleMouseButtonEvent(button, action)
+		u.handleMouseButtonEvent(button, action)
 	})
 
 	win.SetScrollCallback(func(win *glfw.Window, xoff, yoff float64) {
-		v.handleScrollEvent(yoff)
+		u.handleScrollEvent(yoff)
 	})
 
 	return func() { glfw.Terminate() }, nil
 }
 
-func (v *View) handleSizeEvent(width, height int) {
+func (u *UI) handleSizeEvent(width, height int) {
 	glog.V(2).Infof("width:%o height:%o", width, height)
-	defer v.WakeLoop()
+	defer u.WakeLoop()
 
 	s := image.Pt(width, height)
-	if v.winSize == s {
+	if u.winSize == s {
 		return
 	}
 
@@ -274,12 +274,12 @@ func (v *View) handleSizeEvent(width, height int) {
 	fw, fh := float32(s.X), float32(s.Y)
 	gfx.SetProjectionViewMatrix(matrix.Ortho(fw, fh, fw /* use width as depth */))
 
-	v.winSize = s
+	u.winSize = s
 
 	// Reset the sidebar scroll offset if the sidebar is shorter than the window.
-	m := v.metrics()
+	m := u.metrics()
 	if m.sidebarBounds.Dy() < m.sidebarRegion.Dy() {
-		v.sidebar.sidebarScrollOffset = image.ZP
+		u.sidebar.sidebarScrollOffset = image.ZP
 	}
 }
 
@@ -301,7 +301,7 @@ type viewMetrics struct {
 	chartRegion image.Rectangle
 }
 
-func (v *View) metrics() viewMetrics {
+func (u *UI) metrics() viewMetrics {
 	// +---+---------+---+
 	// |   | padding |   |
 	// |   +---------+   |
@@ -314,13 +314,13 @@ func (v *View) metrics() viewMetrics {
 	// |   | padding |   |
 	// +---+---------+---+
 
-	if len(v.sidebar.thumbs) == 0 {
-		cb := image.Rect(0, 0, v.winSize.X, v.winSize.Y)
+	if len(u.sidebar.thumbs) == 0 {
+		cb := image.Rect(0, 0, u.winSize.X, u.winSize.Y)
 		cb = cb.Inset(viewPadding)
 		return viewMetrics{chartBounds: cb, chartRegion: cb}
 	}
 
-	cb := image.Rect(viewPadding+chartThumbSize.X, 0, v.winSize.X, v.winSize.Y)
+	cb := image.Rect(viewPadding+chartThumbSize.X, 0, u.winSize.X, u.winSize.Y)
 	cb = cb.Inset(viewPadding)
 
 	// +---+---------+---+---------+---+
@@ -335,13 +335,13 @@ func (v *View) metrics() viewMetrics {
 	// |   | padding |   | padding |   |
 	// +---+---------+---+---------+---+
 
-	sh := (viewPadding+chartThumbSize.Y)*len(v.sidebar.thumbs) + viewPadding
+	sh := (viewPadding+chartThumbSize.Y)*len(u.sidebar.thumbs) + viewPadding
 
 	sb := image.Rect(
-		viewPadding, v.winSize.Y-sh,
-		viewPadding+chartThumbSize.X, v.winSize.Y,
+		viewPadding, u.winSize.Y-sh,
+		viewPadding+chartThumbSize.X, u.winSize.Y,
 	)
-	sb = sb.Add(v.sidebar.sidebarScrollOffset)
+	sb = sb.Add(u.sidebar.sidebarScrollOffset)
 
 	fb := image.Rect(
 		sb.Min.X, sb.Max.Y-viewPadding-chartThumbSize.Y,
@@ -351,7 +351,7 @@ func (v *View) metrics() viewMetrics {
 	// Side bar region.
 	sr := image.Rect(
 		viewPadding, 0,
-		viewPadding+chartThumbSize.X, v.winSize.Y,
+		viewPadding+chartThumbSize.X, u.winSize.Y,
 	)
 
 	return viewMetrics{
@@ -363,19 +363,19 @@ func (v *View) metrics() viewMetrics {
 	}
 }
 
-func (v *View) handleCharEvent(char rune) {
+func (u *UI) handleCharEvent(char rune) {
 	glog.V(2).Infof("char:%c", char)
-	defer v.WakeLoop()
+	defer u.WakeLoop()
 
 	char = unicode.ToUpper(char)
 	if _, ok := acceptedChars[char]; ok {
-		v.inputSymbolText.Text += string(char)
+		u.inputSymbolText.Text += string(char)
 	}
 }
 
-func (v *View) handleKeyEvent(key glfw.Key, action glfw.Action) {
+func (u *UI) handleKeyEvent(key glfw.Key, action glfw.Action) {
 	glog.V(2).Infof("key:%v action:%v", key, action)
-	defer v.WakeLoop()
+	defer u.WakeLoop()
 
 	if action != glfw.Release {
 		return
@@ -383,30 +383,30 @@ func (v *View) handleKeyEvent(key glfw.Key, action glfw.Action) {
 
 	switch key {
 	case glfw.KeyEscape:
-		v.inputSymbolText.Text = ""
+		u.inputSymbolText.Text = ""
 
 	case glfw.KeyBackspace:
-		if l := len(v.inputSymbolText.Text); l > 0 {
-			v.inputSymbolText.Text = v.inputSymbolText.Text[:l-1]
+		if l := len(u.inputSymbolText.Text); l > 0 {
+			u.inputSymbolText.Text = u.inputSymbolText.Text[:l-1]
 		}
 
 	case glfw.KeyEnter:
-		v.inputSymbolSubmittedCallback(v.inputSymbolText.Text)
-		v.inputSymbolText.Text = ""
+		u.inputSymbolSubmittedCallback(u.inputSymbolText.Text)
+		u.inputSymbolText.Text = ""
 	}
 }
 
-func (v *View) handleCursorPosEvent(x, y float64) {
+func (u *UI) handleCursorPosEvent(x, y float64) {
 	glog.V(2).Infof("x:%f y:%f", x, y)
-	defer v.WakeLoop()
+	defer u.WakeLoop()
 
 	// Flip Y-axis since the OpenGL coordinate system makes lower left the origin.
-	v.mousePos = image.Pt(int(x), v.winSize.Y-int(y))
+	u.mousePos = image.Pt(int(x), u.winSize.Y-int(y))
 }
 
-func (v *View) handleMouseButtonEvent(button glfw.MouseButton, action glfw.Action) {
+func (u *UI) handleMouseButtonEvent(button glfw.MouseButton, action glfw.Action) {
 	glog.V(2).Infof("button:%v action:%v", button, action)
-	defer v.WakeLoop()
+	defer u.WakeLoop()
 
 	if button != glfw.MouseButtonLeft {
 		return
@@ -414,32 +414,32 @@ func (v *View) handleMouseButtonEvent(button glfw.MouseButton, action glfw.Actio
 
 	switch action {
 	case glfw.Press:
-		v.mouseLeftButtonPressedCount = 1
+		u.mouseLeftButtonPressedCount = 1
 	case glfw.Release:
-		v.mouseLeftButtonPressedCount = 0
+		u.mouseLeftButtonPressedCount = 0
 	}
 
-	v.mouseLeftButtonReleased = action == glfw.Release
+	u.mouseLeftButtonReleased = action == glfw.Release
 }
 
-func (v *View) handleScrollEvent(yoff float64) {
+func (u *UI) handleScrollEvent(yoff float64) {
 	glog.V(2).Infof("yoff:%f", yoff)
-	defer v.WakeLoop()
+	defer u.WakeLoop()
 
 	if yoff != -1 && yoff != +1 {
 		return
 	}
 
-	if len(v.sidebar.thumbs) == 0 {
+	if len(u.sidebar.thumbs) == 0 {
 		return
 	}
 
-	m := v.metrics()
+	m := u.metrics()
 
 	switch {
-	case v.mousePos.In(m.sidebarRegion):
+	case u.mousePos.In(m.sidebarRegion):
 		// Don't scroll if sidebar is shorter than the window.
-		if m.sidebarBounds.Dy() < v.winSize.Y {
+		if m.sidebarBounds.Dy() < u.winSize.Y {
 			return
 		}
 
@@ -453,25 +453,25 @@ func (v *View) handleScrollEvent(yoff float64) {
 			off.Y += topGap
 		}
 
-		v.sidebar.sidebarScrollOffset = v.sidebar.sidebarScrollOffset.Add(off)
+		u.sidebar.sidebarScrollOffset = u.sidebar.sidebarScrollOffset.Add(off)
 
-	case v.mousePos.In(m.chartRegion):
+	case u.mousePos.In(m.chartRegion):
 		switch {
 		case yoff < 0: // Scroll wheel down
-			v.chartZoomChangeCallback(view.ZoomOut)
+			u.chartZoomChangeCallback(view.ZoomOut)
 		case yoff > 0: // Scroll wheel up
-			v.chartZoomChangeCallback(view.ZoomIn)
+			u.chartZoomChangeCallback(view.ZoomIn)
 		}
 	}
 }
 
 // RunLoop runs the "game loop".
-func (v *View) RunLoop(ctx context.Context, runLoopHook func(context.Context) error) error {
+func (u *UI) RunLoop(ctx context.Context, runLoopHook func(context.Context) error) error {
 start:
 	var lag float64
 	dirty := false
 	prevTime := glfw.GetTime()
-	for !v.win.ShouldClose() {
+	for !u.win.ShouldClose() {
 		currTime := glfw.GetTime() /* seconds */
 		elapsed := currTime - prevTime
 		prevTime = currTime
@@ -481,11 +481,11 @@ start:
 			return err
 		}
 
-		callbacks := v.processInput()
+		callbacks := u.processInput()
 
 		i := 0
 		for ; i < minUpdates || i < maxUpdates && lag >= updateSec; i++ {
-			dirty = v.update()
+			dirty = u.update()
 			lag -= updateSec
 		}
 		if lag < 0 {
@@ -498,9 +498,9 @@ start:
 		}
 
 		now := time.Now()
-		v.render(fudge)
+		u.render(fudge)
 
-		v.win.SwapBuffers()
+		u.win.SwapBuffers()
 		glog.V(3).Infof("updates:%o lag(%f)/updateSec(%f)=fudge(%f) dirty:%t render:%v", i, lag, updateSec, fudge, dirty, time.Since(now).Seconds())
 
 		// Call any callbacks scheduled by views.
@@ -525,7 +525,7 @@ start:
 }
 
 // WakeLoop wakes up the loop if it is asleep.
-func (v *View) WakeLoop() {
+func (u *UI) WakeLoop() {
 	glfw.PostEmptyEvent()
 }
 
@@ -552,125 +552,125 @@ func (ic inputContext) LeftClickInBounds() bool {
 	return ic.MouseLeftButtonReleased && ic.MousePos.In(ic.Bounds)
 }
 
-func (v *View) processInput() []func() {
-	m := v.metrics()
+func (u *UI) processInput() []func() {
+	m := u.metrics()
 
 	ic := inputContext{
 		Bounds:                  m.chartBounds,
-		MousePos:                v.mousePos,
-		MouseLeftButtonDragging: v.mouseLeftButtonPressedCount > fps/2,
-		MouseLeftButtonReleased: v.mouseLeftButtonReleased,
+		MousePos:                u.mousePos,
+		MouseLeftButtonDragging: u.mouseLeftButtonPressedCount > fps/2,
+		MouseLeftButtonReleased: u.mouseLeftButtonReleased,
 		ScheduledCallbacks:      new([]func()),
 	}
 
 	if ic.MouseLeftButtonDragging {
-		fmt.Printf("drag: %t count: %d\n", ic.MouseLeftButtonDragging, v.mouseLeftButtonPressedCount)
+		fmt.Printf("drag: %t count: %d\n", ic.MouseLeftButtonDragging, u.mouseLeftButtonPressedCount)
 	}
 
-	v.instructionsText.ProcessInput(ic.Bounds)
-	v.inputSymbolText.ProcessInput(ic.Bounds)
+	u.instructionsText.ProcessInput(ic.Bounds)
+	u.inputSymbolText.ProcessInput(ic.Bounds)
 
-	for i := 0; i < len(v.charts); i++ {
-		ch := v.charts[i]
+	for i := 0; i < len(u.charts); i++ {
+		ch := u.charts[i]
 		ch.chart.ProcessInput(ic.Bounds, ic.MousePos, ic.MouseLeftButtonReleased, ic.ScheduledCallbacks)
 	}
 
-	v.sidebar.ProcessInput(ic, m)
+	u.sidebar.ProcessInput(ic, m)
 
 	// Reset any flags for the next inputContext.
-	if v.mouseLeftButtonPressedCount > 0 {
-		v.mouseLeftButtonPressedCount++
+	if u.mouseLeftButtonPressedCount > 0 {
+		u.mouseLeftButtonPressedCount++
 	}
-	v.mouseLeftButtonReleased = false
+	u.mouseLeftButtonReleased = false
 
 	return *ic.ScheduledCallbacks
 }
 
-func (v *View) update() (dirty bool) {
-	for i := 0; i < len(v.charts); i++ {
-		ch := v.charts[i]
+func (u *UI) update() (dirty bool) {
+	for i := 0; i < len(u.charts); i++ {
+		ch := u.charts[i]
 		if ch.Update() {
 			dirty = true
 		}
 		if ch.DoneExiting() {
-			v.charts = append(v.charts[:i], v.charts[i+1:]...)
+			u.charts = append(u.charts[:i], u.charts[i+1:]...)
 			ch.Close()
 			i--
 		}
 	}
 
-	if v.sidebar.Update() {
+	if u.sidebar.Update() {
 		dirty = true
 	}
 
 	return dirty
 }
 
-func (v *View) render(fudge float32) {
-	v.title.Render(v.win)
+func (u *UI) render(fudge float32) {
+	u.title.Render(u.win)
 
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	// Render the main chart.
-	for _, ch := range v.charts {
+	for _, ch := range u.charts {
 		ch.Render(fudge)
 	}
 
 	// Render instructions if there are no charts to show.
-	if len(v.charts) == 0 {
-		v.instructionsText.Render(fudge)
+	if len(u.charts) == 0 {
+		u.instructionsText.Render(fudge)
 	}
 
 	// Render the input symbol over the chart.
-	v.inputSymbolText.Render(fudge)
+	u.inputSymbolText.Render(fudge)
 
 	// Render the sidebar thumbnails.
-	v.sidebar.Render(fudge)
+	u.sidebar.Render(fudge)
 }
 
 // SetInputSymbolSubmittedCallback sets the callback for when a new symbol is entered.
-func (v *View) SetInputSymbolSubmittedCallback(cb func(symbol string)) {
-	v.inputSymbolSubmittedCallback = cb
+func (u *UI) SetInputSymbolSubmittedCallback(cb func(symbol string)) {
+	u.inputSymbolSubmittedCallback = cb
 }
 
 // SetChartZoomChangeCallback sets the callback for when the chart is zoomed in or out.
-func (v *View) SetChartZoomChangeCallback(cb func(zoomzoomChange view.ZoomChange)) {
-	v.chartZoomChangeCallback = cb
+func (u *UI) SetChartZoomChangeCallback(cb func(zoomzoomChange view.ZoomChange)) {
+	u.chartZoomChangeCallback = cb
 }
 
 // SetTitle sets the View's title.
-func (v *View) SetTitle(title *title.Title) {
-	defer v.WakeLoop()
-	v.title = title
+func (u *UI) SetTitle(title *title.Title) {
+	defer u.WakeLoop()
+	u.title = title
 }
 
 // NewChart returns a new chart.
-func (v *View) NewChart() *chart.Chart {
+func (u *UI) NewChart() *chart.Chart {
 	return chart.NewChart(fps)
 }
 
 // NewChartThumb returns a new chart thumbnail.
-func (v *View) NewChartThumb() *chart.Thumb {
+func (u *UI) NewChartThumb() *chart.Thumb {
 	return chart.NewThumb(fps)
 }
 
 // SetChart sets the View's main chart.
-func (v *View) SetChart(ch *chart.Chart) {
-	defer v.WakeLoop()
-	for _, ch := range v.charts {
+func (u *UI) SetChart(ch *chart.Chart) {
+	defer u.WakeLoop()
+	for _, ch := range u.charts {
 		ch.Exit()
 	}
-	v.charts = append([]*viewChart{newViewChart(ch)}, v.charts...)
+	u.charts = append([]*viewChart{newViewChart(ch)}, u.charts...)
 }
 
 // AddChartThumb adds the ChartThumbnail to the side bar.
-func (v *View) AddChartThumb(th *chart.Thumb) {
-	defer v.WakeLoop()
-	v.sidebar.AddChartThumb(th)
+func (u *UI) AddChartThumb(th *chart.Thumb) {
+	defer u.WakeLoop()
+	u.sidebar.AddChartThumb(th)
 }
 
 // RemoveChartThumb removes the ChartThumbnail from the side bar.
-func (v *View) RemoveChartThumb(th *chart.Thumb) {
-	defer v.WakeLoop()
-	v.sidebar.RemoveChartThumb(th)
+func (u *UI) RemoveChartThumb(th *chart.Thumb) {
+	defer u.WakeLoop()
+	u.sidebar.RemoveChartThumb(th)
 }
