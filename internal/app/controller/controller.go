@@ -21,8 +21,8 @@ type Controller struct {
 	// model is the data that the Controller connects to the View.
 	model *model.Model
 
-	// view is the UI that the Controller updates.
-	view *ui.UI
+	// ui is the UI that the Controller updates.
+	ui *ui.UI
 
 	// title controls the title bar.
 	title *title.Title
@@ -53,7 +53,7 @@ type Controller struct {
 func New(iexClient *iex.Client) *Controller {
 	c := &Controller{
 		model:                 model.New(),
-		view:                  ui.New(),
+		ui:                    ui.New(),
 		title:                 title.New(),
 		symbolToChartMap:      map[string]*chart.Chart{},
 		symbolToChartThumbMap: map[string]*chart.Thumb{},
@@ -70,7 +70,7 @@ func New(iexClient *iex.Client) *Controller {
 func (c *Controller) RunLoop() error {
 	ctx := context.Background()
 
-	cleanup, err := c.view.Init(ctx)
+	cleanup, err := c.ui.Init(ctx)
 	if err != nil {
 		return err
 	}
@@ -94,13 +94,13 @@ func (c *Controller) RunLoop() error {
 		}
 	}
 
-	c.view.SetTitle(c.title)
+	c.ui.SetTitle(c.title)
 
-	c.view.SetInputSymbolSubmittedCallback(func(symbol string) {
+	c.ui.SetInputSymbolSubmittedCallback(func(symbol string) {
 		c.setChart(ctx, symbol)
 	})
 
-	c.view.SetChartZoomChangeCallback(func(zoomChange view.ZoomChange) {
+	c.ui.SetChartZoomChangeCallback(func(zoomChange view.ZoomChange) {
 		r := nextRange(c.chartRange, zoomChange)
 
 		if c.chartRange == r {
@@ -131,7 +131,7 @@ func (c *Controller) RunLoop() error {
 		return err
 	}
 
-	return c.view.RunLoop(ctx, c.eventController.process)
+	return c.ui.RunLoop(ctx, c.eventController.process)
 }
 
 func (c *Controller) setChart(ctx context.Context, symbol string) error {
@@ -154,7 +154,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 		ch.Close()
 	}
 
-	ch := c.view.NewChart()
+	ch := c.ui.NewChart()
 	c.symbolToChartMap[symbol] = ch
 
 	data, err := c.chartData(symbol, c.chartRange)
@@ -181,7 +181,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 		}
 	})
 
-	c.view.SetChart(ch)
+	c.ui.SetChart(ch)
 
 	if err := c.refreshCurrentStock(ctx); err != nil {
 		return err
@@ -207,7 +207,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 		return c.stockRefresher.refreshOne(ctx, symbol, c.chartThumbRange)
 	}
 
-	th := c.view.NewChartThumb()
+	th := c.ui.NewChartThumb()
 	c.symbolToChartThumbMap[symbol] = th
 
 	data, err := c.chartData(symbol, c.chartThumbRange)
@@ -230,7 +230,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 		}
 	})
 
-	c.view.AddChartThumb(th)
+	c.ui.AddChartThumb(th)
 
 	if err := c.stockRefresher.refreshOne(ctx, symbol, c.chartThumbRange); err != nil {
 		return err
@@ -259,7 +259,7 @@ func (c *Controller) removeChartThumb(symbol string) error {
 	delete(c.symbolToChartThumbMap, symbol)
 	th.Close()
 
-	c.view.RemoveChartThumb(th)
+	c.ui.RemoveChartThumb(th)
 	c.configSaver.save(toConfig(c.model))
 
 	return nil
@@ -418,7 +418,7 @@ func (c *Controller) onRefreshAllStocksRequest(ctx context.Context) error {
 
 // onEventAdded implements the eventHandler interface.
 func (c *Controller) onEventAdded() {
-	c.view.WakeLoop()
+	c.ui.WakeLoop()
 }
 
 func nextRange(r model.Range, zoomChange view.ZoomChange) model.Range {
