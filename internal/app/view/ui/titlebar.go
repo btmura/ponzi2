@@ -14,6 +14,7 @@ type titleBar struct {
 	text string
 }
 
+// newTitleBar returns a new title bar.
 func newTitleBar(win *glfw.Window) *titleBar {
 	return &titleBar{
 		win:  win,
@@ -21,7 +22,7 @@ func newTitleBar(win *glfw.Window) *titleBar {
 	}
 }
 
-// SetData sets the Title's stock.
+// SetData sets the title bar's stock.
 func (t *titleBar) SetData(data *chart.Data) error {
 	if data == nil {
 		return errors.Errorf("missing data")
@@ -39,8 +40,7 @@ func (t *titleBar) SetData(data *chart.Data) error {
 	return nil
 }
 
-// Render renders the Title.
-func (t *titleBar) Render(fudge float32) error {
+// Render renders the title bar.
+func (t *titleBar) Render(fudge float32) {
 	t.win.SetTitle(t.text)
-	return nil
 }

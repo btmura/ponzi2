@@ -393,7 +393,7 @@ func (ch *Chart) Update() (dirty bool) {
 }
 
 // Render renders the Chart.
-func (ch *Chart) Render(fudge float32) error {
+func (ch *Chart) Render(fudge float32) {
 	// Render the border around the chart.
 	rect.StrokeRoundedRect(ch.fullBounds, chartRounding)
 
@@ -407,12 +407,12 @@ func (ch *Chart) Render(fudge float32) error {
 	if !ch.hasStockUpdated {
 		if ch.loading {
 			ch.loadingText.Render(fudge)
-			return nil
+			return
 		}
 
 		if ch.hasError {
 			ch.errorText.Render(fudge)
-			return nil
+			return
 		}
 	}
 
@@ -476,8 +476,6 @@ func (ch *Chart) Render(fudge float32) error {
 	ch.timelineCursor.Render(fudge)
 
 	ch.legend.Render(fudge)
-
-	return nil
 }
 
 // SetRefreshButtonClickCallback sets the callback for refresh button clicks.

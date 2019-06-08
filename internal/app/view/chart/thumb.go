@@ -188,7 +188,7 @@ func (t *Thumb) Update() (dirty bool) {
 }
 
 // Render renders the Thumb.
-func (t *Thumb) Render(fudge float32) error {
+func (t *Thumb) Render(fudge float32) {
 	// Render the border around the chart.
 	rect.StrokeRoundedRect(t.fullBounds, thumbRounding)
 
@@ -226,8 +226,6 @@ func (t *Thumb) Render(fudge float32) error {
 
 	t.dailyStochasticCursor.Render(fudge)
 	t.weeklyStochasticCursor.Render(fudge)
-
-	return nil
 }
 
 // SetRemoveButtonClickCallback sets the callback for remove button clicks.
