@@ -152,7 +152,7 @@ func newViewChart(ch *chart.Chart) *viewChart {
 
 type viewUpdateRenderCloser interface {
 	Update() (dirty bool)
-	Render(fudge float32) error
+	Render(fudge float32)
 	Close()
 }
 

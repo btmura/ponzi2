@@ -202,12 +202,12 @@ func (t *Thumb) Render(fudge float32) {
 	if !t.hasStockUpdated {
 		if t.loading {
 			t.loadingText.Render(fudge)
-			return nil
+			return
 		}
 
 		if t.hasError {
 			t.errorText.Render(fudge)
-			return nil
+			return
 		}
 	}
 
