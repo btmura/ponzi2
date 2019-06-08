@@ -1,4 +1,4 @@
-package title
+package ui
 
 import (
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -8,17 +8,12 @@ import (
 	"github.com/btmura/ponzi2/internal/errors"
 )
 
-// Application name for the window title.
-// TODO(btmura): remove duplication with view.go
-const appName = "ponzi2"
-
 // Title renders the the title bar.
 type Title struct {
 	text string
 }
 
-// New creates a new Title.
-func New() *Title {
+func newTitle() *Title {
 	return &Title{text: appName}
 }
 

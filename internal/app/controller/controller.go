@@ -10,7 +10,6 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/chart"
-	"github.com/btmura/ponzi2/internal/app/view/title"
 	"github.com/btmura/ponzi2/internal/app/view/ui"
 	"github.com/btmura/ponzi2/internal/errors"
 	"github.com/btmura/ponzi2/internal/stock/iex"
@@ -23,21 +22,6 @@ type Controller struct {
 
 	// ui is the UI that the Controller updates.
 	ui *ui.UI
-
-	// title controls the title bar.
-	title *title.Title
-
-	// symbolToChartMap maps symbol to Chart. Only one entry right now.
-	symbolToChartMap map[string]*chart.Chart
-
-	// symbolToChartThumbMap maps symbol to ChartThumbnail.
-	symbolToChartThumbMap map[string]*chart.Thumb
-
-	// chartRange is the current data range to use for Charts.
-	chartRange model.Range
-
-	// chartThumbRange is the current data range to use for ChartThumbnails.
-	chartThumbRange model.Range
 
 	// stockRefresher offers methods to refresh one or many stocks.
 	stockRefresher *stockRefresher
@@ -52,14 +36,9 @@ type Controller struct {
 // New creates a new Controller.
 func New(iexClient *iex.Client) *Controller {
 	c := &Controller{
-		model:                 model.New(),
-		ui:                    ui.New(),
-		title:                 title.New(),
-		symbolToChartMap:      map[string]*chart.Chart{},
-		symbolToChartThumbMap: map[string]*chart.Thumb{},
-		chartRange:            model.OneYear,
-		chartThumbRange:       model.OneYear,
-		configSaver:           newConfigSaver(),
+		model:       model.New(),
+		ui:          ui.New(),
+		configSaver: newConfigSaver(),
 	}
 	c.eventController = newEventController(c)
 	c.stockRefresher = newStockRefresher(iexClient, c.eventController)
@@ -83,7 +62,9 @@ func (c *Controller) RunLoop() error {
 	}
 
 	if s := cfg.GetCurrentStock().GetSymbol(); s != "" {
-		c.setChart(ctx, s)
+		if err := c.setChart(ctx, s); err != nil {
+			return err
+		}
 	}
 
 	for _, cs := range cfg.GetStocks() {
@@ -94,23 +75,39 @@ func (c *Controller) RunLoop() error {
 		}
 	}
 
-	c.ui.SetTitle(c.title)
-
 	c.ui.SetInputSymbolSubmittedCallback(func(symbol string) {
-		c.setChart(ctx, symbol)
+		if err := c.setChart(ctx, symbol); err != nil {
+			glog.Infof("TODO(btmura): remove log fatal, setChart: %v", err)
+		}
 	})
 
 	c.ui.SetChartZoomChangeCallback(func(zoomChange view.ZoomChange) {
-		r := nextRange(c.chartRange, zoomChange)
-
-		if c.chartRange == r {
-			return
-		}
-
-		c.chartRange = r
-
 		if err := c.refreshCurrentStock(ctx); err != nil {
+			glog.Fatalf("TODO(btmura): remove log fatal, refreshCurrentStock: %v", err)
+		}
+	})
+
+	c.ui.SetChartRefreshButtonClickCallback(func(symbol string) {
+		if err := c.refreshAllStocks(ctx); err != nil {
 			glog.Fatalf("TODO(btmura): remove log fatal, refreshStocks: %v", err)
+		}
+	})
+
+	c.ui.SetChartAddButtonClickCallback(func(symbol string) {
+		if err := c.addChartThumb(ctx, symbol); err != nil {
+			glog.Fatalf("TODO(btmura): remove log fatal, addChartThumb: %v", err)
+		}
+	})
+
+	c.ui.SetThumbRemoveButtonClickCallback(func(symbol string) {
+		if err := c.removeChartThumb(symbol); err != nil {
+			glog.Fatalf("TODO(btmura): remove log fatal, removeChartThumb: %v", err)
+		}
+	})
+
+	c.ui.SetThumbClickCallback(func(symbol string) {
+		if err := c.setChart(ctx, symbol); err != nil {
+			glog.Fatalf("TODO(btmura): remove log fatal, setChart: %v", err)
 		}
 	})
 
@@ -149,39 +146,14 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 		return c.refreshCurrentStock(ctx)
 	}
 
-	for symbol, ch := range c.symbolToChartMap {
-		delete(c.symbolToChartMap, symbol)
-		ch.Close()
-	}
-
-	ch := c.ui.NewChart()
-	c.symbolToChartMap[symbol] = ch
-
-	data, err := c.chartData(symbol, c.chartRange)
+	data, err := c.chartData(symbol, c.ui.ChartRange())
 	if err != nil {
 		return err
 	}
 
-	if err := c.title.SetData(data); err != nil {
+	if err := c.ui.SetChart(symbol, data); err != nil {
 		return err
 	}
-
-	if err := ch.SetData(data); err != nil {
-		return err
-	}
-
-	ch.SetRefreshButtonClickCallback(func() {
-		if err := c.refreshAllStocks(ctx); err != nil {
-			glog.Fatalf("TODO(btmura): remove log fatal, refreshStocks: %v", err)
-		}
-	})
-	ch.SetAddButtonClickCallback(func() {
-		if err := c.addChartThumb(ctx, symbol); err != nil {
-			glog.Fatalf("TODO(btmura): remove log fatal, addChartThumb: %v", err)
-		}
-	})
-
-	c.ui.SetChart(ch)
 
 	if err := c.refreshCurrentStock(ctx); err != nil {
 		return err
@@ -204,35 +176,19 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 
 	// If the stock is already added, just refresh it.
 	if !added {
-		return c.stockRefresher.refreshOne(ctx, symbol, c.chartThumbRange)
+		return c.stockRefresher.refreshOne(ctx, symbol, c.ui.ChartThumbRange())
 	}
 
-	th := c.ui.NewChartThumb()
-	c.symbolToChartThumbMap[symbol] = th
-
-	data, err := c.chartData(symbol, c.chartThumbRange)
+	data, err := c.chartData(symbol, c.ui.ChartThumbRange())
 	if err != nil {
 		return err
 	}
 
-	if err := th.SetData(data); err != nil {
+	if err := c.ui.AddChartThumb(symbol, data); err != nil {
 		return err
 	}
 
-	th.SetRemoveButtonClickCallback(func() {
-		if err := c.removeChartThumb(symbol); err != nil {
-			glog.Fatalf("TODO(btmura): remove log fatal, removeChartThumb: %v", err)
-		}
-	})
-	th.SetThumbClickCallback(func() {
-		if err := c.setChart(ctx, symbol); err != nil {
-			glog.Fatalf("TODO(btmura): remove log fatal, setChart: %v", err)
-		}
-	})
-
-	c.ui.AddChartThumb(th)
-
-	if err := c.stockRefresher.refreshOne(ctx, symbol, c.chartThumbRange); err != nil {
+	if err := c.stockRefresher.refreshOne(ctx, symbol, c.ui.ChartThumbRange()); err != nil {
 		return err
 	}
 
@@ -255,11 +211,8 @@ func (c *Controller) removeChartThumb(symbol string) error {
 		return nil
 	}
 
-	th := c.symbolToChartThumbMap[symbol]
-	delete(c.symbolToChartThumbMap, symbol)
-	th.Close()
+	c.ui.RemoveChartThumb(symbol)
 
-	c.ui.RemoveChartThumb(th)
 	c.configSaver.save(toConfig(c.model))
 
 	return nil
@@ -295,7 +248,7 @@ func (c *Controller) chartData(symbol string, dataRange model.Range) (*chart.Dat
 func (c *Controller) refreshCurrentStock(ctx context.Context) error {
 	d := new(dataRequestBuilder)
 	if s := c.model.CurrentSymbol(); s != "" {
-		if err := d.add([]string{s}, c.chartRange); err != nil {
+		if err := d.add([]string{s}, c.ui.ChartRange()); err != nil {
 			return err
 		}
 	}
@@ -306,12 +259,12 @@ func (c *Controller) refreshAllStocks(ctx context.Context) error {
 	d := new(dataRequestBuilder)
 
 	if s := c.model.CurrentSymbol(); s != "" {
-		if err := d.add([]string{s}, c.chartRange); err != nil {
+		if err := d.add([]string{s}, c.ui.ChartRange()); err != nil {
 			return err
 		}
 	}
 
-	if err := d.add(c.model.SidebarSymbols(), c.chartThumbRange); err != nil {
+	if err := d.add(c.model.SidebarSymbols(), c.ui.ChartThumbRange()); err != nil {
 		return err
 	}
 
@@ -320,29 +273,7 @@ func (c *Controller) refreshAllStocks(ctx context.Context) error {
 
 // onStockRefreshStarted implements the eventHandler interface.
 func (c *Controller) onStockRefreshStarted(symbol string, dataRange model.Range) error {
-	if err := model.ValidateSymbol(symbol); err != nil {
-		return err
-	}
-
-	if dataRange == model.RangeUnspecified {
-		return errors.Errorf("range not set")
-	}
-
-	for s, ch := range c.symbolToChartMap {
-		if s == symbol && c.chartRange == dataRange {
-			ch.SetLoading(true)
-			ch.SetError(false)
-		}
-	}
-
-	for s, th := range c.symbolToChartThumbMap {
-		if s == symbol && c.chartThumbRange == dataRange {
-			th.SetLoading(true)
-			th.SetError(false)
-		}
-	}
-
-	return nil
+	return c.ui.SetLoading(symbol, dataRange)
 }
 
 // onStockChartUpdate implements the eventHandler interface.
@@ -359,56 +290,17 @@ func (c *Controller) onStockChartUpdate(symbol string, ch *model.Chart) error {
 		return err
 	}
 
-	if ch, ok := c.symbolToChartMap[symbol]; ok {
-		ch.SetLoading(false)
-
-		data, err := c.chartData(symbol, c.chartRange)
-		if err != nil {
-			return err
-		}
-
-		if err := c.title.SetData(data); err != nil {
-			return err
-		}
-
-		if err := ch.SetData(data); err != nil {
-			return err
-		}
+	data, err := c.chartData(symbol, c.ui.ChartRange())
+	if err != nil {
+		return err
 	}
 
-	if th, ok := c.symbolToChartThumbMap[symbol]; ok {
-		th.SetLoading(false)
-
-		data, err := c.chartData(symbol, c.chartThumbRange)
-		if err != nil {
-			return err
-		}
-
-		if err := th.SetData(data); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return c.ui.SetData(symbol, data)
 }
 
 // onStockChartUpdateError implements the eventHandler interface.
 func (c *Controller) onStockChartUpdateError(symbol string, updateErr error) error {
-	if err := model.ValidateSymbol(symbol); err != nil {
-		return err
-	}
-
-	if ch, ok := c.symbolToChartMap[symbol]; ok {
-		ch.SetLoading(false)
-		ch.SetError(true)
-	}
-
-	if th, ok := c.symbolToChartThumbMap[symbol]; ok {
-		th.SetLoading(false)
-		th.SetError(true)
-	}
-
-	return nil
+	return c.ui.SetError(symbol, updateErr)
 }
 
 // onRefreshAllStocksRequest implements the eventHandler interface.
@@ -419,36 +311,6 @@ func (c *Controller) onRefreshAllStocksRequest(ctx context.Context) error {
 // onEventAdded implements the eventHandler interface.
 func (c *Controller) onEventAdded() {
 	c.ui.WakeLoop()
-}
-
-func nextRange(r model.Range, zoomChange view.ZoomChange) model.Range {
-	// zoomRanges are the ranges from most zoomed out to most zoomed in.
-	var zoomRanges = []model.Range{
-		model.OneYear,
-		model.OneDay,
-	}
-
-	// Find the current zoom range.
-	i := 0
-	for j := range zoomRanges {
-		if zoomRanges[j] == r {
-			i = j
-		}
-	}
-
-	// Adjust the zoom one increment.
-	switch zoomChange {
-	case view.ZoomIn:
-		if i+1 < len(zoomRanges) {
-			i++
-		}
-	case view.ZoomOut:
-		if i-1 >= 0 {
-			i--
-		}
-	}
-
-	return zoomRanges[i]
 }
 
 func toConfig(model *model.Model) *config.Config {

@@ -18,11 +18,12 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
 	"github.com/btmura/ponzi2/internal/app/view/centeredtext"
 	"github.com/btmura/ponzi2/internal/app/view/chart"
-	"github.com/btmura/ponzi2/internal/app/view/title"
+	"github.com/btmura/ponzi2/internal/errors"
 	"github.com/btmura/ponzi2/internal/matrix"
 )
 
@@ -75,8 +76,20 @@ func init() {
 
 // The UI renders the UI to view and edit the model's stocks that it observes.
 type UI struct {
+	// symbolToChartMap maps symbol to Chart. Only one entry right now.
+	symbolToChartMap map[string]*chart.Chart
+
+	// symbolToChartThumbMap maps symbol to ChartThumbnail.
+	symbolToChartThumbMap map[string]*chart.Thumb
+
+	// chartRange is the current data range to use for Charts.
+	chartRange model.Range
+
+	// chartThumbRange is the current data range to use for ChartThumbnails.
+	chartThumbRange model.Range
+
 	// title renders the window title.
-	title *title.Title
+	title *Title
 
 	// charts renders the charts in the main area.
 	charts []*viewChart
@@ -95,6 +108,18 @@ type UI struct {
 
 	// chartZoomChangeCallback is called when the chart is zoomed in or out.
 	chartZoomChangeCallback func(zoomChange view.ZoomChange)
+
+	// chartRefreshButtonClickCallback is called when the main chart's refresh button is clicked.
+	chartRefreshButtonClickCallback func(symbol string)
+
+	// chartAddButtonClickCallback is called when the main chart's add button is clicked.
+	chartAddButtonClickCallback func(symbol string)
+
+	// thumbRemoveButtonClickCallback is called when a thumb's remove button is clicked.
+	thumbRemoveButtonClickCallback func(symbol string)
+
+	// thumbClickCallback is called when a thumb is clicked.
+	thumbClickCallback func(symbol string)
 
 	// win is the handle to the GLFW window.
 	win *glfw.Window
@@ -178,12 +203,20 @@ func (v *viewAnimator) Close() {
 // New creates a new View.
 func New() *UI {
 	return &UI{
-		title:                        title.New(),
-		sidebar:                      new(sidebar),
-		instructionsText:             centeredtext.New(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER..."),
-		inputSymbolText:              centeredtext.New(inputSymbolTextRenderer, "", centeredtext.Bubble(chartRounding, chartPadding)),
-		inputSymbolSubmittedCallback: func(symbol string) {},
-		chartZoomChangeCallback:      func(zoomChange view.ZoomChange) {},
+		symbolToChartMap:                map[string]*chart.Chart{},
+		symbolToChartThumbMap:           map[string]*chart.Thumb{},
+		chartRange:                      model.OneYear,
+		chartThumbRange:                 model.OneYear,
+		title:                           newTitle(),
+		sidebar:                         new(sidebar),
+		instructionsText:                centeredtext.New(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER..."),
+		inputSymbolText:                 centeredtext.New(inputSymbolTextRenderer, "", centeredtext.Bubble(chartRounding, chartPadding)),
+		inputSymbolSubmittedCallback:    func(symbol string) {},
+		chartZoomChangeCallback:         func(zoomChange view.ZoomChange) {},
+		chartRefreshButtonClickCallback: func(symbol string) {},
+		chartAddButtonClickCallback:     func(symbol string) {},
+		thumbRemoveButtonClickCallback:  func(symbol string) {},
+		thumbClickCallback:              func(symbol string) {},
 	}
 }
 
@@ -456,12 +489,28 @@ func (u *UI) handleScrollEvent(yoff float64) {
 		u.sidebar.sidebarScrollOffset = u.sidebar.sidebarScrollOffset.Add(off)
 
 	case u.mousePos.In(m.chartRegion):
+		zoomChange := view.ZoomChangeUnspecified
+
 		switch {
 		case yoff < 0: // Scroll wheel down
-			u.chartZoomChangeCallback(view.ZoomOut)
+			zoomChange = view.ZoomOut
 		case yoff > 0: // Scroll wheel up
-			u.chartZoomChangeCallback(view.ZoomIn)
+			zoomChange = view.ZoomIn
 		}
+
+		if zoomChange == view.ZoomChangeUnspecified {
+			return
+		}
+
+		r := nextRange(u.chartRange, zoomChange)
+
+		if u.chartRange == r {
+			return
+		}
+
+		u.chartRange = r
+
+		u.chartZoomChangeCallback(zoomChange)
 	}
 }
 
@@ -629,48 +678,260 @@ func (u *UI) render(fudge float32) {
 }
 
 // SetInputSymbolSubmittedCallback sets the callback for when a new symbol is entered.
-func (u *UI) SetInputSymbolSubmittedCallback(cb func(symbol string)) {
+func (u *UI) SetInputSymbolSubmittedCallback(cb func(symbol string)) error {
+	if cb == nil {
+		return errors.Errorf("missing callback")
+	}
 	u.inputSymbolSubmittedCallback = cb
+	return nil
 }
 
 // SetChartZoomChangeCallback sets the callback for when the chart is zoomed in or out.
-func (u *UI) SetChartZoomChangeCallback(cb func(zoomzoomChange view.ZoomChange)) {
+func (u *UI) SetChartZoomChangeCallback(cb func(zoomChange view.ZoomChange)) error {
+	if cb == nil {
+		return errors.Errorf("missing callback")
+	}
 	u.chartZoomChangeCallback = cb
+	return nil
 }
 
-// SetTitle sets the View's title.
-func (u *UI) SetTitle(title *title.Title) {
-	defer u.WakeLoop()
-	u.title = title
+// SetChartRefreshButtonClickCallback sets the callback for when the main chart's refresh button is clicked.
+func (u *UI) SetChartRefreshButtonClickCallback(cb func(symbol string)) error {
+	if cb == nil {
+		return errors.Errorf("missing callback")
+	}
+	u.chartRefreshButtonClickCallback = cb
+	return nil
 }
 
-// NewChart returns a new chart.
-func (u *UI) NewChart() *chart.Chart {
-	return chart.NewChart(fps)
+// SetChartAddButtonClickCallback sets the callback for when the main chart's add button is clicked.
+func (u *UI) SetChartAddButtonClickCallback(cb func(symbol string)) error {
+	if cb == nil {
+		return errors.Errorf("missing callback")
+	}
+	u.chartAddButtonClickCallback = cb
+	return nil
 }
 
-// NewChartThumb returns a new chart thumbnail.
-func (u *UI) NewChartThumb() *chart.Thumb {
-	return chart.NewThumb(fps)
+// SetThumbRemoveButtonClickCallback sets the callback for when a thumb's remove button is clicked.
+func (u *UI) SetThumbRemoveButtonClickCallback(cb func(symbol string)) error {
+	if cb == nil {
+		return errors.Errorf("missing callback")
+	}
+	u.thumbRemoveButtonClickCallback = cb
+	return nil
 }
 
-// SetChart sets the View's main chart.
-func (u *UI) SetChart(ch *chart.Chart) {
+// SetThumbClickCallback sets the callback for when a thumb is clicked.
+func (u *UI) SetThumbClickCallback(cb func(symbol string)) error {
+	if cb == nil {
+		return errors.Errorf("missing callback")
+	}
+	u.thumbClickCallback = cb
+	return nil
+}
+
+// SetChart sets the main chart to the given symbol and data.
+func (u *UI) SetChart(symbol string, data *chart.Data) error {
+	if err := model.ValidateSymbol(symbol); err != nil {
+		return err
+	}
+
+	for symbol, ch := range u.symbolToChartMap {
+		delete(u.symbolToChartMap, symbol)
+		ch.Close()
+	}
+
+	ch := chart.NewChart(fps)
+	u.symbolToChartMap[symbol] = ch
+
+	if err := u.title.SetData(data); err != nil {
+		return err
+	}
+
+	if err := ch.SetData(data); err != nil {
+		return err
+	}
+
+	ch.SetRefreshButtonClickCallback(func() {
+		if u.chartRefreshButtonClickCallback != nil {
+			u.chartRefreshButtonClickCallback(symbol)
+		}
+	})
+
+	ch.SetAddButtonClickCallback(func() {
+		if u.chartAddButtonClickCallback != nil {
+			u.chartAddButtonClickCallback(symbol)
+		}
+	})
+
 	defer u.WakeLoop()
 	for _, ch := range u.charts {
 		ch.Exit()
 	}
 	u.charts = append([]*viewChart{newViewChart(ch)}, u.charts...)
+
+	return nil
 }
 
-// AddChartThumb adds the ChartThumbnail to the side bar.
-func (u *UI) AddChartThumb(th *chart.Thumb) {
+// AddChartThumb adds a thumbnail with the given symbol and data.
+func (u *UI) AddChartThumb(symbol string, data *chart.Data) error {
+	if err := model.ValidateSymbol(symbol); err != nil {
+		return err
+	}
+
+	th := chart.NewThumb(fps)
+	u.symbolToChartThumbMap[symbol] = th
+
+	if err := th.SetData(data); err != nil {
+		return err
+	}
+
+	th.SetRemoveButtonClickCallback(func() {
+		if u.thumbRemoveButtonClickCallback != nil {
+			u.thumbRemoveButtonClickCallback(symbol)
+		}
+	})
+
+	th.SetThumbClickCallback(func() {
+		if u.thumbClickCallback != nil {
+			u.thumbClickCallback(symbol)
+		}
+	})
+
 	defer u.WakeLoop()
 	u.sidebar.AddChartThumb(th)
+
+	return nil
 }
 
 // RemoveChartThumb removes the ChartThumbnail from the side bar.
-func (u *UI) RemoveChartThumb(th *chart.Thumb) {
+func (u *UI) RemoveChartThumb(symbol string) error {
+	if err := model.ValidateSymbol(symbol); err != nil {
+		return err
+	}
+
+	th := u.symbolToChartThumbMap[symbol]
+	delete(u.symbolToChartThumbMap, symbol)
+	th.Close()
+
 	defer u.WakeLoop()
 	u.sidebar.RemoveChartThumb(th)
+
+	return nil
+}
+
+// SetLoading sets the charts and thumbs matching the symbol and range to loading.
+func (u *UI) SetLoading(symbol string, dataRange model.Range) error {
+	if err := model.ValidateSymbol(symbol); err != nil {
+		return err
+	}
+
+	if dataRange == model.RangeUnspecified {
+		return errors.Errorf("range not set")
+	}
+
+	for s, ch := range u.symbolToChartMap {
+		if s == symbol && u.chartRange == dataRange {
+			ch.SetLoading(true)
+			ch.SetError(false)
+		}
+	}
+
+	for s, th := range u.symbolToChartThumbMap {
+		if s == symbol && u.chartThumbRange == dataRange {
+			th.SetLoading(true)
+			th.SetError(false)
+		}
+	}
+
+	return nil
+}
+
+// SetData loads the data to charts and thumbs matching the symbol and range.
+func (u *UI) SetData(symbol string, data *chart.Data) error {
+	if err := model.ValidateSymbol(symbol); err != nil {
+		return err
+	}
+
+	if ch, ok := u.symbolToChartMap[symbol]; ok {
+		ch.SetLoading(false)
+
+		if err := u.title.SetData(data); err != nil {
+			return err
+		}
+
+		if err := ch.SetData(data); err != nil {
+			return err
+		}
+	}
+
+	if th, ok := u.symbolToChartThumbMap[symbol]; ok {
+		th.SetLoading(false)
+
+		if err := th.SetData(data); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// SetError sets an error on the charts and thumbs matching the symbol.
+func (u *UI) SetError(symbol string, updateErr error) error {
+	if err := model.ValidateSymbol(symbol); err != nil {
+		return err
+	}
+
+	if ch, ok := u.symbolToChartMap[symbol]; ok {
+		ch.SetLoading(false)
+		ch.SetError(true)
+	}
+
+	if th, ok := u.symbolToChartThumbMap[symbol]; ok {
+		th.SetLoading(false)
+		th.SetError(true)
+	}
+
+	return nil
+}
+
+// ChartRange returns the range desired by the main chart.
+func (u *UI) ChartRange() model.Range {
+	return u.chartRange
+}
+
+// ChartThumbRange returns the range desired by the chart thumbnails.
+func (u *UI) ChartThumbRange() model.Range {
+	return u.chartThumbRange
+}
+
+func nextRange(r model.Range, zoomChange view.ZoomChange) model.Range {
+	// zoomRanges are the ranges from most zoomed out to most zoomed in.
+	var zoomRanges = []model.Range{
+		model.OneYear,
+		model.OneDay,
+	}
+
+	// Find the current zoom range.
+	i := 0
+	for j := range zoomRanges {
+		if zoomRanges[j] == r {
+			i = j
+		}
+	}
+
+	// Adjust the zoom one increment.
+	switch zoomChange {
+	case view.ZoomIn:
+		if i+1 < len(zoomRanges) {
+			i++
+		}
+	case view.ZoomOut:
+		if i-1 >= 0 {
+			i--
+		}
+	}
+
+	return zoomRanges[i]
 }
