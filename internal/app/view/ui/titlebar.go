@@ -8,17 +8,21 @@ import (
 	"github.com/btmura/ponzi2/internal/errors"
 )
 
-// Title renders the the title bar.
-type Title struct {
+// titleBar renders the the title bar.
+type titleBar struct {
+	win  *glfw.Window
 	text string
 }
 
-func newTitle() *Title {
-	return &Title{text: appName}
+func newTitleBar(win *glfw.Window) *titleBar {
+	return &titleBar{
+		win:  win,
+		text: appName,
+	}
 }
 
 // SetData sets the Title's stock.
-func (t *Title) SetData(data *chart.Data) error {
+func (t *titleBar) SetData(data *chart.Data) error {
 	if data == nil {
 		return errors.Errorf("missing data")
 	}
@@ -36,6 +40,7 @@ func (t *Title) SetData(data *chart.Data) error {
 }
 
 // Render renders the Title.
-func (t *Title) Render(win *glfw.Window) {
-	win.SetTitle(t.text)
+func (t *titleBar) Render(fudge float32) error {
+	t.win.SetTitle(t.text)
+	return nil
 }

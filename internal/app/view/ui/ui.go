@@ -88,8 +88,8 @@ type UI struct {
 	// chartThumbRange is the current data range to use for ChartThumbnails.
 	chartThumbRange model.Range
 
-	// title renders the window title.
-	title *Title
+	// titleBar renders the window titleBar.
+	titleBar *titleBar
 
 	// charts renders the charts in the main area.
 	charts []*viewChart
@@ -207,7 +207,6 @@ func New() *UI {
 		symbolToChartThumbMap:           map[string]*chart.Thumb{},
 		chartRange:                      model.OneYear,
 		chartThumbRange:                 model.OneYear,
-		title:                           newTitle(),
 		sidebar:                         new(sidebar),
 		instructionsText:                centeredtext.New(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER..."),
 		inputSymbolText:                 centeredtext.New(inputSymbolTextRenderer, "", centeredtext.Bubble(chartRounding, chartPadding)),
@@ -236,6 +235,7 @@ func (u *UI) Init(ctx context.Context) (cleanup func(), err error) {
 	if err != nil {
 		return nil, err
 	}
+	u.titleBar = newTitleBar(win)
 	u.win = win
 
 	win.MakeContextCurrent()
@@ -656,7 +656,7 @@ func (u *UI) update() (dirty bool) {
 }
 
 func (u *UI) render(fudge float32) {
-	u.title.Render(u.win)
+	u.titleBar.Render(fudge)
 
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
@@ -745,7 +745,7 @@ func (u *UI) SetChart(symbol string, data *chart.Data) error {
 	ch := chart.NewChart(fps)
 	u.symbolToChartMap[symbol] = ch
 
-	if err := u.title.SetData(data); err != nil {
+	if err := u.titleBar.SetData(data); err != nil {
 		return err
 	}
 
@@ -857,7 +857,7 @@ func (u *UI) SetData(symbol string, data *chart.Data) error {
 	if ch, ok := u.symbolToChartMap[symbol]; ok {
 		ch.SetLoading(false)
 
-		if err := u.title.SetData(data); err != nil {
+		if err := u.titleBar.SetData(data); err != nil {
 			return err
 		}
 
