@@ -1,4 +1,4 @@
-# ![ponzi2 logo of a pyramid](internal/app/view/data/icon.png) ponzi2
+# ![ponzi2 logo of a pyramid](internal/app/view/ui/data/icon.png) ponzi2
 
 [ponzi2](https://ponzi2.io) is a stock chart viewer written in [Go](https://golang.org) using [OpenGL](https://github.com/go-gl/gl) and [GLFW](https://github.com/go-gl/glfw/).
 
