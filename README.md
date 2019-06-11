@@ -7,7 +7,7 @@ Visit [ponzi2.io](https://ponzi2.io) for more videos and tutorials!
 ## Features
 
 * View real-time charts using data provided for free by [IEX](https://iextrading.com/developer). View [IEX’s Terms of Use](https://iextrading.com/api-exhibit-a/). No account or API key required!
-* Learn [Go](https://golang.org) from the actual code with [detailed tutorials](https://ponzi2.io/tutorials)!
+* Learn [Go](https://golang.org) from the actual code with [detailed tutorials](https://ponzi2.io/tutorials/)!
 * Runs on both [Windows and Linux](https://github.com/btmura/ponzi2/releases).
 
 ## Getting Started
