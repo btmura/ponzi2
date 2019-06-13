@@ -578,53 +578,30 @@ func (u *UI) WakeLoop() {
 	glfw.PostEmptyEvent()
 }
 
-type inputContext struct {
-	// Bounds is the rectangle with global coords that should be drawn within.
-	Bounds image.Rectangle
-
-	// MousePos is the current global mouse position.
-	MousePos image.Point
-
-	// MouseLeftButtonDragging is whether the left mouse button is dragging.
-	MouseLeftButtonDragging bool
-
-	// MouseLeftButtonReleased is whether the left mouse button was released.
-	MouseLeftButtonReleased bool
-
-	// ScheduledCallbacks are callbacks to be called at the end of Render.
-	ScheduledCallbacks *[]func()
-}
-
-// LeftClickInBounds returns true if the left mouse button was clicked within
-// the context's bounds. Doesn't take into account overlapping view parts.
-func (ic inputContext) LeftClickInBounds() bool {
-	return ic.MouseLeftButtonReleased && ic.MousePos.In(ic.Bounds)
-}
-
 func (u *UI) processInput() []func() {
 	m := u.metrics()
 
-	ic := inputContext{
-		Bounds:                  m.chartBounds,
+	input := &view.Input{
 		MousePos:                u.mousePos,
 		MouseLeftButtonDragging: u.mouseLeftButtonPressedCount > fps/2,
 		MouseLeftButtonReleased: u.mouseLeftButtonReleased,
-		ScheduledCallbacks:      new([]func()),
 	}
 
-	if ic.MouseLeftButtonDragging {
-		fmt.Printf("drag: %t count: %d\n", ic.MouseLeftButtonDragging, u.mouseLeftButtonPressedCount)
+	if input.MouseLeftButtonDragging {
+		fmt.Printf("drag: %t count: %d\n", input.MouseLeftButtonDragging, u.mouseLeftButtonPressedCount)
 	}
 
-	u.instructionsText.ProcessInput(ic.Bounds)
-	u.inputSymbolText.ProcessInput(ic.Bounds)
+	bounds := m.chartBounds
+
+	u.instructionsText.ProcessInput(bounds)
+	u.inputSymbolText.ProcessInput(bounds)
 
 	for i := 0; i < len(u.charts); i++ {
 		ch := u.charts[i]
-		ch.chart.ProcessInput(ic.Bounds, ic.MousePos, ic.MouseLeftButtonReleased, ic.ScheduledCallbacks)
+		ch.chart.ProcessInput(bounds, input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
 	}
 
-	u.sidebar.ProcessInput(ic, m)
+	u.sidebar.ProcessInput(input, m)
 
 	// Reset any flags for the next inputContext.
 	if u.mouseLeftButtonPressedCount > 0 {
@@ -632,7 +609,7 @@ func (u *UI) processInput() []func() {
 	}
 	u.mouseLeftButtonReleased = false
 
-	return *ic.ScheduledCallbacks
+	return input.ScheduledCallbacks
 }
 
 func (u *UI) update() (dirty bool) {

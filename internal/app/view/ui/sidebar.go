@@ -3,6 +3,7 @@ package ui
 import (
 	"image"
 
+	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/chart"
 )
 
@@ -43,11 +44,11 @@ func (s *sidebar) RemoveChartThumb(th *chart.Thumb) {
 }
 
 // ProcessInput processes input.
-func (s *sidebar) ProcessInput(ic inputContext, m viewMetrics) {
-	ic.Bounds = m.firstThumbBounds
+func (s *sidebar) ProcessInput(input *view.Input, m viewMetrics) {
+	bounds := m.firstThumbBounds
 	for _, th := range s.thumbs {
-		th.chartThumb.ProcessInput(ic.Bounds, ic.MousePos, ic.MouseLeftButtonReleased, ic.ScheduledCallbacks)
-		ic.Bounds = ic.Bounds.Sub(chartThumbRenderOffset)
+		th.chartThumb.ProcessInput(bounds, input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
+		bounds = bounds.Sub(chartThumbRenderOffset)
 	}
 }
 
