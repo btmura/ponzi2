@@ -20,6 +20,9 @@ type sidebar struct {
 	// sidebarScrollOffset stores the Y offset accumulated from scroll events
 	// that should be used to calculate the sidebar's bounds.
 	sidebarScrollOffset image.Point
+
+	// bounds is the rectangle to draw within.
+	bounds image.Rectangle
 }
 
 type sidebarThumb struct {
@@ -43,12 +46,21 @@ func (s *sidebar) RemoveChartThumb(th *chart.Thumb) {
 	}
 }
 
+// SetBounds sets the bounds to draw within.
+func (s *sidebar) SetBounds(bounds image.Rectangle) {
+	s.bounds = bounds
+}
+
 // ProcessInput processes input.
-func (s *sidebar) ProcessInput(input *view.Input, m viewMetrics) {
-	bounds := m.firstThumbBounds
+func (s *sidebar) ProcessInput(input *view.Input) {
+	thumbBounds := image.Rect(
+		s.bounds.Min.X, s.bounds.Max.Y-viewPadding-chartThumbSize.Y,
+		s.bounds.Max.X, s.bounds.Max.Y-viewPadding,
+	)
 	for _, th := range s.thumbs {
-		th.chartThumb.ProcessInput(bounds, input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
-		bounds = bounds.Sub(chartThumbRenderOffset)
+		th.chartThumb.SetBounds(thumbBounds)
+		th.chartThumb.ProcessInput(input)
+		thumbBounds = thumbBounds.Sub(chartThumbRenderOffset)
 	}
 }
 

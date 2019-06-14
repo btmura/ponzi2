@@ -324,9 +324,6 @@ type viewMetrics struct {
 	// sidebarBounds is where to draw the sidebar that can move up or down.
 	sidebarBounds image.Rectangle
 
-	// firstThumbBounds is where to draw the first thumbnail in the sidebar.
-	firstThumbBounds image.Rectangle
-
 	// sidebarRegion is where to detect scroll events for the sidebar.
 	sidebarRegion image.Rectangle
 
@@ -376,11 +373,6 @@ func (u *UI) metrics() viewMetrics {
 	)
 	sb = sb.Add(u.sidebar.sidebarScrollOffset)
 
-	fb := image.Rect(
-		sb.Min.X, sb.Max.Y-viewPadding-chartThumbSize.Y,
-		sb.Max.X, sb.Max.Y-viewPadding,
-	)
-
 	// Side bar region.
 	sr := image.Rect(
 		viewPadding, 0,
@@ -388,11 +380,10 @@ func (u *UI) metrics() viewMetrics {
 	)
 
 	return viewMetrics{
-		chartBounds:      cb,
-		sidebarBounds:    sb,
-		firstThumbBounds: fb,
-		sidebarRegion:    sr,
-		chartRegion:      cb,
+		chartBounds:   cb,
+		sidebarBounds: sb,
+		sidebarRegion: sr,
+		chartRegion:   cb,
 	}
 }
 
@@ -601,7 +592,8 @@ func (u *UI) processInput() []func() {
 		ch.chart.ProcessInput(bounds, input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
 	}
 
-	u.sidebar.ProcessInput(input, m)
+	u.sidebar.SetBounds(m.sidebarBounds)
+	u.sidebar.ProcessInput(input)
 
 	// Reset any flags for the next inputContext.
 	if u.mouseLeftButtonPressedCount > 0 {

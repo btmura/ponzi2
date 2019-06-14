@@ -7,6 +7,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
 	"github.com/btmura/ponzi2/internal/app/view/centeredtext"
 	"github.com/btmura/ponzi2/internal/app/view/color"
@@ -144,20 +145,19 @@ func (t *Thumb) SetData(data *Data) error {
 	return nil
 }
 
-// ProcessInput processes input.
-func (t *Thumb) ProcessInput(
-	bounds image.Rectangle,
-	mousePos image.Point,
-	mouseLeftButtonReleased bool,
-	scheduledCallbacks *[]func(),
-) {
+// SetBounds sets the bounds to draw within.
+func (t *Thumb) SetBounds(bounds image.Rectangle) {
 	t.fullBounds = bounds
-	t.mousePos = mousePos
+}
 
-	r, clicks := t.header.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
+// ProcessInput processes input.
+func (t *Thumb) ProcessInput(input *view.Input) {
+	t.mousePos = input.MousePos
+
+	r, clicks := t.header.ProcessInput(t.fullBounds, input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
 	t.bodyBounds = r
-	if !clicks.HasClicks() && mouseLeftButtonReleased && mousePos.In(bounds) {
-		*scheduledCallbacks = append(*scheduledCallbacks, t.thumbClickCallback)
+	if !clicks.HasClicks() && input.LeftClickInBounds(t.fullBounds) {
+		input.ScheduledCallbacks = append(input.ScheduledCallbacks, t.thumbClickCallback)
 	}
 
 	rects := rect.Slice(r, 0.5)
