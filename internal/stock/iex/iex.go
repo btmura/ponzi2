@@ -97,12 +97,15 @@ type ChartPoint struct {
 
 // Client is used to make IEX API requests.
 type Client struct {
+	// token is the API token required on all requests.
+	token string
+
 	// dumpAPIResponses dumps API responses into text files.
 	dumpAPIResponses bool
 }
 
 // NewClient returns a new Client.
-func NewClient(dumpAPIResponses bool) *Client {
+func NewClient(token string, dumpAPIResponses bool) *Client {
 	return &Client{dumpAPIResponses: dumpAPIResponses}
 }
 
@@ -130,12 +133,13 @@ func (c *Client) GetStocks(ctx context.Context, req *GetStocksRequest) ([]*Stock
 		return nil, errors.Errorf("iex: last must be greater than or equal to zero")
 	}
 
-	u, err := url.Parse("https://api.iextrading.com/1.0/stock/market/batch")
+	u, err := url.Parse("https://cloud.iexapis.com/stable/stock/market/batch")
 	if err != nil {
 		return nil, err
 	}
 
 	v := url.Values{}
+	v.Set("token", c.token)
 	v.Set("symbols", strings.Join(req.Symbols, ","))
 	v.Set("types", "quote,chart")
 	v.Set("range", rangeStr)
@@ -326,7 +330,7 @@ func quoteDate(latestSource Source, latestTime string) (time.Time, error) {
 
 func chartDate(date, minute string) (time.Time, error) {
 	if minute != "" {
-		return time.ParseInLocation("20060102 15:04", date+" "+minute, loc)
+		return time.ParseInLocation("2006-01-02 15:04", date+" "+minute, loc)
 	}
 	return time.ParseInLocation("2006-01-02", date, loc)
 }

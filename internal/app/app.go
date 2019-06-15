@@ -9,8 +9,8 @@ import (
 )
 
 // Run runs the app. Should be called from main.
-func Run(dumpAPIResponses bool) {
-	c := iex.NewClient(dumpAPIResponses)
+func Run(token string, dumpAPIResponses bool) {
+	c := iex.NewClient(token, dumpAPIResponses)
 	if err := controller.New(c).RunLoop(); err != nil {
 		glog.Fatal(err)
 	}

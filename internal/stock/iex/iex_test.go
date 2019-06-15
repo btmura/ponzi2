@@ -71,9 +71,9 @@ func TestDecodeStocks(t *testing.T) {
 				"AAPL": {
 					"quote":{"companyName":"Apple Inc.","latestPrice":225.74,"latestSource":"Close","latestTime":"September 28, 2018","latestUpdate":1538164800414,"latestVolume":22067409,"open":224.8,"high":225.84,"low":224.02,"close":225.74,"change":0.79,"changePercent":0.00351},
 					"chart": [
-						{"date":"20180918","minute":"15:57","open":218.44,"high":218.49,"low":218.37,"close":218.49,"volume":2607},
-						{"date":"20180918","minute":"15:58","open":218.46,"high":218.5,"low":218.435,"close":218.44,"volume":3680},
-						{"date":"20180918","minute":"15:59","open":218.45,"high":218.49,"low":218.34,"close":218.34,"volume":26153}
+						{"date":"2018-09-18","minute":"15:57","open":218.44,"high":218.49,"low":218.37,"close":218.49,"volume":2607},
+						{"date":"2018-09-18","minute":"15:58","open":218.46,"high":218.5,"low":218.435,"close":218.44,"volume":3680},
+						{"date":"2018-09-18","minute":"15:59","open":218.45,"high":218.49,"low":218.34,"close":218.34,"volume":26153}
 					]
 				}
 			}`,
@@ -268,7 +268,7 @@ func TestChartDate(t *testing.T) {
 		},
 		{
 			desc:        "date and time",
-			inputDate:   "20180628",
+			inputDate:   "2018-06-28",
 			inputMinute: "14:53",
 			want:        time.Date(2018, 6, 28, 14, 53, 0, 0, loc),
 		},

@@ -15,7 +15,8 @@ var (
 	symbols          = flag.String("symbols", "SPY", "Comma-separated list of symbols.")
 	rangeFlag        = flag.String("range", "1d", "Range of data to get. Values: 1d, 2y")
 	chartLast        = flag.Int("chart_last", 5, "Last N chart elements if greater than zero.")
-	dumpAPIResponses = flag.Bool("dump_api_responses", false, "Dump API responses to txt files.")
+	token            = flag.String("token", "", "API token required on requests.")
+	dumpAPIResponses = flag.Bool("dump_api_responses", true, "Dump API responses to txt files.")
 )
 
 func main() {
@@ -23,7 +24,7 @@ func main() {
 
 	ctx := context.Background()
 
-	c := iex.NewClient(*dumpAPIResponses)
+	c := iex.NewClient(*token, *dumpAPIResponses)
 
 	req := &iex.GetStocksRequest{
 		Symbols: strings.Split(*symbols, ","),
