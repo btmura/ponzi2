@@ -20,7 +20,6 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
-	"github.com/btmura/ponzi2/internal/app/view/animation"
 	"github.com/btmura/ponzi2/internal/app/view/centeredtext"
 	"github.com/btmura/ponzi2/internal/app/view/chart"
 	"github.com/btmura/ponzi2/internal/errors"
@@ -92,7 +91,7 @@ type UI struct {
 	titleBar *titleBar
 
 	// charts renders the charts in the main area.
-	charts []*viewChart
+	charts []*uiChart
 
 	// sidebar is the sidebar of chart thumbnails on the side.
 	sidebar *sidebar
@@ -138,66 +137,30 @@ type UI struct {
 	mouseLeftButtonReleased bool
 }
 
-type viewChart struct {
-	chart *chart.Chart
-	*viewAnimator
+type uiChart struct {
+	*chart.Chart
+	*view.Fader
 }
 
-func newViewChart(ch *chart.Chart) *viewChart {
-	return &viewChart{
-		chart:        ch,
-		viewAnimator: newViewAnimator(ch),
+func newUIChart(ch *chart.Chart) *uiChart {
+	return &uiChart{
+		Chart: ch,
+		Fader: view.NewFader(1 * fps),
 	}
 }
 
-type viewUpdateRenderCloser interface {
-	Update() (dirty bool)
-	Render(fudge float32)
-	Close()
-}
-
-type viewAnimator struct {
-	updateRenderCloser viewUpdateRenderCloser
-	exiting            bool
-	fade               *animation.Animation
-}
-
-func newViewAnimator(updateRenderer viewUpdateRenderCloser) *viewAnimator {
-	return &viewAnimator{
-		updateRenderCloser: updateRenderer,
-		fade:               animation.New(1*fps, animation.Started()),
-	}
-}
-
-func (v *viewAnimator) Exit() {
-	v.exiting = true
-	v.fade = v.fade.Rewinded()
-	v.fade.Start()
-}
-
-func (v *viewAnimator) DoneExiting() bool {
-	return v.exiting && !v.fade.Animating()
-}
-
-func (v *viewAnimator) Update() (dirty bool) {
-	if v.updateRenderCloser.Update() {
+func (c *uiChart) Update() (dirty bool) {
+	if c.Chart.Update() {
 		dirty = true
 	}
-	if v.fade.Update() {
+	if c.Fader.Update() {
 		dirty = true
 	}
 	return dirty
 }
 
-func (v *viewAnimator) Render(fudge float32) {
-	old := gfx.Alpha()
-	defer gfx.SetAlpha(old)
-	gfx.SetAlpha(v.fade.Value(fudge))
-	v.updateRenderCloser.Render(fudge)
-}
-
-func (v *viewAnimator) Close() {
-	v.updateRenderCloser.Close()
+func (c *uiChart) Render(fudge float32) {
+	c.Fader.Render(c.Chart.Render, fudge)
 }
 
 // New creates a new View.
@@ -589,7 +552,7 @@ func (u *UI) processInput() []func() {
 
 	for i := 0; i < len(u.charts); i++ {
 		ch := u.charts[i]
-		ch.chart.ProcessInput(bounds, input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
+		ch.ProcessInput(bounds, input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
 	}
 
 	u.sidebar.SetBounds(m.sidebarBounds)
@@ -610,7 +573,7 @@ func (u *UI) update() (dirty bool) {
 		if ch.Update() {
 			dirty = true
 		}
-		if ch.DoneExiting() {
+		if ch.DoneFadingOut() {
 			u.charts = append(u.charts[:i], u.charts[i+1:]...)
 			ch.Close()
 			i--
@@ -736,9 +699,9 @@ func (u *UI) SetChart(symbol string, data *chart.Data) error {
 
 	defer u.WakeLoop()
 	for _, ch := range u.charts {
-		ch.Exit()
+		ch.FadeOut()
 	}
-	u.charts = append([]*viewChart{newViewChart(ch)}, u.charts...)
+	u.charts = append([]*uiChart{newUIChart(ch)}, u.charts...)
 
 	return nil
 }

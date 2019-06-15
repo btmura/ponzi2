@@ -26,21 +26,39 @@ type sidebar struct {
 }
 
 type sidebarThumb struct {
-	chartThumb *chart.Thumb
-	*viewAnimator
+	*chart.Thumb
+	*view.Fader
+}
+
+func newSidebarThumb(th *chart.Thumb) *sidebarThumb {
+	return &sidebarThumb{
+		Thumb: th,
+		Fader: view.NewFader(1 * fps),
+	}
+}
+
+func (t *sidebarThumb) Update() (dirty bool) {
+	if t.Thumb.Update() {
+		dirty = true
+	}
+	if t.Fader.Update() {
+		dirty = true
+	}
+	return dirty
+}
+
+func (t *sidebarThumb) Render(fudge float32) {
+	t.Fader.Render(t.Thumb.Render, fudge)
 }
 
 func (s *sidebar) AddChartThumb(th *chart.Thumb) {
-	s.thumbs = append(s.thumbs, &sidebarThumb{
-		chartThumb:   th,
-		viewAnimator: newViewAnimator(th),
-	})
+	s.thumbs = append(s.thumbs, newSidebarThumb(th))
 }
 
 func (s *sidebar) RemoveChartThumb(th *chart.Thumb) {
-	for _, vth := range s.thumbs {
-		if vth.chartThumb == th {
-			vth.Exit()
+	for _, t := range s.thumbs {
+		if t.Thumb == th {
+			t.FadeOut()
 			break
 		}
 	}
@@ -57,34 +75,32 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		s.bounds.Min.X, s.bounds.Max.Y-viewPadding-chartThumbSize.Y,
 		s.bounds.Max.X, s.bounds.Max.Y-viewPadding,
 	)
-	for _, th := range s.thumbs {
-		th.chartThumb.SetBounds(thumbBounds)
-		th.chartThumb.ProcessInput(input)
+	for _, t := range s.thumbs {
+		t.SetBounds(thumbBounds)
+		t.ProcessInput(input)
 		thumbBounds = thumbBounds.Sub(chartThumbRenderOffset)
 	}
 }
 
+// Update moves the animation one step forward.
 func (s *sidebar) Update() (dirty bool) {
 	for i := 0; i < len(s.thumbs); i++ {
-		th := s.thumbs[i]
-		if th.Update() {
+		t := s.thumbs[i]
+		if t.Update() {
 			dirty = true
 		}
-		if th.DoneExiting() {
+		if t.DoneFadingOut() {
 			s.thumbs = append(s.thumbs[:i], s.thumbs[i+1:]...)
-			th.Close()
+			t.Close()
 			i--
 		}
 	}
 	return dirty
 }
 
+// Render renders a frame.
 func (s *sidebar) Render(fudge float32) {
-	if len(s.thumbs) == 0 {
-		return
-	}
-
-	for _, th := range s.thumbs {
-		th.Render(fudge)
+	for _, t := range s.thumbs {
+		t.Render(fudge)
 	}
 }

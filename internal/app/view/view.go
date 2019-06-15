@@ -1,6 +1,8 @@
 package view
 
-import "image"
+import (
+	"image"
+)
 
 // ZoomChange specifies whether the user has zoomed in or not.
 type ZoomChange int
