@@ -106,7 +106,7 @@ type Client struct {
 
 // NewClient returns a new Client.
 func NewClient(token string, dumpAPIResponses bool) *Client {
-	return &Client{dumpAPIResponses: dumpAPIResponses}
+	return &Client{token: token, dumpAPIResponses: dumpAPIResponses}
 }
 
 // GetStocks gets a series of trading sessions for a stock symbol.
