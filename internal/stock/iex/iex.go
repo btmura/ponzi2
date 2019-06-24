@@ -70,6 +70,12 @@ type Quote struct {
 	ChangePercent float32
 }
 
+// DeepCopy returns a deep copy of the quote.
+func (q *Quote) DeepCopy() *Quote {
+	copy := *q
+	return &copy
+}
+
 // Source is the quote data source.
 type Source int
 
@@ -93,6 +99,12 @@ type ChartPoint struct {
 	Volume        int
 	Change        float32
 	ChangePercent float32
+}
+
+// DeepCopy returns a deep copy of the chart point.
+func (c *ChartPoint) DeepCopy() *ChartPoint {
+	copy := *c
+	return &copy
 }
 
 // Client is used to make IEX API requests.
