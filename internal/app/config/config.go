@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/user"
 	"path"
+	"path/filepath"
 
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
@@ -80,7 +81,7 @@ func userConfigDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	p := path.Join(u.HomeDir, ".config", "ponzi")
+	p := filepath.Join(u.HomeDir, ".config", "ponzi")
 	if err := os.MkdirAll(p, 0755); err != nil {
 		return "", err
 	}
