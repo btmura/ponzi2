@@ -54,41 +54,6 @@ type Stock struct {
 	Chart  []*ChartPoint
 }
 
-// Quote is a stock quote.
-type Quote struct {
-	CompanyName   string
-	LatestPrice   float32
-	LatestSource  Source
-	LatestTime    time.Time
-	LatestUpdate  time.Time
-	LatestVolume  int
-	Open          float32
-	High          float32
-	Low           float32
-	Close         float32
-	Change        float32
-	ChangePercent float32
-}
-
-// DeepCopy returns a deep copy of the quote.
-func (q *Quote) DeepCopy() *Quote {
-	copy := *q
-	return &copy
-}
-
-// Source is the quote data source.
-type Source int
-
-// Source values.
-//go:generate stringer -type=Source
-const (
-	SourceUnspecified Source = iota
-	IEXRealTimePrice
-	FifteenMinuteDelayedPrice
-	Close
-	PreviousClose
-)
-
 // ChartPoint is a single point on the chart.
 type ChartPoint struct {
 	Date          time.Time
@@ -302,42 +267,6 @@ func decodeStocks(r io.Reader) ([]*Stock, error) {
 	}
 
 	return chs, nil
-}
-
-func quoteSource(latestSource string) (Source, error) {
-	switch latestSource {
-	case "IEX real time price":
-		return IEXRealTimePrice, nil
-	case "15 minute delayed price":
-		return FifteenMinuteDelayedPrice, nil
-	case "Close":
-		return Close, nil
-	case "Previous close":
-		return PreviousClose, nil
-	default:
-		return SourceUnspecified, errors.Errorf("unrecognized source: %q", latestSource)
-	}
-}
-
-func quoteDate(latestSource Source, latestTime string) (time.Time, error) {
-	switch latestSource {
-	case IEXRealTimePrice, FifteenMinuteDelayedPrice:
-		t, err := time.ParseInLocation("3:04:05 PM", latestTime, loc)
-		if err != nil {
-			return time.Time{}, err
-		}
-
-		n := now()
-		return time.Date(
-			n.Year(), n.Month(), n.Day(),
-			t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), t.Location()), nil
-
-	case PreviousClose, Close:
-		return time.ParseInLocation("January 2, 2006", latestTime, loc)
-
-	default:
-		return time.Time{}, errors.Errorf("couldn't parse quote date with source(%q) and time(%q)", latestSource, latestTime)
-	}
 }
 
 func chartDate(date, minute string) (time.Time, error) {
