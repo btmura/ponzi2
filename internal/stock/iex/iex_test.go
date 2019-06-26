@@ -201,37 +201,3 @@ func TestDecodeStocks(t *testing.T) {
 		})
 	}
 }
-
-func TestChartDate(t *testing.T) {
-	for _, tt := range []struct {
-		desc        string
-		inputDate   string
-		inputMinute string
-		want        time.Time
-		wantErr     bool
-	}{
-		{
-			desc:      "date",
-			inputDate: "2018-06-28",
-			want:      time.Date(2018, 6, 28, 0, 0, 0, 0, loc),
-		},
-		{
-			desc:        "date and time",
-			inputDate:   "2018-06-28",
-			inputMinute: "14:53",
-			want:        time.Date(2018, 6, 28, 14, 53, 0, 0, loc),
-		},
-	} {
-		t.Run(tt.desc, func(t *testing.T) {
-			got, gotErr := chartDate(tt.inputDate, tt.inputMinute)
-
-			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("diff (-want, +got)\n%s", diff)
-			}
-
-			if (gotErr != nil) != tt.wantErr {
-				t.Errorf("got error: %v, wanted err: %t", gotErr, tt.wantErr)
-			}
-		})
-	}
-}

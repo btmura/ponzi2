@@ -140,7 +140,7 @@ func decodeQuotes(r io.Reader) ([]*Quote, error) {
 	var m map[string]stock
 	dec := json.NewDecoder(r)
 	if err := dec.Decode(&m); err != nil {
-		return nil, errors.Errorf("json decode failed: %v", err)
+		return nil, errors.Errorf("quote json decode failed: %v", err)
 	}
 
 	var quotes []*Quote

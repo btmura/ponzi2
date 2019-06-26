@@ -54,24 +54,6 @@ type Stock struct {
 	Chart  []*ChartPoint
 }
 
-// ChartPoint is a single point on the chart.
-type ChartPoint struct {
-	Date          time.Time
-	Open          float32
-	High          float32
-	Low           float32
-	Close         float32
-	Volume        int
-	Change        float32
-	ChangePercent float32
-}
-
-// DeepCopy returns a deep copy of the chart point.
-func (c *ChartPoint) DeepCopy() *ChartPoint {
-	copy := *c
-	return &copy
-}
-
 // Client is used to make IEX API requests.
 type Client struct {
 	// token is the API token required on all requests.
@@ -267,13 +249,6 @@ func decodeStocks(r io.Reader) ([]*Stock, error) {
 	}
 
 	return chs, nil
-}
-
-func chartDate(date, minute string) (time.Time, error) {
-	if minute != "" {
-		return time.ParseInLocation("2006-01-02 15:04", date+" "+minute, loc)
-	}
-	return time.ParseInLocation("2006-01-02", date, loc)
 }
 
 func millisToTime(ms int64) time.Time {
