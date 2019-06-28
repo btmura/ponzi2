@@ -15,6 +15,9 @@ type CacheClient struct {
 
 	// quoteCache caches quote responses.
 	quoteCache *quoteCache
+
+	// chartCache caches chart responses.
+	chartCache *chartCache
 }
 
 // NewCacheClient returns a new CacheClient.
@@ -22,6 +25,7 @@ func NewCacheClient(client *Client) *CacheClient {
 	return &CacheClient{
 		client:     client,
 		quoteCache: newQuoteCache(),
+		chartCache: newChartCache(),
 	}
 }
 
@@ -58,6 +62,45 @@ func (c *CacheClient) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]*
 		quotes = append(quotes, v.quote.DeepCopy())
 	}
 	return quotes, nil
+}
+
+// GetCharts gets charts for stock symbols.
+func (c *CacheClient) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart, error) {
+	var missingSymbols []string
+	for _, sym := range req.Symbols {
+		k := chartCacheKey{symbol: sym, dataRange: req.Range}
+		v := c.chartCache.get(k)
+		if v == nil {
+			missingSymbols = append(missingSymbols, sym)
+		}
+	}
+
+	r := &GetChartsRequest{
+		Symbols:   missingSymbols,
+		Range:     req.Range,
+		ChartLast: req.ChartLast,
+	}
+	missingCharts, err := c.client.GetCharts(ctx, r)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, ch := range missingCharts {
+		k := chartCacheKey{symbol: ch.Symbol, dataRange: req.Range}
+		v := &chartCacheValue{
+			chart:          ch.DeepCopy(),
+			lastUpdateTime: now(),
+		}
+		c.chartCache.put(k, v)
+	}
+
+	var charts []*Chart
+	for _, sym := range req.Symbols {
+		k := chartCacheKey{symbol: sym, dataRange: req.Range}
+		v := c.chartCache.get(k)
+		charts = append(charts, v.chart.DeepCopy())
+	}
+	return charts, nil
 }
 
 // quoteCache caches data from the quote endpoint.
@@ -108,16 +151,13 @@ type chartCacheKey struct {
 }
 
 type chartCacheValue struct {
-	chartPoints    []*ChartPoint
+	chart          *Chart
 	lastUpdateTime time.Time
 }
 
 func (c *chartCacheValue) deepCopy() *chartCacheValue {
 	copy := *c
-	copy.chartPoints = nil
-	for _, cp := range c.chartPoints {
-		copy.chartPoints = append(copy.chartPoints, cp)
-	}
+	copy.chart = copy.chart.DeepCopy()
 	return &copy
 }
 

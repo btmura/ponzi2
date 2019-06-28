@@ -21,6 +21,16 @@ type Chart struct {
 	ChartPoints []*ChartPoint
 }
 
+// DeepCopy retuns a deep copy of the chart.
+func (c *Chart) DeepCopy() *Chart {
+	copy := *c
+	copy.ChartPoints = make([]*ChartPoint, len(c.ChartPoints))
+	for i := range c.ChartPoints {
+		copy.ChartPoints[i] = c.ChartPoints[i].DeepCopy()
+	}
+	return &copy
+}
+
 // ChartPoint is a single point on the chart.
 type ChartPoint struct {
 	Date          time.Time
