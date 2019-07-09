@@ -6,6 +6,7 @@ import (
 	_ "expvar"
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -30,7 +31,10 @@ func main() {
 
 	ctx := context.Background()
 
-	c := iex.NewCacheClient(iex.NewClient(*token, *dumpAPIResponses))
+	c, err := iex.NewCacheClient(iex.NewClient(*token, *dumpAPIResponses))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	for {
 		fmt.Printf("Enter comma-separated symbols: ")
