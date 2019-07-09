@@ -6,7 +6,6 @@ import (
 	_ "expvar"
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
@@ -49,7 +48,8 @@ func main() {
 
 		quotes, err := c.GetQuotes(ctx, req)
 		if err != nil {
-			log.Fatalf("GetQuotes: %v", err)
+			fmt.Printf("GetQuotes: %v\n", err)
+			continue
 		}
 
 		for i, q := range quotes {
