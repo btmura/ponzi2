@@ -2,11 +2,14 @@ package iex
 
 import (
 	"context"
+	"expvar"
 	"os"
 	"os/user"
 	"path/filepath"
 	"time"
 )
+
+var cacheClientVar = expvar.NewMap("iex-cache-client-stats")
 
 // CacheClient is used to make IEX API requests with caching.
 type CacheClient struct {
@@ -31,6 +34,8 @@ func NewCacheClient(client *Client) *CacheClient {
 
 // GetQuotes gets quotes for stock symbols.
 func (c *CacheClient) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]*Quote, error) {
+	cacheClientVar.Add("get-quotes-requests", 1)
+
 	var missingSymbols []string
 	for _, sym := range req.Symbols {
 		k := quoteCacheKey{symbol: sym}
@@ -130,8 +135,10 @@ func newQuoteCache() *quoteCache {
 func (q *quoteCache) get(key quoteCacheKey) *quoteCacheValue {
 	v := q.data[key]
 	if v != nil {
+		cacheClientVar.Add("quote-cache-hits", 1)
 		return v.deepCopy()
 	}
+	cacheClientVar.Add("quote-cache-misses", 1)
 	return nil
 }
 

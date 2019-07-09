@@ -3,21 +3,31 @@ package main
 
 import (
 	"context"
+	_ "expvar"
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
 var (
+	port             = flag.Int("port", 9000, "Port number to export metrics.")
 	token            = flag.String("token", "", "API token required on requests.")
 	dumpAPIResponses = flag.Bool("dump_api_responses", false, "Dump API responses to txt files.")
 )
 
 func main() {
 	flag.Parse()
+
+	fmt.Printf("Serving metrics at http://localhost:%d/debug/vars\n", *port)
+	go func() {
+		if err := http.ListenAndServe(fmt.Sprintf(":%d", *port), nil); err != nil {
+			fmt.Printf("http.ListenAndServe failed: %v\n", err)
+		}
+	}()
 
 	ctx := context.Background()
 
