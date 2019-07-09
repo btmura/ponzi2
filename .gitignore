@@ -31,3 +31,6 @@ ponzi2
 
 # Visual Studio Code Settings
 settings.json
+
+# IEX Debug Respone Dumps
+iex-*.txt
