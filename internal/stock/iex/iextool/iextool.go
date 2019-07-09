@@ -12,11 +12,8 @@ import (
 )
 
 var (
-	symbols          = flag.String("symbols", "SPY", "Comma-separated list of symbols.")
-	rangeFlag        = flag.String("range", "1d", "Range of data to get. Values: 1d, 2y")
-	chartLast        = flag.Int("chart_last", 5, "Last N chart elements if greater than zero.")
 	token            = flag.String("token", "", "API token required on requests.")
-	dumpAPIResponses = flag.Bool("dump_api_responses", true, "Dump API responses to txt files.")
+	dumpAPIResponses = flag.Bool("dump_api_responses", false, "Dump API responses to txt files.")
 )
 
 func main() {
@@ -24,38 +21,30 @@ func main() {
 
 	ctx := context.Background()
 
-	c := iex.NewClient(*token, *dumpAPIResponses)
+	c := iex.NewCacheClient(iex.NewClient(*token, *dumpAPIResponses))
 
-	req := &iex.GetStocksRequest{
-		Symbols: strings.Split(*symbols, ","),
-		Range:   iex.TwoYears,
-	}
+	for {
+		fmt.Printf("Enter comma-separated symbols: ")
 
-	switch *rangeFlag {
-	case "1d":
-		req.Range = iex.OneDay
-	case "2y":
-		req.Range = iex.TwoYears
-	default:
-		log.Fatalf("iextool: unsupported range: %v", *rangeFlag)
-	}
+		line := ""
+		fmt.Scanln(&line)
 
-	if *chartLast > 0 {
-		req.ChartLast = *chartLast
-	}
+		line = strings.ToUpper(line)
 
-	stocks, err := c.GetStocks(ctx, req)
-	if err != nil {
-		log.Fatal(err)
-	}
+		req := &iex.GetQuotesRequest{
+			Symbols: strings.Split(line, ","),
+		}
 
-	fmt.Printf("Request:\n\n%+v\n\n", req)
+		fmt.Printf("Quotes: %+v\n", req)
 
-	for _, st := range stocks {
-		fmt.Printf("Symbol:\n\n%s\n\nQuote:\n\n%+v\n\n", st.Symbol, st.Quote)
-		for i, p := range st.Chart {
-			fmt.Printf("%3d: %s Open: %.2f High: %.2f Low: %.2f Close: %.2f Volume: %d\n",
-				i, p.Date, p.Open, p.High, p.Low, p.Close, p.Volume)
+		quotes, err := c.GetQuotes(ctx, req)
+		if err != nil {
+			log.Fatalf("GetQuotes: %v", err)
+		}
+
+		for i, q := range quotes {
+			fmt.Printf("%d: %s Open: %.2f High: %.2f Low: %.2f Close: %.2f Volume: %d\n",
+				i, q.Symbol, q.Open, q.High, q.Low, q.Close, q.LatestVolume)
 		}
 	}
 }
