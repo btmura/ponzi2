@@ -36,11 +36,14 @@ func NewCacheClient(client *Client) *CacheClient {
 func (c *CacheClient) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]*Quote, error) {
 	cacheClientVar.Add("get-quotes-requests", 1)
 
+	symbol2Quote := map[string]*Quote{}
 	var missingSymbols []string
 	for _, sym := range req.Symbols {
 		k := quoteCacheKey{symbol: sym}
 		v := c.quoteCache.get(k)
-		if v == nil {
+		if v != nil {
+			symbol2Quote[sym] = v.quote.DeepCopy()
+		} else {
 			missingSymbols = append(missingSymbols, sym)
 		}
 	}
@@ -57,14 +60,17 @@ func (c *CacheClient) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]*
 			quote:          q.DeepCopy(),
 			lastUpdateTime: now(),
 		}
+		symbol2Quote[q.Symbol] = q.DeepCopy()
 		c.quoteCache.put(k, v)
 	}
 
 	var quotes []*Quote
 	for _, sym := range req.Symbols {
-		k := quoteCacheKey{symbol: sym}
-		v := c.quoteCache.get(k)
-		quotes = append(quotes, v.quote.DeepCopy())
+		q := symbol2Quote[sym]
+		if q == nil {
+			q = &Quote{Symbol: sym}
+		}
+		quotes = append(quotes, q)
 	}
 	return quotes, nil
 }
