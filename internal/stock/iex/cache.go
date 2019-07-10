@@ -28,10 +28,15 @@ func NewCacheClient(client *Client) (*CacheClient, error) {
 		return nil, err
 	}
 
+	c, err := loadChartCache()
+	if err != nil {
+		return nil, err
+	}
+
 	return &CacheClient{
 		client:     client,
 		quoteCache: q,
-		chartCache: newChartCache(),
+		chartCache: c,
 	}, nil
 }
 

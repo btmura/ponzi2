@@ -77,6 +77,8 @@ func (q *quoteCacheValue) deepCopy() *quoteCacheValue {
 }
 
 func (q *quoteCache) get(key quoteCacheKey) *quoteCacheValue {
+	cacheClientVar.Add("quote-cache-gets", 1)
+
 	v := q.Data[key]
 	if v != nil {
 		cacheClientVar.Add("quote-cache-hits", 1)
@@ -87,6 +89,8 @@ func (q *quoteCache) get(key quoteCacheKey) *quoteCacheValue {
 }
 
 func (q *quoteCache) put(key quoteCacheKey, val *quoteCacheValue) {
+	cacheClientVar.Add("quote-cache-puts", 1)
+
 	if q.Data == nil {
 		q.Data = map[quoteCacheKey]*quoteCacheValue{}
 	}
