@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/btmura/ponzi2/internal/errors"
 )
 
 // GetCharts gets charts for stock symbols.
@@ -41,7 +43,9 @@ func (c *CacheClient) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*
 			LastUpdateTime: now(),
 		}
 		symbol2Chart[ch.Symbol] = ch.DeepCopy()
-		c.chartCache.put(k, v)
+		if err := c.chartCache.put(k, v); err != nil {
+			return nil, err
+		}
 	}
 
 	if err := saveChartCache(c.chartCache); err != nil {
@@ -93,14 +97,20 @@ func (c *chartCache) get(key chartCacheKey) *chartCacheValue {
 	return nil
 }
 
-func (c *chartCache) put(key chartCacheKey, val *chartCacheValue) {
+func (c *chartCache) put(key chartCacheKey, val *chartCacheValue) error {
 	cacheClientVar.Add("chart-cache-puts", 1)
+
+	if !validSymbolRegexp.MatchString(key.Symbol) {
+		return errors.Errorf("bad symbol: got %s, want: %v", key.Symbol, validSymbolRegexp)
+	}
 
 	if c.Data == nil {
 		c.Data = map[chartCacheKey]*chartCacheValue{}
 	}
 	c.Data[key] = val.deepCopy()
 	c.Data[key].LastUpdateTime = now()
+
+	return nil
 }
 
 func loadChartCache() (*chartCache, error) {

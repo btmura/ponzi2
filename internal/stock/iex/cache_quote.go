@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/btmura/ponzi2/internal/errors"
 )
 
 // GetQuotes gets quotes for stock symbols.
@@ -37,7 +39,9 @@ func (c *CacheClient) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]*
 			LastUpdateTime: now(),
 		}
 		symbol2Quote[q.Symbol] = q.DeepCopy()
-		c.quoteCache.put(k, v)
+		if err := c.quoteCache.put(k, v); err != nil {
+			return nil, err
+		}
 	}
 
 	if err := saveQuoteCache(c.quoteCache); err != nil {
@@ -88,14 +92,20 @@ func (q *quoteCache) get(key quoteCacheKey) *quoteCacheValue {
 	return nil
 }
 
-func (q *quoteCache) put(key quoteCacheKey, val *quoteCacheValue) {
+func (q *quoteCache) put(key quoteCacheKey, val *quoteCacheValue) error {
 	cacheClientVar.Add("quote-cache-puts", 1)
+
+	if !validSymbolRegexp.MatchString(key.Symbol) {
+		return errors.Errorf("bad symbol: got %s, want: %v", key.Symbol, validSymbolRegexp)
+	}
 
 	if q.Data == nil {
 		q.Data = map[quoteCacheKey]*quoteCacheValue{}
 	}
 	q.Data[key] = val.deepCopy()
 	q.Data[key].LastUpdateTime = now()
+
+	return nil
 }
 
 func loadQuoteCache() (*quoteCache, error) {

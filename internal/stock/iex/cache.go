@@ -5,7 +5,11 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"regexp"
 )
+
+// validSymbolRegexp is a regexp that accepts valid stock symbols. Examples: X, FB, SPY, AAPL
+var validSymbolRegexp = regexp.MustCompile("^[A-Z]{1,5}$")
 
 var cacheClientVar = expvar.NewMap("iex-cache-client-stats")
 
