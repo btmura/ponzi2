@@ -109,6 +109,11 @@ func (q *quoteCache) put(key quoteCacheKey, val *quoteCacheValue) error {
 }
 
 func loadQuoteCache() (*quoteCache, error) {
+	t := now()
+	defer func() {
+		cacheClientVar.Set("quote-cache-load-time", time.Since(t))
+	}()
+
 	path, err := quoteCachePath()
 	if err != nil {
 		return nil, err
@@ -132,6 +137,11 @@ func loadQuoteCache() (*quoteCache, error) {
 }
 
 func saveQuoteCache(q *quoteCache) error {
+	t := now()
+	defer func() {
+		cacheClientVar.Set("quote-cache-save-time", time.Since(t))
+	}()
+
 	path, err := quoteCachePath()
 	if err != nil {
 		return err

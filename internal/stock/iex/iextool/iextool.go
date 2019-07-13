@@ -38,6 +38,15 @@ func main() {
 	}
 
 	for {
+		expvar.Do(func(kv expvar.KeyValue) {
+			if !strings.HasPrefix(kv.Key, "iex-") {
+				return
+			}
+			fmt.Println(kv)
+		})
+
+		fmt.Println()
+
 		fmt.Printf("Enter comma-separated symbols: ")
 
 		symbolLine := ""
@@ -86,15 +95,6 @@ func main() {
 					j, p.Date.Format("1/2/06 03:04 AM"), p.Open, p.High, p.Low, p.Close, p.Volume)
 			}
 		}
-
-		fmt.Println()
-
-		expvar.Do(func(kv expvar.KeyValue) {
-			if !strings.HasPrefix(kv.Key, "iex-") {
-				return
-			}
-			fmt.Println(kv)
-		})
 
 		fmt.Println()
 	}

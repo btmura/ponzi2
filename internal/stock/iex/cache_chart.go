@@ -114,6 +114,11 @@ func (c *chartCache) put(key chartCacheKey, val *chartCacheValue) error {
 }
 
 func loadChartCache() (*chartCache, error) {
+	t := now()
+	defer func() {
+		cacheClientVar.Set("chart-cache-load-time", time.Since(t))
+	}()
+
 	path, err := chartCachePath()
 	if err != nil {
 		return nil, err
@@ -137,6 +142,11 @@ func loadChartCache() (*chartCache, error) {
 }
 
 func saveChartCache(q *chartCache) error {
+	t := now()
+	defer func() {
+		cacheClientVar.Set("chart-cache-save-time", time.Since(t))
+	}()
+
 	path, err := chartCachePath()
 	if err != nil {
 		return err
