@@ -143,6 +143,61 @@ func TestRemoveSidebarSymbol(t *testing.T) {
 	}
 }
 
+func TestUpdateStockQuote(t *testing.T) {
+	old := now
+	defer func() { now = old }()
+	now = func() time.Time { return time.Date(2019, time.March, 10, 30, 0, 0, 0, time.UTC) }
+
+	m := New()
+
+	// Add SPY to the model so UpdateStockQuote works.
+	m.SetCurrentSymbol("SPY")
+
+	if err := m.UpdateStockQuote("", &Quote{}); err == nil {
+		t.Errorf("UpdateStockQuote should return an error when the input symbol is invalid.")
+	}
+
+	if err := m.UpdateStockQuote("SPY", nil /* quote can't be nil */); err == nil {
+		t.Errorf("UpdateStockQuote should return an error when the input quote is invalid.")
+	}
+
+	q1 := &Quote{Close: 1337}
+	if err := m.UpdateStockQuote("SPY", q1); err != nil {
+		t.Errorf("UpdateStockQuote should not return an error if the inputs are valid.")
+	}
+
+	want := &Stock{
+		Symbol: "SPY",
+		Quote:  &Quote{Close: 1337},
+	}
+
+	st, err := m.Stock("SPY")
+	if err != nil {
+		t.Errorf("Stock should not return an error if the given symbol is valid.")
+	}
+	if diff := cmp.Diff(want, st); diff != "" {
+		t.Errorf("diff (-want, +got)\n%s", diff)
+	}
+
+	q2 := &Quote{Open: 42}
+	if err := m.UpdateStockQuote("SPY", q2); err != nil {
+		t.Errorf("UpdateStockQuote should not return an error if the inputs are valid.")
+	}
+
+	want = &Stock{
+		Symbol: "SPY",
+		Quote:  &Quote{Open: 42},
+	}
+
+	st, err = m.Stock("SPY")
+	if err != nil {
+		t.Errorf("Stock should not return an error if the given symbol is valid.")
+	}
+	if diff := cmp.Diff(want, st); diff != "" {
+		t.Errorf("diff (-want, +got)\n%s", diff)
+	}
+}
+
 func TestUpdateStockChart(t *testing.T) {
 	old := now
 	defer func() { now = old }()

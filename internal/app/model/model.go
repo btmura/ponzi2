@@ -244,6 +244,28 @@ func (m *Model) Stock(symbol string) (*Stock, error) {
 	return m.symbol2Stock[symbol], nil
 }
 
+// UpdateStockQuote updates the quote for a stock if the stock is in the model.
+func (m *Model) UpdateStockQuote(symbol string, quote *Quote) error {
+	if err := ValidateSymbol(symbol); err != nil {
+		return err
+	}
+
+	if err := ValidateQuote(quote); err != nil {
+		return err
+	}
+
+	st := m.symbol2Stock[symbol]
+
+	// Don't do anything if the stock isn't in the model.
+	if st == nil {
+		return nil
+	}
+
+	st.Quote = quote
+
+	return nil
+}
+
 // UpdateStockChart inserts or updates the chart for a stock if it is in the model.
 func (m *Model) UpdateStockChart(symbol string, chart *Chart) error {
 	if err := ValidateSymbol(symbol); err != nil {
@@ -297,6 +319,15 @@ func ValidateSymbol(symbol string) error {
 	if !validSymbolRegexp.MatchString(symbol) {
 		return errors.Errorf("bad symbol: got %s, want: %v", symbol, validSymbolRegexp)
 	}
+	return nil
+}
+
+// ValidateQuote validates a Quote and returns an error if it's invalid.
+func ValidateQuote(q *Quote) error {
+	if q == nil {
+		return errors.Errorf("missing quote")
+	}
+
 	return nil
 }
 
