@@ -114,31 +114,59 @@ func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) err
 				s.eventController.addEventLocked(es...)
 			}
 
-			stocks, err := s.iexClient.GetStocks(ctx, req.iexRequest)
+			quotes, err := s.iexClient.GetQuotes(ctx, req.quotesRequest)
 			if err != nil {
 				handleErr(err)
 				return
 			}
 
+			charts, err := s.iexClient.GetCharts(ctx, req.chartsRequest)
+			if err != nil {
+				handleErr(err)
+				return
+			}
+
+			type stockData struct {
+				quote *iex.Quote
+				chart *iex.Chart
+			}
+
+			symbol2StockData := map[string]*stockData{}
+
+			for _, q := range quotes {
+				d := symbol2StockData[q.Symbol]
+				if d == nil {
+					d = &stockData{}
+					symbol2StockData[q.Symbol] = d
+				}
+				d.quote = q
+			}
+
+			for _, ch := range charts {
+				d := symbol2StockData[ch.Symbol]
+				if d == nil {
+					d = &stockData{}
+					symbol2StockData[ch.Symbol] = d
+				}
+				d.chart = ch
+			}
+
 			var es []event
 
-			found := map[string]bool{}
-			for _, st := range stocks {
-				found[st.Symbol] = true
-
+			for sym, stockData := range symbol2StockData {
 				switch req.dataRange {
 				case model.OneDay:
-					ch, err := modelOneDayChart(st)
+					ch, err := modelOneDayChart(stockData.quote, stockData.chart)
 					es = append(es, event{
-						symbol:    st.Symbol,
+						symbol:    sym,
 						chart:     ch,
 						updateErr: err,
 					})
 
 				case model.OneYear:
-					ch, err := modelOneYearChart(st)
+					ch, err := modelOneYearChart(stockData.quote, stockData.chart)
 					es = append(es, event{
-						symbol:    st.Symbol,
+						symbol:    sym,
 						chart:     ch,
 						updateErr: err,
 					})
@@ -146,7 +174,7 @@ func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) err
 			}
 
 			for _, sym := range req.symbols {
-				if found[sym] {
+				if symbol2StockData[sym] != nil {
 					continue
 				}
 				es = append(es, event{
@@ -204,9 +232,10 @@ func (d *dataRequestBuilder) add(symbols []string, dataRange model.Range) error 
 }
 
 type dataRequest struct {
-	symbols    []string
-	dataRange  model.Range
-	iexRequest *iex.GetStocksRequest
+	symbols       []string
+	dataRange     model.Range
+	quotesRequest *iex.GetQuotesRequest
+	chartsRequest *iex.GetChartsRequest
 }
 
 func (d *dataRequestBuilder) dataRequests() ([]*dataRequest, error) {
@@ -226,7 +255,10 @@ func (d *dataRequestBuilder) dataRequests() ([]*dataRequest, error) {
 		reqs = append(reqs, &dataRequest{
 			symbols:   ss,
 			dataRange: r,
-			iexRequest: &iex.GetStocksRequest{
+			quotesRequest: &iex.GetQuotesRequest{
+				Symbols: ss,
+			},
+			chartsRequest: &iex.GetChartsRequest{
 				Symbols: ss,
 				Range:   ir,
 			},

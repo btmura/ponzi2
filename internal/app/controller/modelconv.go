@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/btmura/ponzi2/internal/app/model"
-	"github.com/btmura/ponzi2/internal/stock/iex"
 	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
 // maxDataWeeks is maximum number of weeks of data to retain.
@@ -18,15 +18,15 @@ const (
 	d = 3
 )
 
-func modelOneDayChart(st *iex.Stock) (*model.Chart, error) {
-	q, err := modelQuote(st.Quote)
+func modelOneDayChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
+	q, err := modelQuote(quote)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO(btmura): remove duplication with modelTradingSessions
 	var ts []*model.TradingSession
-	for _, p := range st.Chart {
+	for _, p := range chart.ChartPoints {
 		ts = append(ts, &model.TradingSession{
 			Date:          p.Date,
 			Open:          p.Open,
@@ -51,13 +51,13 @@ func modelOneDayChart(st *iex.Stock) (*model.Chart, error) {
 	}, nil
 }
 
-func modelOneYearChart(st *iex.Stock) (*model.Chart, error) {
-	q, err := modelQuote(st.Quote)
+func modelOneYearChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
+	q, err := modelQuote(quote)
 	if err != nil {
 		return nil, err
 	}
 
-	ds := modelTradingSessions(st)
+	ds := modelTradingSessions(quote, chart)
 	ws := weeklyModelTradingSessions(ds)
 
 	m25 := modelMovingAverages(ds, 25)
@@ -173,9 +173,9 @@ func modelRange(r iex.Range) (model.Range, error) {
 	}
 }
 
-func modelTradingSessions(st *iex.Stock) []*model.TradingSession {
+func modelTradingSessions(quote *iex.Quote, chart *iex.Chart) []*model.TradingSession {
 	var ts []*model.TradingSession
-	for _, p := range st.Chart {
+	for _, p := range chart.ChartPoints {
 		ts = append(ts, &model.TradingSession{
 			Date:          p.Date,
 			Open:          p.Open,
@@ -194,7 +194,7 @@ func modelTradingSessions(st *iex.Stock) []*model.TradingSession {
 	// Add a trading session for the current quote if we do not have data
 	// for today's trading session, so that the chart includes the latest quote.
 
-	q := st.Quote
+	q := quote
 	if q == nil {
 		return ts
 	}
