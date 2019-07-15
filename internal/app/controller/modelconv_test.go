@@ -11,15 +11,13 @@ import (
 
 func TestModelOneDayChart(t *testing.T) {
 	for _, tt := range []struct {
-		desc       string
-		inputQuote *iex.Quote
-		inputChart *iex.Chart
-		want       *model.Chart
-		wantErr    bool
+		desc    string
+		input   *iex.Chart
+		want    *model.Chart
+		wantErr bool
 	}{
 		{
-			inputQuote: &iex.Quote{CompanyName: "Apple Inc."},
-			inputChart: &iex.Chart{
+			input: &iex.Chart{
 				ChartPoints: []*iex.ChartPoint{
 					{
 						Date:   time.Date(2018, time.September, 18, 15, 57, 0, 0, time.UTC),
@@ -32,7 +30,6 @@ func TestModelOneDayChart(t *testing.T) {
 				},
 			},
 			want: &model.Chart{
-				Quote: &model.Quote{CompanyName: "Apple Inc."},
 				Range: model.OneDay,
 				TradingSessionSeries: &model.TradingSessionSeries{
 					TradingSessions: []*model.TradingSession{
@@ -50,7 +47,7 @@ func TestModelOneDayChart(t *testing.T) {
 		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
-			got, gotErr := modelOneDayChart(tt.inputQuote, tt.inputChart)
+			got, gotErr := modelOneDayChart(tt.input)
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("diff (-want, +got)\n%s", diff)

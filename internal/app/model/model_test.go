@@ -210,37 +210,6 @@ func TestUpdateStockChart(t *testing.T) {
 	if diff := cmp.Diff(want, st); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
-
-	c3 := &Chart{
-		Quote: &Quote{CompanyName: "S&P 500"},
-		Range: OneYear,
-	}
-	if err := m.UpdateStockChart("SPY", c3); err != nil {
-		t.Errorf("UpdateStockChart should not return an error if the inputs are valid.")
-	}
-
-	want = &Stock{
-		Symbol: "SPY",
-		Charts: []*Chart{
-			{
-				Range:          OneDay,
-				LastUpdateTime: time.Date(2019, time.March, 10, 30, 0, 0, 0, time.UTC),
-			},
-			{
-				Quote:          &Quote{CompanyName: "S&P 500"},
-				Range:          OneYear,
-				LastUpdateTime: time.Date(2019, time.March, 10, 30, 0, 0, 0, time.UTC),
-			},
-		},
-	}
-
-	st, err = m.Stock("SPY")
-	if err != nil {
-		t.Errorf("Stock should not return an error if the given symbol is valid.")
-	}
-	if diff := cmp.Diff(want, st); diff != "" {
-		t.Errorf("diff (-want, +got)\n%s", diff)
-	}
 }
 
 func TestStockBookkeeping(t *testing.T) {

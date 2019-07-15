@@ -18,12 +18,7 @@ const (
 	d = 3
 )
 
-func modelOneDayChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
-	q, err := modelQuote(quote)
-	if err != nil {
-		return nil, err
-	}
-
+func modelOneDayChart(chart *iex.Chart) (*model.Chart, error) {
 	// TODO(btmura): remove duplication with modelTradingSessions
 	var ts []*model.TradingSession
 	for _, p := range chart.ChartPoints {
@@ -43,7 +38,6 @@ func modelOneDayChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) 
 	})
 
 	return &model.Chart{
-		Quote: q,
 		Range: model.OneDay,
 		TradingSessionSeries: &model.TradingSessionSeries{
 			TradingSessions: ts,
@@ -52,11 +46,6 @@ func modelOneDayChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) 
 }
 
 func modelOneYearChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
-	q, err := modelQuote(quote)
-	if err != nil {
-		return nil, err
-	}
-
 	ds := modelTradingSessions(quote, chart)
 	ws := weeklyModelTradingSessions(ds)
 
@@ -106,7 +95,6 @@ func modelOneYearChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error)
 	}
 
 	return &model.Chart{
-		Quote:                  q,
 		Range:                  model.OneYear,
 		TradingSessionSeries:   &model.TradingSessionSeries{TradingSessions: ds},
 		MovingAverageSeries25:  &model.MovingAverageSeries{MovingAverages: m25},

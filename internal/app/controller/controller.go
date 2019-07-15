@@ -236,7 +236,7 @@ func (c *Controller) chartData(symbol string, dataRange model.Range) (*chart.Dat
 
 	for _, ch := range st.Charts {
 		if ch.Range == dataRange {
-			data.Quote = ch.Quote
+			data.Quote = st.Quote
 			data.Chart = ch
 			return data, nil
 		}

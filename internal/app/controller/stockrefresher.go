@@ -156,7 +156,7 @@ func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) err
 			for sym, stockData := range symbol2StockData {
 				switch req.dataRange {
 				case model.OneDay:
-					ch, err := modelOneDayChart(stockData.quote, stockData.chart)
+					ch, err := modelOneDayChart(stockData.chart)
 					es = append(es, event{
 						symbol:    sym,
 						chart:     ch,

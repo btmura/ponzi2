@@ -31,13 +31,15 @@ type Stock struct {
 	// Symbol is the stock's non-empty symbol.
 	Symbol string
 
+	// Quote is the stock's quote.
+	Quote *Quote
+
 	// Charts are the stock's unsorted charts. Nil initially.
 	Charts []*Chart
 }
 
 // Chart has multiple series of data to be graphed.
 type Chart struct {
-	Quote                  *Quote
 	Range                  Range
 	TradingSessionSeries   *TradingSessionSeries
 	MovingAverageSeries25  *MovingAverageSeries
