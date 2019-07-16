@@ -276,30 +276,46 @@ func (c *Controller) onStockRefreshStarted(symbol string, dataRange model.Range)
 	return c.ui.SetLoading(symbol, dataRange)
 }
 
-// onStockChartUpdate implements the eventHandler interface.
-func (c *Controller) onStockChartUpdate(symbol string, ch *model.Chart) error {
+// onStockUpdate implements the eventHandler interface.
+func (c *Controller) onStockUpdate(symbol string, q *model.Quote, ch *model.Chart) error {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		return err
 	}
 
-	if err := model.ValidateChart(ch); err != nil {
-		return err
+	if q != nil {
+		if err := model.ValidateQuote(q); err != nil {
+			return err
+		}
+
+		if err := c.model.UpdateStockQuote(symbol, q); err != nil {
+			return err
+		}
 	}
 
-	if err := c.model.UpdateStockChart(symbol, ch); err != nil {
-		return err
+	if ch != nil {
+		if err := model.ValidateChart(ch); err != nil {
+			return err
+		}
+
+		if err := c.model.UpdateStockChart(symbol, ch); err != nil {
+			return err
+		}
 	}
 
-	data, err := c.chartData(symbol, c.ui.ChartRange())
-	if err != nil {
-		return err
+	if q != nil || ch != nil {
+		data, err := c.chartData(symbol, c.ui.ChartRange())
+		if err != nil {
+			return err
+		}
+
+		return c.ui.SetData(symbol, data)
 	}
 
-	return c.ui.SetData(symbol, data)
+	return nil
 }
 
-// onStockChartUpdateError implements the eventHandler interface.
-func (c *Controller) onStockChartUpdateError(symbol string, updateErr error) error {
+// onStockUpdateError implements the eventHandler interface.
+func (c *Controller) onStockUpdateError(symbol string, updateErr error) error {
 	return c.ui.SetError(symbol, updateErr)
 }
 

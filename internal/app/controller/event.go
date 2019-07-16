@@ -12,6 +12,7 @@ import (
 type event struct {
 	symbol           string
 	dataRange        model.Range
+	quote            *model.Quote
 	chart            *model.Chart
 	updateErr        error
 	refreshAllStocks bool
@@ -33,8 +34,8 @@ type eventController struct {
 // eventHandler is an interface for handling all event types.
 type eventHandler interface {
 	onStockRefreshStarted(symbol string, dataRange model.Range) error
-	onStockChartUpdate(symbol string, ch *model.Chart) error
-	onStockChartUpdateError(symbol string, updateErr error) error
+	onStockUpdate(symbol string, q *model.Quote, ch *model.Chart) error
+	onStockUpdateError(symbol string, updateErr error) error
 	onRefreshAllStocksRequest(ctx context.Context) error
 	onEventAdded()
 }
@@ -80,12 +81,12 @@ func (c *eventController) process(ctx context.Context) error {
 	for _, e := range c.takeEventLocked() {
 		switch {
 		case e.updateErr != nil:
-			if err := c.handler.onStockChartUpdateError(e.symbol, e.updateErr); err != nil {
+			if err := c.handler.onStockUpdateError(e.symbol, e.updateErr); err != nil {
 				return err
 			}
 
-		case e.chart != nil:
-			if err := c.handler.onStockChartUpdate(e.symbol, e.chart); err != nil {
+		case e.quote != nil, e.chart != nil:
+			if err := c.handler.onStockUpdate(e.symbol, e.quote, e.chart); err != nil {
 				return err
 			}
 

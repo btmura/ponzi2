@@ -154,11 +154,21 @@ func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) err
 			var es []event
 
 			for sym, stockData := range symbol2StockData {
+				q, err := modelQuote(stockData.quote)
+				if err != nil {
+					es = append(es, event{
+						symbol:    sym,
+						updateErr: err,
+					})
+					continue
+				}
+
 				switch req.dataRange {
 				case model.OneDay:
 					ch, err := modelOneDayChart(stockData.chart)
 					es = append(es, event{
 						symbol:    sym,
+						quote:     q,
 						chart:     ch,
 						updateErr: err,
 					})
@@ -167,6 +177,7 @@ func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) err
 					ch, err := modelOneYearChart(stockData.quote, stockData.chart)
 					es = append(es, event{
 						symbol:    sym,
+						quote:     q,
 						chart:     ch,
 						updateErr: err,
 					})
