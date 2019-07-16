@@ -14,7 +14,7 @@ import (
 
 type stockRefresher struct {
 	// iexClient fetches stock data to update the model.
-	iexClient *iex.Client
+	iexClient iexClientInterface
 
 	// eventController allows the stockRefresher to post stock updates.
 	eventController *eventController
@@ -26,7 +26,7 @@ type stockRefresher struct {
 	enabled bool
 }
 
-func newStockRefresher(iexClient *iex.Client, eventController *eventController) *stockRefresher {
+func newStockRefresher(iexClient iexClientInterface, eventController *eventController) *stockRefresher {
 	return &stockRefresher{
 		iexClient:       iexClient,
 		eventController: eventController,

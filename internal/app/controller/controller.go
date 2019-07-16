@@ -33,8 +33,14 @@ type Controller struct {
 	eventController *eventController
 }
 
+// iexClientInterface is implemented by clients in the iex package to get stock data.
+type iexClientInterface interface {
+	GetQuotes(ctx context.Context, req *iex.GetQuotesRequest) ([]*iex.Quote, error)
+	GetCharts(ctx context.Context, req *iex.GetChartsRequest) ([]*iex.Chart, error)
+}
+
 // New creates a new Controller.
-func New(iexClient *iex.Client) *Controller {
+func New(iexClient iexClientInterface) *Controller {
 	c := &Controller{
 		model:       model.New(),
 		ui:          ui.New(),

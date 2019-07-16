@@ -10,7 +10,10 @@ import (
 
 // Run runs the app. Should be called from main.
 func Run(token string, dumpAPIResponses bool) {
-	c := iex.NewClient(token, dumpAPIResponses)
+	c, err := iex.NewCacheClient(iex.NewClient(token, dumpAPIResponses))
+	if err != nil {
+		glog.Fatal(err)
+	}
 	if err := controller.New(c).RunLoop(); err != nil {
 		glog.Fatal(err)
 	}
