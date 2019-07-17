@@ -19,11 +19,11 @@ func (c *CacheClient) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*
 	for _, sym := range req.Symbols {
 		k := chartCacheKey{Symbol: sym, DataRange: req.Range}
 		v := c.chartCache.get(k)
-		if v != nil {
+		if v != nil && v.fresh(now()) {
 			symbol2Chart[sym] = v.Chart.DeepCopy()
-		} else {
-			missingSymbols = append(missingSymbols, sym)
+			continue
 		}
+		missingSymbols = append(missingSymbols, sym)
 	}
 
 	r := &GetChartsRequest{
@@ -77,6 +77,12 @@ type chartCacheKey struct {
 type chartCacheValue struct {
 	Chart          *Chart
 	LastUpdateTime time.Time
+}
+
+func (c *chartCacheValue) fresh(now time.Time) bool {
+	return now.Year() == c.LastUpdateTime.Year() &&
+		now.Month() == c.LastUpdateTime.Month() &&
+		now.Day() == c.LastUpdateTime.Day()
 }
 
 func (c *chartCacheValue) deepCopy() *chartCacheValue {

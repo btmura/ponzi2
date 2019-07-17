@@ -19,11 +19,11 @@ func (c *CacheClient) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]*
 	for _, sym := range req.Symbols {
 		k := quoteCacheKey{Symbol: sym}
 		v := c.quoteCache.get(k)
-		if v != nil {
+		if v != nil && v.fresh(now()) {
 			symbol2Quote[sym] = v.Quote.DeepCopy()
-		} else {
-			missingSymbols = append(missingSymbols, sym)
+			continue
 		}
+		missingSymbols = append(missingSymbols, sym)
 	}
 
 	r := &GetQuotesRequest{Symbols: missingSymbols}
@@ -72,6 +72,12 @@ type quoteCacheKey struct {
 type quoteCacheValue struct {
 	Quote          *Quote
 	LastUpdateTime time.Time
+}
+
+func (q *quoteCacheValue) fresh(now time.Time) bool {
+	return now.Year() == q.LastUpdateTime.Year() &&
+		now.Month() == q.LastUpdateTime.Month() &&
+		now.Day() == q.LastUpdateTime.Day()
 }
 
 func (q *quoteCacheValue) deepCopy() *quoteCacheValue {
