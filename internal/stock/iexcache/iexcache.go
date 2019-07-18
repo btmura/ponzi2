@@ -1,4 +1,4 @@
-package iex
+package iexcache
 
 import (
 	"expvar"
@@ -6,17 +6,19 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
+
+	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
 // validSymbolRegexp is a regexp that accepts valid stock symbols. Examples: X, FB, SPY, AAPL
 var validSymbolRegexp = regexp.MustCompile("^[A-Z]{1,5}$")
 
-var cacheClientVar = expvar.NewMap("iex-cache-client-stats")
+var cacheClientVar = expvar.NewMap("iexcache-client-stats")
 
-// CacheClient is used to make IEX API requests with caching.
-type CacheClient struct {
+// Client is used to make IEX API requests and cache the results.
+type Client struct {
 	// client is used to make IEX API requests without caching.
-	client *Client
+	client *iex.Client
 
 	// quoteCache caches quote responses.
 	quoteCache *quoteCache
@@ -25,8 +27,8 @@ type CacheClient struct {
 	chartCache *chartCache
 }
 
-// NewCacheClient returns a new CacheClient.
-func NewCacheClient(client *Client) (*CacheClient, error) {
+// NewClient returns a new CacheClient.
+func NewClient(client *iex.Client) (*Client, error) {
 	q, err := loadQuoteCache()
 	if err != nil {
 		return nil, err
@@ -37,7 +39,7 @@ func NewCacheClient(client *Client) (*CacheClient, error) {
 		return nil, err
 	}
 
-	return &CacheClient{
+	return &Client{
 		client:     client,
 		quoteCache: q,
 		chartCache: c,

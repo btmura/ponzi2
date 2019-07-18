@@ -1,4 +1,4 @@
-package iex
+package iexcache
 
 import (
 	"context"
@@ -8,13 +8,14 @@ import (
 	"time"
 
 	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
 // GetQuotes gets quotes for stock symbols.
-func (c *CacheClient) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]*Quote, error) {
+func (c *Client) GetQuotes(ctx context.Context, req *iex.GetQuotesRequest) ([]*iex.Quote, error) {
 	cacheClientVar.Add("get-quotes-requests", 1)
 
-	symbol2Quote := map[string]*Quote{}
+	symbol2Quote := map[string]*iex.Quote{}
 	var missingSymbols []string
 	for _, sym := range req.Symbols {
 		k := quoteCacheKey{Symbol: sym}
@@ -26,7 +27,7 @@ func (c *CacheClient) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]*
 		missingSymbols = append(missingSymbols, sym)
 	}
 
-	r := &GetQuotesRequest{Symbols: missingSymbols}
+	r := &iex.GetQuotesRequest{Symbols: missingSymbols}
 	missingQuotes, err := c.client.GetQuotes(ctx, r)
 	if err != nil {
 		return nil, err
@@ -48,11 +49,11 @@ func (c *CacheClient) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]*
 		return nil, err
 	}
 
-	var quotes []*Quote
+	var quotes []*iex.Quote
 	for _, sym := range req.Symbols {
 		q := symbol2Quote[sym]
 		if q == nil {
-			q = &Quote{Symbol: sym}
+			q = &iex.Quote{Symbol: sym}
 		}
 		quotes = append(quotes, q)
 	}
@@ -70,7 +71,7 @@ type quoteCacheKey struct {
 }
 
 type quoteCacheValue struct {
-	Quote          *Quote
+	Quote          *iex.Quote
 	LastUpdateTime time.Time
 }
 

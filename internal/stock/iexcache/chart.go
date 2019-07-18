@@ -1,4 +1,4 @@
-package iex
+package iexcache
 
 import (
 	"context"
@@ -8,13 +8,20 @@ import (
 	"time"
 
 	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/stock/iex"
+)
+
+// Internal package variables used for the implementation.
+var (
+	// now is a function to get the current time. Mocked out in tests to return a fixed time.
+	now = time.Now
 )
 
 // GetCharts gets charts for stock symbols.
-func (c *CacheClient) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart, error) {
+func (c *Client) GetCharts(ctx context.Context, req *iex.GetChartsRequest) ([]*iex.Chart, error) {
 	cacheClientVar.Add("get-charts-requests", 1)
 
-	symbol2Chart := map[string]*Chart{}
+	symbol2Chart := map[string]*iex.Chart{}
 	var missingSymbols []string
 	for _, sym := range req.Symbols {
 		k := chartCacheKey{Symbol: sym, DataRange: req.Range}
@@ -26,7 +33,7 @@ func (c *CacheClient) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*
 		missingSymbols = append(missingSymbols, sym)
 	}
 
-	r := &GetChartsRequest{
+	r := &iex.GetChartsRequest{
 		Symbols:   missingSymbols,
 		Range:     req.Range,
 		ChartLast: req.ChartLast,
@@ -52,11 +59,11 @@ func (c *CacheClient) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*
 		return nil, err
 	}
 
-	var charts []*Chart
+	var charts []*iex.Chart
 	for _, sym := range req.Symbols {
 		ch := symbol2Chart[sym]
 		if ch == nil {
-			ch = &Chart{Symbol: sym}
+			ch = &iex.Chart{Symbol: sym}
 		}
 		charts = append(charts, ch)
 	}
@@ -71,11 +78,11 @@ type chartCache struct {
 
 type chartCacheKey struct {
 	Symbol    string
-	DataRange Range
+	DataRange iex.Range
 }
 
 type chartCacheValue struct {
-	Chart          *Chart
+	Chart          *iex.Chart
 	LastUpdateTime time.Time
 }
 

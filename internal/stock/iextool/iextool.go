@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/btmura/ponzi2/internal/stock/iex"
+	"github.com/btmura/ponzi2/internal/stock/iexcache"
 )
 
 var (
@@ -32,17 +33,16 @@ func main() {
 
 	ctx := context.Background()
 
-	c, err := iex.NewCacheClient(iex.NewClient(*token, *dumpAPIResponses))
+	c, err := iexcache.NewClient(iex.NewClient(*token, *dumpAPIResponses))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for {
 		expvar.Do(func(kv expvar.KeyValue) {
-			if !strings.HasPrefix(kv.Key, "iex-") {
-				return
+			if strings.HasPrefix(kv.Key, "iex") {
+				fmt.Println(kv)
 			}
-			fmt.Println(kv)
 		})
 
 		fmt.Println()
