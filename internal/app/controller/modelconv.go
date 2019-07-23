@@ -2,7 +2,6 @@ package controller
 
 import (
 	"sort"
-	"time"
 
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/errors"
@@ -45,8 +44,8 @@ func modelOneDayChart(chart *iex.Chart) (*model.Chart, error) {
 	}, nil
 }
 
-func modelOneYearChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
-	ds := modelTradingSessions(quote, chart)
+func modelOneYearChart(chart *iex.Chart) (*model.Chart, error) {
+	ds := modelTradingSessions(chart)
 	ws := weeklyModelTradingSessions(ds)
 
 	m25 := modelMovingAverages(ds, 25)
@@ -161,8 +160,9 @@ func modelRange(r iex.Range) (model.Range, error) {
 	}
 }
 
-func modelTradingSessions(quote *iex.Quote, chart *iex.Chart) []*model.TradingSession {
+func modelTradingSessions(chart *iex.Chart) []*model.TradingSession {
 	var ts []*model.TradingSession
+
 	for _, p := range chart.ChartPoints {
 		ts = append(ts, &model.TradingSession{
 			Date:          p.Date,
@@ -175,42 +175,12 @@ func modelTradingSessions(quote *iex.Quote, chart *iex.Chart) []*model.TradingSe
 			PercentChange: p.ChangePercent,
 		})
 	}
+
 	sort.Slice(ts, func(i, j int) bool {
 		return ts[i].Date.Before(ts[j].Date)
 	})
 
-	// Add a trading session for the current quote if we do not have data
-	// for today's trading session, so that the chart includes the latest quote.
-
-	q := quote
-	if q == nil {
-		return ts
-	}
-
-	t := &model.TradingSession{
-		Date:          q.LatestTime,
-		Open:          q.Open,
-		High:          q.High,
-		Low:           q.Low,
-		Close:         q.LatestPrice,
-		Volume:        q.LatestVolume,
-		Change:        q.Change,
-		PercentChange: q.ChangePercent,
-	}
-
-	if len(ts) == 0 {
-		return []*model.TradingSession{t}
-	}
-
-	clean := func(t time.Time) time.Time {
-		return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
-	}
-
-	if clean(t.Date) == clean(ts[len(ts)-1].Date) {
-		return ts
-	}
-
-	return append(ts, t)
+	return ts
 }
 
 func weeklyModelTradingSessions(ds []*model.TradingSession) (ws []*model.TradingSession) {
