@@ -10,6 +10,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/btmura/ponzi2/internal/stock/iex"
 	"github.com/btmura/ponzi2/internal/stock/iexcache"
@@ -53,7 +54,7 @@ func main() {
 		fmt.Scanln(&symbolLine)
 		symbolLine = strings.ToUpper(symbolLine)
 
-		dataRange := pick("Pick a range", iex.OneDay, iex.TwoYears).(iex.Range)
+		dataRange := pick("Pick a range", iex.TwoYears, iex.OneDay).(iex.Range)
 
 		qReq := &iex.GetQuotesRequest{
 			Symbols: strings.Split(symbolLine, ","),
@@ -67,9 +68,27 @@ func main() {
 			continue
 		}
 
+		formatTime := func(t time.Time) string {
+			return t.Format("1/2/06 03:04 AM")
+		}
+
 		for i, q := range quotes {
-			fmt.Printf("%d: %-4s O: %.2f H: %.2f L: %.2f C: %.2f V: %d\n",
-				i, q.Symbol, q.Open, q.High, q.Low, q.Close, q.LatestVolume)
+			fmt.Printf("%d: %q %q LP: %.2f LS: %v LT: %s, LU: %s, LV: %d "+
+				"O: %.2f H: %.2f L: %.2f C: %.2f CH: %.2f CHP: %.2f\n",
+				i,
+				q.Symbol,
+				q.CompanyName,
+				q.LatestPrice,
+				q.LatestSource,
+				formatTime(q.LatestTime),
+				formatTime(q.LatestUpdate),
+				q.LatestVolume,
+				q.Open,
+				q.High,
+				q.Low,
+				q.Close,
+				q.Change,
+				q.ChangePercent)
 		}
 
 		fmt.Println()
@@ -88,11 +107,23 @@ func main() {
 			continue
 		}
 
+		const last = 10
+
 		for i, ch := range charts {
 			fmt.Printf("%d: %s\n", i, ch.Symbol)
 			for j, p := range ch.ChartPoints {
-				fmt.Printf("\t%d: D: %v O: %.2f H: %.2f L: %.2f C: %.2f V: %d\n",
-					j, p.Date.Format("1/2/06 03:04 AM"), p.Open, p.High, p.Low, p.Close, p.Volume)
+				if j >= len(ch.ChartPoints)-last {
+					fmt.Printf("\t%d: %s O: %.2f H: %.2f L: %.2f C: %.2f V: %d CH: %.2f CHP: %.2f\n",
+						j,
+						formatTime(p.Date),
+						p.Open,
+						p.High,
+						p.Low,
+						p.Close,
+						p.Volume,
+						p.Change,
+						p.ChangePercent)
+				}
 			}
 		}
 
