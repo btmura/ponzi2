@@ -324,11 +324,6 @@ func (c *Controller) onStockUpdateError(symbol string, updateErr error) error {
 	return c.ui.SetError(symbol, updateErr)
 }
 
-// onRefreshAllStocksRequest implements the eventHandler interface.
-func (c *Controller) onRefreshAllStocksRequest(ctx context.Context) error {
-	return c.refreshAllStocks(ctx)
-}
-
 // onEventAdded implements the eventHandler interface.
 func (c *Controller) onEventAdded() {
 	c.ui.WakeLoop()

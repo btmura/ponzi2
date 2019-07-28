@@ -10,13 +10,12 @@ import (
 
 // event is a single event that the Controller should process on the main thread.
 type event struct {
-	symbol           string
-	dataRange        model.Range
-	quote            *model.Quote
-	chart            *model.Chart
-	updateErr        error
-	refreshAllStocks bool
-	refreshStarted   bool
+	symbol         string
+	dataRange      model.Range
+	quote          *model.Quote
+	chart          *model.Chart
+	updateErr      error
+	refreshStarted bool
 }
 
 // eventController collects events in a queue. It is thread-safe.
@@ -36,7 +35,6 @@ type eventHandler interface {
 	onStockRefreshStarted(symbol string, dataRange model.Range) error
 	onStockUpdate(symbol string, q *model.Quote, ch *model.Chart) error
 	onStockUpdateError(symbol string, updateErr error) error
-	onRefreshAllStocksRequest(ctx context.Context) error
 	onEventAdded()
 }
 
@@ -87,11 +85,6 @@ func (c *eventController) process(ctx context.Context) error {
 
 		case e.quote != nil, e.chart != nil:
 			if err := c.handler.onStockUpdate(e.symbol, e.quote, e.chart); err != nil {
-				return err
-			}
-
-		case e.refreshAllStocks:
-			if err := c.handler.onRefreshAllStocksRequest(ctx); err != nil {
 				return err
 			}
 
