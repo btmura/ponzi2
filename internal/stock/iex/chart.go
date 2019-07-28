@@ -56,6 +56,17 @@ type GetChartsRequest struct {
 	ChartLast int
 }
 
+// Range is the range to specify in the request.
+type Range int
+
+// Range values.
+//go:generate stringer -type=Range
+const (
+	RangeUnspecified Range = iota
+	OneDay
+	TwoYears
+)
+
 // GetCharts gets charts for stock symbols.
 func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart, error) {
 	if len(req.Symbols) == 0 {

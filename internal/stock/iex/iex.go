@@ -20,17 +20,6 @@ var (
 	loc = mustLoadLocation("America/New_York")
 )
 
-// Range is the range to specify in the request.
-type Range int
-
-// Range values.
-//go:generate stringer -type=Range
-const (
-	RangeUnspecified Range = iota
-	OneDay
-	TwoYears
-)
-
 // Client is used to make IEX API requests.
 type Client struct {
 	// token is the API token required on all requests.
