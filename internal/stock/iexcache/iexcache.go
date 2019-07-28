@@ -31,8 +31,8 @@ type Client struct {
 	chartCache *chartCache
 }
 
-// NewClient returns a new CacheClient.
-func NewClient(client *iex.Client) (*Client, error) {
+// Wrap returns a new CacheClient.
+func Wrap(client *iex.Client) (*Client, error) {
 	q, err := loadQuoteCache()
 	if err != nil {
 		return nil, err

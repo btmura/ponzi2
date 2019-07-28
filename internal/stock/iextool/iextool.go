@@ -34,7 +34,7 @@ func main() {
 
 	ctx := context.Background()
 
-	c, err := iexcache.NewClient(iex.NewClient(*token, *dumpAPIResponses))
+	c, err := iexcache.Wrap(iex.NewClient(*token, *dumpAPIResponses))
 	if err != nil {
 		log.Fatal(err)
 	}

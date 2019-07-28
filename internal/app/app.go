@@ -11,7 +11,7 @@ import (
 
 // Run runs the app. Should be called from main.
 func Run(token string, dumpAPIResponses bool) {
-	c, err := iexcache.NewClient(iex.NewClient(token, dumpAPIResponses))
+	c, err := iexcache.Wrap(iex.NewClient(token, dumpAPIResponses))
 	if err != nil {
 		glog.Fatal(err)
 	}
