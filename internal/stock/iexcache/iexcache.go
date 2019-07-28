@@ -6,9 +6,13 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"time"
 
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
+
+// now is a function to get the current time. Mocked out in tests to return a fixed time.
+var now = time.Now
 
 // validSymbolRegexp is a regexp that accepts valid stock symbols. Examples: X, FB, SPY, AAPL
 var validSymbolRegexp = regexp.MustCompile("^[A-Z]{1,5}$")

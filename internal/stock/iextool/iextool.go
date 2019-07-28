@@ -94,9 +94,8 @@ func main() {
 		fmt.Println()
 
 		cReq := &iex.GetChartsRequest{
-			Symbols:   strings.Split(symbolLine, ","),
-			Range:     dataRange,
-			ChartLast: 3,
+			Symbols: strings.Split(symbolLine, ","),
+			Range:   dataRange,
 		}
 
 		fmt.Printf("Charts: %+v\n\n", cReq)
