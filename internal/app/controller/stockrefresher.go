@@ -2,8 +2,6 @@ package controller
 
 import (
 	"context"
-	"log"
-	"time"
 
 	"github.com/golang/glog"
 
@@ -19,9 +17,6 @@ type stockRefresher struct {
 	// eventController allows the stockRefresher to post stock updates.
 	eventController *eventController
 
-	// refreshTicker ticks to trigger refreshes during market hours.
-	refreshTicker *time.Ticker
-
 	// enabled enables refreshing stocks when set to true.
 	enabled bool
 }
@@ -30,28 +25,6 @@ func newStockRefresher(iexClient iexClientInterface, eventController *eventContr
 	return &stockRefresher{
 		iexClient:       iexClient,
 		eventController: eventController,
-		refreshTicker:   time.NewTicker(5 * time.Minute),
-	}
-}
-
-// refreshLoop refreshes stocks during market hours.
-func (s *stockRefresher) refreshLoop() {
-	loc, err := time.LoadLocation("America/New_York")
-	if err != nil {
-		log.Fatalf("time.LoadLocation: %v", err)
-	}
-
-	for t := range s.refreshTicker.C {
-		n := time.Now()
-		open := time.Date(n.Year(), n.Month(), n.Day(), 9, 30, 0, 0, loc)
-		close := time.Date(n.Year(), n.Month(), n.Day(), 16, 0, 0, 0, loc)
-
-		if t.Before(open) || t.After(close) {
-			glog.V(2).Infof("ignoring refresh ticker at %v", t.Format("1/2/2006 3:04:05 PM"))
-			continue
-		}
-
-		s.eventController.addEventLocked(event{refreshAllStocks: true})
 	}
 }
 
@@ -61,7 +34,6 @@ func (s *stockRefresher) start() {
 
 func (s *stockRefresher) stop() {
 	s.enabled = false
-	s.refreshTicker.Stop()
 }
 
 func (s *stockRefresher) refreshOne(ctx context.Context, symbol string, dataRange model.Range) error {

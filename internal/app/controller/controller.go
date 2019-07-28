@@ -117,8 +117,7 @@ func (c *Controller) RunLoop() error {
 		}
 	})
 
-	// Process stock refreshes and config changes in the background until the program ends.
-	go c.stockRefresher.refreshLoop()
+	// Process config changes in the background until the program ends.
 	go c.configSaver.saveLoop()
 
 	defer func() {
