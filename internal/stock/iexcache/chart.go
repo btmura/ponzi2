@@ -23,7 +23,13 @@ const debugChart = false
 func (c *Client) GetCharts(ctx context.Context, req *iex.GetChartsRequest) ([]*iex.Chart, error) {
 	cacheClientVar.Add("get-charts-requests", 1)
 
-	dataRange := req.Range
+	if len(req.Symbols) == 0 {
+		return nil, nil
+	}
+
+	if req.Range != iex.TwoYears {
+		return nil, errors.Errorf("only the two years range is supported")
+	}
 
 	fixedNow := now()
 	today := toDate(fixedNow)
@@ -56,7 +62,7 @@ func (c *Client) GetCharts(ctx context.Context, req *iex.GetChartsRequest) ([]*i
 	}
 
 	for _, sym := range req.Symbols {
-		k := newChartCacheKey(sym, req.Range)
+		k := newChartCacheKey(sym, daily)
 		v := c.chartCache.get(k)
 		if v == nil {
 			symbol2Data[sym] = &data{minChartLast: 0}
@@ -118,7 +124,7 @@ func (c *Client) GetCharts(ctx context.Context, req *iex.GetChartsRequest) ([]*i
 		req := chartLast2Request[data.minChartLast]
 		if req == nil {
 			req = &iex.GetChartsRequest{
-				Range:     dataRange,
+				Range:     iex.TwoYears,
 				ChartLast: data.minChartLast,
 			}
 			chartLast2Request[data.minChartLast] = req
@@ -197,7 +203,7 @@ func (c *Client) GetCharts(ctx context.Context, req *iex.GetChartsRequest) ([]*i
 	dump(2)
 
 	for sym, data := range symbol2Data {
-		k := newChartCacheKey(sym, dataRange)
+		k := newChartCacheKey(sym, daily)
 		v := &chartCacheValue{
 			Chart:          data.finalChart,
 			LastUpdateTime: fixedNow,
@@ -227,12 +233,20 @@ type chartCache struct {
 }
 
 type chartCacheKey struct {
-	Symbol    string
-	DataRange iex.Range
+	Symbol string
+	Type   chartType
 }
 
-func newChartCacheKey(symbol string, dataRange iex.Range) chartCacheKey {
-	return chartCacheKey{Symbol: symbol, DataRange: dataRange}
+type chartType int
+
+const (
+	chartTypeUnspecified chartType = iota
+	minute
+	daily
+)
+
+func newChartCacheKey(symbol string, chType chartType) chartCacheKey {
+	return chartCacheKey{Symbol: symbol, Type: chType}
 }
 
 type chartCacheValue struct {
