@@ -8,9 +8,10 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "command": "go generate ./... ; if ($?) { go build -v -x }; if ($?) { ./ponzi2.exe -alsologtostderr}",
+            // Set "ponzi2.token" in your workspace settings.
+            "command": "go generate ./... ; if ($?) { go build -v -x }; if ($?) { ./ponzi2.exe -alsologtostderr -token=${config:ponzi2.token} }",
             "linux": {
-                "command": "go generate ./... && go build -v -x && ./ponzi2 -alsologtostderr"
+                "command": "go generate ./... && go build -v -x && ./ponzi2 -alsologtostderr -token=${config:ponzi2.token}"
             },
             "options": {
                 "cwd": "${workspaceRoot}"
