@@ -1,7 +1,6 @@
 package iexcache
 
 import (
-	"bytes"
 	"context"
 	"encoding/gob"
 	"os"
@@ -66,7 +65,7 @@ func (c *Client) GetQuotes(ctx context.Context, req *iex.GetQuotesRequest) ([]*i
 // Fields are exported for gob encoding and decoding.
 type quoteCache struct {
 	Data map[quoteCacheKey]*quoteCacheValue
-	sync.Mutex
+	mu   sync.Mutex
 }
 
 type quoteCacheKey struct {
@@ -91,8 +90,8 @@ func (q *quoteCacheValue) deepCopy() *quoteCacheValue {
 }
 
 func (q *quoteCache) get(key quoteCacheKey) *quoteCacheValue {
-	q.Lock()
-	defer q.Unlock()
+	q.mu.Lock()
+	defer q.mu.Unlock()
 
 	cacheClientVar.Add("quote-cache-gets", 1)
 
@@ -106,8 +105,8 @@ func (q *quoteCache) get(key quoteCacheKey) *quoteCacheValue {
 }
 
 func (q *quoteCache) put(key quoteCacheKey, val *quoteCacheValue) error {
-	q.Lock()
-	defer q.Unlock()
+	q.mu.Lock()
+	defer q.mu.Unlock()
 
 	cacheClientVar.Add("quote-cache-puts", 1)
 
@@ -122,42 +121,6 @@ func (q *quoteCache) put(key quoteCacheKey, val *quoteCacheValue) error {
 	q.Data[key].LastUpdateTime = now()
 
 	return nil
-}
-
-// encodableQuoteCache is an gob encodable version of quoteCache.
-// Fields are exported for gob encoding and decoding.
-type encodableQuoteCache struct {
-	Version int
-	Data    map[quoteCacheKey]*quoteCacheValue
-}
-
-// GobDecode implements the GobDecoder interface.
-func (q *quoteCache) GobDecode(b []byte) error {
-	e := &encodableQuoteCache{}
-
-	dec := gob.NewDecoder(bytes.NewReader(b))
-	if err := dec.Decode(e); err != nil {
-		return err
-	}
-	q.Data = e.Data
-
-	return nil
-}
-
-// GobEncode implements the GobEncoder interface.
-func (q *quoteCache) GobEncode() ([]byte, error) {
-	e := &encodableQuoteCache{
-		Version: 1,
-		Data:    q.Data,
-	}
-
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	if err := enc.Encode(e); err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
 }
 
 func loadQuoteCache() (*quoteCache, error) {

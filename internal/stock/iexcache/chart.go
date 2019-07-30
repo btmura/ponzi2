@@ -1,7 +1,6 @@
 package iexcache
 
 import (
-	"bytes"
 	"context"
 	"encoding/gob"
 	"fmt"
@@ -229,7 +228,7 @@ func (c *Client) GetCharts(ctx context.Context, req *iex.GetChartsRequest) ([]*i
 // Fields are exported for gob encoding and decoding.
 type chartCache struct {
 	Data map[chartCacheKey]*chartCacheValue
-	sync.Mutex
+	mu   sync.Mutex
 }
 
 type chartCacheKey struct {
@@ -261,8 +260,8 @@ func (c *chartCacheValue) deepCopy() *chartCacheValue {
 }
 
 func (c *chartCache) get(key chartCacheKey) *chartCacheValue {
-	c.Lock()
-	defer c.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	cacheClientVar.Add("chart-cache-gets", 1)
 
@@ -276,8 +275,8 @@ func (c *chartCache) get(key chartCacheKey) *chartCacheValue {
 }
 
 func (c *chartCache) put(key chartCacheKey, val *chartCacheValue) error {
-	c.Lock()
-	defer c.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	cacheClientVar.Add("chart-cache-puts", 1)
 
@@ -292,42 +291,6 @@ func (c *chartCache) put(key chartCacheKey, val *chartCacheValue) error {
 	c.Data[key].LastUpdateTime = now()
 
 	return nil
-}
-
-// encodableChartCache is a gob encodable version of chartCache.
-// Fields are exported for gob encoding and decoding.
-type encodableChartCache struct {
-	Version int
-	Data    map[chartCacheKey]*chartCacheValue
-}
-
-// GobDecode implements the GobDecoder interface.
-func (c *chartCache) GobDecode(b []byte) error {
-	e := &encodableChartCache{}
-
-	dec := gob.NewDecoder(bytes.NewReader(b))
-	if err := dec.Decode(e); err != nil {
-		return err
-	}
-	c.Data = e.Data
-
-	return nil
-}
-
-// GobEncode implements the GobEncoder interface.
-func (c *chartCache) GobEncode() ([]byte, error) {
-	e := &encodableChartCache{
-		Version: 1,
-		Data:    c.Data,
-	}
-
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	if err := enc.Encode(e); err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
 }
 
 func loadChartCache() (*chartCache, error) {
