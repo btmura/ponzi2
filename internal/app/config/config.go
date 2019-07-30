@@ -2,18 +2,25 @@
 package config
 
 import (
-	"io/ioutil"
+	"encoding/gob"
 	"os"
 	"os/user"
 	"path"
 	"path/filepath"
 
 	"github.com/golang/glog"
-	"github.com/golang/protobuf/proto"
 )
 
-// Generate config.pb.go. Follow setup instructions @ github.com/golang/protobuf.
-//go:generate protoc -I=data --go_out=. config.proto
+// Config configures the app.
+type Config struct {
+	CurrentStock *Stock
+	Stocks       []*Stock
+}
+
+// Stock identifies a single stock by symbol.
+type Stock struct {
+	Symbol string
+}
 
 // Load loads the user's config from disk.
 func Load() (*Config, error) {
@@ -25,22 +32,17 @@ func Load() (*Config, error) {
 	glog.V(2).Infof("loading config from %s", cfgPath)
 
 	file, err := os.Open(cfgPath)
-	if err != nil && !os.IsNotExist(err) {
+	if os.IsNotExist(err) {
+		return &Config{}, nil
+	}
+	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	if os.IsNotExist(err) {
-		return &Config{}, nil
-	}
-
-	bytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil, err
-	}
-
 	cfg := &Config{}
-	if err := proto.UnmarshalText(string(bytes), cfg); err != nil {
+	dec := gob.NewDecoder(file)
+	if err := dec.Decode(cfg); err != nil {
 		return nil, err
 	}
 	return cfg, nil
@@ -61,8 +63,8 @@ func Save(cfg *Config) error {
 	}
 	defer file.Close()
 
-	m := &proto.TextMarshaler{Compact: false}
-	if err := m.Marshal(file, cfg); err != nil {
+	enc := gob.NewEncoder(file)
+	if err := enc.Encode(cfg); err != nil {
 		return err
 	}
 	return nil
@@ -73,7 +75,7 @@ func userConfigPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return path.Join(dirPath, "config.txt"), nil
+	return path.Join(dirPath, "config.gob"), nil
 }
 
 func userConfigDir() (string, error) {

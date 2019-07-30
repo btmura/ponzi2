@@ -67,14 +67,16 @@ func (c *Controller) RunLoop() error {
 		return err
 	}
 
-	if s := cfg.GetCurrentStock().GetSymbol(); s != "" {
-		if err := c.setChart(ctx, s); err != nil {
-			return err
+	if cfg.CurrentStock != nil {
+		if s := cfg.CurrentStock.Symbol; s != "" {
+			if err := c.setChart(ctx, s); err != nil {
+				return err
+			}
 		}
 	}
 
-	for _, cs := range cfg.GetStocks() {
-		if s := cs.GetSymbol(); s != "" {
+	for _, cs := range cfg.Stocks {
+		if s := cs.Symbol; s != "" {
 			if err := c.addChartThumb(ctx, s); err != nil {
 				return err
 			}
