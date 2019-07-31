@@ -154,6 +154,12 @@ func TestQuoteDate(t *testing.T) {
 			inputLatestTime:   "September 25, 2018",
 			want:              time.Date(2018, time.September, 25, 0, 0, 0, 0, loc),
 		},
+		{
+			desc:              "null latest time",
+			inputLatestSource: FifteenMinuteDelayedPrice,
+			inputLatestTime:   "",
+			want:              time.Time{},
+		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
 			got, gotErr := quoteDate(tt.inputLatestSource, tt.inputLatestTime)

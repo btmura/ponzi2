@@ -197,6 +197,10 @@ func quoteSource(latestSource string) (Source, error) {
 }
 
 func quoteDate(latestSource Source, latestTime string) (time.Time, error) {
+	if latestTime == "" {
+		return time.Time{}, nil
+	}
+
 	switch latestSource {
 	case IEXRealTimePrice, FifteenMinuteDelayedPrice:
 		t, err := time.ParseInLocation("3:04:05 PM", latestTime, loc)
