@@ -63,11 +63,7 @@ func Save(cfg *Config) error {
 	}
 	defer file.Close()
 
-	enc := gob.NewEncoder(file)
-	if err := enc.Encode(cfg); err != nil {
-		return err
-	}
-	return nil
+	return gob.NewEncoder(file).Encode(cfg)
 }
 
 func userConfigPath() (string, error) {

@@ -338,11 +338,7 @@ func saveChartCache(q *chartCache) error {
 	}
 	defer file.Close()
 
-	enc := gob.NewEncoder(file)
-	if err := enc.Encode(q); err != nil {
-		return err
-	}
-	return nil
+	return gob.NewEncoder(file).Encode(q)
 }
 
 func chartCachePath() (string, error) {
