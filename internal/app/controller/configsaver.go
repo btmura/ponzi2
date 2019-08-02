@@ -1,9 +1,8 @@
 package controller
 
 import (
-	"github.com/golang/glog"
-
 	"github.com/btmura/ponzi2/internal/app/config"
+	"github.com/btmura/ponzi2/internal/log"
 )
 
 type configSaver struct {
@@ -27,7 +26,7 @@ func newConfigSaver() *configSaver {
 func (c *configSaver) saveLoop() {
 	for cfg := range c.queue {
 		if err := config.Save(cfg); err != nil {
-			glog.V(2).Infof("failed to save config: %v", err)
+			log.Errorf("failed to save config: %v", err)
 		}
 	}
 	c.done <- true
@@ -39,7 +38,7 @@ func (c *configSaver) start() {
 
 func (c *configSaver) save(cfg *config.Config) {
 	if !c.enabled {
-		glog.V(2).Infof("ignoring save request, saving disabled")
+		log.Infof("ignoring save request, saving disabled")
 		return
 	}
 

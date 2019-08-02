@@ -5,14 +5,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/golang/glog"
-
 	"github.com/btmura/ponzi2/internal/app/config"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/chart"
 	"github.com/btmura/ponzi2/internal/app/view/ui"
 	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/log"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
@@ -86,37 +85,37 @@ func (c *Controller) RunLoop() error {
 
 	c.ui.SetInputSymbolSubmittedCallback(func(symbol string) {
 		if err := c.setChart(ctx, symbol); err != nil {
-			glog.Infof("TODO(btmura): remove log fatal, setChart: %v", err)
+			log.Errorf("setChart: %v", err)
 		}
 	})
 
 	c.ui.SetChartZoomChangeCallback(func(zoomChange view.ZoomChange) {
 		if err := c.refreshCurrentStock(ctx); err != nil {
-			glog.Fatalf("TODO(btmura): remove log fatal, refreshCurrentStock: %v", err)
+			log.Errorf("refreshCurrentStock: %v", err)
 		}
 	})
 
 	c.ui.SetChartRefreshButtonClickCallback(func(symbol string) {
 		if err := c.refreshAllStocks(ctx); err != nil {
-			glog.Fatalf("TODO(btmura): remove log fatal, refreshStocks: %v", err)
+			log.Errorf("refreshStocks: %v", err)
 		}
 	})
 
 	c.ui.SetChartAddButtonClickCallback(func(symbol string) {
 		if err := c.addChartThumb(ctx, symbol); err != nil {
-			glog.Fatalf("TODO(btmura): remove log fatal, addChartThumb: %v", err)
+			log.Errorf("addChartThumb: %v", err)
 		}
 	})
 
 	c.ui.SetThumbRemoveButtonClickCallback(func(symbol string) {
 		if err := c.removeChartThumb(symbol); err != nil {
-			glog.Fatalf("TODO(btmura): remove log fatal, removeChartThumb: %v", err)
+			log.Errorf("removeChartThumb: %v", err)
 		}
 	})
 
 	c.ui.SetThumbClickCallback(func(symbol string) {
 		if err := c.setChart(ctx, symbol); err != nil {
-			glog.Fatalf("TODO(btmura): remove log fatal, setChart: %v", err)
+			log.Errorf("setChart: %v", err)
 		}
 	})
 

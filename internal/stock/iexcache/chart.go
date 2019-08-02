@@ -3,7 +3,6 @@ package iexcache
 import (
 	"context"
 	"encoding/gob"
-	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -13,10 +12,9 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/log"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
-
-const debugChart = false
 
 // GetCharts gets charts for stock symbols.
 func (c *Client) GetCharts(ctx context.Context, req *iex.GetChartsRequest) ([]*iex.Chart, error) {
@@ -52,11 +50,8 @@ func (c *Client) GetCharts(ctx context.Context, req *iex.GetChartsRequest) ([]*i
 	symbol2Data := map[string]*data{}
 
 	dump := func(i int) {
-		if !debugChart {
-			return
-		}
 		for sym, data := range symbol2Data {
-			fmt.Printf("[%d] %s: %v\n", i, sym, data)
+			log.Debugf("[%d] %s: %v", i, sym, data)
 		}
 	}
 
@@ -86,9 +81,7 @@ func (c *Client) GetCharts(ctx context.Context, req *iex.GetChartsRequest) ([]*i
 		latest := toDate(ps[len(ps)-1].Date)
 
 		for {
-			if debugChart {
-				fmt.Printf("%s: l: %v t: %v\n", sym, latest, today)
-			}
+			log.Debugf("%s: l: %v t: %v", sym, latest, today)
 
 			latest = latest.AddDate(0, 0, 1 /* day */)
 
@@ -140,10 +133,8 @@ func (c *Client) GetCharts(ctx context.Context, req *iex.GetChartsRequest) ([]*i
 
 	g, gCtx := errgroup.WithContext(ctx)
 	for i, req := range reqs {
+		log.Debugf("%d: api request: %v", i, req)
 		i, req := i, req
-		if debugChart {
-			fmt.Printf("%d: api request: %v\n", i, req)
-		}
 		g.Go(func() error {
 			resp, err := c.client.GetCharts(gCtx, req)
 			if err != nil {

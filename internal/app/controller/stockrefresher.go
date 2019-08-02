@@ -3,10 +3,9 @@ package controller
 import (
 	"context"
 
-	"github.com/golang/glog"
-
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/log"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
@@ -54,7 +53,7 @@ func (s *stockRefresher) refreshOne(ctx context.Context, symbol string, dataRang
 
 func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) error {
 	if !s.enabled {
-		glog.V(2).Infof("ignoring stock refresh request, refreshing disabled")
+		log.Infof("ignoring stock refresh request, refreshing disabled")
 		return nil
 	}
 

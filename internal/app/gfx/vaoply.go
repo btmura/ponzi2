@@ -5,8 +5,7 @@ import (
 	"image/draw"
 	"io"
 
-	"github.com/golang/glog"
-
+	"github.com/btmura/ponzi2/internal/log"
 	"github.com/btmura/ponzi2/internal/ply"
 )
 
@@ -29,7 +28,7 @@ func TexturedPLYVAO(plyReader, texturedReader io.Reader) *VAO {
 func readTexturedPLYVAO(r, textureReader io.Reader) *VAOVertexData {
 	p, err := ply.Decode(r)
 	if err != nil {
-		glog.Fatalf("decoding PLY failed: %v", err)
+		log.Fatalf("decoding PLY failed: %v", err)
 	}
 	data := &VAOVertexData{}
 
@@ -55,7 +54,7 @@ func readTexturedPLYVAO(r, textureReader io.Reader) *VAOVertexData {
 	for _, e := range p.Elements["face"] {
 		list := e.Uint32Lists["vertex_indices"]
 		if len(list) != 3 {
-			glog.Fatalf("index list has %d elements, want 3", len(list))
+			log.Fatalf("index list has %d elements, want 3", len(list))
 		}
 		for _, idx := range list {
 			triangleIndices = append(triangleIndices, uint16(idx))
@@ -72,7 +71,7 @@ func readTexturedPLYVAO(r, textureReader io.Reader) *VAOVertexData {
 	if textureReader != nil {
 		img, _, err := image.Decode(textureReader)
 		if err != nil {
-			glog.Fatalf("decoding texture failed: %v", err)
+			log.Fatalf("decoding texture failed: %v", err)
 		}
 
 		rgba := image.NewRGBA(img.Bounds())
@@ -82,7 +81,7 @@ func readTexturedPLYVAO(r, textureReader io.Reader) *VAOVertexData {
 
 	switch {
 	case len(triangleIndices) > 0 && len(lineIndices) > 0:
-		glog.Fatalf("both triangles and lines is unsupported")
+		log.Fatalf("both triangles and lines is unsupported")
 
 	case len(triangleIndices) > 0:
 		data.Mode = Triangles
@@ -95,6 +94,6 @@ func readTexturedPLYVAO(r, textureReader io.Reader) *VAOVertexData {
 		return data
 	}
 
-	glog.V(2).Info("missing indices")
+	log.Info("missing indices")
 	return nil
 }

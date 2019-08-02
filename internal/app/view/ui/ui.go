@@ -14,7 +14,6 @@ import (
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
-	"github.com/golang/glog"
 	"golang.org/x/image/font/gofont/goregular"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
@@ -23,6 +22,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/centeredtext"
 	"github.com/btmura/ponzi2/internal/app/view/chart"
 	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/log"
 	"github.com/btmura/ponzi2/internal/matrix"
 )
 
@@ -213,7 +213,7 @@ func (u *UI) Init(ctx context.Context) (cleanup func(), err error) {
 	if err := gl.Init(); err != nil {
 		return nil, err
 	}
-	glog.V(2).Infof("OpenGL version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
+	log.Infof("OpenGL version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
 
 	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
@@ -256,7 +256,7 @@ func (u *UI) Init(ctx context.Context) (cleanup func(), err error) {
 }
 
 func (u *UI) handleSizeEvent(width, height int) {
-	glog.V(2).Infof("width:%o height:%o", width, height)
+	log.Debugf("width: %d height: %d", width, height)
 	defer u.WakeLoop()
 
 	s := image.Pt(width, height)
@@ -351,7 +351,7 @@ func (u *UI) metrics() viewMetrics {
 }
 
 func (u *UI) handleCharEvent(char rune) {
-	glog.V(2).Infof("char:%c", char)
+	log.Debugf("char: %c", char)
 	defer u.WakeLoop()
 
 	char = unicode.ToUpper(char)
@@ -361,7 +361,7 @@ func (u *UI) handleCharEvent(char rune) {
 }
 
 func (u *UI) handleKeyEvent(key glfw.Key, action glfw.Action) {
-	glog.V(2).Infof("key:%v action:%v", key, action)
+	log.Debugf("key: %v action: %v", key, action)
 	defer u.WakeLoop()
 
 	if action != glfw.Release {
@@ -384,7 +384,7 @@ func (u *UI) handleKeyEvent(key glfw.Key, action glfw.Action) {
 }
 
 func (u *UI) handleCursorPosEvent(x, y float64) {
-	glog.V(2).Infof("x:%f y:%f", x, y)
+	log.Debugf("x: %f y: %f", x, y)
 	defer u.WakeLoop()
 
 	// Flip Y-axis since the OpenGL coordinate system makes lower left the origin.
@@ -392,7 +392,7 @@ func (u *UI) handleCursorPosEvent(x, y float64) {
 }
 
 func (u *UI) handleMouseButtonEvent(button glfw.MouseButton, action glfw.Action) {
-	glog.V(2).Infof("button:%v action:%v", button, action)
+	log.Debugf("button: %v action: %v", button, action)
 	defer u.WakeLoop()
 
 	if button != glfw.MouseButtonLeft {
@@ -410,7 +410,7 @@ func (u *UI) handleMouseButtonEvent(button glfw.MouseButton, action glfw.Action)
 }
 
 func (u *UI) handleScrollEvent(yoff float64) {
-	glog.V(2).Infof("yoff:%f", yoff)
+	log.Debugf("yoff: %f", yoff)
 	defer u.WakeLoop()
 
 	if yoff != -1 && yoff != +1 {
@@ -504,7 +504,7 @@ start:
 		u.render(fudge)
 
 		u.win.SwapBuffers()
-		glog.V(3).Infof("updates:%o lag(%f)/updateSec(%f)=fudge(%f) dirty:%t render:%v", i, lag, updateSec, fudge, dirty, time.Since(now).Seconds())
+		log.Debugf("updates: %o lag(%f)/updateSec(%f)=fudge(%f) dirty: %t render: %v", i, lag, updateSec, fudge, dirty, time.Since(now).Seconds())
 
 		// Call any callbacks scheduled by views.
 		for _, cb := range callbacks {
@@ -518,7 +518,7 @@ start:
 
 		glfw.PollEvents()
 		if !dirty {
-			glog.V(3).Info("wait events")
+			log.Debugf("wait events")
 			glfw.WaitEvents()
 			goto start
 		}
