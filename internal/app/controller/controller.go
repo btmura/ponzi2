@@ -3,7 +3,6 @@ package controller
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/btmura/ponzi2/internal/app/config"
 	"github.com/btmura/ponzi2/internal/app/model"
@@ -323,7 +322,7 @@ func (c *Controller) onStockUpdate(symbol string, q *model.Quote, ch *model.Char
 
 // onStockUpdateError implements the eventHandler interface.
 func (c *Controller) onStockUpdateError(symbol string, updateErr error) error {
-	fmt.Printf("stock update for %s failed: %v\n", symbol, updateErr)
+	log.Errorf("stock update for %s failed: %v\n", symbol, updateErr)
 	return c.ui.SetError(symbol, updateErr)
 }
 
