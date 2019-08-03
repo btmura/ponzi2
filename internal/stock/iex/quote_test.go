@@ -118,6 +118,43 @@ func TestDecodeQuotes(t *testing.T) {
 	}
 }
 
+func TestQuoteSource(t *testing.T) {
+	for _, tt := range []struct {
+		desc              string
+		inputLatestSource string
+		want              Source
+		wantErr           bool
+	}{
+		{
+			desc:              "empty string",
+			inputLatestSource: "",
+			want:              SourceUnspecified,
+		},
+		{
+			desc:              "unrecognized source",
+			inputLatestSource: "unsupported",
+			wantErr:           true,
+		},
+		{
+			desc:              "valid source",
+			inputLatestSource: "IEX real time price",
+			want:              IEXRealTimePrice,
+		},
+	} {
+		t.Run(tt.desc, func(t *testing.T) {
+			got, gotErr := quoteSource(tt.inputLatestSource)
+
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("diff (-want, +got)\n%s", diff)
+			}
+
+			if (gotErr != nil) != tt.wantErr {
+				t.Errorf("got error: %v, wanted err: %t", gotErr, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestQuoteDate(t *testing.T) {
 	old := now
 	defer func() { now = old }()

@@ -183,6 +183,8 @@ func decodeQuotes(r io.Reader) ([]*Quote, error) {
 
 func quoteSource(latestSource string) (Source, error) {
 	switch latestSource {
+	case "":
+		return SourceUnspecified, nil
 	case "IEX real time price":
 		return IEXRealTimePrice, nil
 	case "15 minute delayed price":
