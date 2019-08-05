@@ -2,6 +2,7 @@ package iexcache
 
 import (
 	"expvar"
+	"log"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -24,20 +25,12 @@ type Client struct {
 	// client is used to make IEX API requests without caching.
 	client *iex.Client
 
-	// quoteCache caches quote responses.
-	quoteCache *quoteCache
-
 	// chartCache caches chart responses.
 	chartCache *chartCache
 }
 
 // Wrap returns a new CacheClient.
 func Wrap(client *iex.Client) (*Client, error) {
-	q, err := loadQuoteCache()
-	if err != nil {
-		return nil, err
-	}
-
 	c, err := loadChartCache()
 	if err != nil {
 		return nil, err
@@ -45,7 +38,6 @@ func Wrap(client *iex.Client) (*Client, error) {
 
 	return &Client{
 		client:     client,
-		quoteCache: q,
 		chartCache: c,
 	}, nil
 }
@@ -61,4 +53,23 @@ func userCacheDir() (string, error) {
 		return "", err
 	}
 	return p, nil
+}
+
+// timeKey converts a time into a key usable in maps
+// by normalizing the location and stripping the monotonic clock.
+func timeKey(t time.Time) time.Time {
+	return t.UTC().Round(0)
+}
+
+// midnight strips the hours, minutes, seconds, and nanoseconds from the given time.
+func midnight(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+}
+
+func mustLoadLocation(name string) *time.Location {
+	loc, err := time.LoadLocation(name)
+	if err != nil {
+		log.Fatalf("time.LoadLocation(%s) failed: %v", name, err)
+	}
+	return loc
 }

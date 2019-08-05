@@ -29,7 +29,7 @@ func (c *Client) GetCharts(ctx context.Context, req *iex.GetChartsRequest) ([]*i
 	}
 
 	fixedNow := now()
-	today := toDate(fixedNow)
+	today := midnight(fixedNow)
 
 	type data struct {
 		// cacheChart is the chart found in the cache. Nil if not in cache.
@@ -78,7 +78,7 @@ func (c *Client) GetCharts(ctx context.Context, req *iex.GetChartsRequest) ([]*i
 		// by counting business days between the latest point's date and today's date.
 		minChartLast := -1
 
-		latest := toDate(ps[len(ps)-1].Date)
+		latest := midnight(ps[len(ps)-1].Date)
 
 		for {
 			log.Debugf("%s: l: %v t: %v", sym, latest, today)
@@ -338,12 +338,4 @@ func chartCachePath() (string, error) {
 		return "", err
 	}
 	return filepath.Join(dir, "iex-chart-cache.gob"), nil
-}
-
-func timeKey(t time.Time) time.Time {
-	return t.UTC().Round(0)
-}
-
-func toDate(t time.Time) time.Time {
-	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 }
