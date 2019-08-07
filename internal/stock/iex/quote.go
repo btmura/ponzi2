@@ -222,3 +222,9 @@ func quoteDate(latestSource Source, latestTime string) (time.Time, error) {
 		return time.Time{}, errors.Errorf("couldn't parse quote date with source(%q) and time(%q)", latestSource, latestTime)
 	}
 }
+
+func millisToTime(ms int64) time.Time {
+	sec := ms / 1e3
+	nsec := ms*1e6 - sec*1e9
+	return time.Unix(sec, nsec)
+}

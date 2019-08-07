@@ -12,7 +12,10 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/log"
 )
 
 // Chart has points for a stock chart.
@@ -69,6 +72,210 @@ const (
 
 // GetCharts gets charts for stock symbols.
 func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart, error) {
+	cacheClientVar.Add("get-charts-requests", 1)
+	if c.enableChartCache {
+		return c.getChartsCached(ctx, req)
+	}
+	return c.noCacheGetCharts(ctx, req)
+}
+
+func (c *Client) getChartsCached(ctx context.Context, req *GetChartsRequest) ([]*Chart, error) {
+	if len(req.Symbols) == 0 {
+		return nil, nil
+	}
+
+	if req.Range != TwoYears {
+		return nil, errors.Errorf("only the two years range is supported")
+	}
+
+	fixedNow := now()
+	today := midnight(fixedNow)
+
+	type data struct {
+		// cacheChart is the chart found in the cache. Nil if not in cache.
+		cacheChart *Chart
+
+		// minChartLast is the minimum chartLast value to complete the data set.
+		// 0 means make a request for the range's default data.
+		// -1 means don't make any request at all.
+		minChartLast int
+
+		// responseChart is the chart data from calling the API. Nil if API not called.
+		responseChart *Chart
+
+		// finalChart is the non-nil final chart to cache and return.
+		finalChart *Chart
+	}
+
+	symbol2Data := map[string]*data{}
+
+	dump := func(i int) {
+		for sym, data := range symbol2Data {
+			log.Debugf("[%d] %s: %v", i, sym, data)
+		}
+	}
+
+	for _, sym := range req.Symbols {
+		k := newChartCacheKey(sym, daily)
+		v := c.chartCache.get(k)
+		if v == nil {
+			symbol2Data[sym] = &data{minChartLast: 0}
+			continue
+		}
+
+		ps := v.Chart.ChartPoints
+
+		// If cached value has no data, then consider this missing.
+		if len(ps) == 0 {
+			symbol2Data[sym] = &data{
+				cacheChart:   v.Chart.DeepCopy(),
+				minChartLast: 0,
+			}
+			continue
+		}
+
+		// Compute the number of points required to be combined with the cached value
+		// by counting business days between the latest point's date and today's date.
+		minChartLast := -1
+
+		latest := midnight(ps[len(ps)-1].Date)
+
+		for {
+			log.Debugf("%s: l: %v t: %v", sym, latest, today)
+
+			latest = latest.AddDate(0, 0, 1 /* day */)
+
+			// Don't ask for data in the future. :)
+			if !latest.Before(today) {
+				break
+			}
+
+			// Don't ask for data for weekends, since the market is closed.
+			// Keep iterating though.
+			if latest.Weekday() != time.Saturday && latest.Weekday() != time.Sunday {
+				if minChartLast == -1 {
+					minChartLast = 0
+				}
+				minChartLast++
+			}
+		}
+
+		symbol2Data[sym] = &data{
+			cacheChart:   v.Chart.DeepCopy(),
+			minChartLast: minChartLast,
+		}
+	}
+
+	dump(0)
+
+	chartLast2Request := map[int]*GetChartsRequest{}
+	for sym, data := range symbol2Data {
+		if data.minChartLast == -1 {
+			continue
+		}
+		req := chartLast2Request[data.minChartLast]
+		if req == nil {
+			req = &GetChartsRequest{
+				Range:     TwoYears,
+				ChartLast: data.minChartLast,
+			}
+			chartLast2Request[data.minChartLast] = req
+		}
+		req.Symbols = append(req.Symbols, sym)
+	}
+
+	var reqs []*GetChartsRequest
+	for _, req := range chartLast2Request {
+		reqs = append(reqs, req)
+	}
+
+	responses := make([][]*Chart, len(reqs))
+
+	g, gCtx := errgroup.WithContext(ctx)
+	for i, req := range reqs {
+		log.Debugf("%d: api request: %v", i, req)
+		i, req := i, req
+		g.Go(func() error {
+			resp, err := c.noCacheGetCharts(gCtx, req)
+			if err != nil {
+				return err
+			}
+			responses[i] = resp
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+
+	for _, charts := range responses {
+		for _, ch := range charts {
+			data := symbol2Data[ch.Symbol]
+			data.responseChart = ch
+		}
+	}
+
+	dump(1)
+
+	for sym, data := range symbol2Data {
+		switch data.minChartLast {
+		case -1:
+			data.finalChart = data.cacheChart
+
+		case 0:
+			data.finalChart = data.responseChart
+
+		default:
+			date2Point := map[time.Time]*ChartPoint{}
+			for _, pt := range data.cacheChart.ChartPoints {
+				date2Point[timeKey(pt.Date)] = pt
+			}
+			for _, pt := range data.responseChart.ChartPoints {
+				date2Point[timeKey(pt.Date)] = pt
+			}
+
+			var pts []*ChartPoint
+			for _, pt := range date2Point {
+				pts = append(pts, pt)
+			}
+			sort.Slice(pts, func(i, j int) bool {
+				return pts[i].Date.Before(pts[j].Date)
+			})
+
+			data.finalChart = &Chart{
+				Symbol:      sym,
+				ChartPoints: pts,
+			}
+		}
+	}
+
+	dump(2)
+
+	for sym, data := range symbol2Data {
+		k := newChartCacheKey(sym, daily)
+		v := &chartCacheValue{
+			Chart:          data.finalChart,
+			LastUpdateTime: fixedNow,
+		}
+		if err := c.chartCache.put(k, v); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := saveChartCache(c.chartCache); err != nil {
+		return nil, err
+	}
+
+	var charts []*Chart
+	for _, sym := range req.Symbols {
+		data := symbol2Data[sym]
+		charts = append(charts, data.finalChart)
+	}
+	return charts, nil
+}
+
+func (c *Client) noCacheGetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart, error) {
 	if len(req.Symbols) == 0 {
 		return nil, nil
 	}

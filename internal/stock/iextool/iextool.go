@@ -13,12 +13,12 @@ import (
 	"time"
 
 	"github.com/btmura/ponzi2/internal/stock/iex"
-	"github.com/btmura/ponzi2/internal/stock/iexcache"
 )
 
 var (
 	port             = flag.Int("port", 9000, "Port number to export metrics.")
 	token            = flag.String("token", "", "API token required on requests.")
+	enableChartCache = flag.Bool("enable_chart_cache", true, "Whether to enable the chart cache.")
 	dumpAPIResponses = flag.Bool("dump_api_responses", false, "Dump API responses to txt files.")
 )
 
@@ -34,7 +34,7 @@ func main() {
 
 	ctx := context.Background()
 
-	c, err := iexcache.Wrap(iex.NewClient(*token, *dumpAPIResponses))
+	c, err := iex.NewClient(*token, *enableChartCache, *dumpAPIResponses)
 	if err != nil {
 		log.Fatal(err)
 	}
