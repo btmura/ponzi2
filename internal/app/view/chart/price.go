@@ -153,11 +153,23 @@ func priceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32) (st
 	midX := -1.0 + stickWidth*0.5
 	rightX := -1.0 + stickWidth*0.9
 
+	// Move the X coordinates one stick over.
+	moveOver := func() {
+		leftX += stickWidth
+		midX += stickWidth
+		rightX += stickWidth
+	}
+
 	calcY := func(value float32) float32 {
 		return 2*(value-priceRange[0])/(priceRange[1]-priceRange[0]) - 1
 	}
 
 	for i, s := range ds {
+		if s.Empty() {
+			moveOver()
+			continue
+		}
+
 		// Figure out Y coordinates of the key levels.
 		lowY, highY, openY, closeY := calcY(s.Low), calcY(s.High), calcY(s.Open), calcY(s.Close)
 
@@ -229,10 +241,7 @@ func priceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32) (st
 			)
 		}
 
-		// Move the X coordinates one stick over.
-		leftX += stickWidth
-		midX += stickWidth
-		rightX += stickWidth
+		moveOver()
 	}
 
 	lineVAO := gfx.NewVAO(

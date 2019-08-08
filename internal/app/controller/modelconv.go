@@ -184,17 +184,26 @@ func modelTradingSessions(quote *iex.Quote, chart *iex.Chart) []*model.TradingSe
 	// Add a trading session for the current quote if we do not have data
 	// for today's trading session, so that the chart includes the latest quote.
 
-	q := quote
-	if q == nil {
+	if quote == nil {
 		return ts
+	}
+
+	q := quote
+
+	o, h, l, c := q.Open, q.High, q.Low, q.Close
+	if o == 0 && h == 0 && l == 0 && c == 0 {
+		o = q.LatestPrice
+		h = q.LatestPrice
+		l = q.LatestPrice
+		c = q.LatestPrice
 	}
 
 	t := &model.TradingSession{
 		Date:          q.LatestTime,
-		Open:          q.Open,
-		High:          q.High,
-		Low:           q.Low,
-		Close:         q.LatestPrice,
+		Open:          o,
+		High:          h,
+		Low:           l,
+		Close:         c,
 		Volume:        q.LatestVolume,
 		Change:        q.Change,
 		PercentChange: q.ChangePercent,
