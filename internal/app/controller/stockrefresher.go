@@ -145,7 +145,7 @@ func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) err
 					})
 
 				case model.OneYear:
-					ch, err := modelOneYearChart(stockData.chart)
+					ch, err := modelOneYearChart(stockData.quote, stockData.chart)
 					es = append(es, event{
 						symbol:    sym,
 						quote:     q,
