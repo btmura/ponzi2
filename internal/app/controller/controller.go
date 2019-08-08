@@ -118,7 +118,8 @@ func (c *Controller) RunLoop() error {
 		}
 	})
 
-	// Process config changes in the background until the program ends.
+	// Process stock refreshes and config changes in the background until the program ends.
+	go c.stockRefresher.refreshLoop()
 	go c.configSaver.saveLoop()
 
 	defer func() {
@@ -324,6 +325,11 @@ func (c *Controller) onStockUpdate(symbol string, q *model.Quote, ch *model.Char
 func (c *Controller) onStockUpdateError(symbol string, updateErr error) error {
 	log.Errorf("stock update for %s failed: %v\n", symbol, updateErr)
 	return c.ui.SetError(symbol, updateErr)
+}
+
+// onRefreshAllStocksRequest implements the eventHandler interface.
+func (c *Controller) onRefreshAllStocksRequest(ctx context.Context) error {
+	return c.refreshAllStocks(ctx)
 }
 
 // onEventAdded implements the eventHandler interface.
