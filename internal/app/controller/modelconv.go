@@ -192,12 +192,13 @@ func modelTradingSessions(quote *iex.Quote, chart *iex.Chart) []*model.TradingSe
 
 	// Real-time quotes won't have OHLC set, but they will have a latest price.
 	// Fake OHLC so something shows up on the chart by using the latest price.
+	// TODO(btmura): considering using a different color for a fake ohlc
 	o, h, l, c := q.Open, q.High, q.Low, q.Close
 	if o == 0 && h == 0 && l == 0 && c == 0 {
-		o = q.LatestPrice
-		h = q.LatestPrice
-		l = q.LatestPrice
+		o = q.LatestPrice - q.Change
 		c = q.LatestPrice
+		l = (o + c) / 2
+		h = (o + c) / 2
 	}
 
 	t := &model.TradingSession{
