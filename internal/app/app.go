@@ -2,17 +2,25 @@
 package app
 
 import (
+	"context"
+
 	"github.com/btmura/ponzi2/internal/app/controller"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
 // App runs a GUI.
 type App struct {
-	client *iex.Client
+	client iexClientInterface
+}
+
+// iexClientInterface is implemented by clients in the iex package to get stock data.
+type iexClientInterface interface {
+	GetQuotes(ctx context.Context, req *iex.GetQuotesRequest) ([]*iex.Quote, error)
+	GetCharts(ctx context.Context, req *iex.GetChartsRequest) ([]*iex.Chart, error)
 }
 
 // New returns a new App.
-func New(client *iex.Client) *App {
+func New(client iexClientInterface) *App {
 	return &App{client}
 }
 

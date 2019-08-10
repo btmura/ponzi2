@@ -1,4 +1,4 @@
-package server
+package iexremote
 
 import (
 	"encoding/gob"
@@ -14,19 +14,21 @@ type Server struct {
 	client *iex.Client
 }
 
-// New returns a new Server.
-func New(port int, client *iex.Client) *Server {
+// NewServer returns a new Server.
+func NewServer(port int, client *iex.Client) *Server {
 	return &Server{port, client}
 }
 
 // Run runs the server. Should be called from main.
 func (s *Server) Run() error {
-	http.HandleFunc("/charts", s.chartsHandler)
-	http.HandleFunc("/quotes", s.quotesHandler)
+	http.HandleFunc("/chart", s.chartHandler)
+	http.HandleFunc("/quote", s.quoteHandler)
 	return http.ListenAndServe(fmt.Sprintf(":%d", s.port), nil)
 }
 
-func (s *Server) quotesHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) quoteHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("quote")
+
 	ctx := r.Context()
 
 	iexReq := &iex.GetQuotesRequest{}
@@ -50,7 +52,9 @@ func (s *Server) quotesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) chartsHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) chartHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("chart")
+
 	ctx := r.Context()
 
 	iexReq := &iex.GetChartsRequest{}
