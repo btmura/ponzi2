@@ -44,7 +44,7 @@ func (s *stockRefresher) refreshLoop() {
 		open := time.Date(n.Year(), n.Month(), n.Day(), 9, 30, 0, 0, loc)
 		close := time.Date(n.Year(), n.Month(), n.Day(), 16, 0, 0, 0, loc)
 
-		if t.Before(open) || t.After(close) {
+		if open.Weekday() == time.Saturday || open.Weekday() == time.Sunday || t.Before(open) || t.After(close) {
 			log.Infof("ignoring refresh ticker at %v", t.Format("1/2/2006 3:04:05 PM"))
 			continue
 		}
