@@ -28,9 +28,6 @@ var cacheClientVar = expvar.NewMap("iex-client-stats")
 
 // Client is used to make IEX API requests.
 type Client struct {
-	// token is the API token required on all requests.
-	token string
-
 	// chartCache caches chart responses for GetCharts.
 	chartCache *chartCache
 
@@ -42,14 +39,13 @@ type Client struct {
 }
 
 // NewClient returns a new Client.
-func NewClient(token string, enableChartCache, dumpAPIResponses bool) (*Client, error) {
+func NewClient(enableChartCache, dumpAPIResponses bool) (*Client, error) {
 	chartCache, err := loadChartCache()
 	if err != nil {
 		return nil, err
 	}
 
 	return &Client{
-		token:            token,
 		chartCache:       chartCache,
 		enableChartCache: enableChartCache,
 		dumpAPIResponses: dumpAPIResponses,

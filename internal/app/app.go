@@ -5,12 +5,14 @@ import (
 	"context"
 
 	"github.com/btmura/ponzi2/internal/app/controller"
+	"github.com/btmura/ponzi2/internal/errors"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
 // App runs a GUI.
 type App struct {
 	client iexClientInterface
+	token  string
 }
 
 // iexClientInterface is implemented by clients in the iex package to get stock data.
@@ -20,11 +22,19 @@ type iexClientInterface interface {
 }
 
 // New returns a new App.
-func New(client iexClientInterface) *App {
-	return &App{client}
+func New(client iexClientInterface, token string) *App {
+	return &App{client, token}
 }
 
 // Run runs the app. Should be called from main.
 func (a *App) Run() error {
-	return controller.New(a.client).RunLoop()
+	if a.client == nil {
+		return errors.Errorf("nil client")
+	}
+
+	if a.token == "" {
+		return errors.Errorf("missing token")
+	}
+
+	return controller.New(a.client, a.token).RunLoop()
 }

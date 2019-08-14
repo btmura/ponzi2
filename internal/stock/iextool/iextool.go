@@ -34,7 +34,7 @@ func main() {
 
 	ctx := context.Background()
 
-	c, err := iex.NewClient(*token, *enableChartCache, *dumpAPIResponses)
+	c, err := iex.NewClient(*enableChartCache, *dumpAPIResponses)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,6 +57,7 @@ func main() {
 		dataRange := pick("Pick a range", iex.TwoYears, iex.OneDay).(iex.Range)
 
 		qReq := &iex.GetQuotesRequest{
+			Token:   *token,
 			Symbols: strings.Split(symbolLine, ","),
 		}
 
@@ -94,6 +95,7 @@ func main() {
 		fmt.Println()
 
 		cReq := &iex.GetChartsRequest{
+			Token:   *token,
 			Symbols: strings.Split(symbolLine, ","),
 			Range:   dataRange,
 		}

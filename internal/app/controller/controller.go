@@ -39,14 +39,14 @@ type iexClientInterface interface {
 }
 
 // New creates a new Controller.
-func New(iexClient iexClientInterface) *Controller {
+func New(iexClient iexClientInterface, token string) *Controller {
 	c := &Controller{
 		model:       model.New(),
 		ui:          ui.New(),
 		configSaver: newConfigSaver(),
 	}
 	c.eventController = newEventController(c)
-	c.stockRefresher = newStockRefresher(iexClient, c.eventController)
+	c.stockRefresher = newStockRefresher(iexClient, token, c.eventController)
 	return c
 }
 

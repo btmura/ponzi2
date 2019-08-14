@@ -54,6 +54,7 @@ func (c *ChartPoint) DeepCopy() *ChartPoint {
 
 // GetChartsRequest is the request for GetCharts.
 type GetChartsRequest struct {
+	Token     string
 	Symbols   []string
 	Range     Range
 	ChartLast int
@@ -73,6 +74,7 @@ const (
 // GetCharts gets charts for stock symbols.
 func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart, error) {
 	cacheClientVar.Add("get-charts-requests", 1)
+
 	if c.enableChartCache {
 		return c.getChartsCached(ctx, req)
 	}
@@ -80,6 +82,10 @@ func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart
 }
 
 func (c *Client) getChartsCached(ctx context.Context, req *GetChartsRequest) ([]*Chart, error) {
+	if req.Token == "" {
+		return nil, errors.Errorf("missing token")
+	}
+
 	if len(req.Symbols) == 0 {
 		return nil, nil
 	}
@@ -168,6 +174,7 @@ func (c *Client) getChartsCached(ctx context.Context, req *GetChartsRequest) ([]
 
 	dump(0)
 
+	token := req.Token
 	chartLast2Request := map[int]*GetChartsRequest{}
 	for sym, data := range symbol2Data {
 		if data.minChartLast == -1 {
@@ -176,6 +183,7 @@ func (c *Client) getChartsCached(ctx context.Context, req *GetChartsRequest) ([]
 		req := chartLast2Request[data.minChartLast]
 		if req == nil {
 			req = &GetChartsRequest{
+				Token:     token,
 				Range:     TwoYears,
 				ChartLast: data.minChartLast,
 			}
@@ -276,6 +284,10 @@ func (c *Client) getChartsCached(ctx context.Context, req *GetChartsRequest) ([]
 }
 
 func (c *Client) noCacheGetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart, error) {
+	if req.Token == "" {
+		return nil, errors.Errorf("missing token")
+	}
+
 	if len(req.Symbols) == 0 {
 		return nil, nil
 	}
@@ -304,7 +316,7 @@ func (c *Client) noCacheGetCharts(ctx context.Context, req *GetChartsRequest) ([
 	}
 
 	v := url.Values{}
-	v.Set("token", c.token)
+	v.Set("token", req.Token)
 	v.Set("symbols", strings.Join(req.Symbols, ","))
 	v.Set("types", "chart")
 	v.Set("range", rangeStr)

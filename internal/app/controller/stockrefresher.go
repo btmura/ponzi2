@@ -14,6 +14,9 @@ type stockRefresher struct {
 	// iexClient fetches stock data to update the model.
 	iexClient iexClientInterface
 
+	// token is the IEX API token to be included on requests.
+	token string
+
 	// eventController allows the stockRefresher to post stock updates.
 	eventController *eventController
 
@@ -24,9 +27,10 @@ type stockRefresher struct {
 	enabled bool
 }
 
-func newStockRefresher(iexClient iexClientInterface, eventController *eventController) *stockRefresher {
+func newStockRefresher(iexClient iexClientInterface, token string, eventController *eventController) *stockRefresher {
 	return &stockRefresher{
 		iexClient:       iexClient,
+		token:           token,
 		eventController: eventController,
 		refreshTicker:   time.NewTicker(5 * time.Minute),
 	}
@@ -83,7 +87,7 @@ func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) err
 		return nil
 	}
 
-	reqs, err := d.dataRequests()
+	reqs, err := d.dataRequests(s.token)
 	if err != nil {
 		return err
 	}
@@ -246,7 +250,7 @@ type dataRequest struct {
 	chartsRequest *iex.GetChartsRequest
 }
 
-func (d *dataRequestBuilder) dataRequests() ([]*dataRequest, error) {
+func (d *dataRequestBuilder) dataRequests(token string) ([]*dataRequest, error) {
 	var reqs []*dataRequest
 	for r, ss := range d.range2Symbols {
 		var ir iex.Range
@@ -264,9 +268,11 @@ func (d *dataRequestBuilder) dataRequests() ([]*dataRequest, error) {
 			symbols:   ss,
 			dataRange: r,
 			quotesRequest: &iex.GetQuotesRequest{
+				Token:   token,
 				Symbols: ss,
 			},
 			chartsRequest: &iex.GetChartsRequest{
+				Token:   token,
 				Symbols: ss,
 				Range:   ir,
 			},

@@ -52,11 +52,16 @@ const (
 
 // GetQuotesRequest is the request for GetQuotes.
 type GetQuotesRequest struct {
+	Token   string
 	Symbols []string
 }
 
 // GetQuotes gets quotes for stock symbols.
 func (c *Client) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]*Quote, error) {
+	if req.Token == "" {
+		return nil, errors.Errorf("missing token")
+	}
+
 	if len(req.Symbols) == 0 {
 		return nil, nil
 	}
@@ -67,7 +72,7 @@ func (c *Client) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]*Quote
 	}
 
 	v := url.Values{}
-	v.Set("token", c.token)
+	v.Set("token", req.Token)
 	v.Set("symbols", strings.Join(req.Symbols, ","))
 	v.Set("types", "quote")
 	v.Set("filter", strings.Join([]string{
