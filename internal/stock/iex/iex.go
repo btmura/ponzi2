@@ -29,27 +29,23 @@ var cacheClientVar = expvar.NewMap("iex-client-stats")
 // Client is used to make IEX API requests.
 type Client struct {
 	// chartCache caches chart responses for GetCharts.
-	chartCache *chartCache
-
-	// enableChartCache is whether to use the chartCache for GetCharts.
-	enableChartCache bool
+	chartCache iexChartCacheInterface
 
 	// dumpAPIResponses dumps API responses into text files.
 	dumpAPIResponses bool
 }
 
-// NewClient returns a new Client.
-func NewClient(enableChartCache, dumpAPIResponses bool) (*Client, error) {
-	chartCache, err := loadChartCache()
-	if err != nil {
-		return nil, err
-	}
+type iexChartCacheInterface interface {
+	Get(key ChartCacheKey) *ChartCacheValue
+	Put(key ChartCacheKey, val *ChartCacheValue) error
+}
 
+// NewClient returns a new Client.
+func NewClient(chartCache iexChartCacheInterface, dumpAPIResponses bool) *Client {
 	return &Client{
 		chartCache:       chartCache,
-		enableChartCache: enableChartCache,
 		dumpAPIResponses: dumpAPIResponses,
-	}, nil
+	}
 }
 
 func dumpResponse(fileName string, r io.Reader) (io.ReadCloser, error) {

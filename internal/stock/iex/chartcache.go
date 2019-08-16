@@ -11,76 +11,43 @@ import (
 	"github.com/btmura/ponzi2/internal/errors"
 )
 
-// chartCache caches data from the chart endpoint.
-// Fields are exported for gob encoding and decoding.
-type chartCache struct {
-	Data map[chartCacheKey]*chartCacheValue
-	mu   sync.Mutex
+type ChartCacheKey struct {
+	Symbol   string
+	Interval ChartInterval
 }
 
-type chartCacheKey struct {
-	Symbol string
-	Type   chartType
-}
-
-type chartType int
+type ChartInterval int
 
 const (
-	chartTypeUnspecified chartType = iota
-	minute
-	daily
+	ChartIntervalUnspecified ChartInterval = iota
+	MinuteInterval
+	DailyInterval
 )
 
-func newChartCacheKey(symbol string, chType chartType) chartCacheKey {
-	return chartCacheKey{Symbol: symbol, Type: chType}
-}
-
-type chartCacheValue struct {
+type ChartCacheValue struct {
 	Chart          *Chart
 	LastUpdateTime time.Time
 }
 
-func (c *chartCacheValue) deepCopy() *chartCacheValue {
+func (c *ChartCacheValue) DeepCopy() *ChartCacheValue {
 	copy := *c
 	copy.Chart = copy.Chart.DeepCopy()
 	return &copy
 }
 
-func (c *chartCache) get(key chartCacheKey) *chartCacheValue {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+type NoOpChartCache struct{}
 
-	cacheClientVar.Add("chart-cache-gets", 1)
+func (n *NoOpChartCache) Get(key ChartCacheKey) *ChartCacheValue            { return nil }
+func (n *NoOpChartCache) Put(key ChartCacheKey, val *ChartCacheValue) error { return nil }
 
-	v := c.Data[key]
-	if v != nil {
-		cacheClientVar.Add("chart-cache-hits", 1)
-		return v.deepCopy()
-	}
-	cacheClientVar.Add("chart-cache-misses", 1)
-	return nil
+// GOBChartCache caches data from the chart endpoint.
+// Fields are exported for gob encoding and decoding.
+type GOBChartCache struct {
+	Data map[ChartCacheKey]*ChartCacheValue
+	mu   sync.Mutex
 }
 
-func (c *chartCache) put(key chartCacheKey, val *chartCacheValue) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	cacheClientVar.Add("chart-cache-puts", 1)
-
-	if !validSymbolRegexp.MatchString(key.Symbol) {
-		return errors.Errorf("bad symbol: got %s, want: %v", key.Symbol, validSymbolRegexp)
-	}
-
-	if c.Data == nil {
-		c.Data = map[chartCacheKey]*chartCacheValue{}
-	}
-	c.Data[key] = val.deepCopy()
-	c.Data[key].LastUpdateTime = now()
-
-	return nil
-}
-
-func loadChartCache() (*chartCache, error) {
+func OpenGOBChartCache() (*GOBChartCache, error) {
 	t := now()
 	defer func() {
 		cacheClientVar.Set("chart-cache-load-time", time.Since(t))
@@ -93,22 +60,58 @@ func loadChartCache() (*chartCache, error) {
 
 	file, err := os.Open(path)
 	if os.IsNotExist(err) {
-		return &chartCache{}, nil
+		return &GOBChartCache{}, nil
 	}
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	q := &chartCache{}
+	c := &GOBChartCache{}
 	dec := gob.NewDecoder(file)
-	if err := dec.Decode(q); err != nil {
+	if err := dec.Decode(c); err != nil {
 		return nil, err
 	}
-	return q, nil
+	return c, nil
 }
 
-func saveChartCache(q *chartCache) error {
+func (g *GOBChartCache) Get(key ChartCacheKey) *ChartCacheValue {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	cacheClientVar.Add("chart-cache-gets", 1)
+
+	v := g.Data[key]
+	if v != nil {
+		cacheClientVar.Add("chart-cache-hits", 1)
+		return v.DeepCopy()
+	}
+	cacheClientVar.Add("chart-cache-misses", 1)
+	return nil
+}
+
+func (g *GOBChartCache) Put(key ChartCacheKey, val *ChartCacheValue) error {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	cacheClientVar.Add("chart-cache-puts", 1)
+
+	if !validSymbolRegexp.MatchString(key.Symbol) {
+		return errors.Errorf("bad symbol: got %s, want: %v", key.Symbol, validSymbolRegexp)
+	}
+
+	if g.Data == nil {
+		g.Data = map[ChartCacheKey]*ChartCacheValue{}
+	}
+	g.Data[key] = val.DeepCopy()
+	g.Data[key].LastUpdateTime = now()
+
+	saveChartCache(g)
+
+	return nil
+}
+
+func saveChartCache(g *GOBChartCache) error {
 	t := now()
 	defer func() {
 		cacheClientVar.Set("chart-cache-save-time", time.Since(t))
@@ -125,7 +128,7 @@ func saveChartCache(q *chartCache) error {
 	}
 	defer file.Close()
 
-	return gob.NewEncoder(file).Encode(q)
+	return gob.NewEncoder(file).Encode(g)
 }
 
 func chartCachePath() (string, error) {
@@ -147,15 +150,4 @@ func userCacheDir() (string, error) {
 		return "", err
 	}
 	return p, nil
-}
-
-// timeKey converts a time into a key usable in maps
-// by normalizing the location and stripping the monotonic clock.
-func timeKey(t time.Time) time.Time {
-	return t.UTC().Round(0)
-}
-
-// midnight strips the hours, minutes, seconds, and nanoseconds from the given time.
-func midnight(t time.Time) time.Time {
-	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 }

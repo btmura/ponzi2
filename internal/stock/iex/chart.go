@@ -75,13 +75,6 @@ const (
 func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart, error) {
 	cacheClientVar.Add("get-charts-requests", 1)
 
-	if c.enableChartCache {
-		return c.getChartsCached(ctx, req)
-	}
-	return c.noCacheGetCharts(ctx, req)
-}
-
-func (c *Client) getChartsCached(ctx context.Context, req *GetChartsRequest) ([]*Chart, error) {
 	if req.Token == "" {
 		return nil, errors.Errorf("missing token")
 	}
@@ -122,8 +115,8 @@ func (c *Client) getChartsCached(ctx context.Context, req *GetChartsRequest) ([]
 	}
 
 	for _, sym := range req.Symbols {
-		k := newChartCacheKey(sym, daily)
-		v := c.chartCache.get(k)
+		k := ChartCacheKey{sym, DailyInterval}
+		v := c.chartCache.Get(k)
 		if v == nil {
 			symbol2Data[sym] = &data{minChartLast: 0}
 			continue
@@ -261,18 +254,14 @@ func (c *Client) getChartsCached(ctx context.Context, req *GetChartsRequest) ([]
 	dump(2)
 
 	for sym, data := range symbol2Data {
-		k := newChartCacheKey(sym, daily)
-		v := &chartCacheValue{
+		k := ChartCacheKey{sym, DailyInterval}
+		v := &ChartCacheValue{
 			Chart:          data.finalChart,
 			LastUpdateTime: fixedNow,
 		}
-		if err := c.chartCache.put(k, v); err != nil {
+		if err := c.chartCache.Put(k, v); err != nil {
 			return nil, err
 		}
-	}
-
-	if err := saveChartCache(c.chartCache); err != nil {
-		return nil, err
 	}
 
 	var charts []*Chart
@@ -426,4 +415,15 @@ func chartDate(date, minute string) (time.Time, error) {
 		return time.ParseInLocation("2006-01-02 15:04", date+" "+minute, loc)
 	}
 	return time.ParseInLocation("2006-01-02", date, loc)
+}
+
+// timeKey converts a time into a key usable in maps
+// by normalizing the location and stripping the monotonic clock.
+func timeKey(t time.Time) time.Time {
+	return t.UTC().Round(0)
+}
+
+// midnight strips the hours, minutes, seconds, and nanoseconds from the given time.
+func midnight(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 }

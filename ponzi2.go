@@ -26,16 +26,20 @@ func main() {
 	switch {
 	case *remoteAddr != "":
 		c := iexremote.NewClient(*remoteAddr)
+		a := app.New(c, *token)
+		log.Fatal(a.Run())
 
+	case *enableChartCache:
+		cache, err := iex.OpenGOBChartCache()
+		if err != nil {
+			log.Fatal(err)
+		}
+		c := iex.NewClient(cache, *dumpAPIResponses)
 		a := app.New(c, *token)
 		log.Fatal(a.Run())
 
 	default:
-		c, err := iex.NewClient(*enableChartCache, *dumpAPIResponses)
-		if err != nil {
-			log.Fatal(err)
-		}
-
+		c := iex.NewClient(new(iex.NoOpChartCache), *dumpAPIResponses)
 		a := app.New(c, *token)
 		log.Fatal(a.Run())
 	}

@@ -25,6 +25,10 @@ var (
 func main() {
 	flag.Parse()
 
+	if *token == "" {
+		log.Fatal("token cannot be empty")
+	}
+
 	// fmt.Printf("Serving metrics at http://localhost:%d/debug/vars\n", *port)
 	// go func() {
 	// 	if err := http.ListenAndServe(fmt.Sprintf(":%d", *port), nil); err != nil {
@@ -34,9 +38,18 @@ func main() {
 
 	ctx := context.Background()
 
-	c, err := iex.NewClient(*enableChartCache, *dumpAPIResponses)
-	if err != nil {
-		log.Fatal(err)
+	var c *iex.Client
+
+	switch {
+	case *enableChartCache:
+		cache, err := iex.OpenGOBChartCache()
+		if err != nil {
+			log.Fatal(err)
+		}
+		c = iex.NewClient(cache, *dumpAPIResponses)
+
+	default:
+		c = iex.NewClient(new(iex.NoOpChartCache), *dumpAPIResponses)
 	}
 
 	for {
