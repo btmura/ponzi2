@@ -9,9 +9,9 @@
                 "isDefault": true
             },
             // Set "ponzi2.token" in your workspace settings.
-            "command": "go generate ./... ; if ($?) { go build -v -x }; if ($?) { ./ponzi2.exe -token=${config:ponzi2.token} }",
+            "command": "go generate ./... ; if ($?) { go build -v -x ./cmd/ponzi2 }; if ($?) { ./ponzi2.exe -token=${config:ponzi2.token} }",
             "linux": {
-                "command": "go generate ./... && go build -v -x && ./ponzi2 -token=${config:ponzi2.token}"
+                "command": "go generate ./... && go build -v -x ./cmd/ponzi2 && ./ponzi2 -token=${config:ponzi2.token}"
             },
             "options": {
                 "cwd": "${workspaceRoot}",
