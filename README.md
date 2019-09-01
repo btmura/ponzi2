@@ -12,9 +12,9 @@ Visit [ponzi2.io](https://ponzi2.io) for more videos and tutorials!
 
 ## Getting Started
 
-ponzi2 is go-gettable:
+Run this command to install "ponzi2" and "ponzi2server".
 
-`go get -u github.com/btmura/ponzi2`
+`go get -u github.com/btmura/ponzi2/...`
 
 ### Development Environment Setup
 
