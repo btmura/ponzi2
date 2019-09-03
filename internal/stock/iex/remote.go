@@ -1,4 +1,4 @@
-package iexremote
+package iex
 
 import (
 	"bytes"
@@ -7,22 +7,20 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-
-	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
-// Client connects to the server.
-type Client struct {
+// RemoteClient connects to the server.
+type RemoteClient struct {
 	url string
 }
 
-// NewClient returns a new Client.
-func NewClient(url string) *Client {
-	return &Client{url: url}
+// NewRemoteClient returns a new RemoteClient.
+func NewRemoteClient(url string) *RemoteClient {
+	return &RemoteClient{url: url}
 }
 
 // GetQuotes sends the request for quotes to the server.
-func (c *Client) GetQuotes(ctx context.Context, req *iex.GetQuotesRequest) ([]*iex.Quote, error) {
+func (c *RemoteClient) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]*Quote, error) {
 	fmt.Println("GetQuotes")
 
 	u, err := url.Parse(c.url + "/quote")
@@ -47,7 +45,7 @@ func (c *Client) GetQuotes(ctx context.Context, req *iex.GetQuotesRequest) ([]*i
 	}
 	defer httpResp.Body.Close()
 
-	var resp []*iex.Quote
+	var resp []*Quote
 	dec := gob.NewDecoder(httpResp.Body)
 	if err := dec.Decode(&resp); err != nil {
 		return nil, err
@@ -57,7 +55,7 @@ func (c *Client) GetQuotes(ctx context.Context, req *iex.GetQuotesRequest) ([]*i
 }
 
 // GetCharts sends the charts request to the server.
-func (c *Client) GetCharts(ctx context.Context, req *iex.GetChartsRequest) ([]*iex.Chart, error) {
+func (c *RemoteClient) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart, error) {
 	fmt.Println("GetCharts")
 
 	u, err := url.Parse(c.url + "/chart")
@@ -82,7 +80,7 @@ func (c *Client) GetCharts(ctx context.Context, req *iex.GetChartsRequest) ([]*i
 	}
 	defer httpResp.Body.Close()
 
-	var resp []*iex.Chart
+	var resp []*Chart
 	dec := gob.NewDecoder(httpResp.Body)
 	if err := dec.Decode(&resp); err != nil {
 		return nil, err

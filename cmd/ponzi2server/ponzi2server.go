@@ -1,10 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
 	"os"
+	"strconv"
+
+	"github.com/btmura/ponzi2/internal/server"
+	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
 func main() {
@@ -13,10 +15,12 @@ func main() {
 		port = "1337"
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "hello, world!")
-	})
+	intPort, err := strconv.Atoi(port)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	log.Printf("serving on %s", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
+	c := iex.NewClient(new(iex.NoOpChartCache), false)
+	s := server.NewServer(intPort, c)
+	log.Fatal(s.Run())
 }

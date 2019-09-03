@@ -1,4 +1,4 @@
-package iexremote
+package server
 
 import (
 	"encoding/gob"
