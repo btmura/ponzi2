@@ -14,8 +14,8 @@ type Server struct {
 	client *iex.Client
 }
 
-// NewServer returns a new Server.
-func NewServer(port int, client *iex.Client) *Server {
+// New returns a new Server.
+func New(port int, client *iex.Client) *Server {
 	return &Server{port, client}
 }
 
