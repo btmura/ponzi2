@@ -24,7 +24,7 @@ func main() {
 
 	switch {
 	case *remoteAddr != "":
-		c := iex.NewRemoteClient(*remoteAddr)
+		c := iex.NewHTTPGOBClient(*remoteAddr)
 		a := app.New(c, *token)
 		log.Fatal(a.Run())
 

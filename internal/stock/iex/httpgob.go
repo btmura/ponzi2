@@ -9,18 +9,18 @@ import (
 	"net/url"
 )
 
-// RemoteClient connects to the server.
-type RemoteClient struct {
+// HTTPGOBClient connects to the server.
+type HTTPGOBClient struct {
 	url string
 }
 
-// NewRemoteClient returns a new RemoteClient.
-func NewRemoteClient(url string) *RemoteClient {
-	return &RemoteClient{url: url}
+// NewHTTPGOBClient returns a new HTTPGOBClient.
+func NewHTTPGOBClient(url string) *HTTPGOBClient {
+	return &HTTPGOBClient{url: url}
 }
 
 // GetQuotes sends the request for quotes to the server.
-func (c *RemoteClient) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]*Quote, error) {
+func (c *HTTPGOBClient) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]*Quote, error) {
 	fmt.Println("GetQuotes")
 
 	u, err := url.Parse(c.url + "/quote")
@@ -55,7 +55,7 @@ func (c *RemoteClient) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]
 }
 
 // GetCharts sends the charts request to the server.
-func (c *RemoteClient) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart, error) {
+func (c *HTTPGOBClient) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart, error) {
 	fmt.Println("GetCharts")
 
 	u, err := url.Parse(c.url + "/chart")
