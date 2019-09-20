@@ -12,6 +12,7 @@ var displaySources = map[model.Source]string{
 	model.FifteenMinuteDelayedPrice: "15 Min Delayed",
 	model.Close:                     "Close",
 	model.PreviousClose:             "Previous Close",
+	model.IEXPrice:                  "IEX Price",
 }
 
 func Join(a ...string) string {

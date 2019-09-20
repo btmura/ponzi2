@@ -77,6 +77,7 @@ const (
 	FifteenMinuteDelayedPrice
 	Close
 	PreviousClose
+	IEXPrice
 )
 
 // Range is the range to specify in the request.

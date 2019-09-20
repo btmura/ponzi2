@@ -48,6 +48,7 @@ const (
 	FifteenMinuteDelayedPrice
 	Close
 	PreviousClose
+	IEXPrice
 )
 
 // GetQuotesRequest is the request for GetQuotes.
@@ -198,6 +199,8 @@ func quoteSource(latestSource string) (Source, error) {
 		return Close, nil
 	case "Previous close":
 		return PreviousClose, nil
+	case "IEX price":
+		return IEXPrice, nil
 	default:
 		return SourceUnspecified, errors.Errorf("unrecognized source: %q", latestSource)
 	}
@@ -209,7 +212,7 @@ func quoteDate(latestSource Source, latestTime string) (time.Time, error) {
 	}
 
 	switch latestSource {
-	case IEXRealTimePrice, FifteenMinuteDelayedPrice:
+	case IEXPrice, IEXRealTimePrice, FifteenMinuteDelayedPrice:
 		t, err := time.ParseInLocation("3:04:05 PM", latestTime, loc)
 		if err != nil {
 			return time.Time{}, err

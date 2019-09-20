@@ -13,11 +13,12 @@ func _() {
 	_ = x[FifteenMinuteDelayedPrice-2]
 	_ = x[Close-3]
 	_ = x[PreviousClose-4]
+	_ = x[IEXPrice-5]
 }
 
-const _Source_name = "SourceUnspecifiedIEXRealTimePriceFifteenMinuteDelayedPriceClosePreviousClose"
+const _Source_name = "SourceUnspecifiedIEXRealTimePriceFifteenMinuteDelayedPriceClosePreviousCloseIEXPrice"
 
-var _Source_index = [...]uint8{0, 17, 33, 58, 63, 76}
+var _Source_index = [...]uint8{0, 17, 33, 58, 63, 76, 84}
 
 func (i Source) String() string {
 	if i < 0 || i >= Source(len(_Source_index)-1) {
