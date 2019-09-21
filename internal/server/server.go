@@ -5,25 +5,27 @@ import (
 	"fmt"
 	"net/http"
 
+	"gocloud.dev/server"
+
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
 // Server processes requests.
 type Server struct {
-	port   int
 	client *iex.Client
 }
 
 // New returns a new Server.
-func New(port int, client *iex.Client) *Server {
-	return &Server{port, client}
+func New(client *iex.Client) *Server {
+	return &Server{client}
 }
 
 // Run runs the server. Should be called from main.
-func (s *Server) Run() error {
+func (s *Server) Run(port int) error {
+	srv := server.New(http.DefaultServeMux, nil)
 	http.HandleFunc("/chart", s.chartHandler)
 	http.HandleFunc("/quote", s.quoteHandler)
-	return http.ListenAndServe(fmt.Sprintf(":%d", s.port), nil)
+	return srv.ListenAndServe(fmt.Sprintf(":%d", port))
 }
 
 func (s *Server) quoteHandler(w http.ResponseWriter, r *http.Request) {

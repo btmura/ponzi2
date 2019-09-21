@@ -21,6 +21,6 @@ func main() {
 	}
 
 	c := iex.NewClient(new(iex.NoOpChartCache), false)
-	s := server.New(intPort, c)
-	log.Fatal(s.Run())
+	s := server.New(c)
+	log.Fatal(s.Run(intPort))
 }
