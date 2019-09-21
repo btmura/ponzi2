@@ -1,3 +1,4 @@
+// Package status has functions to build a stock's status line with the symbol, price, and more.
 package status
 
 import (
@@ -15,6 +16,7 @@ var displaySources = map[model.Source]string{
 	model.IEXPrice:                  "IEX Price",
 }
 
+// Join combines the non-empty strings in the slice together with spaces.
 func Join(a ...string) string {
 	var b []string
 	for _, s := range a {
@@ -25,6 +27,7 @@ func Join(a ...string) string {
 	return strings.Join(b, " ")
 }
 
+// Paren parethesizes a string if it is not empty.
 func Paren(a string) string {
 	if a == "" {
 		return ""
@@ -32,6 +35,7 @@ func Paren(a string) string {
 	return fmt.Sprintf("(%s)", a)
 }
 
+// PriceChange returns a status line with the quote's price information.
 func PriceChange(q *model.Quote) string {
 	if q == nil {
 		return ""
@@ -39,6 +43,7 @@ func PriceChange(q *model.Quote) string {
 	return fmt.Sprintf("%.2f %+5.2f (%+5.2f%%)", q.LatestPrice, q.Change, q.ChangePercent*100)
 }
 
+// SourceUpdate returns a status line with the quote's source and update time information.
 func SourceUpdate(q *model.Quote) string {
 	if q == nil {
 		return ""
