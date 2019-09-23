@@ -5,6 +5,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app"
 	"github.com/btmura/ponzi2/internal/log"
+	"github.com/btmura/ponzi2/internal/server"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
@@ -24,7 +25,7 @@ func main() {
 
 	switch {
 	case *remoteAddr != "":
-		c := iex.NewHTTPGOBClient(*remoteAddr)
+		c := server.NewClient(*remoteAddr)
 		a := app.New(c, *token)
 		log.Fatal(a.Run())
 
