@@ -1,6 +1,7 @@
 package iex
 
 import (
+	"context"
 	"encoding/gob"
 	"os"
 	"os/user"
@@ -37,8 +38,8 @@ func (c *ChartCacheValue) DeepCopy() *ChartCacheValue {
 
 type NoOpChartCache struct{}
 
-func (n *NoOpChartCache) Get(key ChartCacheKey) *ChartCacheValue            { return nil }
-func (n *NoOpChartCache) Put(key ChartCacheKey, val *ChartCacheValue) error { return nil }
+func (n *NoOpChartCache) Get(ctx context.Context, key ChartCacheKey) (*ChartCacheValue, error)             { return nil, nil  }
+func (n *NoOpChartCache) Put(ctx context.Context, key ChartCacheKey, val *ChartCacheValue) error { return nil  }
 
 // GOBChartCache caches data from the chart endpoint.
 // Fields are exported for gob encoding and decoding.
@@ -75,7 +76,7 @@ func OpenGOBChartCache() (*GOBChartCache, error) {
 	return c, nil
 }
 
-func (g *GOBChartCache) Get(key ChartCacheKey) *ChartCacheValue {
+func (g *GOBChartCache) Get(ctx context.Context, key ChartCacheKey) (*ChartCacheValue, error)  {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
@@ -84,13 +85,13 @@ func (g *GOBChartCache) Get(key ChartCacheKey) *ChartCacheValue {
 	v := g.Data[key]
 	if v != nil {
 		cacheClientVar.Add("chart-cache-hits", 1)
-		return v.DeepCopy()
+		return v.DeepCopy(), nil
 	}
 	cacheClientVar.Add("chart-cache-misses", 1)
-	return nil
+	return nil, nil
 }
 
-func (g *GOBChartCache) Put(key ChartCacheKey, val *ChartCacheValue) error {
+func (g *GOBChartCache) Put(ctx context.Context, key ChartCacheKey, val *ChartCacheValue) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 

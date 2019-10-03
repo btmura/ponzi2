@@ -116,7 +116,10 @@ func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart
 
 	for _, sym := range req.Symbols {
 		k := ChartCacheKey{sym, DailyInterval}
-		v := c.chartCache.Get(k)
+		v, err  := c.chartCache.Get(ctx, k)
+		if err != nil {
+			return nil, err
+		}
 		if v == nil {
 			symbol2Data[sym] = &data{minChartLast: 0}
 			continue
@@ -259,7 +262,7 @@ func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart
 			Chart:          data.finalChart,
 			LastUpdateTime: fixedNow,
 		}
-		if err := c.chartCache.Put(k, v); err != nil {
+		if err := c.chartCache.Put(ctx, k, v); err != nil {
 			return nil, err
 		}
 	}

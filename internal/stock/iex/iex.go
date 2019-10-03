@@ -3,6 +3,7 @@ package iex
 
 import (
 	"bytes"
+	"context"
 	"expvar"
 	"fmt"
 	"io"
@@ -36,8 +37,8 @@ type Client struct {
 }
 
 type iexChartCacheInterface interface {
-	Get(key ChartCacheKey) *ChartCacheValue
-	Put(key ChartCacheKey, val *ChartCacheValue) error
+	Get(ctx context.Context, key ChartCacheKey) (*ChartCacheValue, error)
+	Put(ctx context.Context , key ChartCacheKey, val *ChartCacheValue) error
 }
 
 // NewClient returns a new Client.
