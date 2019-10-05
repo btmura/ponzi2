@@ -31,7 +31,7 @@ ponzi2server is an optional server compatible only with ponzi2 that caches IEX d
 
 `go build ./cmd/ponzi2server && ./ponzi2server.exe`
 
-`go build ./cmd/ponzi2.exe && ./ponzi2.exe -token YOUR_API_TOKEN -remote_addr http://localhost:1337
+`go build ./cmd/ponzi2.exe && ./ponzi2.exe -token YOUR_API_TOKEN -remote_addr http://localhost:1337`
 
 ## Getting Help
 
