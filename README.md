@@ -25,6 +25,14 @@ Run this command to install "ponzi2" and "ponzi2server".
 3. `go get -u golang.org/x/tools/cmd/stringer`
 4. `go generate ./...`
 
+#### Developing the ponzi2server
+
+ponzi2server is an optional server compatible only with ponzi2 that caches IEX data responses. You can run it locally or deploy it on Google AppEngine. It is written using the Go Cloud Development Kit, so that it can be unit-tested and potentially run on different cloud providers.
+
+`go build ./cmd/ponzi2server && ./ponzi2server.exe`
+
+`go build ./cmd/ponzi2.exe && ./ponzi2.exe -token YOUR_API_TOKEN -remote_addr http://localhost:1337
+
 ## Getting Help
 
 Send an e-mail to btmura (address on GitHub profile).
