@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	"gocloud.dev/docstore"
+	"gocloud.dev/gcerrors"
 
+	"github.com/btmura/ponzi2/internal/errors"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
@@ -35,8 +37,12 @@ func (d *DocChartCache) Get(ctx context.Context, key iex.ChartCacheKey) (*iex.Ch
 	doc := &chartCacheDoc{
 		Key: fmt.Sprintf("%s:%v", key.Symbol, key.Interval),
 	}
-	if err := d.coll.Get(ctx, doc); err != nil {
-		return nil, err
+	err := d.coll.Get(ctx, doc)
+	if gcerrors.Code(err) == gcerrors.NotFound {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, errors.Errorf("getting doc for %s failed: %v", doc.Key, err)
 	}
 	return doc.CacheValue, nil
 }
@@ -48,5 +54,8 @@ func (d *DocChartCache) Put(ctx context.Context, key iex.ChartCacheKey, val *iex
 		CacheKey:   key,
 		CacheValue: val,
 	}
-	return d.coll.Put(ctx, doc)
+	if err := d.coll.Put(ctx, doc); err != nil {
+		return errors.Errorf("putting doc for %s failed: %v", doc.Key, err)
+	}
+	return nil
 }

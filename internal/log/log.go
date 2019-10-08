@@ -98,6 +98,7 @@ func linePrefix(level, file string, line int) string {
 }
 
 func debugEnabled(file string) bool {
+	// TODO(btmura): use regexp to match file names
 	base := strings.TrimSuffix(file, path.Ext(file))
 	return strings.Contains(os.Getenv("PZDEBUG"), base)
 }
