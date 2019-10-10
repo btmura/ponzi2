@@ -12,34 +12,47 @@ import (
 	"github.com/btmura/ponzi2/internal/errors"
 )
 
+// ChartCacheKey is the key to look up chart cache entries.
 type ChartCacheKey struct {
 	Symbol   string
 	Interval ChartInterval
 }
 
+// ChartInterval is the chart's interval like minute or daily.
 type ChartInterval int
 
+// ChartInterval values.
 const (
 	ChartIntervalUnspecified ChartInterval = iota
 	MinuteInterval
 	DailyInterval
 )
 
+// ChartCacheValue is the value of chart cache entries.
 type ChartCacheValue struct {
 	Chart          *Chart
 	LastUpdateTime time.Time
 }
 
+// DeepCopy returns a deep copy of the value.
 func (c *ChartCacheValue) DeepCopy() *ChartCacheValue {
 	copy := *c
 	copy.Chart = copy.Chart.DeepCopy()
 	return &copy
 }
 
+// NoOpChartCache is a chart cache that doesn't do anything.
 type NoOpChartCache struct{}
 
-func (n *NoOpChartCache) Get(ctx context.Context, key ChartCacheKey) (*ChartCacheValue, error)             { return nil, nil  }
-func (n *NoOpChartCache) Put(ctx context.Context, key ChartCacheKey, val *ChartCacheValue) error { return nil  }
+// Get implements the iexChartCacheInterface.
+func (n *NoOpChartCache) Get(ctx context.Context, key ChartCacheKey) (*ChartCacheValue, error) {
+	return nil, nil
+}
+
+// Put implements the iexChartCacheInterface.
+func (n *NoOpChartCache) Put(ctx context.Context, key ChartCacheKey, val *ChartCacheValue) error {
+	return nil
+}
 
 // GOBChartCache caches data from the chart endpoint.
 // Fields are exported for gob encoding and decoding.
@@ -48,6 +61,7 @@ type GOBChartCache struct {
 	mu   sync.Mutex
 }
 
+// OpenGOBChartCache opens the GOB-based chart cache from disk.
 func OpenGOBChartCache() (*GOBChartCache, error) {
 	t := now()
 	defer func() {
@@ -76,7 +90,8 @@ func OpenGOBChartCache() (*GOBChartCache, error) {
 	return c, nil
 }
 
-func (g *GOBChartCache) Get(ctx context.Context, key ChartCacheKey) (*ChartCacheValue, error)  {
+// Get implements the iexChartCacheInterface.
+func (g *GOBChartCache) Get(ctx context.Context, key ChartCacheKey) (*ChartCacheValue, error) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
@@ -91,6 +106,7 @@ func (g *GOBChartCache) Get(ctx context.Context, key ChartCacheKey) (*ChartCache
 	return nil, nil
 }
 
+// Put implements the iexChartCacheInterface.
 func (g *GOBChartCache) Put(ctx context.Context, key ChartCacheKey, val *ChartCacheValue) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
