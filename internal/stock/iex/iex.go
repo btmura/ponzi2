@@ -24,7 +24,7 @@ var (
 
 var (
 	// validTokenRegexp is a regexp that accepts valid IEX API tokens.
-	validTokenRegexp = regexp.MustCompile("^[A-Za-z0-9]{1,}$")
+	validTokenRegexp = regexp.MustCompile("^[A-Za-z0-9_]{1,}$")
 
 	// validSymbolRegexp is a regexp that accepts valid stock symbols. Examples: X, FB, SPY, AAPL
 	validSymbolRegexp = regexp.MustCompile("^[A-Z]{1,5}$")

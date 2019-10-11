@@ -28,13 +28,8 @@ func TestValidTokenRegexp(t *testing.T) {
 			want:  false,
 		},
 		{
-			desc:  "letters",
-			input: "abc",
-			want:  true,
-		},
-		{
-			desc:  "numbers",
-			input: "0123",
+			desc:  "valid",
+			input: "abc_123",
 			want:  true,
 		},
 	} {
