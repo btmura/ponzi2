@@ -14,6 +14,7 @@ import (
 
 // ChartCacheKey is the key to look up chart cache entries.
 type ChartCacheKey struct {
+	Token    string
 	Symbol   string
 	Interval ChartInterval
 }
@@ -112,6 +113,10 @@ func (g *GOBChartCache) Put(ctx context.Context, key ChartCacheKey, val *ChartCa
 	defer g.mu.Unlock()
 
 	cacheClientVar.Add("chart-cache-puts", 1)
+
+	if !validTokenRegexp.MatchString(key.Token) {
+		return errors.Errorf("bad token: got %s, want: %v", key.Token, validTokenRegexp)
+	}
 
 	if !validSymbolRegexp.MatchString(key.Symbol) {
 		return errors.Errorf("bad symbol: got %s, want: %v", key.Symbol, validSymbolRegexp)

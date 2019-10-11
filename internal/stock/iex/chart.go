@@ -115,8 +115,8 @@ func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart
 	}
 
 	for _, sym := range req.Symbols {
-		k := ChartCacheKey{sym, DailyInterval}
-		v, err  := c.chartCache.Get(ctx, k)
+		k := ChartCacheKey{req.Token, sym, DailyInterval}
+		v, err := c.chartCache.Get(ctx, k)
 		if err != nil {
 			return nil, err
 		}
@@ -257,7 +257,7 @@ func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart
 	dump(2)
 
 	for sym, data := range symbol2Data {
-		k := ChartCacheKey{sym, DailyInterval}
+		k := ChartCacheKey{req.Token, sym, DailyInterval}
 		v := &ChartCacheValue{
 			Chart:          data.finalChart,
 			LastUpdateTime: fixedNow,

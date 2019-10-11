@@ -22,8 +22,13 @@ var (
 	loc = mustLoadLocation("America/New_York")
 )
 
-// validSymbolRegexp is a regexp that accepts valid stock symbols. Examples: X, FB, SPY, AAPL
-var validSymbolRegexp = regexp.MustCompile("^[A-Z]{1,5}$")
+var (
+	// validTokenRegexp is a regexp that accepts valid IEX API tokens.
+	validTokenRegexp = regexp.MustCompile("^[A-Za-z0-9]{1,}$")
+
+	// validSymbolRegexp is a regexp that accepts valid stock symbols. Examples: X, FB, SPY, AAPL
+	validSymbolRegexp = regexp.MustCompile("^[A-Z]{1,5}$")
+)
 
 var cacheClientVar = expvar.NewMap("iex-client-stats")
 
@@ -38,7 +43,7 @@ type Client struct {
 
 type iexChartCacheInterface interface {
 	Get(ctx context.Context, key ChartCacheKey) (*ChartCacheValue, error)
-	Put(ctx context.Context , key ChartCacheKey, val *ChartCacheValue) error
+	Put(ctx context.Context, key ChartCacheKey, val *ChartCacheValue) error
 }
 
 // NewClient returns a new Client.
