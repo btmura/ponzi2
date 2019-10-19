@@ -29,7 +29,17 @@ Run this command to install "ponzi2" and "ponzi2server".
 
 ponzi2server is an optional server compatible only with ponzi2 that caches IEX data responses. You can run it locally or deploy it on Google AppEngine. It is written using the Go Cloud Development Kit, so that it can be unit-tested and potentially run on different cloud providers.
 
+##### In-Memory DB
+
 `go build ./cmd/ponzi2server && ./ponzi2server.exe`
+
+`go build ./cmd/ponzi2.exe && ./ponzi2.exe -token YOUR_API_TOKEN -remote_addr http://localhost:1337`
+
+##### Mongo DB
+
+`/c/Program\ Files/MongoDB/Server/4.2/bin/mongod.exe --dbpath="d:\mongodb\data\db"`
+
+`go build ./cmd/ponzi2server && MONGO_SERVER_URL=mongodb://localhost:27017 ./ponzi2server.exe -port=1337 -docstore_url=mongo://ponzi2/iex-chart-cache?id_field=Key`
 
 `go build ./cmd/ponzi2.exe && ./ponzi2.exe -token YOUR_API_TOKEN -remote_addr http://localhost:1337`
 
