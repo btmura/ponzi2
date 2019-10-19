@@ -34,10 +34,15 @@ func NewDocChartCache(coll *docstore.Collection) *DocChartCache {
 
 // Get implements the iexChartCacheInterface.
 func (d *DocChartCache) Get(ctx context.Context, key iex.ChartCacheKey) (*iex.ChartCacheValue, error) {
-	doc := &chartCacheDoc{
-		Key: fmt.Sprintf("%s:%v", key.Symbol, key.Interval),
+	docKey, err := chartCacheDocKey(key)
+	if err != nil {
+		return nil, errors.Errorf("making get doc key failed: %v", err)
 	}
-	err := d.coll.Get(ctx, doc)
+
+	doc := &chartCacheDoc{
+		Key: docKey,
+	}
+	err = d.coll.Get(ctx, doc)
 	if gcerrors.Code(err) == gcerrors.NotFound {
 		return nil, nil
 	}
@@ -49,8 +54,13 @@ func (d *DocChartCache) Get(ctx context.Context, key iex.ChartCacheKey) (*iex.Ch
 
 // Put implements the iexChartCacheInterface.
 func (d *DocChartCache) Put(ctx context.Context, key iex.ChartCacheKey, val *iex.ChartCacheValue) error {
+	docKey, err := chartCacheDocKey(key)
+	if err != nil {
+		return errors.Errorf("making put doc key failed: %v", err)
+	}
+
 	doc := &chartCacheDoc{
-		Key:        fmt.Sprintf("%s:%v", key.Symbol, key.Interval),
+		Key:        docKey,
 		CacheKey:   key,
 		CacheValue: val,
 	}
@@ -58,4 +68,8 @@ func (d *DocChartCache) Put(ctx context.Context, key iex.ChartCacheKey, val *iex
 		return errors.Errorf("putting doc for %s failed: %v", doc.Key, err)
 	}
 	return nil
+}
+
+func chartCacheDocKey(cacheKey iex.ChartCacheKey) (string, error) {
+	return fmt.Sprintf("%s:%s:%v", cacheKey.Token, cacheKey.Symbol, cacheKey.Interval), nil
 }
