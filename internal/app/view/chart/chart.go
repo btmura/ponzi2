@@ -273,10 +273,10 @@ func (ch *Chart) ProcessInput(
 	ch.mousePos = mousePos
 
 	r, _ := ch.header.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
-	ch.bodyBounds = r
 
-	ch.loadingText.ProcessInput(bounds)
-	ch.errorText.ProcessInput(bounds)
+	ch.bodyBounds = r
+	ch.loadingText.ProcessInput(r)
+	ch.errorText.ProcessInput(r)
 
 	// Calculate percentage needed for each section.
 	const (

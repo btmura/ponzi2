@@ -155,10 +155,15 @@ func (t *Thumb) ProcessInput(input *view.Input) {
 	t.mousePos = input.MousePos
 
 	r, clicks := t.header.ProcessInput(t.fullBounds, input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
+
 	t.bodyBounds = r
+	t.loadingText.ProcessInput(r)
+	t.errorText.ProcessInput(r)
+
 	if !clicks.HasClicks() && input.LeftClickInBounds(t.fullBounds) {
 		input.ScheduledCallbacks = append(input.ScheduledCallbacks, t.thumbClickCallback)
 	}
+
 
 	rects := rect.Slice(r, 0.5)
 	for i := range rects {
