@@ -1,6 +1,7 @@
 package chart
 
 import (
+	"fmt"
 	"image"
 
 	"golang.org/x/image/font/gofont/goregular"
@@ -162,9 +163,12 @@ func (ch *Chart) SetLoading(loading bool) {
 }
 
 // SetError toggles the Chart's error indicator.
-func (ch *Chart) SetError(error bool) {
-	ch.hasError = error
-	ch.header.SetError(error)
+func (ch *Chart) SetError(err error) {
+	ch.hasError = err != nil
+	if err != nil {
+		ch.errorText.Text = fmt.Sprintf("ERROR: %v", err)
+	}
+	ch.header.SetError(err)
 }
 
 // Data is argument to SetData.

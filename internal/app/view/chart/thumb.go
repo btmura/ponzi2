@@ -1,6 +1,7 @@
 package chart
 
 import (
+	"fmt"
 	"image"
 
 	"golang.org/x/image/font/gofont/goregular"
@@ -104,9 +105,12 @@ func (t *Thumb) SetLoading(loading bool) {
 }
 
 // SetError toggles the Chart's error indicator.
-func (t *Thumb) SetError(error bool) {
-	t.hasError = error
-	t.header.SetError(error)
+func (t *Thumb) SetError(err error) {
+	t.hasError = err != nil
+	if err != nil {
+		t.errorText.Text = fmt.Sprintf("ERROR: %v", err)
+	}
+	t.header.SetError(err)
 }
 
 // SetData sets the data to be shown on the chart.
@@ -163,7 +167,6 @@ func (t *Thumb) ProcessInput(input *view.Input) {
 	if !clicks.HasClicks() && input.LeftClickInBounds(t.fullBounds) {
 		input.ScheduledCallbacks = append(input.ScheduledCallbacks, t.thumbClickCallback)
 	}
-
 
 	rects := rect.Slice(r, 0.5)
 	for i := range rects {

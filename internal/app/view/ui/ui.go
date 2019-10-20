@@ -766,14 +766,14 @@ func (u *UI) SetLoading(symbol string, dataRange model.Range) error {
 	for s, ch := range u.symbolToChartMap {
 		if s == symbol && u.chartRange == dataRange {
 			ch.SetLoading(true)
-			ch.SetError(false)
+			ch.SetError(nil)
 		}
 	}
 
 	for s, th := range u.symbolToChartThumbMap {
 		if s == symbol && u.chartThumbRange == dataRange {
 			th.SetLoading(true)
-			th.SetError(false)
+			th.SetError(nil)
 		}
 	}
 
@@ -817,12 +817,12 @@ func (u *UI) SetError(symbol string, updateErr error) error {
 
 	if ch, ok := u.symbolToChartMap[symbol]; ok {
 		ch.SetLoading(false)
-		ch.SetError(true)
+		ch.SetError(updateErr)
 	}
 
 	if th, ok := u.symbolToChartThumbMap[symbol]; ok {
 		th.SetLoading(false)
-		th.SetError(true)
+		th.SetError(updateErr)
 	}
 
 	return nil

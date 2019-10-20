@@ -127,8 +127,8 @@ func (h *header) SetLoading(loading bool) {
 }
 
 // SetError toggles the Chart's error indicator.
-func (h *header) SetError(error bool) {
-	h.hasError = error
+func (h *header) SetError(err error ) {
+	h.hasError = err != nil
 }
 
 // SetData sets the data to be shown on the chart.
