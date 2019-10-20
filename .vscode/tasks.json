@@ -15,7 +15,7 @@
             },
             "options": {
                 "cwd": "${workspaceRoot}",
-                "env": {"PZDEBUG": "chart"},
+                "env": {"PZDEBUG": "chart"}
             },
             "problemMatcher": [
                 "$go"
