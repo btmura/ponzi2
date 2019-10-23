@@ -7,6 +7,7 @@ import (
 
 	"gocloud.dev/server"
 
+	"github.com/btmura/ponzi2/internal/errors"
 	"github.com/btmura/ponzi2/internal/log"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
@@ -38,8 +39,7 @@ func (s *Server) quoteHandler(w http.ResponseWriter, r *http.Request) {
 	iexReq := &iex.GetQuotesRequest{}
 	dec := gob.NewDecoder(r.Body)
 	if err := dec.Decode(iexReq); err != nil {
-		log.Errorf("decoding quote request failed: %v", err)
-		w.WriteHeader(http.StatusBadRequest)
+		logAndWriteError(w, http.StatusBadRequest, errors.Errorf("decoding quote request failed: %v", err))
 		return
 	}
 
@@ -47,8 +47,7 @@ func (s *Server) quoteHandler(w http.ResponseWriter, r *http.Request) {
 
 	iexResp, err := s.client.GetQuotes(ctx, iexReq)
 	if err != nil {
-		log.Errorf("getting quotes failed: %v", err)
-		w.WriteHeader(http.StatusBadRequest)
+		logAndWriteError(w, http.StatusBadRequest, errors.Errorf("getting quotes failed: %v", err))
 		return
 	}
 
@@ -56,8 +55,7 @@ func (s *Server) quoteHandler(w http.ResponseWriter, r *http.Request) {
 
 	enc := gob.NewEncoder(w)
 	if err := enc.Encode(iexResp); err != nil {
-		log.Errorf("encoding quote response failed: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		logAndWriteError(w, http.StatusInternalServerError, errors.Errorf("encoding quote response failed: %v", err))
 		return
 	}
 }
@@ -68,8 +66,7 @@ func (s *Server) chartHandler(w http.ResponseWriter, r *http.Request) {
 	iexReq := &iex.GetChartsRequest{}
 	dec := gob.NewDecoder(r.Body)
 	if err := dec.Decode(iexReq); err != nil {
-		log.Errorf("decoding chart request failed: %v", err)
-		w.WriteHeader(http.StatusBadRequest)
+		logAndWriteError(w, http.StatusBadRequest, errors.Errorf("decoding chart request failed: %v", err))
 		return
 	}
 
@@ -77,8 +74,7 @@ func (s *Server) chartHandler(w http.ResponseWriter, r *http.Request) {
 
 	iexResp, err := s.client.GetCharts(ctx, iexReq)
 	if err != nil {
-		log.Errorf("getting charts failed: %v", err)
-		w.WriteHeader(http.StatusBadRequest)
+		logAndWriteError(w, http.StatusBadRequest, errors.Errorf("getting charts failed: %v", err))
 		return
 	}
 
@@ -86,8 +82,13 @@ func (s *Server) chartHandler(w http.ResponseWriter, r *http.Request) {
 
 	enc := gob.NewEncoder(w)
 	if err := enc.Encode(iexResp); err != nil {
-		log.Errorf("encoding chart response failed: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		logAndWriteError(w, http.StatusInternalServerError, errors.Errorf("encoding chart response failed: %v", err))
 		return
 	}
+}
+
+func logAndWriteError(w http.ResponseWriter, statusCode int, err error) {
+	log.Error(err)
+	w.WriteHeader(statusCode)
+	fmt.Fprint(w, err)
 }

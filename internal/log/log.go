@@ -46,7 +46,7 @@ func Debugf(format string, a ...interface{}) {
 }
 
 // Error logs an error message.
-func Error(format string, a ...interface{}) {
+func Error(a ...interface{}) {
 	file, line := fileLine(2)
 	fmt.Print(linePrefix("E", file, line))
 	fmt.Print(a...)
