@@ -1,10 +1,12 @@
 package iex
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"sort"
@@ -376,10 +378,15 @@ func decodeCharts(r io.Reader) ([]*Chart, error) {
 		Chart []*chartPoint `json:"chart"`
 	}
 
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, errors.Errorf("reading chart json failed: %v", err)
+	}
+
 	var m map[string]stock
-	dec := json.NewDecoder(r)
+	dec := json.NewDecoder(bytes.NewReader(b))
 	if err := dec.Decode(&m); err != nil {
-		return nil, errors.Errorf("chart json decode failed: %v", err)
+		return nil, errors.Errorf("chart json decode failed: %v, got: %s", err, string(b))
 	}
 
 	var charts []*Chart
