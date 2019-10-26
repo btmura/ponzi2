@@ -9,10 +9,10 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
-	"github.com/btmura/ponzi2/internal/app/view/centeredtext"
 	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/status"
+	"github.com/btmura/ponzi2/internal/app/view/text"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 	"github.com/btmura/ponzi2/internal/errors"
 )
@@ -73,11 +73,11 @@ type Chart struct {
 
 	legend *legend
 
-	// loadingText is the text shown when loading from a fresh state.
-	loadingText *centeredtext.CenteredText
+	// loadingTextBox renders the loading text shown when loading from a fresh state.
+	loadingTextBox *text.Box
 
-	// errorText is the text shown when an error occurs from a fresh state.
-	errorText *centeredtext.CenteredText
+	// errorTextBox renders the error text.
+	errorTextBox *text.Box
 
 	// loading is true when data for the stock is being retrieved.
 	loading bool
@@ -149,10 +149,10 @@ func NewChart(fps int) *Chart {
 
 		legend: new(legend),
 
-		loadingText: centeredtext.New(chartSymbolQuoteTextRenderer, "LOADING..."),
-		errorText:   centeredtext.New(chartSymbolQuoteTextRenderer, "ERROR", centeredtext.Color(color.Orange)),
-		loading:     true,
-		fadeIn:      animation.New(1 * fps),
+		loadingTextBox: text.NewBox(chartSymbolQuoteTextRenderer, "LOADING..."),
+		errorTextBox:   text.NewBox(chartSymbolQuoteTextRenderer, "ERROR", text.Color(color.Orange)),
+		loading:        true,
+		fadeIn:         animation.New(1 * fps),
 	}
 }
 
@@ -166,7 +166,7 @@ func (ch *Chart) SetLoading(loading bool) {
 func (ch *Chart) SetError(err error) {
 	ch.hasError = err != nil
 	if err != nil {
-		ch.errorText.Text = fmt.Sprintf("ERROR: %v", err)
+		ch.errorTextBox.Text = fmt.Sprintf("ERROR: %v", err)
 	}
 	ch.header.SetError(err)
 }
@@ -279,8 +279,8 @@ func (ch *Chart) ProcessInput(
 	r, _ := ch.header.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
 
 	ch.bodyBounds = r
-	ch.loadingText.ProcessInput(r)
-	ch.errorText.ProcessInput(r)
+	ch.loadingTextBox.ProcessInput(r)
+	ch.errorTextBox.ProcessInput(r)
 
 	// Calculate percentage needed for each section.
 	const (
@@ -410,12 +410,12 @@ func (ch *Chart) Render(fudge float32) {
 	// Only show messages if no prior data to show.
 	if !ch.hasStockUpdated {
 		if ch.loading {
-			ch.loadingText.Render(fudge)
+			ch.loadingTextBox.Render(fudge)
 			return
 		}
 
 		if ch.hasError {
-			ch.errorText.Render(fudge)
+			ch.errorTextBox.Render(fudge)
 			return
 		}
 	}

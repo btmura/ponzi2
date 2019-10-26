@@ -10,10 +10,10 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
-	"github.com/btmura/ponzi2/internal/app/view/centeredtext"
 	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/status"
+	"github.com/btmura/ponzi2/internal/app/view/text"
 	"github.com/btmura/ponzi2/internal/errors"
 )
 
@@ -40,11 +40,11 @@ type Thumb struct {
 	weeklyStochasticCursor   *stochasticCursor
 	weeklyStochasticTimeline *timeline
 
-	// loadingText is the text shown when loading from a fresh state.
-	loadingText *centeredtext.CenteredText
+	// loadingTextBox renders the loading text shown when loading from a fresh state.
+	loadingTextBox *text.Box
 
-	// errorText is the text shown when an error occurs from a fresh state.
-	errorText *centeredtext.CenteredText
+	// errorTextBox renders the error text.
+	errorTextBox *text.Box
 
 	// thumbClickCallback is the callback to schedule when the thumb is clicked.
 	thumbClickCallback func()
@@ -91,10 +91,10 @@ func NewThumb(fps int) *Thumb {
 		weeklyStochasticCursor:   new(stochasticCursor),
 		weeklyStochasticTimeline: new(timeline),
 
-		loadingText: centeredtext.New(thumbSymbolQuoteTextRenderer, "LOADING..."),
-		errorText:   centeredtext.New(thumbSymbolQuoteTextRenderer, "ERROR", centeredtext.Color(color.Orange)),
-		loading:     true,
-		fadeIn:      animation.New(1 * fps),
+		loadingTextBox: text.NewBox(thumbSymbolQuoteTextRenderer, "LOADING..."),
+		errorTextBox:   text.NewBox(thumbSymbolQuoteTextRenderer, "ERROR", text.Color(color.Orange)),
+		loading:        true,
+		fadeIn:         animation.New(1 * fps),
 	}
 }
 
@@ -108,7 +108,7 @@ func (t *Thumb) SetLoading(loading bool) {
 func (t *Thumb) SetError(err error) {
 	t.hasError = err != nil
 	if err != nil {
-		t.errorText.Text = fmt.Sprintf("ERROR: %v", err)
+		t.errorTextBox.Text = fmt.Sprintf("ERROR: %v", err)
 	}
 	t.header.SetError(err)
 }
@@ -161,8 +161,8 @@ func (t *Thumb) ProcessInput(input *view.Input) {
 	r, clicks := t.header.ProcessInput(t.fullBounds, input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
 
 	t.bodyBounds = r
-	t.loadingText.ProcessInput(r)
-	t.errorText.ProcessInput(r)
+	t.loadingTextBox.ProcessInput(r)
+	t.errorTextBox.ProcessInput(r)
 
 	if !clicks.HasClicks() && input.LeftClickInBounds(t.fullBounds) {
 		input.ScheduledCallbacks = append(input.ScheduledCallbacks, t.thumbClickCallback)
@@ -209,12 +209,12 @@ func (t *Thumb) Render(fudge float32) {
 	// Only show messages if no prior data to show.
 	if !t.hasStockUpdated {
 		if t.loading {
-			t.loadingText.Render(fudge)
+			t.loadingTextBox.Render(fudge)
 			return
 		}
 
 		if t.hasError {
-			t.errorText.Render(fudge)
+			t.errorTextBox.Render(fudge)
 			return
 		}
 	}

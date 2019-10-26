@@ -19,8 +19,8 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
-	"github.com/btmura/ponzi2/internal/app/view/centeredtext"
 	"github.com/btmura/ponzi2/internal/app/view/chart"
+	"github.com/btmura/ponzi2/internal/app/view/text"
 	"github.com/btmura/ponzi2/internal/errors"
 	"github.com/btmura/ponzi2/internal/log"
 	"github.com/btmura/ponzi2/internal/matrix"
@@ -96,11 +96,11 @@ type UI struct {
 	// sidebar is the sidebar of chart thumbnails on the side.
 	sidebar *sidebar
 
-	// instructionsText is instructional text show when no chart is shown.
-	instructionsText *centeredtext.CenteredText
+	// instructionsTextBox renders instructional text when no chart is shown.
+	instructionsTextBox *text.Box
 
-	// inputSymbolText stores and renders the symbol being entered by the user.
-	inputSymbolText *centeredtext.CenteredText
+	// inputSymbolTextBox stores and renders the symbol being entered by the user.
+	inputSymbolTextBox *text.Box
 
 	// inputSymbolSubmittedCallback is called when a new symbol is entered.
 	inputSymbolSubmittedCallback func(symbol string)
@@ -171,8 +171,8 @@ func New() *UI {
 		chartRange:                      model.OneYear,
 		chartThumbRange:                 model.OneYear,
 		sidebar:                         new(sidebar),
-		instructionsText:                centeredtext.New(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER..."),
-		inputSymbolText:                 centeredtext.New(inputSymbolTextRenderer, "", centeredtext.Bubble(chartRounding, chartPadding)),
+		instructionsTextBox:             text.NewBox(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER..."),
+		inputSymbolTextBox:              text.NewBox(inputSymbolTextRenderer, "", text.Bubble(chartRounding, chartPadding)),
 		inputSymbolSubmittedCallback:    func(symbol string) {},
 		chartZoomChangeCallback:         func(zoomChange view.ZoomChange) {},
 		chartRefreshButtonClickCallback: func(symbol string) {},
@@ -356,7 +356,7 @@ func (u *UI) handleCharEvent(char rune) {
 
 	char = unicode.ToUpper(char)
 	if _, ok := acceptedChars[char]; ok {
-		u.inputSymbolText.Text += string(char)
+		u.inputSymbolTextBox.Text += string(char)
 	}
 }
 
@@ -370,16 +370,16 @@ func (u *UI) handleKeyEvent(key glfw.Key, action glfw.Action) {
 
 	switch key {
 	case glfw.KeyEscape:
-		u.inputSymbolText.Text = ""
+		u.inputSymbolTextBox.Text = ""
 
 	case glfw.KeyBackspace:
-		if l := len(u.inputSymbolText.Text); l > 0 {
-			u.inputSymbolText.Text = u.inputSymbolText.Text[:l-1]
+		if l := len(u.inputSymbolTextBox.Text); l > 0 {
+			u.inputSymbolTextBox.Text = u.inputSymbolTextBox.Text[:l-1]
 		}
 
 	case glfw.KeyEnter:
-		u.inputSymbolSubmittedCallback(u.inputSymbolText.Text)
-		u.inputSymbolText.Text = ""
+		u.inputSymbolSubmittedCallback(u.inputSymbolTextBox.Text)
+		u.inputSymbolTextBox.Text = ""
 	}
 }
 
@@ -547,8 +547,8 @@ func (u *UI) processInput() []func() {
 
 	bounds := m.chartBounds
 
-	u.instructionsText.ProcessInput(bounds)
-	u.inputSymbolText.ProcessInput(bounds)
+	u.instructionsTextBox.ProcessInput(bounds)
+	u.inputSymbolTextBox.ProcessInput(bounds)
 
 	for i := 0; i < len(u.charts); i++ {
 		ch := u.charts[i]
@@ -599,11 +599,11 @@ func (u *UI) render(fudge float32) {
 
 	// Render instructions if there are no charts to show.
 	if len(u.charts) == 0 {
-		u.instructionsText.Render(fudge)
+		u.instructionsTextBox.Render(fudge)
 	}
 
 	// Render the input symbol over the chart.
-	u.inputSymbolText.Render(fudge)
+	u.inputSymbolTextBox.Render(fudge)
 
 	// Render the sidebar thumbnails.
 	u.sidebar.Render(fudge)

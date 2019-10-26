@@ -1,4 +1,4 @@
-package centeredtext
+package text
 
 import (
 	"image"
@@ -7,8 +7,8 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
-// CenteredText draws text that is horizontally and vertically centered.
-type CenteredText struct {
+// Box draws text that is horizontally and vertically centered.
+type Box struct {
 	// textRenderer renders the text.
 	textRenderer *gfx.TextRenderer
 
@@ -29,55 +29,56 @@ type CenteredText struct {
 }
 
 // Option is an option to pass to New.
-type Option func(c *CenteredText)
+type Option func(c *Box)
 
-// New creates a new CenteredText.
-func New(textRenderer *gfx.TextRenderer, text string, opts ...Option) *CenteredText {
-	c := &CenteredText{
+// NewBox creates a new Box.
+func NewBox(textRenderer *gfx.TextRenderer, text string, opts ...Option) *Box {
+	b := &Box{
 		textRenderer: textRenderer,
 		Text:         text,
 		color:        [3]float32{1, 1, 1},
 	}
 	for _, o := range opts {
-		o(c)
+		o(b)
 	}
-	return c
+	return b
 }
 
 // Color returns an option to set the text color.
 func Color(color [3]float32) Option {
-	return func(c *CenteredText) {
-		c.color = color
+	return func(b *Box) {
+		b.color = color
 	}
 }
 
 // Bubble returns an option to configure the background bubble.
 func Bubble(rounding, padding int) Option {
-	return func(c *CenteredText) {
-		c.bubbleSpec = &rect.BubbleSpec{
+	return func(b *Box) {
+		b.bubbleSpec = &rect.BubbleSpec{
 			Rounding: rounding,
 			Padding:  padding,
 		}
 	}
 }
 
-func (c *CenteredText) ProcessInput(bounds image.Rectangle) {
-	c.size = c.textRenderer.Measure(c.Text)
-	c.pt = image.Point{
-		X: bounds.Min.X + bounds.Dx()/2 - c.size.X/2,
-		Y: bounds.Min.Y + bounds.Dy()/2 - c.size.Y/2,
+// ProcessInput processes the input.
+func (b *Box) ProcessInput(bounds image.Rectangle) {
+	b.size = b.textRenderer.Measure(b.Text)
+	b.pt = image.Point{
+		X: bounds.Min.X + bounds.Dx()/2 - b.size.X/2,
+		Y: bounds.Min.Y + bounds.Dy()/2 - b.size.Y/2,
 	}
 }
 
-// Render renders the CenteredText.
-func (c *CenteredText) Render(fudge float32) {
-	if c.Text == "" {
+// Render renders the Box.
+func (b *Box) Render(fudge float32) {
+	if b.Text == "" {
 		return
 	}
 
-	if c.bubbleSpec != nil {
-		rect.RenderBubble(c.pt, c.size, *c.bubbleSpec)
+	if b.bubbleSpec != nil {
+		rect.RenderBubble(b.pt, b.size, *b.bubbleSpec)
 	}
 
-	c.textRenderer.Render(c.Text, c.pt, c.color)
+	b.textRenderer.Render(b.Text, b.pt, b.color)
 }
