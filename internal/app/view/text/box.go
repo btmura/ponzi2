@@ -26,6 +26,9 @@ type Box struct {
 
 	// pt is the location to render the text.
 	pt image.Point
+
+	// bounds is the rectangle with global coords that should be drawn within.
+	bounds image.Rectangle
 }
 
 // Option is an option to pass to New.
@@ -61,12 +64,17 @@ func Bubble(rounding, padding int) Option {
 	}
 }
 
+// SetBounds sets the bounds with global coordinates to draw within.
+func (b *Box) SetBounds(bounds image.Rectangle) {
+	b.bounds = bounds
+}
+
 // ProcessInput processes the input.
-func (b *Box) ProcessInput(bounds image.Rectangle) {
+func (b *Box) ProcessInput() {
 	b.size = b.textRenderer.Measure(b.Text)
 	b.pt = image.Point{
-		X: bounds.Min.X + bounds.Dx()/2 - b.size.X/2,
-		Y: bounds.Min.Y + bounds.Dy()/2 - b.size.Y/2,
+		X: b.bounds.Min.X + b.bounds.Dx()/2 - b.size.X/2,
+		Y: b.bounds.Min.Y + b.bounds.Dy()/2 - b.size.Y/2,
 	}
 }
 

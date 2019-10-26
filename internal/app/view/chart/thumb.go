@@ -161,8 +161,11 @@ func (t *Thumb) ProcessInput(input *view.Input) {
 	r, clicks := t.header.ProcessInput(t.fullBounds, input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
 
 	t.bodyBounds = r
-	t.loadingTextBox.ProcessInput(r)
-	t.errorTextBox.ProcessInput(r)
+	t.loadingTextBox.SetBounds(r)
+	t.errorTextBox.SetBounds(r)
+
+	t.loadingTextBox.ProcessInput()
+	t.errorTextBox.ProcessInput()
 
 	if !clicks.HasClicks() && input.LeftClickInBounds(t.fullBounds) {
 		input.ScheduledCallbacks = append(input.ScheduledCallbacks, t.thumbClickCallback)
