@@ -143,7 +143,7 @@ func newRuneRenderer(face font.Face, m font.Metrics, r rune) *runeRenderer {
 
 	w := font.MeasureString(face, string(r))
 	rgba := image.NewRGBA(image.Rect(0, 0, w.Round(), m.Height.Round()))
-	draw.Draw(rgba, rgba.Bounds(), bg, image.ZP, draw.Src)
+	draw.Draw(rgba, rgba.Bounds(), bg, image.Point{}, draw.Src)
 
 	d := &font.Drawer{
 		Dst:  rgba,

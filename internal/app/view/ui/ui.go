@@ -275,7 +275,7 @@ func (u *UI) handleSizeEvent(width, height int) {
 	// Reset the sidebar scroll offset if the sidebar is shorter than the window.
 	m := u.metrics()
 	if m.sidebarBounds.Dy() < m.sidebarRegion.Dy() {
-		u.sidebar.sidebarScrollOffset = image.ZP
+		u.sidebar.sidebarScrollOffset = image.Point{}
 	}
 }
 
