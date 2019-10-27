@@ -108,7 +108,7 @@ func (t *Thumb) SetLoading(loading bool) {
 func (t *Thumb) SetError(err error) {
 	t.hasError = err != nil
 	if err != nil {
-		t.errorTextBox.Text = fmt.Sprintf("ERROR: %v", err)
+		t.errorTextBox.SetText(fmt.Sprintf("ERROR: %v", err))
 	}
 	t.header.SetError(err)
 }

@@ -356,7 +356,7 @@ func (u *UI) handleCharEvent(char rune) {
 
 	char = unicode.ToUpper(char)
 	if _, ok := acceptedChars[char]; ok {
-		u.inputSymbolTextBox.Text += string(char)
+		u.inputSymbolTextBox.SetText(string(char))
 	}
 }
 
@@ -370,16 +370,16 @@ func (u *UI) handleKeyEvent(key glfw.Key, action glfw.Action) {
 
 	switch key {
 	case glfw.KeyEscape:
-		u.inputSymbolTextBox.Text = ""
+		u.inputSymbolTextBox.SetText("")
 
 	case glfw.KeyBackspace:
-		if l := len(u.inputSymbolTextBox.Text); l > 0 {
-			u.inputSymbolTextBox.Text = u.inputSymbolTextBox.Text[:l-1]
+		if l := len(u.inputSymbolTextBox.Text()); l > 0 {
+			u.inputSymbolTextBox.SetText(u.inputSymbolTextBox.Text()[:l-1])
 		}
 
 	case glfw.KeyEnter:
-		u.inputSymbolSubmittedCallback(u.inputSymbolTextBox.Text)
-		u.inputSymbolTextBox.Text = ""
+		u.inputSymbolSubmittedCallback(u.inputSymbolTextBox.Text())
+		u.inputSymbolTextBox.SetText("")
 	}
 }
 

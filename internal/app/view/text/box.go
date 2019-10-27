@@ -12,8 +12,8 @@ type Box struct {
 	// textRenderer renders the text.
 	textRenderer *gfx.TextRenderer
 
-	// Text is the text to render.
-	Text string
+	// text is the text to render.
+	text string
 
 	// color is the color to render the text in.
 	color [3]float32
@@ -38,7 +38,7 @@ type Option func(c *Box)
 func NewBox(textRenderer *gfx.TextRenderer, text string, opts ...Option) *Box {
 	b := &Box{
 		textRenderer: textRenderer,
-		Text:         text,
+		text:         text,
 		color:        [3]float32{1, 1, 1},
 	}
 	for _, o := range opts {
@@ -64,6 +64,16 @@ func Bubble(rounding, padding int) Option {
 	}
 }
 
+// Text returns the text that will be shown in the box.
+func (b *Box) Text() string {
+	return b.text
+}
+
+// SetText sets the text to show in the box.
+func (b *Box) SetText(text string) {
+	b.text = text
+}
+
 // SetBounds sets the bounds with global coordinates to draw within.
 func (b *Box) SetBounds(bounds image.Rectangle) {
 	b.bounds = bounds
@@ -71,7 +81,7 @@ func (b *Box) SetBounds(bounds image.Rectangle) {
 
 // ProcessInput processes the input.
 func (b *Box) ProcessInput() {
-	b.size = b.textRenderer.Measure(b.Text)
+	b.size = b.textRenderer.Measure(b.text)
 	b.pt = image.Point{
 		X: b.bounds.Min.X + b.bounds.Dx()/2 - b.size.X/2,
 		Y: b.bounds.Min.Y + b.bounds.Dy()/2 - b.size.Y/2,
@@ -80,7 +90,7 @@ func (b *Box) ProcessInput() {
 
 // Render renders the Box.
 func (b *Box) Render(fudge float32) {
-	if b.Text == "" {
+	if b.text == "" {
 		return
 	}
 
@@ -88,5 +98,5 @@ func (b *Box) Render(fudge float32) {
 		rect.RenderBubble(b.pt, b.size, *b.bubbleSpec)
 	}
 
-	b.textRenderer.Render(b.Text, b.pt, b.color)
+	b.textRenderer.Render(b.text, b.pt, b.color)
 }

@@ -166,7 +166,7 @@ func (ch *Chart) SetLoading(loading bool) {
 func (ch *Chart) SetError(err error) {
 	ch.hasError = err != nil
 	if err != nil {
-		ch.errorTextBox.Text = fmt.Sprintf("ERROR: %v", err)
+		ch.errorTextBox.SetText(fmt.Sprintf("ERROR: %v", err))
 	}
 	ch.header.SetError(err)
 }
