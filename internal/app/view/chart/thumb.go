@@ -91,8 +91,8 @@ func NewThumb(fps int) *Thumb {
 		weeklyStochasticCursor:   new(stochasticCursor),
 		weeklyStochasticTimeline: new(timeline),
 
-		loadingTextBox: text.NewBox(thumbSymbolQuoteTextRenderer, "LOADING..."),
-		errorTextBox:   text.NewBox(thumbSymbolQuoteTextRenderer, "ERROR", text.Color(color.Orange)),
+		loadingTextBox: text.NewBox(thumbSymbolQuoteTextRenderer, "LOADING...", text.Bubble(0, thumbPadding)),
+		errorTextBox:   text.NewBox(thumbSymbolQuoteTextRenderer, "ERROR", text.Bubble(0, thumbPadding), text.Color(color.Orange)),
 		loading:        true,
 		fadeIn:         animation.New(1 * fps),
 	}
@@ -190,6 +190,12 @@ func (t *Thumb) ProcessInput(input *view.Input) {
 // Update updates the Thumb.
 func (t *Thumb) Update() (dirty bool) {
 	if t.header.Update() {
+		dirty = true
+	}
+	if t.loadingTextBox.Update() {
+		dirty = true
+	}
+	if t.errorTextBox.Update() {
 		dirty = true
 	}
 	if t.fadeIn.Update() {

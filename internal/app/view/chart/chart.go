@@ -149,8 +149,8 @@ func NewChart(fps int) *Chart {
 
 		legend: new(legend),
 
-		loadingTextBox: text.NewBox(chartSymbolQuoteTextRenderer, "LOADING..."),
-		errorTextBox:   text.NewBox(chartSymbolQuoteTextRenderer, "ERROR", text.Color(color.Orange)),
+		loadingTextBox: text.NewBox(chartSymbolQuoteTextRenderer, "LOADING...", text.Bubble(0, chartPadding)),
+		errorTextBox:   text.NewBox(chartSymbolQuoteTextRenderer, "ERROR", text.Bubble(0, chartPadding), text.Color(color.Orange)),
 		loading:        true,
 		fadeIn:         animation.New(1 * fps),
 	}
@@ -391,6 +391,12 @@ func (ch *Chart) ProcessInput(
 // Update updates the Chart.
 func (ch *Chart) Update() (dirty bool) {
 	if ch.header.Update() {
+		dirty = true
+	}
+	if ch.loadingTextBox.Update() {
+		dirty = true
+	}
+	if ch.errorTextBox.Update() {
 		dirty = true
 	}
 	if ch.fadeIn.Update() {

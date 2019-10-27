@@ -586,6 +586,14 @@ func (u *UI) update() (dirty bool) {
 		dirty = true
 	}
 
+	if u.instructionsTextBox.Update() {
+		dirty = true
+	}
+
+	if u.inputSymbolTextBox.Update() {
+		dirty = true
+	}
+
 	return dirty
 }
 
