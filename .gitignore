@@ -32,5 +32,8 @@ _testmain.go
 # Visual Studio Code Settings
 settings.json
 
-# IEX Debug Respone Dumps
+# Goland
+.idea
+
+# IEX Debug Response Dumps
 iex-*.txt
