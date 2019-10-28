@@ -35,7 +35,7 @@ type VAOVertexData struct {
 	// TexCoords is an optional slice of flattened (s, t) coords.
 	TexCoords []float32
 
-	// Colors is an optional slice of flattened (r, g, b) values.
+	// Colors is an optional slice of flattened (r, g, b, a) values.
 	Colors []float32
 
 	// Indices is a required slice of indices into all the buffers.

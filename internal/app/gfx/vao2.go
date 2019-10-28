@@ -65,7 +65,7 @@ func newVAO(data *VAOVertexData) *vao {
 		if len(data.Colors) != 0 {
 			gl.BindBuffer(gl.ARRAY_BUFFER, cbo)
 			gl.EnableVertexAttribArray(colorLocation)
-			gl.VertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
+			gl.VertexAttribPointer(colorLocation, 4, gl.FLOAT, false, 0, gl.PtrOffset(0))
 		}
 
 		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo)

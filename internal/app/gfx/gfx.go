@@ -79,7 +79,7 @@ func setFragMode(mode fragMode) {
 }
 
 func setTextColor(color TextColor) {
-	gl.Uniform3fv(textColorLocation, 1, &color[0])
+	gl.Uniform4fv(textColorLocation, 1, &color[0])
 }
 
 // SetAlpha sets the alpha amount.

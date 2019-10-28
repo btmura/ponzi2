@@ -10,12 +10,12 @@ import (
 
 type movingAverage struct {
 	renderable bool
-	color      [3]float32
+	color      [4]float32
 	line       *gfx.VAO
 	bounds     image.Rectangle
 }
 
-func newMovingAverage(color [3]float32) *movingAverage {
+func newMovingAverage(color [4]float32) *movingAverage {
 	return &movingAverage{color: color}
 }
 

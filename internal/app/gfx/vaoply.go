@@ -46,7 +46,7 @@ func readTexturedPLYVAO(r, textureReader io.Reader) *VAOVertexData {
 		if r, ok := e.Uint8s["red"]; ok {
 			g := e.Uint8s["green"]
 			b := e.Uint8s["blue"]
-			data.Colors = append(data.Colors, float32(r)/0xff, float32(g)/0xff, float32(b)/0xff)
+			data.Colors = append(data.Colors, float32(r)/0xff, float32(g)/0xff, float32(b)/0xff, 1)
 		}
 	}
 

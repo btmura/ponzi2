@@ -192,15 +192,15 @@ var _escData = map[string]*_escFile{
 
 	"/data/shader.frag": {
 		local:   "data/shader.frag",
-		size:    671,
+		size:    675,
 		modtime: 1337,
 		compressed: `
-H4sIAAAAAAAC/3yRUWv6MBTFn3M/xQVf2j8i/jvdxooPQ91eJoI42JvENNWwmCtp6jaG333EatvN0rck
-93fuuTm3c5A2U2RwMOyjICsBOolMlZH4tHh8Xo3nL/PFajafTLH/u7Kcvi1fF9Oi9v+6VpdGAJp/Ue4C
-TYI77zfCYYi5USnZHSrjMLV8M6NExg3obYVmfLfX0kYTdPLT5baRv6v4gxQ3J3RMmmwTfF/BqSbukOv9
-lscAynj1AEWhLK6RbzYmskkMQLkrED/82QAOpBLccWUCfwrxG1j2oZzYYnD54+lR8Owq5AdgrOyFo4s1
-Y2sr+XsMdVV9AX9152yiSXA+dcuxw5Z2LZP4bwZljt1Wh56tm7AjwHWr8qFnN+tuFWCP479iA2EMx58A
-AAD//1vGn32fAgAA
+H4sIAAAAAAAC/3yR0WvCMBDGn3N/xYEv7RBxRbex4sNQt5eJIA72JjFNNSzmJE3dxvB/HzXadrP0Lcn9
+vu+73HUO0maKDA6GfRRkJUAnkakyEp8XTy+r8fx1vljN5pMp9v9WltP35dti6mu317W6NALQ/JtyF2gS
+3BV5IxyGmBuVkt2hMg5TyzczSmTcgN5VaMZ3ey1tNEEnv1xuG/n7ij9IMTihY9Jkm+CHCk41cYdc77c8
+BlDGq4VX+mtUmI2JbBIDUO48UjR/DoADqQR3XJmgOIX4Ayz7VE5sMbj88fQoeHY15EdgrPTC0SWasbWV
+/COGuqq+gP+682yiSXA+dcu2wxa7lk6KbwblHHt2s+62pvRsPYgdAa7tygdvV1053vgthDEcfwMAAP//
+CQD5EqMCAAA=
 `,
 	},
 

@@ -27,7 +27,7 @@ type TextRenderer struct {
 }
 
 // TextColor is a RGB color of 3 floats from 0.0 to 1.0.
-type TextColor [3]float32
+type TextColor [4]float32
 
 type textRenderSettings struct {
 	maxWidth int

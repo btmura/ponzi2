@@ -30,7 +30,7 @@ type header struct {
 	quoteText string
 
 	// quoteColor is the color to render the quote text.
-	quoteColor [3]float32
+	quoteColor [4]float32
 
 	// symbolQuoteTextRenderer renders the symbol and quote text.
 	symbolQuoteTextRenderer *gfx.TextRenderer
@@ -127,7 +127,7 @@ func (h *header) SetLoading(loading bool) {
 }
 
 // SetError toggles the Chart's error indicator.
-func (h *header) SetError(err error ) {
+func (h *header) SetError(err error) {
 	h.hasError = err != nil
 }
 

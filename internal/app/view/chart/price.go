@@ -192,7 +192,7 @@ func priceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32) (st
 		)
 
 		// Add the colors corresponding to the vertices.
-		var c [3]float32
+		var c [4]float32
 		switch {
 		case s.Close > s.Open:
 			c = color.Green
@@ -203,14 +203,14 @@ func priceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32) (st
 		}
 
 		colors = append(colors,
-			c[0], c[1], c[2],
-			c[0], c[1], c[2],
-			c[0], c[1], c[2],
-			c[0], c[1], c[2],
-			c[0], c[1], c[2],
-			c[0], c[1], c[2],
-			c[0], c[1], c[2],
-			c[0], c[1], c[2],
+			c[0], c[1], c[2], c[3],
+			c[0], c[1], c[2], c[3],
+			c[0], c[1], c[2], c[3],
+			c[0], c[1], c[2], c[3],
+			c[0], c[1], c[2], c[3],
+			c[0], c[1], c[2], c[3],
+			c[0], c[1], c[2], c[3],
+			c[0], c[1], c[2], c[3],
 		)
 
 		// idx is function to refer to the vertices above.

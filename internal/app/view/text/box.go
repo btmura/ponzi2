@@ -16,7 +16,7 @@ type Box struct {
 	text string
 
 	// color is the color to render the text in.
-	color [3]float32
+	color [4]float32
 
 	// bubbleSpec specifies the bubble to render behind the text. Nil for none.
 	bubbleSpec *rect.BubbleSpec
@@ -42,7 +42,7 @@ func NewBox(textRenderer *gfx.TextRenderer, text string, opts ...Option) *Box {
 	b := &Box{
 		textRenderer: textRenderer,
 		text:         text,
-		color:        [3]float32{1, 1, 1},
+		color:        [4]float32{1, 1, 1, 1},
 		dirty:        true,
 	}
 	for _, o := range opts {
@@ -52,7 +52,7 @@ func NewBox(textRenderer *gfx.TextRenderer, text string, opts ...Option) *Box {
 }
 
 // Color returns an option to set the text color.
-func Color(color [3]float32) Option {
+func Color(color [4]float32) Option {
 	return func(b *Box) {
 		b.color = color
 	}

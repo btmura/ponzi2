@@ -14,14 +14,14 @@ var stochasticHorizRuleSet = vao.HorizRuleSet([]float32{0.2, 0.8}, [2]float32{0,
 
 type stochastic struct {
 	renderable   bool
-	dColor       [3]float32
+	dColor       [4]float32
 	lineKVAO     *gfx.VAO
 	lineDVAO     *gfx.VAO
 	MaxLabelSize image.Point
 	bounds       image.Rectangle
 }
 
-func newStochastic(dColor [3]float32) *stochastic {
+func newStochastic(dColor [4]float32) *stochastic {
 	return &stochastic{dColor: dColor}
 }
 

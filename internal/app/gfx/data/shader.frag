@@ -6,7 +6,7 @@
 
 layout(location = 5) uniform int fragMode;
 layout(location = 6) uniform sampler2D texture;
-layout(location = 7) uniform vec3 textColor;
+layout(location = 7) uniform vec4 textColor;
 layout(location = 8) uniform float alpha;
 
 in vec4 color;
@@ -25,7 +25,7 @@ void main(void) {
 		break;
 
 	case FRAG_TEXT_COLOR_MODE:
-		fragColor = vec4(textColor, texture2D(texture, texCoord).r);
+		fragColor = vec4(textColor.rgb, texture2D(texture, texCoord).r);
 		break;
 	}
 
