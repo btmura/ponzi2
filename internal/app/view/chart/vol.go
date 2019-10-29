@@ -135,30 +135,24 @@ func volumeBarsVAO(ds []*model.TradingSession, maxVolume int) *gfx.VAO {
 		)
 
 		// Add the colors corresponding to the volume bar.
+		add := func(c [4]float32) {
+			data.Colors = append(data.Colors,
+				c[0], c[1], c[2], c[3],
+				c[0], c[1], c[2], c[3],
+				c[0], c[1], c[2], c[3],
+				c[0], c[1], c[2], c[3],
+			)
+		}
+
 		switch {
 		case s.Close > s.Open:
-			data.Colors = append(data.Colors,
-				color.Green[0], color.Green[1], color.Green[2],
-				color.Green[0], color.Green[1], color.Green[2],
-				color.Green[0], color.Green[1], color.Green[2],
-				color.Green[0], color.Green[1], color.Green[2],
-			)
+			add(color.Green)
 
 		case s.Close < s.Open:
-			data.Colors = append(data.Colors,
-				color.Red[0], color.Red[1], color.Red[2],
-				color.Red[0], color.Red[1], color.Red[2],
-				color.Red[0], color.Red[1], color.Red[2],
-				color.Red[0], color.Red[1], color.Red[2],
-			)
+			add(color.Red)
 
 		default:
-			data.Colors = append(data.Colors,
-				color.Yellow[0], color.Yellow[1], color.Yellow[2],
-				color.Yellow[0], color.Yellow[1], color.Yellow[2],
-				color.Yellow[0], color.Yellow[1], color.Yellow[2],
-				color.Yellow[0], color.Yellow[1], color.Yellow[2],
-			)
+			add(color.Yellow)
 		}
 
 		// idx is function to refer to the vertices above.
