@@ -3,6 +3,7 @@ package chart
 import (
 	"image"
 
+	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
@@ -69,7 +70,7 @@ func (p *priceCursor) Render(fudge float32) {
 	}
 
 	rect.RenderBubble(tp, l.size, axisLabelBubbleSpec)
-	axisLabelTextRenderer.Render(l.text, tp, color.White)
+	axisLabelTextRenderer.Render(l.text, tp, gfx.TextColor(color.White))
 }
 
 func (p *priceCursor) Close() {

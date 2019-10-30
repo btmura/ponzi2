@@ -3,6 +3,7 @@ package chart
 import (
 	"image"
 
+	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/color"
 )
@@ -74,7 +75,7 @@ func (p *priceAxis) Render(fudge float32) {
 				break
 			}
 
-			axisLabelTextRenderer.Render(l.text, pt, color.White)
+			axisLabelTextRenderer.Render(l.text, pt, gfx.TextColor(color.White))
 		}
 
 		pt = pt.Sub(dp)

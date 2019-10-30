@@ -280,7 +280,7 @@ func (h *header) Render(fudge float32) {
 	{
 		pt := pt
 		pt.X += h.rounding
-		pt.X += h.symbolQuoteTextRenderer.Render(h.symbol, pt, color.White)
+		pt.X += h.symbolQuoteTextRenderer.Render(h.symbol, pt, gfx.TextColor(color.White))
 		pt.X += h.padding
 
 		if w := buttonEdge - pt.X; w > 0 {
