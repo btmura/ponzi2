@@ -6,7 +6,6 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/color"
-	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
 // volumeCursor renders crosshairs at the mouse pointer
@@ -73,7 +72,7 @@ func (v *volumeCursor) Render(fudge float32) {
 		Y: v.labelRect.Min.Y + int(float32(v.labelRect.Dy())*l.percent) - l.size.Y/2,
 	}
 
-	rect.RenderBubble(tp, l.size, axisLabelBubbleSpec)
+	axisLabelBubble.Render(tp, l.size)
 	axisLabelTextRenderer.Render(l.text, tp, gfx.TextColor(color.White))
 }
 

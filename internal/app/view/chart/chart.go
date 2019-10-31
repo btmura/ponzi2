@@ -31,7 +31,7 @@ var (
 )
 
 var (
-	axisLabelBubbleSpec   = rect.BubbleSpec{Rounding: 6, Padding: 4}
+	axisLabelBubble       = rect.Bubble{Rounding: 6, Padding: 4}
 	axisLabelTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
 )
 

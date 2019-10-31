@@ -54,16 +54,16 @@ func (s *stochasticCursor) Render(fudge float32) {
 	}
 
 	br := image.Rectangle{Min: tp, Max: tp.Add(l.size)}
-	br = br.Inset(-axisLabelBubbleSpec.Padding)
+	br = br.Inset(-axisLabelBubble.Padding)
 
 	if s.mousePos.In(br) {
 		tp.X = s.labelRect.Min.X
 		br = image.Rectangle{Min: tp, Max: tp.Add(l.size)}
-		br = br.Inset(-axisLabelBubbleSpec.Padding)
+		br = br.Inset(-axisLabelBubble.Padding)
 	}
 
-	rect.FillRoundedRect(br, axisLabelBubbleSpec.Rounding)
-	rect.StrokeRoundedRect(br, axisLabelBubbleSpec.Rounding)
+	rect.FillRoundedRect(br, axisLabelBubble.Rounding)
+	rect.StrokeRoundedRect(br, axisLabelBubble.Rounding)
 
 	axisLabelTextRenderer.Render(l.text, tp, gfx.TextColor(color.White))
 }

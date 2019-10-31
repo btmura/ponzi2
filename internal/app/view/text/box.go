@@ -18,8 +18,8 @@ type Box struct {
 	// color is the color to render the text in.
 	color [4]float32
 
-	// bubbleSpec specifies the bubble to render behind the text. Nil for none.
-	bubbleSpec *rect.BubbleSpec
+	// bubble is the bubble to render behind the text. Nil for none.
+	bubble *rect.Bubble
 
 	// bounds is the rectangle with global coords that should be drawn within.
 	bounds image.Rectangle
@@ -61,7 +61,7 @@ func Color(color [4]float32) Option {
 // Bubble returns an option to configure the background bubble.
 func Bubble(rounding, padding int) Option {
 	return func(b *Box) {
-		b.bubbleSpec = &rect.BubbleSpec{
+		b.bubble = &rect.Bubble{
 			Rounding: rounding,
 			Padding:  padding,
 		}
@@ -103,14 +103,14 @@ func (b *Box) Update() (dirty bool) {
 	b.size = b.textRenderer.Measure(b.text)
 
 	totalWidth := b.size.X
-	if b.bubbleSpec != nil {
-		totalWidth += b.bubbleSpec.Padding
+	if b.bubble != nil {
+		totalWidth += b.bubble.Padding
 	}
 
 	if totalWidth > b.bounds.Dx() {
 		b.size.X = b.bounds.Dx()
-		if b.bubbleSpec != nil {
-			b.size.X -= b.bubbleSpec.Padding * 2
+		if b.bubble != nil {
+			b.size.X -= b.bubble.Padding * 2
 		}
 	}
 
@@ -134,8 +134,8 @@ func (b *Box) Render(fudge float32) {
 		return
 	}
 
-	if b.bubbleSpec != nil {
-		rect.RenderBubble(b.pt, b.size, *b.bubbleSpec)
+	if b.bubble != nil {
+		b.bubble.Render(b.pt, b.size)
 	}
 
 	b.textRenderer.Render(b.text, b.pt, b.color, gfx.TextRenderMaxWidth(b.size.X))

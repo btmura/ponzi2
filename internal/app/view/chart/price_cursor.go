@@ -6,7 +6,6 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/color"
-	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
 // priceCursor renders crosshairs at the mouse pointer
@@ -69,7 +68,7 @@ func (p *priceCursor) Render(fudge float32) {
 		Y: p.labelRect.Min.Y + int(float32(p.labelRect.Dy())*perc) - l.size.Y/2,
 	}
 
-	rect.RenderBubble(tp, l.size, axisLabelBubbleSpec)
+	axisLabelBubble.Render(tp, l.size)
 	axisLabelTextRenderer.Render(l.text, tp, gfx.TextColor(color.White))
 }
 

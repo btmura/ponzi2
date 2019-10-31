@@ -8,7 +8,6 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/color"
-	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/errors"
 )
 
@@ -93,7 +92,7 @@ func (t *timelineCursor) Render(fudge float32) {
 		Y: t.labelRect.Min.Y + t.labelRect.Dy()/2 - size.Y/2,
 	}
 
-	rect.RenderBubble(tp, size, axisLabelBubbleSpec)
+	axisLabelBubble.Render(tp, size)
 	axisLabelTextRenderer.Render(text, tp, gfx.TextColor(color.White))
 }
 

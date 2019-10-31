@@ -10,7 +10,6 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/color"
-	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
 type legend struct {
@@ -81,7 +80,7 @@ func (l *legend) renderMATrackLineLegend() {
 		Y: l.labelRect.Min.Y + l.labelRect.Dy() - int(math.Floor(float64(mal.size.Y)*float64(2.4))),
 	}
 
-	rect.RenderBubble(MAp, mal.size, axisLabelBubbleSpec)
+	axisLabelBubble.Render(MAp, mal.size)
 	axisLabelTextRenderer.Render(mal.text, MAp, gfx.TextColor(color.White))
 }
 
@@ -111,7 +110,7 @@ func (l *legend) renderCandleTrackLineLegend() {
 		Y: l.labelRect.Min.Y + l.labelRect.Dy() - pl.size.Y,
 	}
 
-	rect.RenderBubble(ohlcvp, pl.size, axisLabelBubbleSpec)
+	axisLabelBubble.Render(ohlcvp, pl.size)
 	axisLabelTextRenderer.Render(pl.text, ohlcvp, gfx.TextColor(color.White))
 }
 

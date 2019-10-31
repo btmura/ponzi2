@@ -2,21 +2,22 @@ package rect
 
 import "image"
 
-// TODO(btmura): change from bubbleSpec type to bubble type
-type BubbleSpec struct {
-	// Rounding is how much rounding of the bubble's rounded rectangle.
+// Bubble is a rounded rectangle with a fill and stroke color.
+type Bubble struct {
+	// Rounding is how rounded the corners of the bubble are.
 	Rounding int
 
-	// Padding is how much padding of the bubble's text.
+	// Padding is how much padding to add around the given bounds.
 	Padding int
 }
 
-func RenderBubble(pt, sz image.Point, bs BubbleSpec) {
+// Render renders the bubble.
+func (b *Bubble) Render(pt, sz image.Point) {
 	br := image.Rectangle{
 		Min: pt,
 		Max: pt.Add(sz),
 	}
-	br = br.Inset(-bs.Padding)
-	FillRoundedRect(br, bs.Rounding)
-	StrokeRoundedRect(br, bs.Rounding)
+	br = br.Inset(-b.Padding)
+	FillRoundedRect(br, b.Rounding)
+	StrokeRoundedRect(br, b.Rounding)
 }
