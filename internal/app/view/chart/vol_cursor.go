@@ -67,13 +67,17 @@ func (v *volumeCursor) Render(fudge float32) {
 
 	perc := float32(v.mousePos.Y-v.volRect.Min.Y) / float32(v.volRect.Dy())
 	l := makeVolumeLabel(v.maxVolume, perc)
-	tp := image.Point{
+	textPt := image.Point{
 		X: v.labelRect.Max.X - l.size.X,
 		Y: v.labelRect.Min.Y + int(float32(v.labelRect.Dy())*l.percent) - l.size.Y/2,
 	}
+	textRect := image.Rectangle{
+		Min: textPt,
+		Max: textPt.Add(l.size),
+	}
 
-	axisLabelBubble.Render(tp, l.size)
-	axisLabelTextRenderer.Render(l.text, tp, gfx.TextColor(color.White))
+	axisLabelBubble.Render(textRect)
+	axisLabelTextRenderer.Render(l.text, textPt, gfx.TextColor(color.White))
 }
 
 func (v *volumeCursor) Close() {

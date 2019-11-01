@@ -75,13 +75,17 @@ func (l *legend) renderMATrackLineLegend() {
 	mal.text = l.chartLegendMALabelText(ms25[i], ms50[i], ms200[i])
 	mal.size = axisLabelTextRenderer.Measure(mal.text)
 
-	MAp := image.Point{
+	textPt := image.Point{
 		X: l.labelRect.Min.X + l.labelRect.Dx()/2 - mal.size.X/2,
 		Y: l.labelRect.Min.Y + l.labelRect.Dy() - int(math.Floor(float64(mal.size.Y)*float64(2.4))),
 	}
+	textRect := image.Rectangle{
+		Min: textPt,
+		Max: textPt.Add(mal.size),
+	}
 
-	axisLabelBubble.Render(MAp, mal.size)
-	axisLabelTextRenderer.Render(mal.text, MAp, gfx.TextColor(color.White))
+	axisLabelBubble.Render(textRect)
+	axisLabelTextRenderer.Render(mal.text, textPt, gfx.TextColor(color.White))
 }
 
 func (l *legend) renderCandleTrackLineLegend() {
@@ -105,13 +109,17 @@ func (l *legend) renderCandleTrackLineLegend() {
 	pl.text = l.chartLegendCandleLabelText(ts[i])
 	pl.size = axisLabelTextRenderer.Measure(pl.text)
 
-	ohlcvp := image.Point{
+	textPt := image.Point{
 		X: l.labelRect.Min.X + l.labelRect.Dx()/2 - pl.size.X/2,
 		Y: l.labelRect.Min.Y + l.labelRect.Dy() - pl.size.Y,
 	}
+	textRect := image.Rectangle{
+		Min: textPt,
+		Max: textPt.Add(pl.size),
+	}
 
-	axisLabelBubble.Render(ohlcvp, pl.size)
-	axisLabelTextRenderer.Render(pl.text, ohlcvp, gfx.TextColor(color.White))
+	axisLabelBubble.Render(textRect)
+	axisLabelTextRenderer.Render(pl.text, textPt, gfx.TextColor(color.White))
 }
 
 type legendLabel struct {

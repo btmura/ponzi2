@@ -24,11 +24,8 @@ type Box struct {
 	// bounds is the rectangle with global coords that should be drawn within.
 	bounds image.Rectangle
 
-	// size is the size of the text that will be rendered which may not be all the text.
-	size image.Point
-
-	// pt is the location to render the text.
-	pt image.Point
+	// adjustedBounds is the adjusted bounds shrink-wrapped around the text.
+	adjustedBounds image.Rectangle
 
 	// dirty is true if the text or bounds has changed and requires an update.
 	dirty bool
@@ -100,23 +97,27 @@ func (b *Box) Update() (dirty bool) {
 		return false
 	}
 
-	b.size = b.textRenderer.Measure(b.text)
+	textSize := b.textRenderer.Measure(b.text)
 
-	totalWidth := b.size.X
+	totalWidth := textSize.X
 	if b.bubble != nil {
 		totalWidth += b.bubble.Padding
 	}
 
 	if totalWidth > b.bounds.Dx() {
-		b.size.X = b.bounds.Dx()
+		textSize.X = b.bounds.Dx()
 		if b.bubble != nil {
-			b.size.X -= b.bubble.Padding * 2
+			textSize.X -= b.bubble.Padding * 2
 		}
 	}
 
-	b.pt = image.Point{
-		X: b.bounds.Min.X + b.bounds.Dx()/2 - b.size.X/2,
-		Y: b.bounds.Min.Y + b.bounds.Dy()/2 - b.size.Y/2,
+	textPt := image.Point{
+		X: b.bounds.Min.X + b.bounds.Dx()/2 - textSize.X/2,
+		Y: b.bounds.Min.Y + b.bounds.Dy()/2 - textSize.Y/2,
+	}
+	b.adjustedBounds = image.Rectangle{
+		Min: textPt,
+		Max: textPt.Add(textSize),
 	}
 
 	b.dirty = false
@@ -135,8 +136,8 @@ func (b *Box) Render(fudge float32) {
 	}
 
 	if b.bubble != nil {
-		b.bubble.Render(b.pt, b.size)
+		b.bubble.Render(b.adjustedBounds)
 	}
 
-	b.textRenderer.Render(b.text, b.pt, b.color, gfx.TextRenderMaxWidth(b.size.X))
+	b.textRenderer.Render(b.text, b.adjustedBounds.Min, b.color, gfx.TextRenderMaxWidth(b.adjustedBounds.Dx()))
 }

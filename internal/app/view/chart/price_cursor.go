@@ -63,13 +63,17 @@ func (p *priceCursor) Render(fudge float32) {
 	v := p.priceRange[0] + (p.priceRange[1]-p.priceRange[0])*perc
 	l := makePriceLabel(v)
 
-	tp := image.Point{
+	textPt := image.Point{
 		X: p.labelRect.Max.X - l.size.X,
 		Y: p.labelRect.Min.Y + int(float32(p.labelRect.Dy())*perc) - l.size.Y/2,
 	}
+	textRect := image.Rectangle{
+		Min: textPt,
+		Max: textPt.Add(l.size),
+	}
 
-	axisLabelBubble.Render(tp, l.size)
-	axisLabelTextRenderer.Render(l.text, tp, gfx.TextColor(color.White))
+	axisLabelBubble.Render(textRect)
+	axisLabelTextRenderer.Render(l.text, textPt, gfx.TextColor(color.White))
 }
 
 func (p *priceCursor) Close() {
