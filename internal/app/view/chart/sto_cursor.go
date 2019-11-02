@@ -5,7 +5,6 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/view/color"
-	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
 // stochasticCursor renders crosshairs at the mouse pointer
@@ -53,18 +52,16 @@ func (s *stochasticCursor) Render(fudge float32) {
 		Y: s.labelRect.Min.Y + int(float32(s.labelRect.Dy())*l.percent) - l.size.Y/2,
 	}
 
-	br := image.Rectangle{Min: tp, Max: tp.Add(l.size)}
-	br = br.Inset(-axisLabelBubble.Padding)
+	bubbleRect := image.Rectangle{Min: tp, Max: tp.Add(l.size)}
+	bubbleRect = bubbleRect.Inset(-axisLabelPadding)
 
-	if s.mousePos.In(br) {
+	if s.mousePos.In(bubbleRect) {
 		tp.X = s.labelRect.Min.X
-		br = image.Rectangle{Min: tp, Max: tp.Add(l.size)}
-		br = br.Inset(-axisLabelBubble.Padding)
+		bubbleRect = image.Rectangle{Min: tp, Max: tp.Add(l.size)}
+		bubbleRect = bubbleRect.Inset(-axisLabelPadding)
 	}
 
-	rect.FillRoundedRect(br, axisLabelBubble.Rounding)
-	rect.StrokeRoundedRect(br, axisLabelBubble.Rounding)
-
+	axisLabelBubble.Render(bubbleRect)
 	axisLabelTextRenderer.Render(l.text, tp, gfx.TextColor(color.White))
 }
 

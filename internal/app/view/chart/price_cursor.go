@@ -67,12 +67,13 @@ func (p *priceCursor) Render(fudge float32) {
 		X: p.labelRect.Max.X - l.size.X,
 		Y: p.labelRect.Min.Y + int(float32(p.labelRect.Dy())*perc) - l.size.Y/2,
 	}
-	textRect := image.Rectangle{
+	bubbleRect := image.Rectangle{
 		Min: textPt,
 		Max: textPt.Add(l.size),
 	}
+	bubbleRect = bubbleRect.Inset(-axisLabelPadding)
 
-	axisLabelBubble.Render(textRect)
+	axisLabelBubble.Render(bubbleRect)
 	axisLabelTextRenderer.Render(l.text, textPt, gfx.TextColor(color.White))
 }
 

@@ -71,12 +71,13 @@ func (v *volumeCursor) Render(fudge float32) {
 		X: v.labelRect.Max.X - l.size.X,
 		Y: v.labelRect.Min.Y + int(float32(v.labelRect.Dy())*l.percent) - l.size.Y/2,
 	}
-	textRect := image.Rectangle{
+	bubbleRect := image.Rectangle{
 		Min: textPt,
 		Max: textPt.Add(l.size),
 	}
+	bubbleRect = bubbleRect.Inset(-axisLabelPadding)
 
-	axisLabelBubble.Render(textRect)
+	axisLabelBubble.Render(bubbleRect)
 	axisLabelTextRenderer.Render(l.text, textPt, gfx.TextColor(color.White))
 }
 

@@ -79,12 +79,13 @@ func (l *legend) renderMATrackLineLegend() {
 		X: l.labelRect.Min.X + l.labelRect.Dx()/2 - mal.size.X/2,
 		Y: l.labelRect.Min.Y + l.labelRect.Dy() - int(math.Floor(float64(mal.size.Y)*float64(2.4))),
 	}
-	textRect := image.Rectangle{
+	bubbleRect := image.Rectangle{
 		Min: textPt,
 		Max: textPt.Add(mal.size),
 	}
+	bubbleRect = bubbleRect.Inset(-axisLabelPadding)
 
-	axisLabelBubble.Render(textRect)
+	axisLabelBubble.Render(bubbleRect)
 	axisLabelTextRenderer.Render(mal.text, textPt, gfx.TextColor(color.White))
 }
 
@@ -118,7 +119,7 @@ func (l *legend) renderCandleTrackLineLegend() {
 		Max: textPt.Add(pl.size),
 	}
 
-	axisLabelBubble.Render(textRect)
+	axisLabelBubble.Render(textRect.Inset(-axisLabelPadding))
 	axisLabelTextRenderer.Render(pl.text, textPt, gfx.TextColor(color.White))
 }
 

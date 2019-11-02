@@ -4,7 +4,6 @@ import (
 	"image"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
-	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
 // Box draws text that is horizontally and vertically centered.
@@ -17,9 +16,6 @@ type Box struct {
 
 	// color is the color to render the text in.
 	color [4]float32
-
-	// bubble is the bubble to render behind the text. Nil for none.
-	bubble *rect.Bubble
 
 	// bounds is the rectangle with global coords that should be drawn within.
 	bounds image.Rectangle
@@ -52,16 +48,6 @@ func NewBox(textRenderer *gfx.TextRenderer, text string, opts ...Option) *Box {
 func Color(color [4]float32) Option {
 	return func(b *Box) {
 		b.color = color
-	}
-}
-
-// Bubble returns an option to configure the background bubble.
-func Bubble(rounding, padding int) Option {
-	return func(b *Box) {
-		b.bubble = &rect.Bubble{
-			Rounding: rounding,
-			Padding:  padding,
-		}
 	}
 }
 
@@ -98,17 +84,8 @@ func (b *Box) Update() (dirty bool) {
 	}
 
 	textSize := b.textRenderer.Measure(b.text)
-
-	totalWidth := textSize.X
-	if b.bubble != nil {
-		totalWidth += b.bubble.Padding
-	}
-
-	if totalWidth > b.bounds.Dx() {
+	if textSize.X > b.bounds.Dx() {
 		textSize.X = b.bounds.Dx()
-		if b.bubble != nil {
-			textSize.X -= b.bubble.Padding * 2
-		}
 	}
 
 	textPt := image.Point{
@@ -133,10 +110,6 @@ func (b *Box) Render(fudge float32) {
 
 	if b.bounds.Empty() {
 		return
-	}
-
-	if b.bubble != nil {
-		b.bubble.Render(b.adjustedBounds)
 	}
 
 	b.textRenderer.Render(b.text, b.adjustedBounds.Min, b.color, gfx.TextRenderMaxWidth(b.adjustedBounds.Dx()))

@@ -59,11 +59,6 @@ const (
 
 const viewPadding = 10
 
-const (
-	chartRounding = 10
-	chartPadding  = 5
-)
-
 var inputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
 
 func init() {
@@ -172,7 +167,7 @@ func New() *UI {
 		chartThumbRange:                 model.OneYear,
 		sidebar:                         new(sidebar),
 		instructionsTextBox:             text.NewBox(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER..."),
-		inputSymbolTextBox:              text.NewBox(inputSymbolTextRenderer, "", text.Bubble(chartRounding, chartPadding)),
+		inputSymbolTextBox:              text.NewBox(inputSymbolTextRenderer, ""),
 		inputSymbolSubmittedCallback:    func(symbol string) {},
 		chartZoomChangeCallback:         func(zoomChange view.ZoomChange) {},
 		chartRefreshButtonClickCallback: func(symbol string) {},
@@ -356,7 +351,7 @@ func (u *UI) handleCharEvent(char rune) {
 
 	char = unicode.ToUpper(char)
 	if _, ok := acceptedChars[char]; ok {
-		u.inputSymbolTextBox.SetText(string(char))
+		u.inputSymbolTextBox.SetText(u.inputSymbolTextBox.Text() + string(char))
 	}
 }
 

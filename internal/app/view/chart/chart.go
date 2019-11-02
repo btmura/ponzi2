@@ -21,8 +21,9 @@ import (
 //go:generate esc -o bindata.go -pkg chart -include ".*(ply|png)" -modtime 1337 -private data
 
 const (
-	chartRounding = 10
-	chartPadding  = 5
+	chartRounding    = 10
+	chartPadding     = 5
+	axisLabelPadding = 4
 )
 
 var (
@@ -31,7 +32,7 @@ var (
 )
 
 var (
-	axisLabelBubble       = rect.Bubble{Rounding: 6, Padding: 4}
+	axisLabelBubble       = rect.Bubble{Rounding: 6}
 	axisLabelTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
 )
 
@@ -149,8 +150,8 @@ func NewChart(fps int) *Chart {
 
 		legend: new(legend),
 
-		loadingTextBox: text.NewBox(chartSymbolQuoteTextRenderer, "LOADING...", text.Bubble(0, chartPadding)),
-		errorTextBox:   text.NewBox(chartSymbolQuoteTextRenderer, "ERROR", text.Bubble(0, chartPadding), text.Color(color.Orange)),
+		loadingTextBox: text.NewBox(chartSymbolQuoteTextRenderer, "LOADING..."),
+		errorTextBox:   text.NewBox(chartSymbolQuoteTextRenderer, "ERROR", text.Color(color.Orange)),
 		loading:        true,
 		fadeIn:         animation.New(1 * fps),
 	}

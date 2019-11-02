@@ -91,12 +91,13 @@ func (t *timelineCursor) Render(fudge float32) {
 		X: t.mousePos.X - textSize.X/2,
 		Y: t.labelRect.Min.Y + t.labelRect.Dy()/2 - textSize.Y/2,
 	}
-	textRect := image.Rectangle{
+	bubbleRect := image.Rectangle{
 		Min: textPt,
 		Max: textPt.Add(textSize),
 	}
+	bubbleRect = bubbleRect.Inset(-axisLabelPadding)
 
-	axisLabelBubble.Render(textRect)
+	axisLabelBubble.Render(bubbleRect)
 	axisLabelTextRenderer.Render(text, textPt, gfx.TextColor(color.White))
 }
 
