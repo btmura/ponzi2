@@ -37,12 +37,12 @@ type Bubble struct {
 
 // Render renders the bubble.
 func (b *Bubble) Render(bounds image.Rectangle) {
-	FillRoundedRect(bounds, b.Rounding)
-	StrokeRoundedRect(bounds, b.Rounding)
+	fillRoundedRect(bounds, b.Rounding)
+	strokeRoundedRect(bounds, b.Rounding)
 }
 
-// FillRoundedRect renders a filled rounded rectangle within r.
-func FillRoundedRect(r image.Rectangle, rounding int) {
+// fillRoundedRect renders a filled rounded rectangle within r.
+func fillRoundedRect(r image.Rectangle, rounding int) {
 	// [+] Render 2 overlapping rects to fill in everything except the corners.
 
 	// 1. [|] Render filled rect from bottom to top but less on the X-Axis.
@@ -57,8 +57,8 @@ func FillRoundedRect(r image.Rectangle, rounding int) {
 	renderRoundedRectCorners(r, roundedCornerNWFaces, rounding)
 }
 
-// StrokeRoundedRect renders a stroked rounded rectangle within r.
-func StrokeRoundedRect(r image.Rectangle, rounding int) {
+// strokeRoundedRect renders a stroked rounded rectangle within r.
+func strokeRoundedRect(r image.Rectangle, rounding int) {
 	// TOP Border
 	hMinX, hMaxX := r.Min.X+rounding-gapFudge, r.Max.X-rounding+gapFudge
 	gfx.SetModelMatrixRect(image.Rect(hMinX, r.Max.Y, hMaxX, r.Max.Y))
@@ -81,8 +81,8 @@ func StrokeRoundedRect(r image.Rectangle, rounding int) {
 	renderRoundedRectCorners(r, roundedCornerNWEdges, rounding)
 }
 
-// renderRoundedRectCorners is a helper function for FillRoundedRect
-// and StrokeRoundedRect that renders a VAO at r's corners.
+// renderRoundedRectCorners is a helper function for fillRoundedRect
+// and strokeRoundedRect that renders a VAO at r's corners.
 func renderRoundedRectCorners(r image.Rectangle, nwCornerVAO *gfx.VAO, rounding int) {
 	// NORTHWEST Corner
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y-rounding, r.Min.X+rounding, r.Max.Y))

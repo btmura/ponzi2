@@ -43,6 +43,10 @@ var (
 
 // Chart shows a stock chart for a single stock.
 type Chart struct {
+	// frameBubble is the border around the entire chart.
+	frameBubble *rect.Bubble
+
+	// header renders the header with the symbol, quote, and buttons.
 	header *header
 
 	prices        *price
@@ -111,6 +115,7 @@ type Chart struct {
 // NewChart creates a new Chart.
 func NewChart(fps int) *Chart {
 	return &Chart{
+		frameBubble: &rect.Bubble{Rounding: chartRounding},
 		header: newHeader(&headerArgs{
 			SymbolQuoteTextRenderer: chartSymbolQuoteTextRenderer,
 			QuotePrinter:            chartQuotePrinter,
@@ -408,10 +413,7 @@ func (ch *Chart) Update() (dirty bool) {
 
 // Render renders the Chart.
 func (ch *Chart) Render(fudge float32) {
-	// Render the border around the chart.
-	rect.StrokeRoundedRect(ch.fullBounds, chartRounding)
-
-	// Render the header and the line below it.
+	ch.frameBubble.Render(ch.fullBounds)
 	ch.header.Render(fudge)
 
 	r := ch.bodyBounds

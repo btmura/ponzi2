@@ -29,6 +29,9 @@ var (
 
 // Thumb shows a thumbnail for a stock.
 type Thumb struct {
+	// frameBubble is the border around the entire thumb.
+	frameBubble *rect.Bubble
+
 	// header renders the header with the symbol, quote, and buttons.
 	header *header
 
@@ -74,6 +77,8 @@ type Thumb struct {
 // NewThumb creates a Thumb.
 func NewThumb(fps int) *Thumb {
 	return &Thumb{
+		frameBubble: &rect.Bubble{Rounding: thumbRounding},
+
 		header: newHeader(&headerArgs{
 			SymbolQuoteTextRenderer: thumbSymbolQuoteTextRenderer,
 			QuotePrinter:            thumbQuotePrinter,
@@ -206,10 +211,7 @@ func (t *Thumb) Update() (dirty bool) {
 
 // Render renders the Thumb.
 func (t *Thumb) Render(fudge float32) {
-	// Render the border around the chart.
-	rect.StrokeRoundedRect(t.fullBounds, thumbRounding)
-
-	// Render the header and the line below it.
+	t.frameBubble.Render(t.fullBounds)
 	t.header.Render(fudge)
 
 	r := t.bodyBounds
