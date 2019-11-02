@@ -29,6 +29,18 @@ var (
 // gapFudge is how much to extend the borders to close gaps in OpenGL rendering.
 const gapFudge = 2
 
+// Bubble is a rounded rectangle with a fill and stroke color.
+type Bubble struct {
+	// Rounding is how rounded the corners of the bubble are.
+	Rounding int
+}
+
+// Render renders the bubble.
+func (b *Bubble) Render(bounds image.Rectangle) {
+	FillRoundedRect(bounds, b.Rounding)
+	StrokeRoundedRect(bounds, b.Rounding)
+}
+
 // FillRoundedRect renders a filled rounded rectangle within r.
 func FillRoundedRect(r image.Rectangle, rounding int) {
 	// [+] Render 2 overlapping rects to fill in everything except the corners.
