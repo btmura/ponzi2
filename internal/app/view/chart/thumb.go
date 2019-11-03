@@ -18,8 +18,9 @@ import (
 )
 
 const (
-	thumbRounding = 6
-	thumbPadding  = 2
+	thumbRounding       = 6
+	thumbSectionPadding = 2
+	thumbTextPadding    = 10
 )
 
 var (
@@ -84,7 +85,7 @@ func NewThumb(fps int) *Thumb {
 			QuotePrinter:            thumbQuotePrinter,
 			ShowRemoveButton:        true,
 			Rounding:                thumbRounding,
-			Padding:                 thumbPadding,
+			Padding:                 thumbSectionPadding,
 			FPS:                     fps,
 		}),
 
@@ -96,8 +97,8 @@ func NewThumb(fps int) *Thumb {
 		weeklyStochasticCursor:   new(stochasticCursor),
 		weeklyStochasticTimeline: new(timeline),
 
-		loadingTextBox: text.NewBox(thumbSymbolQuoteTextRenderer, "LOADING..."),
-		errorTextBox:   text.NewBox(thumbSymbolQuoteTextRenderer, "ERROR", text.Color(color.Orange)),
+		loadingTextBox: text.NewBox(thumbSymbolQuoteTextRenderer, "LOADING...", text.Padding(thumbTextPadding)),
+		errorTextBox:   text.NewBox(thumbSymbolQuoteTextRenderer, "ERROR", text.Color(color.Orange), text.Padding(thumbTextPadding)),
 		loading:        true,
 		fadeIn:         animation.New(1 * fps),
 	}
@@ -179,7 +180,7 @@ func (t *Thumb) ProcessInput(input *view.Input) {
 
 	rects := rect.Slice(r, 0.5)
 	for i := range rects {
-		rects[i] = rects[i].Inset(thumbPadding)
+		rects[i] = rects[i].Inset(thumbSectionPadding)
 	}
 
 	dr, wr := rects[1], rects[0]

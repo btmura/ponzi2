@@ -17,6 +17,9 @@ type Box struct {
 	// color is the color to render the text in.
 	color [4]float32
 
+	// padding is the padding around the text.
+	padding int
+
 	// bounds is the rectangle with global coords that should be drawn within.
 	bounds image.Rectangle
 
@@ -30,6 +33,20 @@ type Box struct {
 // Option is an option to pass to New.
 type Option func(c *Box)
 
+// Color returns an option to set the text color.
+func Color(color [4]float32) Option {
+	return func(b *Box) {
+		b.color = color
+	}
+}
+
+// Padding returns an option to set the padding.
+func Padding(padding int) Option {
+	return func(b *Box) {
+		b.padding = padding
+	}
+}
+
 // NewBox creates a new Box.
 func NewBox(textRenderer *gfx.TextRenderer, text string, opts ...Option) *Box {
 	b := &Box{
@@ -42,13 +59,6 @@ func NewBox(textRenderer *gfx.TextRenderer, text string, opts ...Option) *Box {
 		o(b)
 	}
 	return b
-}
-
-// Color returns an option to set the text color.
-func Color(color [4]float32) Option {
-	return func(b *Box) {
-		b.color = color
-	}
 }
 
 // Text returns the text that will be shown in the box.
@@ -84,8 +94,8 @@ func (b *Box) Update() (dirty bool) {
 	}
 
 	textSize := b.textRenderer.Measure(b.text)
-	if textSize.X > b.bounds.Dx() {
-		textSize.X = b.bounds.Dx()
+	if textSize.X > b.bounds.Dx()-b.padding {
+		textSize.X = b.bounds.Dx() - b.padding
 	}
 
 	textPt := image.Point{

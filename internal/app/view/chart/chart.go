@@ -21,15 +21,17 @@ import (
 //go:generate esc -o bindata.go -pkg chart -include ".*(ply|png)" -modtime 1337 -private data
 
 const (
-	chartRounding    = 10
-	chartPadding     = 5
-	axisLabelPadding = 4
+	chartRounding       = 10
+	chartSectionPadding = 5
+	chartTextPadding    = 20
 )
 
 var (
 	chartSymbolQuoteTextRenderer = gfx.NewTextRenderer(goregular.TTF, 24)
 	chartQuotePrinter            = func(q *model.Quote) string { return status.Join(status.PriceChange(q), status.SourceUpdate(q)) }
 )
+
+const axisLabelPadding = 4
 
 var (
 	axisLabelBubble       = rect.Bubble{Rounding: 6}
@@ -122,7 +124,7 @@ func NewChart(fps int) *Chart {
 			ShowRefreshButton:       true,
 			ShowAddButton:           true,
 			Rounding:                chartRounding,
-			Padding:                 chartPadding,
+			Padding:                 chartSectionPadding,
 			FPS:                     fps,
 		}),
 
@@ -155,8 +157,8 @@ func NewChart(fps int) *Chart {
 
 		legend: new(legend),
 
-		loadingTextBox: text.NewBox(chartSymbolQuoteTextRenderer, "LOADING..."),
-		errorTextBox:   text.NewBox(chartSymbolQuoteTextRenderer, "ERROR", text.Color(color.Orange)),
+		loadingTextBox: text.NewBox(chartSymbolQuoteTextRenderer, "LOADING...", text.Padding(chartTextPadding)),
+		errorTextBox:   text.NewBox(chartSymbolQuoteTextRenderer, "ERROR", text.Color(color.Orange), text.Padding(chartTextPadding)),
 		loading:        true,
 		fadeIn:         animation.New(1 * fps),
 	}
@@ -298,7 +300,7 @@ func (ch *Chart) ProcessInput(
 		dailyStochasticsPercent  = 0.13
 		weeklyStochasticsPercent = 0.13
 	)
-	timeLabelsPercent := float32(ch.timelineAxis.MaxLabelSize.Y+chartPadding*2) / float32(r.Dy())
+	timeLabelsPercent := float32(ch.timelineAxis.MaxLabelSize.Y+chartSectionPadding*2) / float32(r.Dy())
 
 	// Divide up the rectangle into sections.
 	var rects []image.Rectangle
@@ -331,7 +333,7 @@ func (ch *Chart) ProcessInput(
 			maxWidth = w
 		}
 	}
-	maxWidth += chartPadding
+	maxWidth += chartSectionPadding
 
 	// Set left side of label rects.
 	plr.Min.X = pr.Max.X - maxWidth
@@ -353,17 +355,17 @@ func (ch *Chart) ProcessInput(
 	tlr := tr
 
 	// Pad all the rects.
-	pr = pr.Inset(chartPadding)
-	vr = vr.Inset(chartPadding)
-	dr = dr.Inset(chartPadding)
-	wr = wr.Inset(chartPadding)
-	tr = tr.Inset(chartPadding)
+	pr = pr.Inset(chartSectionPadding)
+	vr = vr.Inset(chartSectionPadding)
+	dr = dr.Inset(chartSectionPadding)
+	wr = wr.Inset(chartSectionPadding)
+	tr = tr.Inset(chartSectionPadding)
 
-	plr = plr.Inset(chartPadding)
-	vlr = vlr.Inset(chartPadding)
-	dlr = dlr.Inset(chartPadding)
-	wlr = wlr.Inset(chartPadding)
-	tlr = tlr.Inset(chartPadding)
+	plr = plr.Inset(chartSectionPadding)
+	vlr = vlr.Inset(chartSectionPadding)
+	dlr = dlr.Inset(chartSectionPadding)
+	wlr = wlr.Inset(chartSectionPadding)
+	tlr = tlr.Inset(chartSectionPadding)
 
 	ch.prices.ProcessInput(pr)
 	ch.priceCursor.ProcessInput(pr, plr, ch.mousePos)
@@ -443,7 +445,7 @@ func (ch *Chart) Render(fudge float32) {
 		dailyStochasticsPercent  = 0.13
 		weeklyStochasticsPercent = 0.13
 	)
-	timeLabelsPercent := float32(ch.timelineAxis.MaxLabelSize.Y+chartPadding*2) / float32(r.Dy())
+	timeLabelsPercent := float32(ch.timelineAxis.MaxLabelSize.Y+chartSectionPadding*2) / float32(r.Dy())
 
 	// Divide up the rectangle into sections.
 	var rects []image.Rectangle
