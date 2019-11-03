@@ -61,7 +61,8 @@ func (s *stochasticCursor) Render(fudge float32) {
 		bubbleRect = bubbleRect.Inset(-axisLabelPadding)
 	}
 
-	axisLabelBubble.Render(bubbleRect)
+	axisLabelBubble.SetBounds(bubbleRect)
+	axisLabelBubble.Render(fudge)
 	axisLabelTextRenderer.Render(l.text, tp, gfx.TextColor(color.White))
 }
 

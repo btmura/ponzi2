@@ -280,6 +280,7 @@ func (ch *Chart) ProcessInput(
 	scheduledCallbacks *[]func(),
 ) {
 	ch.fullBounds = bounds
+	ch.frameBubble.SetBounds(bounds)
 	ch.mousePos = mousePos
 
 	r, _ := ch.header.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
@@ -413,7 +414,7 @@ func (ch *Chart) Update() (dirty bool) {
 
 // Render renders the Chart.
 func (ch *Chart) Render(fudge float32) {
-	ch.frameBubble.Render(ch.fullBounds)
+	ch.frameBubble.Render(fudge)
 	ch.header.Render(fudge)
 
 	r := ch.bodyBounds

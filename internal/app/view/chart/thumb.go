@@ -157,6 +157,7 @@ func (t *Thumb) SetData(data *Data) error {
 // SetBounds sets the bounds to draw within.
 func (t *Thumb) SetBounds(bounds image.Rectangle) {
 	t.fullBounds = bounds
+	t.frameBubble.SetBounds(bounds)
 }
 
 // ProcessInput processes input.
@@ -211,7 +212,7 @@ func (t *Thumb) Update() (dirty bool) {
 
 // Render renders the Thumb.
 func (t *Thumb) Render(fudge float32) {
-	t.frameBubble.Render(t.fullBounds)
+	t.frameBubble.Render(fudge)
 	t.header.Render(fudge)
 
 	r := t.bodyBounds

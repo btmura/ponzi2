@@ -47,12 +47,12 @@ func (l *legend) ProcessInput(priceRect, labelRect image.Rectangle, mousePos ima
 func (l *legend) Render(fudge float32) {
 	// Renders trackline legend. To display inline comment out the two lines below and uncomment the last line.
 	if l.showMovingAverages {
-		l.renderMATrackLineLegend()
+		l.renderMATrackLineLegend(fudge)
 	}
-	l.renderCandleTrackLineLegend()
+	l.renderCandleTrackLineLegend(fudge)
 }
 
-func (l *legend) renderMATrackLineLegend() {
+func (l *legend) renderMATrackLineLegend(fudge float32) {
 	if !l.mousePos.In(l.priceRect) {
 		return
 	}
@@ -85,11 +85,12 @@ func (l *legend) renderMATrackLineLegend() {
 	}
 	bubbleRect = bubbleRect.Inset(-axisLabelPadding)
 
-	axisLabelBubble.Render(bubbleRect)
+	axisLabelBubble.SetBounds(bubbleRect)
+	axisLabelBubble.Render(fudge)
 	axisLabelTextRenderer.Render(mal.text, textPt, gfx.TextColor(color.White))
 }
 
-func (l *legend) renderCandleTrackLineLegend() {
+func (l *legend) renderCandleTrackLineLegend(fudge float32) {
 	if !l.mousePos.In(l.priceRect) {
 		return
 	}
@@ -114,12 +115,14 @@ func (l *legend) renderCandleTrackLineLegend() {
 		X: l.labelRect.Min.X + l.labelRect.Dx()/2 - pl.size.X/2,
 		Y: l.labelRect.Min.Y + l.labelRect.Dy() - pl.size.Y,
 	}
-	textRect := image.Rectangle{
+	bubbleRect := image.Rectangle{
 		Min: textPt,
 		Max: textPt.Add(pl.size),
 	}
+	bubbleRect = bubbleRect.Inset(-axisLabelPadding)
 
-	axisLabelBubble.Render(textRect.Inset(-axisLabelPadding))
+	axisLabelBubble.SetBounds(bubbleRect)
+	axisLabelBubble.Render(fudge)
 	axisLabelTextRenderer.Render(pl.text, textPt, gfx.TextColor(color.White))
 }
 
