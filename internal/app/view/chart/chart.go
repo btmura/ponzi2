@@ -375,7 +375,8 @@ func (ch *Chart) ProcessInput(
 	ch.movingAverage200.ProcessInput(pr)
 
 	ch.volume.ProcessInput(vr)
-	ch.volumeCursor.ProcessInput(vr, vlr, ch.mousePos)
+	ch.volumeCursor.SetBounds(vr, vlr)
+	ch.volumeCursor.ProcessInput(ch.mousePos)
 	ch.volumeTimeline.ProcessInput(vr)
 
 	ch.dailyStochastics.ProcessInput(dr)

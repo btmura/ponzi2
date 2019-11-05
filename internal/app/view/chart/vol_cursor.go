@@ -47,10 +47,14 @@ func (v *volumeCursor) SetData(ts *model.TradingSessionSeries) {
 	v.renderable = true
 }
 
-// ProcessInput processes input.
-func (v *volumeCursor) ProcessInput(volRect, labelRect image.Rectangle, mousePos image.Point) {
+// SetBounds sets the bounds to draw the volume crosshairs and labels.
+func (v *volumeCursor) SetBounds(volRect, labelRect image.Rectangle) {
 	v.volRect = volRect
 	v.labelRect = labelRect
+}
+
+// ProcessInput processes input.
+func (v *volumeCursor) ProcessInput(mousePos image.Point) {
 	v.mousePos = mousePos
 }
 
