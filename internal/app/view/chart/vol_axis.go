@@ -48,7 +48,7 @@ func (v *volumeAxis) SetData(ts *model.TradingSessionSeries) {
 	v.renderable = true
 }
 
-func (v *volumeAxis) ProcessInput(labelRect image.Rectangle) {
+func (v *volumeAxis) SetBounds(labelRect image.Rectangle) {
 	v.labelRect = labelRect
 }
 

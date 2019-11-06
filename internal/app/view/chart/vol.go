@@ -56,7 +56,7 @@ func (v *volume) SetData(ts *model.TradingSessionSeries) {
 	v.renderable = true
 }
 
-func (v *volume) ProcessInput(bounds image.Rectangle) {
+func (v *volume) SetBounds(bounds image.Rectangle) {
 	v.bounds = bounds
 }
 

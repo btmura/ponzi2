@@ -374,7 +374,7 @@ func (ch *Chart) ProcessInput(
 	ch.movingAverage50.ProcessInput(pr)
 	ch.movingAverage200.ProcessInput(pr)
 
-	ch.volume.ProcessInput(vr)
+	ch.volume.SetBounds(vr)
 	ch.volumeCursor.SetBounds(vr, vlr)
 	ch.volumeCursor.ProcessInput(ch.mousePos)
 	ch.volumeTimeline.ProcessInput(vr)
@@ -391,7 +391,7 @@ func (ch *Chart) ProcessInput(
 	ch.timelineCursor.ProcessInput(tr, tlr, ch.mousePos)
 
 	ch.priceAxis.ProcessInput(plr)
-	ch.volumeAxis.ProcessInput(vlr)
+	ch.volumeAxis.SetBounds(vlr)
 	ch.dailyStochasticAxis.ProcessInput(dlr)
 	ch.weeklyStochasticAxis.ProcessInput(wlr)
 
