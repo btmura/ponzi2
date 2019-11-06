@@ -58,8 +58,7 @@ func (t *timelineAxis) SetData(r model.Range, ts *model.TradingSessionSeries) er
 	return nil
 }
 
-// ProcessInput processes input.
-func (t *timelineAxis) ProcessInput(timelineRect image.Rectangle) {
+func (t *timelineAxis) SetBounds(timelineRect image.Rectangle) {
 	t.timelineRect = timelineRect
 }
 

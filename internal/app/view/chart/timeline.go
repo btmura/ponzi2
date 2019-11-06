@@ -78,8 +78,7 @@ func weekLineValues(r model.Range, ts []*model.TradingSession) ([]float32, error
 	return values, nil
 }
 
-// ProcessInput processes input.
-func (t *timeline) ProcessInput(lineRect image.Rectangle) {
+func (t *timeline) SetBounds(lineRect image.Rectangle) {
 	t.lineRect = lineRect
 }
 

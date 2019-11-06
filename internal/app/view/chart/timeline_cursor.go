@@ -61,10 +61,13 @@ func (t *timelineCursor) SetData(r model.Range, ts *model.TradingSessionSeries) 
 	return nil
 }
 
-// ProcessInput processes input.
-func (t *timelineCursor) ProcessInput(timelineRect, labelRect image.Rectangle, mousePos image.Point) {
+func (t *timelineCursor) SetBounds(timelineRect, labelRect image.Rectangle) {
 	t.bounds = timelineRect
 	t.labelRect = labelRect
+}
+
+// ProcessInput processes input.
+func (t *timelineCursor) ProcessInput(mousePos image.Point) {
 	t.mousePos = mousePos
 }
 
