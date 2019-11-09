@@ -274,14 +274,13 @@ func (ch *Chart) SetData(data *Data) error {
 	return nil
 }
 
-// ProcessInput processes input.
-func (ch *Chart) ProcessInput(
-	bounds image.Rectangle,
-	mousePos image.Point,
-	mouseLeftButtonReleased bool,
-	scheduledCallbacks *[]func(),
-) {
+func (ch *Chart) SetBounds(bounds image.Rectangle) {
 	ch.fullBounds = bounds
+}
+
+func (ch *Chart) ProcessInput(mousePos image.Point, mouseLeftButtonReleased bool, scheduledCallbacks *[]func()) {
+	bounds := ch.fullBounds
+
 	ch.frameBubble.SetBounds(bounds)
 	ch.mousePos = mousePos
 

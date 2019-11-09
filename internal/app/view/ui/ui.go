@@ -549,7 +549,8 @@ func (u *UI) processInput() []func() {
 
 	for i := 0; i < len(u.charts); i++ {
 		ch := u.charts[i]
-		ch.ProcessInput(bounds, input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
+		ch.SetBounds(bounds)
+		ch.ProcessInput(input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
 	}
 
 	u.sidebar.SetBounds(m.sidebarBounds)
