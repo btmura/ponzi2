@@ -39,8 +39,7 @@ func (p *priceAxis) SetData(ts *model.TradingSessionSeries) {
 	p.renderable = true
 }
 
-// ProcessInput processes input.
-func (p *priceAxis) ProcessInput(labelRect image.Rectangle) {
+func (p *priceAxis) SetBounds(labelRect image.Rectangle) {
 	p.labelRect = labelRect
 }
 

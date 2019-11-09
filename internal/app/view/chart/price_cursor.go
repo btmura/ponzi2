@@ -17,7 +17,7 @@ type priceCursor struct {
 	// priceRange is the inclusive range from min to max price.
 	priceRange [2]float32
 
-	// priceRect is the rectangle where the price candleticks are drawn.
+	// priceRect is the rectangle where the price candlesticks are drawn.
 	priceRect image.Rectangle
 
 	// labelRect is the rectangle where the axis labels are drawn.
@@ -41,10 +41,12 @@ func (p *priceCursor) SetData(ts *model.TradingSessionSeries) {
 	p.renderable = true
 }
 
-// ProcessInput processes input.
-func (p *priceCursor) ProcessInput(priceRect, labelRect image.Rectangle, mousePos image.Point) {
+func (p *priceCursor) SetBounds(priceRect, labelRect image.Rectangle) {
 	p.priceRect = priceRect
 	p.labelRect = labelRect
+}
+
+func (p *priceCursor) ProcessInput(mousePos image.Point) {
 	p.mousePos = mousePos
 }
 

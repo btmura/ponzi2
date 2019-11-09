@@ -54,8 +54,7 @@ func (p *price) SetData(ts *model.TradingSessionSeries) {
 	p.renderable = true
 }
 
-// ProcessInput processes input.
-func (p *price) ProcessInput(bounds image.Rectangle) {
+func (p *price) SetBounds(bounds image.Rectangle) {
 	p.bounds = bounds
 }
 

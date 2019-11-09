@@ -367,8 +367,9 @@ func (ch *Chart) ProcessInput(
 	wlr = wlr.Inset(chartSectionPadding)
 	tlr = tlr.Inset(chartSectionPadding)
 
-	ch.prices.ProcessInput(pr)
-	ch.priceCursor.ProcessInput(pr, plr, ch.mousePos)
+	ch.prices.SetBounds(pr)
+	ch.priceCursor.SetBounds(pr, plr)
+	ch.priceCursor.ProcessInput(ch.mousePos)
 	ch.priceTimeline.SetBounds(pr)
 	ch.movingAverage25.ProcessInput(pr)
 	ch.movingAverage50.ProcessInput(pr)
@@ -380,10 +381,12 @@ func (ch *Chart) ProcessInput(
 	ch.volumeTimeline.SetBounds(vr)
 
 	ch.dailyStochastics.SetBounds(dr)
+	ch.dailyStochasticCursor.SetBounds(dr, dlr)
 	ch.dailyStochasticCursor.ProcessInput(ch.mousePos)
 	ch.dailyStochasticTimeline.SetBounds(dr)
 
 	ch.weeklyStochastics.SetBounds(wr)
+	ch.weeklyStochasticCursor.SetBounds(wr, wlr)
 	ch.weeklyStochasticCursor.ProcessInput(ch.mousePos)
 	ch.weeklyStochasticTimeline.SetBounds(wr)
 
@@ -391,7 +394,7 @@ func (ch *Chart) ProcessInput(
 	ch.timelineCursor.SetBounds(tr, tlr)
 	ch.timelineCursor.ProcessInput(ch.mousePos)
 
-	ch.priceAxis.ProcessInput(plr)
+	ch.priceAxis.SetBounds(plr)
 	ch.volumeAxis.SetBounds(vlr)
 	ch.dailyStochasticAxis.SetBounds(dlr)
 	ch.weeklyStochasticAxis.SetBounds(wlr)
