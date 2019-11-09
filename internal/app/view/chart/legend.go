@@ -38,9 +38,12 @@ func (l *legend) SetData(
 	l.showMovingAverages = showMovingAverages
 }
 
-func (l *legend) ProcessInput(priceRect, labelRect image.Rectangle, mousePos image.Point) {
+func (l *legend) SetBounds(priceRect, labelRect image.Rectangle) {
 	l.priceRect = priceRect
 	l.labelRect = labelRect
+}
+
+func (l *legend) ProcessInput(mousePos image.Point) {
 	l.mousePos = mousePos
 }
 

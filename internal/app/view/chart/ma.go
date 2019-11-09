@@ -38,8 +38,7 @@ func (m *movingAverage) SetData(ts *model.TradingSessionSeries, ms *model.Moving
 	m.renderable = true
 }
 
-// ProcessInput processes input.
-func (m *movingAverage) ProcessInput(bounds image.Rectangle) {
+func (m *movingAverage) SetBounds(bounds image.Rectangle) {
 	m.bounds = bounds
 }
 

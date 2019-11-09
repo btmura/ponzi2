@@ -371,9 +371,9 @@ func (ch *Chart) ProcessInput(
 	ch.priceCursor.SetBounds(pr, plr)
 	ch.priceCursor.ProcessInput(ch.mousePos)
 	ch.priceTimeline.SetBounds(pr)
-	ch.movingAverage25.ProcessInput(pr)
-	ch.movingAverage50.ProcessInput(pr)
-	ch.movingAverage200.ProcessInput(pr)
+	ch.movingAverage25.SetBounds(pr)
+	ch.movingAverage50.SetBounds(pr)
+	ch.movingAverage200.SetBounds(pr)
 
 	ch.volume.SetBounds(vr)
 	ch.volumeCursor.SetBounds(vr, vlr)
@@ -399,7 +399,8 @@ func (ch *Chart) ProcessInput(
 	ch.dailyStochasticAxis.SetBounds(dlr)
 	ch.weeklyStochasticAxis.SetBounds(wlr)
 
-	ch.legend.ProcessInput(pr, llr, ch.mousePos)
+	ch.legend.SetBounds(plr, llr)
+	ch.legend.ProcessInput(ch.mousePos)
 }
 
 // Update updates the Chart.
