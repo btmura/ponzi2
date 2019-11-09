@@ -23,10 +23,12 @@ type stochasticCursor struct {
 	mousePos image.Point
 }
 
-// ProcessInput processes input.
-func (s *stochasticCursor) ProcessInput(stoRect, labelRect image.Rectangle, mousePos image.Point) {
+func (s *stochasticCursor) SetBounds(stoRect, labelRect image.Rectangle) {
 	s.stoRect = stoRect
 	s.labelRect = labelRect
+}
+
+func (s *stochasticCursor) ProcessInput(mousePos image.Point) {
 	s.mousePos = mousePos
 }
 

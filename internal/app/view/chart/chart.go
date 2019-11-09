@@ -379,12 +379,12 @@ func (ch *Chart) ProcessInput(
 	ch.volumeCursor.ProcessInput(ch.mousePos)
 	ch.volumeTimeline.SetBounds(vr)
 
-	ch.dailyStochastics.ProcessInput(dr)
-	ch.dailyStochasticCursor.ProcessInput(dr, dlr, ch.mousePos)
+	ch.dailyStochastics.SetBounds(dr)
+	ch.dailyStochasticCursor.ProcessInput(ch.mousePos)
 	ch.dailyStochasticTimeline.SetBounds(dr)
 
-	ch.weeklyStochastics.ProcessInput(wr)
-	ch.weeklyStochasticCursor.ProcessInput(wr, wlr, ch.mousePos)
+	ch.weeklyStochastics.SetBounds(wr)
+	ch.weeklyStochasticCursor.ProcessInput(ch.mousePos)
 	ch.weeklyStochasticTimeline.SetBounds(wr)
 
 	ch.timelineAxis.SetBounds(tr)
@@ -393,8 +393,8 @@ func (ch *Chart) ProcessInput(
 
 	ch.priceAxis.ProcessInput(plr)
 	ch.volumeAxis.SetBounds(vlr)
-	ch.dailyStochasticAxis.ProcessInput(dlr)
-	ch.weeklyStochasticAxis.ProcessInput(wlr)
+	ch.dailyStochasticAxis.SetBounds(dlr)
+	ch.weeklyStochasticAxis.SetBounds(wlr)
 
 	ch.legend.ProcessInput(pr, llr, ch.mousePos)
 }

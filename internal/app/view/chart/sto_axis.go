@@ -36,8 +36,7 @@ func (s *stochasticAxis) SetData(ss *model.StochasticSeries) {
 	s.renderable = true
 }
 
-// ProcessInput processes input.
-func (s *stochasticAxis) ProcessInput(labelRect image.Rectangle) {
+func (s *stochasticAxis) SetBounds(labelRect image.Rectangle) {
 	s.labelRect = labelRect
 }
 

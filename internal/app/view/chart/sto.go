@@ -50,8 +50,7 @@ func (s *stochastic) SetData(ss *model.StochasticSeries) {
 	s.renderable = true
 }
 
-// ProcessInput processes input.
-func (s *stochastic) ProcessInput(bounds image.Rectangle) {
+func (s *stochastic) SetBounds(bounds image.Rectangle) {
 	s.bounds = bounds
 }
 
