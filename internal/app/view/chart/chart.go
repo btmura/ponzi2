@@ -285,7 +285,8 @@ func (ch *Chart) ProcessInput(
 	ch.frameBubble.SetBounds(bounds)
 	ch.mousePos = mousePos
 
-	r, _ := ch.header.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
+	ch.header.SetBounds(bounds)
+	r, _ := ch.header.ProcessInput(mousePos, mouseLeftButtonReleased, scheduledCallbacks)
 
 	ch.bodyBounds = r
 	ch.loadingTextBox.SetBounds(r)

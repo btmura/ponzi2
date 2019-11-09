@@ -182,9 +182,11 @@ func (c headerClicks) HasClicks() bool {
 	return c.AddButtonClicked || c.RefreshButtonClicked || c.RemoveButtonClicked
 }
 
-// ProcessInput processes input.
+func (h *header) SetBounds(bounds image.Rectangle) {
+	h.bounds = bounds
+}
+
 func (h *header) ProcessInput(
-	bounds image.Rectangle,
 	mousePos image.Point,
 	mouseLeftButtonReleased bool,
 	scheduledCallbacks *[]func(),
@@ -192,14 +194,13 @@ func (h *header) ProcessInput(
 	body image.Rectangle,
 	clicks headerClicks,
 ) {
-	h.bounds = bounds
 
 	height := h.padding + h.symbolQuoteTextRenderer.LineHeight() + h.padding
 	buttonSize := image.Pt(height, height)
 
 	// Render buttons in the upper right corner from right to left.
-	r := bounds
-	bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
+	r := h.bounds
+	bounds := image.Rectangle{Min: r.Max.Sub(buttonSize), Max: r.Max}
 
 	if h.removeButton.enabled {
 		clicks.RemoveButtonClicked = h.removeButton.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)

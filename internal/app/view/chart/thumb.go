@@ -165,7 +165,8 @@ func (t *Thumb) SetBounds(bounds image.Rectangle) {
 func (t *Thumb) ProcessInput(input *view.Input) {
 	t.mousePos = input.MousePos
 
-	r, clicks := t.header.ProcessInput(t.fullBounds, input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
+	t.header.SetBounds(t.fullBounds)
+	r, clicks := t.header.ProcessInput(input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
 
 	t.bodyBounds = r
 	t.loadingTextBox.SetBounds(r)
