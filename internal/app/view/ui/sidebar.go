@@ -28,6 +28,7 @@ type sidebar struct {
 type sidebarThumb struct {
 	*chart.Thumb
 	*view.Fader
+	dragging bool
 }
 
 func newSidebarThumb(th *chart.Thumb) *sidebarThumb {
@@ -64,12 +65,10 @@ func (s *sidebar) RemoveChartThumb(th *chart.Thumb) {
 	}
 }
 
-// SetBounds sets the bounds to draw within.
 func (s *sidebar) SetBounds(bounds image.Rectangle) {
 	s.bounds = bounds
 }
 
-// ProcessInput processes input.
 func (s *sidebar) ProcessInput(input *view.Input) {
 	thumbBounds := image.Rect(
 		s.bounds.Min.X, s.bounds.Max.Y-viewPadding-chartThumbSize.Y,
@@ -78,6 +77,7 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 	for _, t := range s.thumbs {
 		t.SetBounds(thumbBounds)
 		t.ProcessInput(input)
+		t.dragging = input.MouseLeftButtonDragging && input.MouseLeftButtonDraggingStartedPos.In(thumbBounds)
 		thumbBounds = thumbBounds.Sub(chartThumbRenderOffset)
 	}
 }
@@ -101,6 +101,9 @@ func (s *sidebar) Update() (dirty bool) {
 // Render renders a frame.
 func (s *sidebar) Render(fudge float32) {
 	for _, t := range s.thumbs {
+		if t.dragging {
+			continue
+		}
 		t.Render(fudge)
 	}
 }

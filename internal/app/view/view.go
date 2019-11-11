@@ -23,6 +23,10 @@ type Input struct {
 	// MouseLeftButtonDragging is whether the left mouse button is dragging.
 	MouseLeftButtonDragging bool
 
+	// MouseLeftButtonDraggingStartedPos is the global mouse position where the dragging started.
+	// Only set when MouseLeftButtonDragging is true.
+	MouseLeftButtonDraggingStartedPos image.Point
+
 	// MouseLeftButtonReleased is whether the left mouse button was released.
 	MouseLeftButtonReleased bool
 
