@@ -307,7 +307,7 @@ func (u *UI) metrics() viewMetrics {
 	// |   | padding |   |
 	// +---+---------+---+
 
-	if len(u.sidebar.thumbs) == 0 {
+	if len(u.sidebar.slots) == 0 {
 		cb := image.Rect(0, 0, u.winSize.X, u.winSize.Y)
 		cb = cb.Inset(viewPadding)
 		return viewMetrics{chartBounds: cb, chartRegion: cb}
@@ -328,7 +328,7 @@ func (u *UI) metrics() viewMetrics {
 	// |   | padding |   | padding |   |
 	// +---+---------+---+---------+---+
 
-	sh := (viewPadding+chartThumbSize.Y)*len(u.sidebar.thumbs) + viewPadding
+	sh := (viewPadding+chartThumbSize.Y)*len(u.sidebar.slots) + viewPadding
 
 	sb := image.Rect(
 		viewPadding, u.winSize.Y-sh,
@@ -418,7 +418,7 @@ func (u *UI) handleScrollEvent(yoff float64) {
 		return
 	}
 
-	if len(u.sidebar.thumbs) == 0 {
+	if len(u.sidebar.slots) == 0 {
 		return
 	}
 
@@ -512,7 +512,7 @@ start:
 			cb()
 		}
 
-		// Mark dirty since new charts or thumbs may have been added.
+		// Mark dirty since new charts or slots may have been added.
 		if len(callbacks) != 0 {
 			dirty = true
 		}
@@ -774,7 +774,7 @@ func (u *UI) RemoveChartThumb(symbol string) error {
 	return nil
 }
 
-// SetLoading sets the charts and thumbs matching the symbol and range to loading.
+// SetLoading sets the charts and slots matching the symbol and range to loading.
 func (u *UI) SetLoading(symbol string, dataRange model.Range) error {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		return err
@@ -801,7 +801,7 @@ func (u *UI) SetLoading(symbol string, dataRange model.Range) error {
 	return nil
 }
 
-// SetData loads the data to charts and thumbs matching the symbol and range.
+// SetData loads the data to charts and slots matching the symbol and range.
 func (u *UI) SetData(symbol string, data *chart.Data) error {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		return err
@@ -830,7 +830,7 @@ func (u *UI) SetData(symbol string, data *chart.Data) error {
 	return nil
 }
 
-// SetError sets an error on the charts and thumbs matching the symbol.
+// SetError sets an error on the charts and slots matching the symbol.
 func (u *UI) SetError(symbol string, updateErr error) error {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		return err
