@@ -102,15 +102,25 @@ type sidebarSlot struct {
 	// thumbnail is an optional stock thumbnail.
 	thumbnail *chart.Thumb
 
-	*view.Fader
+	// fader fades out the slot.
+	fader *view.Fader
+
 	dragging bool
 }
 
 func newSidebarSlot(th *chart.Thumb) *sidebarSlot {
 	return &sidebarSlot{
 		thumbnail: th,
-		Fader:     view.NewFader(1 * fps),
+		fader:     view.NewFader(1 * fps),
 	}
+}
+
+func (s *sidebarSlot) FadeOut() {
+	s.fader.FadeOut()
+}
+
+func (s *sidebarSlot) DoneFadingOut() bool {
+	return s.fader.DoneFadingOut()
 }
 
 func (s *sidebarSlot) SetBounds(bounds image.Rectangle) {
@@ -129,14 +139,14 @@ func (s *sidebarSlot) Update() (dirty bool) {
 	if s.thumbnail != nil && s.thumbnail.Update() {
 		dirty = true
 	}
-	if s.Fader.Update() {
+	if s.fader.Update() {
 		dirty = true
 	}
 	return dirty
 }
 
 func (s *sidebarSlot) Render(fudge float32) {
-	s.Fader.Render(func(fudge float32) {
+	s.fader.Render(func(fudge float32) {
 		if s.thumbnail != nil {
 			s.thumbnail.Render(fudge)
 		}
@@ -146,5 +156,6 @@ func (s *sidebarSlot) Render(fudge float32) {
 func (s *sidebarSlot) Close() {
 	if s.thumbnail != nil {
 		s.thumbnail.Close()
+		s.thumbnail = nil
 	}
 }
