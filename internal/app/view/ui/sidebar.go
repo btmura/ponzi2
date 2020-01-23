@@ -25,57 +25,6 @@ type sidebar struct {
 	bounds image.Rectangle
 }
 
-type sidebarSlot struct {
-	// thumbnail is an optional stock thumbnail.
-	thumbnail *chart.Thumb
-
-	*view.Fader
-	dragging bool
-}
-
-func newSidebarSlot(th *chart.Thumb) *sidebarSlot {
-	return &sidebarSlot{
-		thumbnail: th,
-		Fader:     view.NewFader(1 * fps),
-	}
-}
-
-func (s *sidebarSlot) SetBounds(bounds image.Rectangle) {
-	if s.thumbnail != nil {
-		s.thumbnail.SetBounds(bounds)
-	}
-}
-
-func (s *sidebarSlot) ProcessInput(input *view.Input) {
-	if s.thumbnail != nil {
-		s.thumbnail.ProcessInput(input)
-	}
-}
-
-func (s *sidebarSlot) Update() (dirty bool) {
-	if s.thumbnail != nil && s.thumbnail.Update() {
-		dirty = true
-	}
-	if s.Fader.Update() {
-		dirty = true
-	}
-	return dirty
-}
-
-func (s *sidebarSlot) Render(fudge float32) {
-	s.Fader.Render(func(fudge float32) {
-		if s.thumbnail != nil {
-			s.thumbnail.Render(fudge)
-		}
-	}, fudge)
-}
-
-func (s *sidebarSlot) Close() {
-	if s.thumbnail != nil {
-		s.thumbnail.Close()
-	}
-}
-
 func (s *sidebar) AddChartThumb(th *chart.Thumb) {
 	s.slots = append(s.slots, newSidebarSlot(th))
 }
@@ -146,5 +95,56 @@ func (s *sidebar) Render(fudge float32) {
 		if slot.dragging {
 			slot.Render(fudge)
 		}
+	}
+}
+
+type sidebarSlot struct {
+	// thumbnail is an optional stock thumbnail.
+	thumbnail *chart.Thumb
+
+	*view.Fader
+	dragging bool
+}
+
+func newSidebarSlot(th *chart.Thumb) *sidebarSlot {
+	return &sidebarSlot{
+		thumbnail: th,
+		Fader:     view.NewFader(1 * fps),
+	}
+}
+
+func (s *sidebarSlot) SetBounds(bounds image.Rectangle) {
+	if s.thumbnail != nil {
+		s.thumbnail.SetBounds(bounds)
+	}
+}
+
+func (s *sidebarSlot) ProcessInput(input *view.Input) {
+	if s.thumbnail != nil {
+		s.thumbnail.ProcessInput(input)
+	}
+}
+
+func (s *sidebarSlot) Update() (dirty bool) {
+	if s.thumbnail != nil && s.thumbnail.Update() {
+		dirty = true
+	}
+	if s.Fader.Update() {
+		dirty = true
+	}
+	return dirty
+}
+
+func (s *sidebarSlot) Render(fudge float32) {
+	s.Fader.Render(func(fudge float32) {
+		if s.thumbnail != nil {
+			s.thumbnail.Render(fudge)
+		}
+	}, fudge)
+}
+
+func (s *sidebarSlot) Close() {
+	if s.thumbnail != nil {
+		s.thumbnail.Close()
 	}
 }
