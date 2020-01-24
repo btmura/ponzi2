@@ -47,21 +47,44 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		s.bounds.Min.X, s.bounds.Max.Y-viewPadding-chartThumbSize.Y,
 		s.bounds.Max.X, s.bounds.Max.Y-viewPadding,
 	)
-	for _, slot := range s.slots {
-		slot.dragging = input.MouseLeftButtonDragging && input.MouseLeftButtonDraggingStartedPos.In(slotBounds)
 
+	draggedSlotIndex := -1
+
+	// Set the bounds for each slot and identify the slot being dragged.
+	for i, slot := range s.slots {
+		slot.SetBounds(slotBounds)
+
+		// TODO(btmura): If there is a slot being dragged already, do not recalculate this,
+		//               because the slots may have already shifted order.
+		slot.dragging = input.MouseLeftButtonDragging &&
+			input.MouseLeftButtonDraggingStartedPos.In(slotBounds)
+
+		thumbBounds := slotBounds
 		if slot.dragging {
-			bounds := image.Rect(
+			draggedSlotIndex = i
+			// TODO(btmura): Add a helper method in rect.go for this.
+			thumbBounds = image.Rect(
 				input.MousePos.X-slotBounds.Dx()/2, input.MousePos.Y-slotBounds.Dy()/2,
 				input.MousePos.X+slotBounds.Dx()/2, input.MousePos.Y+slotBounds.Dy()/2,
 			)
-			slot.SetBounds(bounds)
-		} else {
-			slot.SetBounds(slotBounds)
 		}
-		slot.ProcessInput(input)
+		slot.SetThumbnailBounds(thumbBounds)
 
 		slotBounds = slotBounds.Sub(chartThumbRenderOffset)
+	}
+
+	// Move the dragged slot to its proper place in the sidebar.
+	if draggedSlotIndex != -1 {
+		draggedSlot := s.slots[draggedSlotIndex]
+		bounds := draggedSlot.Bounds().Add(image.Pt(0, -chartThumbSize.Y))
+		if input.MousePos.In(bounds) && draggedSlotIndex+1 < len(s.slots) {
+			i, j := draggedSlotIndex, draggedSlotIndex+1
+			s.slots[i], s.slots[j] = s.slots[j], s.slots[i]
+		}
+	}
+
+	for _, slot := range s.slots {
+		slot.ProcessInput(input)
 	}
 }
 
@@ -99,7 +122,10 @@ func (s *sidebar) Render(fudge float32) {
 }
 
 type sidebarSlot struct {
-	// thumbnail is an optional stock thumbnail.
+	// bounds is the rectangle to draw the slot within. Can be empty for collapsed slots.
+	bounds image.Rectangle
+
+	// thumbnail is an optional stock thumbnail. Could have bounds outside the slot if dragged.
 	thumbnail *chart.Thumb
 
 	// fader fades out the slot.
@@ -124,6 +150,14 @@ func (s *sidebarSlot) DoneFadingOut() bool {
 }
 
 func (s *sidebarSlot) SetBounds(bounds image.Rectangle) {
+	s.bounds = bounds
+}
+
+func (s *sidebarSlot) Bounds() image.Rectangle {
+	return s.bounds
+}
+
+func (s *sidebarSlot) SetThumbnailBounds(bounds image.Rectangle) {
 	if s.thumbnail != nil {
 		s.thumbnail.SetBounds(bounds)
 	}
