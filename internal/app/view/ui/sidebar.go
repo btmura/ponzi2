@@ -17,6 +17,9 @@ type sidebar struct {
 	// slots are slots which can have a thumbnail or be a drop site.
 	slots []*sidebarSlot
 
+	// draggedSlot if not nil is the slot with the thumbnail being dragged.
+	draggedSlot *sidebarSlot
+
 	// sidebarScrollOffset stores the Y offset accumulated from scroll events
 	// that should be used to calculate the sidebar's bounds.
 	sidebarScrollOffset image.Point
@@ -43,46 +46,61 @@ func (s *sidebar) SetBounds(bounds image.Rectangle) {
 }
 
 func (s *sidebar) ProcessInput(input *view.Input) {
+	// TODO(btmura): Change these to be constants somewhere.
+	thumbWidth := s.bounds.Dx()
+	thumbHeight := chartThumbSize.Y
+
 	slotBounds := image.Rect(
-		s.bounds.Min.X, s.bounds.Max.Y-viewPadding-chartThumbSize.Y,
+		s.bounds.Min.X, s.bounds.Max.Y-viewPadding-thumbHeight,
 		s.bounds.Max.X, s.bounds.Max.Y-viewPadding,
 	)
 
+	if !input.MouseLeftButtonDragging {
+		s.draggedSlot = nil
+	}
+
 	draggedSlotIndex := -1
 
-	// Set the bounds for each slot and identify the slot being dragged.
+	// Go down the sidebar and assign bounds to each slot and identify the dragged slot.
 	for i, slot := range s.slots {
 		slot.SetBounds(slotBounds)
+		slot.SetThumbnailBounds(slotBounds)
 
-		// TODO(btmura): If there is a slot being dragged already, do not recalculate this,
-		//               because the slots may have already shifted order.
-		slot.dragging = input.MouseLeftButtonDragging &&
-			input.MouseLeftButtonDraggingStartedPos.In(slotBounds)
-
-		thumbBounds := slotBounds
-		if slot.dragging {
-			draggedSlotIndex = i
-			// TODO(btmura): Add a helper method in rect.go for this.
-			thumbBounds = image.Rect(
-				input.MousePos.X-slotBounds.Dx()/2, input.MousePos.Y-slotBounds.Dy()/2,
-				input.MousePos.X+slotBounds.Dx()/2, input.MousePos.Y+slotBounds.Dy()/2,
-			)
+		if s.draggedSlot == nil {
+			dragging := input.MouseLeftButtonDragging &&
+				input.MouseLeftButtonDraggingStartedPos.In(slotBounds)
+			if dragging {
+				s.draggedSlot = slot
+			}
 		}
-		slot.SetThumbnailBounds(thumbBounds)
+
+		if s.draggedSlot == slot {
+			draggedSlotIndex = i
+		}
 
 		slotBounds = slotBounds.Sub(chartThumbRenderOffset)
 	}
 
+	// Float the dragged slot's thumbnail to be under the mouse cursor.
+	if s.draggedSlot != nil {
+		// TODO(btmura): Add a helper method in rect.go for this.
+		thumbBounds := image.Rect(
+			input.MousePos.X-thumbWidth/2, input.MousePos.Y-thumbHeight/2,
+			input.MousePos.X+thumbWidth/2, input.MousePos.Y+thumbHeight/2,
+		)
+		s.draggedSlot.SetThumbnailBounds(thumbBounds)
+	}
+
 	// Move the dragged slot to its proper place in the sidebar.
-	if draggedSlotIndex != -1 {
-		draggedSlot := s.slots[draggedSlotIndex]
-		bounds := draggedSlot.Bounds().Add(image.Pt(0, -chartThumbSize.Y))
+	if s.draggedSlot != nil {
+		bounds := s.draggedSlot.Bounds().Add(image.Pt(0, -thumbHeight))
 		if input.MousePos.In(bounds) && draggedSlotIndex+1 < len(s.slots) {
 			i, j := draggedSlotIndex, draggedSlotIndex+1
 			s.slots[i], s.slots[j] = s.slots[j], s.slots[i]
 		}
 	}
 
+	// Forward the input such as clicks to the adjusted sidebar now.
 	for _, slot := range s.slots {
 		slot.ProcessInput(input)
 	}
@@ -106,18 +124,15 @@ func (s *sidebar) Update() (dirty bool) {
 
 // Render renders a frame.
 func (s *sidebar) Render(fudge float32) {
-	// Draw fixed thumbnails before the dragged thumbnails.
+	// Draw the non-dragged thumbnails first, so they appear under the dragged thumbnail.
 	for _, slot := range s.slots {
-		if !slot.dragging {
+		if slot != s.draggedSlot {
 			slot.Render(fudge)
 		}
 	}
 
-	// Draw dragged thumbnails over fixed thumbnails.
-	for _, slot := range s.slots {
-		if slot.dragging {
-			slot.Render(fudge)
-		}
+	if s.draggedSlot != nil {
+		s.draggedSlot.Render(fudge)
 	}
 }
 
@@ -130,8 +145,6 @@ type sidebarSlot struct {
 
 	// fader fades out the slot.
 	fader *view.Fader
-
-	dragging bool
 }
 
 func newSidebarSlot(th *chart.Thumb) *sidebarSlot {
