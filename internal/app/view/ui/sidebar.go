@@ -3,6 +3,8 @@ package ui
 import (
 	"image"
 
+	"github.com/btmura/ponzi2/internal/app/view/rect"
+
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/chart"
 )
@@ -91,11 +93,18 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		s.draggedSlot.SetThumbnailBounds(thumbBounds)
 	}
 
-	// Move the dragged slot to its proper place in the sidebar.
+	// Move the dragged slot up or down.
 	if s.draggedSlot != nil {
-		bounds := s.draggedSlot.Bounds().Add(image.Pt(0, -thumbHeight))
-		if input.MousePos.In(bounds) && draggedSlotIndex+1 < len(s.slots) {
-			i, j := draggedSlotIndex, draggedSlotIndex+1
+		swapIndex := draggedSlotIndex - 1
+
+		// Dragging down instead.
+		if c := rect.Center(s.draggedSlot.Bounds()); input.MousePos.Y < c.Y {
+			swapIndex = draggedSlotIndex + 1
+		}
+
+		// Swap with adjacent slot if the mouse has moved over it.
+		if swapIndex >= 0 && swapIndex < len(s.slots) && input.MousePos.In(s.slots[swapIndex].Bounds()) {
+			i, j := draggedSlotIndex, swapIndex
 			s.slots[i], s.slots[j] = s.slots[j], s.slots[i]
 		}
 	}

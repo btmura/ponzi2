@@ -142,3 +142,8 @@ func Slice(r image.Rectangle, percentages ...float32) []image.Rectangle {
 func Translate(r image.Rectangle, dx, dy int) image.Rectangle {
 	return r.Add(image.Pt(dx, dy))
 }
+
+// Center returns a point at the center of the rectangle.
+func Center(r image.Rectangle) image.Point {
+	return image.Pt(r.Min.X+r.Dx()/2, r.Min.Y+r.Dy()/2)
+}
