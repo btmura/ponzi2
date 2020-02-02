@@ -84,11 +84,11 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 
 	if s.draggedSlot != nil {
 		// Float the dragged slot's thumbnail to be under the mouse cursor.
-		s.draggedSlot.SetThumbnailBounds(rect.FromCenterAndSize(input.MousePos, thumbSize))
+		s.draggedSlot.SetThumbnailBounds(rect.FromCenterPointAndSize(input.MousePos, thumbSize))
 
 		// Move the dragged slot up or down.
 		swapIndex := draggedSlotIndex - 1
-		if c := rect.Center(s.draggedSlot.Bounds()); input.MousePos.Y < c.Y {
+		if c := rect.CenterPoint(s.draggedSlot.Bounds()); input.MousePos.Y < c.Y {
 			swapIndex = draggedSlotIndex + 1
 		}
 

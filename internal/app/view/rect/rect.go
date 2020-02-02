@@ -119,12 +119,17 @@ func RenderLineAtTop(r image.Rectangle) {
 	horizLine.Render()
 }
 
-// FromCenterAndSize returns a rectangle of the given size centered at the given point.
-func FromCenterAndSize(centerPt, size image.Point) image.Rectangle {
+// FromCenterPointAndSize returns a rectangle of the given size centered at the given point.
+func FromCenterPointAndSize(centerPt, size image.Point) image.Rectangle {
 	return image.Rect(
 		centerPt.X-size.X/2, centerPt.Y-size.Y/2,
 		centerPt.X+size.X/2, centerPt.Y+size.Y/2,
 	)
+}
+
+// CenterPoint returns a point at the center of the rectangle.
+func CenterPoint(r image.Rectangle) image.Point {
+	return image.Pt(r.Min.X+r.Dx()/2, r.Min.Y+r.Dy()/2)
 }
 
 // Slice horizontally cuts a rectangle from the bottom at the percentage
@@ -149,9 +154,4 @@ func Slice(r image.Rectangle, percentages ...float32) []image.Rectangle {
 // Translate returns a rectangle translated by the dx and dy amounts.
 func Translate(r image.Rectangle, dx, dy int) image.Rectangle {
 	return r.Add(image.Pt(dx, dy))
-}
-
-// Center returns a point at the center of the rectangle.
-func Center(r image.Rectangle) image.Point {
-	return image.Pt(r.Min.X+r.Dx()/2, r.Min.Y+r.Dy()/2)
 }
