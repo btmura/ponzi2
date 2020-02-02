@@ -48,11 +48,8 @@ func (s *sidebar) SetBounds(bounds image.Rectangle) {
 }
 
 func (s *sidebar) ProcessInput(input *view.Input) {
-	// TODO(btmura): Change these to be constants somewhere.
-	thumbSize := image.Pt(s.bounds.Dx(), chartThumbSize.Y)
-
 	slotBounds := image.Rect(
-		s.bounds.Min.X, s.bounds.Max.Y-viewPadding-thumbSize.Y,
+		s.bounds.Min.X, s.bounds.Max.Y-viewPadding-chartThumbSize.Y,
 		s.bounds.Max.X, s.bounds.Max.Y-viewPadding,
 	)
 
@@ -84,7 +81,7 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 
 	if s.draggedSlot != nil {
 		// Float the dragged slot's thumbnail to be under the mouse cursor.
-		s.draggedSlot.SetThumbnailBounds(rect.FromCenterPointAndSize(input.MousePos, thumbSize))
+		s.draggedSlot.SetThumbnailBounds(rect.FromCenterPointAndSize(input.MousePos, chartThumbSize))
 
 		// Move the dragged slot up or down.
 		swapIndex := draggedSlotIndex - 1
