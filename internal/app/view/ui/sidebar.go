@@ -9,10 +9,10 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/chart"
 )
 
+// Internal constants.
 var (
-	chartThumbSize         = image.Pt(155, 105)
-	chartThumbRenderOffset = image.Pt(0, viewPadding+chartThumbSize.Y)
-	sidebarScrollAmount    = chartThumbRenderOffset
+	chartThumbSize      = image.Pt(155, 105)
+	sidebarScrollAmount = image.Pt(0, chartThumbSize.Y+viewPadding)
 )
 
 type sidebar struct {
@@ -49,13 +49,17 @@ func (s *sidebar) ResetScroll() {
 
 // Scroll adjusts the scroll of the sidebar either moving it up or down.
 func (s *sidebar) Scroll(scrollDelta int) {
-	s.scrollOffset += scrollDelta
+	s.scrollOffset += sidebarScrollAmount.Y * scrollDelta
 }
 
 // ContentSize returns the size of the sidebar's contents like thumbnails
 // which could be less than the sidebar's bounds if there are not that many thumbnails.
 func (s *sidebar) ContentSize() image.Point {
 	num := len(s.slots)
+	if num == 0 {
+		return image.Pt(0, 0)
+	}
+
 	height := num * chartThumbSize.Y
 	if num > 1 {
 		height += (num - 1) * viewPadding
@@ -98,7 +102,7 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 			draggedSlotIndex = i
 		}
 
-		slotBounds = slotBounds.Sub(chartThumbRenderOffset)
+		slotBounds = slotBounds.Sub(image.Pt(0, chartThumbSize.Y+viewPadding))
 	}
 
 	if s.draggedSlot != nil {

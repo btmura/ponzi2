@@ -304,13 +304,15 @@ func (u *UI) metrics() viewMetrics {
 	// |   | padding |   |
 	// +---+---------+---+
 
-	if u.sidebar.ContentSize().Y == 0 {
+	sidebarSize := u.sidebar.ContentSize()
+
+	if sidebarSize.Y == 0 {
 		cb := image.Rect(0, 0, u.winSize.X, u.winSize.Y)
 		cb = cb.Inset(viewPadding)
 		return viewMetrics{chartBounds: cb, chartRegion: cb}
 	}
 
-	cb := image.Rect(viewPadding+chartThumbSize.X, 0, u.winSize.X, u.winSize.Y)
+	cb := image.Rect(viewPadding+sidebarSize.X, 0, u.winSize.X, u.winSize.Y)
 	cb = cb.Inset(viewPadding)
 
 	// +---+---------+---+---------+---+
@@ -327,7 +329,7 @@ func (u *UI) metrics() viewMetrics {
 
 	sb := image.Rect(
 		viewPadding, 0,
-		viewPadding+chartThumbSize.X, u.winSize.Y,
+		viewPadding+sidebarSize.X, u.winSize.Y,
 	)
 
 	return viewMetrics{
@@ -431,11 +433,10 @@ func (u *UI) handleScrollEvent(yoff float64) {
 		}
 
 		// Scroll wheel down: yoff = -1 up: yoff = +1
-		off := sidebarScrollAmount.Mul(-int(yoff))
 		if debug {
-			log.Info("adjusting scroll by %d", off.Y)
+			log.Info("adjusting scroll by %f", yoff)
 		}
-		u.sidebar.Scroll(off.Y)
+		u.sidebar.Scroll(-int(yoff))
 
 	case u.mousePos.In(m.chartRegion):
 		zoomChange := view.ZoomChangeUnspecified
