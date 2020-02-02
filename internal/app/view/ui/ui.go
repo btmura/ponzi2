@@ -183,7 +183,7 @@ func New() *UI {
 }
 
 // Init initializes the View and returns a cleanup function.
-func (u *UI) Init(ctx context.Context) (cleanup func(), err error) {
+func (u *UI) Init(_ context.Context) (cleanup func(), err error) {
 	if err := glfw.Init(); err != nil {
 		return nil, err
 	}
@@ -272,10 +272,10 @@ func (u *UI) handleSizeEvent(width, height int) {
 
 	u.winSize = s
 
-	// Reset the sidebar scroll offset if the sidebar is shorter than the window.
+	// Reset the sidebar scroll offset if the sidebar is shorter than the bounds.
 	m := u.metrics()
-	if m.sidebarBounds.Dy() < m.sidebarRegion.Dy() {
-		u.sidebar.sidebarScrollOffset = image.Point{}
+	if u.sidebar.ContentSize().Y < m.sidebarBounds.Dy() {
+		u.sidebar.ResetScroll()
 	}
 }
 
@@ -286,9 +286,6 @@ type viewMetrics struct {
 
 	// sidebarBounds is where to draw the sidebar that can move up or down.
 	sidebarBounds image.Rectangle
-
-	// sidebarRegion is where to detect scroll events for the sidebar.
-	sidebarRegion image.Rectangle
 
 	// chartRegion is where to detect scroll events for the chart.
 	chartRegion image.Rectangle
@@ -307,7 +304,7 @@ func (u *UI) metrics() viewMetrics {
 	// |   | padding |   |
 	// +---+---------+---+
 
-	if len(u.sidebar.slots) == 0 {
+	if u.sidebar.ContentSize().Y == 0 {
 		cb := image.Rect(0, 0, u.winSize.X, u.winSize.Y)
 		cb = cb.Inset(viewPadding)
 		return viewMetrics{chartBounds: cb, chartRegion: cb}
@@ -319,25 +316,16 @@ func (u *UI) metrics() viewMetrics {
 	// +---+---------+---+---------+---+
 	// |   | padding |   | padding |   |
 	// |   +---------+   +---------+   |
-	// |   | thumb   |   |         |   |
-	// |   +---------+   |         |   |
-	// | p | padding | p | chart   | p |
-	// |   +---------+   |         |   |
-	// |   | thumb   |   |         |   |
+	// |   |         |   |         |   |
+	// |   |         |   |         |   |
+	// | p | sidebar | p | chart   | p |
+	// |   |         |   |         |   |
+	// |   |         |   |         |   |
 	// |   +---------+   +---------+   |
 	// |   | padding |   | padding |   |
 	// +---+---------+---+---------+---+
 
-	sh := (viewPadding+chartThumbSize.Y)*len(u.sidebar.slots) + viewPadding
-
 	sb := image.Rect(
-		viewPadding, u.winSize.Y-sh,
-		viewPadding+chartThumbSize.X, u.winSize.Y,
-	)
-	sb = sb.Add(u.sidebar.sidebarScrollOffset)
-
-	// Side bar region.
-	sr := image.Rect(
 		viewPadding, 0,
 		viewPadding+chartThumbSize.X, u.winSize.Y,
 	)
@@ -345,7 +333,6 @@ func (u *UI) metrics() viewMetrics {
 	return viewMetrics{
 		chartBounds:   cb,
 		sidebarBounds: sb,
-		sidebarRegion: sr,
 		chartRegion:   cb,
 	}
 }
@@ -411,37 +398,44 @@ func (u *UI) handleMouseButtonEvent(button glfw.MouseButton, action glfw.Action)
 }
 
 func (u *UI) handleScrollEvent(yoff float64) {
-	log.Debugf("yoff: %f", yoff)
-	defer u.WakeLoop()
+	const debug = false
+	if debug {
+		log.Infof("handleScrollEvent(yoff: %f)", yoff)
+	}
 
 	if yoff != -1 && yoff != +1 {
 		return
 	}
 
-	if len(u.sidebar.slots) == 0 {
-		return
-	}
+	defer u.WakeLoop()
 
 	m := u.metrics()
 
 	switch {
-	case u.mousePos.In(m.sidebarRegion):
-		// Don't scroll if sidebar is shorter than the window.
-		if m.sidebarBounds.Dy() < u.winSize.Y {
+	case u.mousePos.In(m.sidebarBounds):
+		height := u.sidebar.ContentSize().Y
+		if height == 0 {
+			if debug {
+				log.Info("ignoring scroll event, sidebar is empty")
+			}
+			return
+		}
+
+		// Reset the scrollbar if its contents are less than the bounds.
+		if height < m.sidebarBounds.Dy() {
+			if debug {
+				log.Info("resetting scroll, sidebar is shorter than bounds")
+			}
+			u.sidebar.ResetScroll()
 			return
 		}
 
 		// Scroll wheel down: yoff = -1 up: yoff = +1
 		off := sidebarScrollAmount.Mul(-int(yoff))
-		tmpRect := m.sidebarBounds.Add(off)
-		if botGap := tmpRect.Min.Y - m.sidebarRegion.Min.Y; botGap > 0 {
-			off.Y -= botGap
+		if debug {
+			log.Info("adjusting scroll by %d", off.Y)
 		}
-		if topGap := m.sidebarRegion.Max.Y - tmpRect.Max.Y; topGap > 0 {
-			off.Y += topGap
-		}
-
-		u.sidebar.sidebarScrollOffset = u.sidebar.sidebarScrollOffset.Add(off)
+		u.sidebar.Scroll(off.Y)
 
 	case u.mousePos.In(m.chartRegion):
 		zoomChange := view.ZoomChangeUnspecified

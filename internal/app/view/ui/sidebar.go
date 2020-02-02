@@ -22,9 +22,8 @@ type sidebar struct {
 	// draggedSlot if not nil is the slot with the thumbnail being dragged.
 	draggedSlot *sidebarSlot
 
-	// sidebarScrollOffset stores the Y offset accumulated from scroll events
-	// that should be used to calculate the sidebar's bounds.
-	sidebarScrollOffset image.Point
+	// scrollOffset stores the Y offset accumulated from scroll event.
+	scrollOffset int
 
 	// bounds is the rectangle to draw within.
 	bounds image.Rectangle
@@ -43,6 +42,27 @@ func (s *sidebar) RemoveChartThumb(th *chart.Thumb) {
 	}
 }
 
+// ResetScroll resets the scroll, bringing the sidebar to the top of its bounds.
+func (s *sidebar) ResetScroll() {
+	s.scrollOffset = 0
+}
+
+// Scroll adjusts the scroll of the sidebar either moving it up or down.
+func (s *sidebar) Scroll(scrollDelta int) {
+	s.scrollOffset += scrollDelta
+}
+
+// ContentSize returns the size of the sidebar's contents like thumbnails
+// which could be less than the sidebar's bounds if there are not that many thumbnails.
+func (s *sidebar) ContentSize() image.Point {
+	num := len(s.slots)
+	height := num * chartThumbSize.Y
+	if num > 1 {
+		height += (num - 1) * viewPadding
+	}
+	return image.Pt(chartThumbSize.X, height)
+}
+
 func (s *sidebar) SetBounds(bounds image.Rectangle) {
 	s.bounds = bounds
 }
@@ -52,6 +72,8 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		s.bounds.Min.X, s.bounds.Max.Y-viewPadding-chartThumbSize.Y,
 		s.bounds.Max.X, s.bounds.Max.Y-viewPadding,
 	)
+
+	slotBounds = slotBounds.Sub(image.Pt(0, s.scrollOffset))
 
 	if !input.MouseLeftButtonDragging {
 		s.draggedSlot = nil
