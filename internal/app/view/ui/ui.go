@@ -434,7 +434,7 @@ func (u *UI) handleScrollEvent(yoff float64) {
 
 		// Scroll wheel down: yoff = -1 up: yoff = +1
 		if debug {
-			log.Info("adjusting scroll by %f", yoff)
+			log.Infof("adjusting scroll by %f", yoff)
 		}
 		u.sidebar.Scroll(-int(yoff))
 
