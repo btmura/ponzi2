@@ -432,11 +432,20 @@ func (u *UI) handleScrollEvent(yoff float64) {
 			return
 		}
 
-		// Scroll wheel down: yoff = -1 up: yoff = +1
-		if debug {
-			log.Infof("adjusting scroll by %f", yoff)
+		scrollDirection := view.ScrollDirectionUnspecified
+
+		switch {
+		case yoff < 0: // Scroll wheel down
+			scrollDirection = view.ScrollDown
+		case yoff > 0: // Scroll wheel up.
+			scrollDirection = view.ScrollUp
 		}
-		u.sidebar.Scroll(-int(yoff))
+
+		if scrollDirection == view.ScrollDirectionUnspecified {
+			return
+		}
+
+		u.sidebar.Scroll(scrollDirection)
 
 	case u.mousePos.In(m.chartRegion):
 		zoomChange := view.ZoomChangeUnspecified

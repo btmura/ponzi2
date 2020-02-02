@@ -4,6 +4,17 @@ import (
 	"image"
 )
 
+// ScrollDirection specifies the mouse scroll wheel direction.
+type ScrollDirection int
+
+// ScrollDirection values.
+//go:generate stringer -type ScrollDirection
+const (
+	ScrollDirectionUnspecified ScrollDirection = iota
+	ScrollUp
+	ScrollDown
+)
+
 // ZoomChange specifies whether the user has zoomed in or not.
 type ZoomChange int
 

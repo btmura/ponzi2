@@ -48,8 +48,13 @@ func (s *sidebar) ResetScroll() {
 }
 
 // Scroll adjusts the scroll of the sidebar either moving it up or down.
-func (s *sidebar) Scroll(scrollDelta int) {
-	s.scrollOffset += sidebarScrollAmount.Y * scrollDelta
+func (s *sidebar) Scroll(direction view.ScrollDirection) {
+	switch direction {
+	case view.ScrollUp:
+		s.scrollOffset -= sidebarScrollAmount.Y
+	case view.ScrollDown:
+		s.scrollOffset += sidebarScrollAmount.Y
+	}
 }
 
 // ContentSize returns the size of the sidebar's contents like thumbnails
