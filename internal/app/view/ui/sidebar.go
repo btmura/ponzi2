@@ -52,7 +52,11 @@ func (s *sidebar) ContentSize() image.Point {
 
 	height := num * chartThumbSize.Y
 	if num > 1 {
+		// Add padding between thumbnails.
 		height += (num - 1) * viewPadding
+
+		// Add padding on top and bottom.
+		height += 2 * viewPadding
 	}
 	return image.Pt(chartThumbSize.X, height)
 }
@@ -72,9 +76,19 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		// Scroll up or down if the scroll event occurred within the sidebar bounds.
 		switch input.Scroll {
 		case view.ScrollUp:
-			s.scrollOffset -= sidebarScrollAmount.Y
+			// Don't allow a gap at the bottom.
+			scroll := sidebarScrollAmount.Y
+			if available := s.scrollOffset + (h - s.bounds.Dy()); scroll > available {
+				scroll = available
+			}
+			s.scrollOffset -= scroll
+
 		case view.ScrollDown:
+			// Don't allow a gap at the top.
 			s.scrollOffset += sidebarScrollAmount.Y
+			if s.scrollOffset > 0 {
+				s.scrollOffset = 0
+			}
 		}
 	}
 
