@@ -42,11 +42,6 @@ func (s *sidebar) RemoveChartThumb(th *chart.Thumb) {
 	}
 }
 
-// ResetScroll resets the scroll, bringing the sidebar to the top of its bounds.
-func (s *sidebar) ResetScroll() {
-	s.scrollOffset = 0
-}
-
 // ContentSize returns the size of the sidebar's contents like thumbnails
 // which could be less than the sidebar's bounds if there are not that many thumbnails.
 func (s *sidebar) ContentSize() image.Point {

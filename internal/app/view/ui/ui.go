@@ -274,12 +274,6 @@ func (u *UI) handleSizeEvent(width, height int) {
 	gfx.SetProjectionViewMatrix(matrix.Ortho(fw, fh, fw /* use width as depth */))
 
 	u.winSize = s
-
-	// Reset the sidebar scroll offset if the sidebar is shorter than the bounds.
-	m := u.metrics()
-	if u.sidebar.ContentSize().Y < m.sidebarBounds.Dy() {
-		u.sidebar.ResetScroll()
-	}
 }
 
 // viewMetrics has dynamic metrics used to render the view.
