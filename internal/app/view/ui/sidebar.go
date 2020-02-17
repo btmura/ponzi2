@@ -66,37 +66,44 @@ func (s *sidebar) SetBounds(bounds image.Rectangle) {
 }
 
 func (s *sidebar) ProcessInput(input *view.Input) {
+	// Adjust the scroll offset due to the mouse wheel or window size.
 	h := s.ContentSize().Y
-	switch {
-	case h == 0 || h < s.bounds.Dy():
+	if h == 0 || h < s.bounds.Dy() {
 		// Reset offset if the sidebar is empty or the contents are less than the bounds.
 		s.scrollOffset = 0
-
-	case input.MousePos.In(s.bounds):
+	} else {
 		// Scroll up or down if the scroll event occurred within the sidebar bounds.
-		switch input.Scroll {
-		case view.ScrollUp:
-			// Don't allow a gap at the bottom.
-			scroll := sidebarScrollAmount.Y
-			if available := s.scrollOffset + (h - s.bounds.Dy()); scroll > available {
-				scroll = available
+		if input.MousePos.In(s.bounds) {
+			switch input.Scroll {
+			case view.ScrollUp:
+				s.scrollUp()
+			case view.ScrollDown:
+				s.scrollDown()
 			}
-			s.scrollOffset -= scroll
+		}
 
-		case view.ScrollDown:
-			// Don't allow a gap at the top.
-			s.scrollOffset += sidebarScrollAmount.Y
-			if s.scrollOffset > 0 {
-				s.scrollOffset = 0
+		// Scroll up or down if dragging and hovering over the bumpers.
+		if input.MouseLeftButtonDragging && s.draggedSlot != nil {
+			top := image.Rect(
+				s.bounds.Min.X, s.bounds.Max.Y-chartThumbSize.Y/2,
+				s.bounds.Max.X, s.bounds.Max.Y)
+			bottom := image.Rect(
+				s.bounds.Min.X, 0,
+				s.bounds.Max.X, chartThumbSize.Y/2)
+			switch {
+			case input.MousePos.In(top):
+				s.scrollDown()
+			case input.MousePos.In(bottom):
+				s.scrollUp()
 			}
 		}
 	}
 
+	// Go down the sidebar and assign bounds to each slot and identify the dragged slot.
 	slotBounds := image.Rect(
 		s.bounds.Min.X, s.bounds.Max.Y-viewPadding-chartThumbSize.Y,
 		s.bounds.Max.X, s.bounds.Max.Y-viewPadding,
 	)
-
 	slotBounds = slotBounds.Sub(image.Pt(0, s.scrollOffset))
 
 	if !input.MouseLeftButtonDragging {
@@ -104,8 +111,6 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 	}
 
 	draggedSlotIndex := -1
-
-	// Go down the sidebar and assign bounds to each slot and identify the dragged slot.
 	for i, slot := range s.slots {
 		slot.SetBounds(slotBounds)
 		slot.SetThumbnailBounds(slotBounds)
@@ -145,6 +150,29 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 	// Forward the input such as clicks to the adjusted sidebar now.
 	for _, slot := range s.slots {
 		slot.ProcessInput(input)
+	}
+}
+
+func (s *sidebar) scrollUp() {
+	// Don't scroll if there is no need.
+	overflow := s.ContentSize().Y - s.bounds.Dy()
+	if overflow <= 0 {
+		return
+	}
+
+	// Don't allow a gap at the bottom.
+	scroll := sidebarScrollAmount.Y
+	if available := s.scrollOffset + overflow; scroll > available {
+		scroll = available
+	}
+	s.scrollOffset -= scroll
+}
+
+func (s *sidebar) scrollDown() {
+	// Don't allow a gap at the top.
+	s.scrollOffset += sidebarScrollAmount.Y
+	if s.scrollOffset > 0 {
+		s.scrollOffset = 0
 	}
 }
 
