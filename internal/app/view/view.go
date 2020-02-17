@@ -41,6 +41,9 @@ type Input struct {
 	// MouseLeftButtonReleased is whether the left mouse button was released.
 	MouseLeftButtonReleased bool
 
+	// Scroll is the up or down scroll direction or unspecified if the user did not scroll.
+	Scroll ScrollDirection
+
 	// ScheduledCallbacks are callbacks to be called at the end of Render.
 	ScheduledCallbacks []func()
 }

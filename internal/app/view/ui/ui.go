@@ -135,6 +135,9 @@ type UI struct {
 
 	// mouseLeftButtonReleased is whether the left mouse button was released.
 	mouseLeftButtonReleased bool
+
+	// scroll is the scroll direction to report. Unspecified if no scroll occurred.
+	scroll view.ScrollDirection
 }
 
 type uiChart struct {
@@ -400,53 +403,24 @@ func (u *UI) handleMouseButtonEvent(button glfw.MouseButton, action glfw.Action)
 }
 
 func (u *UI) handleScrollEvent(yoff float64) {
-	const debug = false
-	if debug {
-		log.Infof("handleScrollEvent(yoff: %f)", yoff)
-	}
-
 	if yoff != -1 && yoff != +1 {
 		return
 	}
 
 	defer u.WakeLoop()
 
+	switch {
+	case yoff < 0: // Scroll wheel down
+		u.scroll = view.ScrollDown
+	case yoff > 0: // Scroll wheel up.
+		u.scroll = view.ScrollUp
+	}
+
+	// TODO(btmura): Move the code below to the Chart's ProcessInput method.
+
 	m := u.metrics()
 
 	switch {
-	case u.mousePos.In(m.sidebarBounds):
-		height := u.sidebar.ContentSize().Y
-		if height == 0 {
-			if debug {
-				log.Info("ignoring scroll event, sidebar is empty")
-			}
-			return
-		}
-
-		// Reset the scrollbar if its contents are less than the bounds.
-		if height < m.sidebarBounds.Dy() {
-			if debug {
-				log.Info("resetting scroll, sidebar is shorter than bounds")
-			}
-			u.sidebar.ResetScroll()
-			return
-		}
-
-		scrollDirection := view.ScrollDirectionUnspecified
-
-		switch {
-		case yoff < 0: // Scroll wheel down
-			scrollDirection = view.ScrollDown
-		case yoff > 0: // Scroll wheel up.
-			scrollDirection = view.ScrollUp
-		}
-
-		if scrollDirection == view.ScrollDirectionUnspecified {
-			return
-		}
-
-		u.sidebar.Scroll(scrollDirection)
-
 	case u.mousePos.In(m.chartRegion):
 		zoomChange := view.ZoomChangeUnspecified
 
@@ -544,6 +518,7 @@ func (u *UI) processInput() []func() {
 		MousePos:                u.mousePos,
 		MouseLeftButtonDragging: u.mouseLeftButtonPressedCount > fps/2,
 		MouseLeftButtonReleased: u.mouseLeftButtonReleased,
+		Scroll:                  u.scroll,
 	}
 
 	if u.mouseLeftButtonPressed {
@@ -580,6 +555,7 @@ func (u *UI) processInput() []func() {
 	}
 	u.mouseLeftButtonPressed = false
 	u.mouseLeftButtonReleased = false
+	u.scroll = view.ScrollDirectionUnspecified
 
 	return input.ScheduledCallbacks
 }

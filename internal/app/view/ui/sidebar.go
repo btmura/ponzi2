@@ -47,16 +47,6 @@ func (s *sidebar) ResetScroll() {
 	s.scrollOffset = 0
 }
 
-// Scroll adjusts the scroll of the sidebar either moving it up or down.
-func (s *sidebar) Scroll(direction view.ScrollDirection) {
-	switch direction {
-	case view.ScrollUp:
-		s.scrollOffset -= sidebarScrollAmount.Y
-	case view.ScrollDown:
-		s.scrollOffset += sidebarScrollAmount.Y
-	}
-}
-
 // ContentSize returns the size of the sidebar's contents like thumbnails
 // which could be less than the sidebar's bounds if there are not that many thumbnails.
 func (s *sidebar) ContentSize() image.Point {
@@ -77,6 +67,22 @@ func (s *sidebar) SetBounds(bounds image.Rectangle) {
 }
 
 func (s *sidebar) ProcessInput(input *view.Input) {
+	h := s.ContentSize().Y
+	switch {
+	case h == 0 || h < s.bounds.Dy():
+		// Reset offset if the sidebar is empty or the contents are less than the bounds.
+		s.scrollOffset = 0
+
+	case input.MousePos.In(s.bounds):
+		// Scroll up or down if the scroll event occurred within the sidebar bounds.
+		switch input.Scroll {
+		case view.ScrollUp:
+			s.scrollOffset -= sidebarScrollAmount.Y
+		case view.ScrollDown:
+			s.scrollOffset += sidebarScrollAmount.Y
+		}
+	}
+
 	slotBounds := image.Rect(
 		s.bounds.Min.X, s.bounds.Max.Y-viewPadding-chartThumbSize.Y,
 		s.bounds.Max.X, s.bounds.Max.Y-viewPadding,
