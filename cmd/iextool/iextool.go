@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	port             = flag.Int("port", 9000, "Port number to export metrics.")
+	// port             = flag.Int("port", 9000, "Port number to export metrics.")
 	token            = flag.String("token", "", "API token required on requests.")
 	enableChartCache = flag.Bool("enable_chart_cache", true, "Whether to enable the chart cache.")
 	dumpAPIResponses = flag.Bool("dump_api_responses", false, "Dump API responses to txt files.")
@@ -64,7 +64,10 @@ func main() {
 		fmt.Printf("Enter comma-separated symbols: ")
 
 		symbolLine := ""
-		fmt.Scanln(&symbolLine)
+		if _, err := fmt.Scanln(&symbolLine); err != nil {
+			fmt.Println(err)
+			continue
+		}
 		symbolLine = strings.ToUpper(symbolLine)
 
 		dataRange := pick("Pick a range", iex.TwoYears, iex.OneDay).(iex.Range)
@@ -154,7 +157,10 @@ func pick(prompt string, choices ...interface{}) interface{} {
 		}
 
 		line := ""
-		fmt.Scanln(&line)
+		if _, err := fmt.Scanln(&line); err != nil {
+			fmt.Println(err)
+			continue
+		}
 
 		line = strings.TrimSpace(line)
 		if line == "" {
