@@ -1,4 +1,5 @@
 // The iextool command prints stock data for a list of stock symbols.
+// go run cmd/iextool/iextool.go -token TOKEN
 package main
 
 import (
@@ -22,6 +23,11 @@ var (
 	dumpAPIResponses = flag.Bool("dump_api_responses", false, "Dump API responses to txt files.")
 )
 
+type chartCache interface {
+	Get(ctx context.Context, key iex.ChartCacheKey) (*iex.ChartCacheValue, error)
+	Put(ctx context.Context, key iex.ChartCacheKey, val *iex.ChartCacheValue) error
+}
+
 func main() {
 	flag.Parse()
 
@@ -38,18 +44,23 @@ func main() {
 
 	ctx := context.Background()
 
-	var c *iex.Client
+	var client *iex.Client
+	var cache chartCache
+	var err error
 
 	switch {
 	case *enableChartCache:
-		cache, err := iex.OpenGOBChartCache()
+		fmt.Println("Using GOB ChartCache...")
+		cache, err = iex.OpenGOBChartCache()
 		if err != nil {
 			log.Fatal(err)
 		}
-		c = iex.NewClient(cache, *dumpAPIResponses)
+		client = iex.NewClient(cache, *dumpAPIResponses)
 
 	default:
-		c = iex.NewClient(new(iex.NoOpChartCache), *dumpAPIResponses)
+		fmt.Println("Using No-op ChartCache...")
+		cache = new(iex.NoOpChartCache)
+		client = iex.NewClient(cache, *dumpAPIResponses)
 	}
 
 	for {
@@ -69,82 +80,140 @@ func main() {
 			continue
 		}
 		symbolLine = strings.ToUpper(symbolLine)
+		symbols := strings.Split(symbolLine, ",")
 
-		dataRange := pick("Pick a range", iex.TwoYears, iex.OneDay).(iex.Range)
+		const (
+			getAPIDataAction     = "Get API Data"
+			clearCacheDataAction = "Clear Cache Data"
+		)
 
-		qReq := &iex.GetQuotesRequest{
-			Token:   *token,
-			Symbols: strings.Split(symbolLine, ","),
+		action := pick("Pick an action", getAPIDataAction, clearCacheDataAction).(string)
+
+		switch action {
+		case getAPIDataAction:
+			getAPIData(ctx, client, symbols)
+
+		case clearCacheDataAction:
+			clearCacheData(ctx, cache, symbols, *token)
 		}
+	}
+}
 
-		fmt.Printf("Quotes: %+v\n\n", qReq)
+func getAPIData(ctx context.Context, client *iex.Client, symbols []string) {
+	dataRange := pick("Pick a range", iex.TwoYears, iex.OneDay).(iex.Range)
 
-		quotes, err := c.GetQuotes(ctx, qReq)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
+	qReq := &iex.GetQuotesRequest{
+		Token:   *token,
+		Symbols: symbols,
+	}
 
-		formatTime := func(t time.Time) string {
-			return t.Format("1/2/06 03:04 AM")
-		}
+	fmt.Printf("Quotes: %+v\n\n", qReq)
 
-		for i, q := range quotes {
-			fmt.Printf("%d: %q %q LP: %.2f LS: %v LT: %s, LU: %s, LV: %d "+
-				"O: %.2f H: %.2f L: %.2f C: %.2f CH: %.2f CHP: %.2f\n",
-				i,
-				q.Symbol,
-				q.CompanyName,
-				q.LatestPrice,
-				q.LatestSource,
-				formatTime(q.LatestTime),
-				formatTime(q.LatestUpdate),
-				q.LatestVolume,
-				q.Open,
-				q.High,
-				q.Low,
-				q.Close,
-				q.Change,
-				q.ChangePercent)
-		}
+	quotes, err := client.GetQuotes(ctx, qReq)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
-		fmt.Println()
+	formatTime := func(t time.Time) string {
+		return t.Format("1/2/06 03:04 AM")
+	}
 
-		cReq := &iex.GetChartsRequest{
-			Token:   *token,
-			Symbols: strings.Split(symbolLine, ","),
-			Range:   dataRange,
-		}
+	for i, q := range quotes {
+		fmt.Printf("%d: %q %q LP: %.2f LS: %v LT: %s, LU: %s, LV: %d "+
+			"O: %.2f H: %.2f L: %.2f C: %.2f CH: %.2f CHP: %.2f\n",
+			i,
+			q.Symbol,
+			q.CompanyName,
+			q.LatestPrice,
+			q.LatestSource,
+			formatTime(q.LatestTime),
+			formatTime(q.LatestUpdate),
+			q.LatestVolume,
+			q.Open,
+			q.High,
+			q.Low,
+			q.Close,
+			q.Change,
+			q.ChangePercent)
+	}
 
-		fmt.Printf("Charts: %+v\n\n", cReq)
+	fmt.Println()
 
-		charts, err := c.GetCharts(ctx, cReq)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
+	cReq := &iex.GetChartsRequest{
+		Token:   *token,
+		Symbols: symbols,
+		Range:   dataRange,
+	}
 
-		const last = 10
+	fmt.Printf("Charts: %+v\n\n", cReq)
 
-		for i, ch := range charts {
-			fmt.Printf("%d: %s\n", i, ch.Symbol)
-			for j, p := range ch.ChartPoints {
-				if j >= len(ch.ChartPoints)-last {
-					fmt.Printf("\t%d: %s O: %.2f H: %.2f L: %.2f C: %.2f V: %d CH: %.2f CHP: %.2f\n",
-						j,
-						formatTime(p.Date),
-						p.Open,
-						p.High,
-						p.Low,
-						p.Close,
-						p.Volume,
-						p.Change,
-						p.ChangePercent)
-				}
+	charts, err := client.GetCharts(ctx, cReq)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	const last = 20
+
+	for i, ch := range charts {
+		fmt.Printf("%d: %s\n", i, ch.Symbol)
+		for j, p := range ch.ChartPoints {
+			if j >= len(ch.ChartPoints)-last {
+				fmt.Printf("\t%d: %s O: %.2f H: %.2f L: %.2f C: %.2f V: %d CH: %.2f CHP: %.2f\n",
+					j,
+					formatTime(p.Date),
+					p.Open,
+					p.High,
+					p.Low,
+					p.Close,
+					p.Volume,
+					p.Change,
+					p.ChangePercent)
 			}
 		}
+	}
 
-		fmt.Println()
+	fmt.Println()
+}
+
+func clearCacheData(ctx context.Context, cache chartCache, symbols []string, token string) {
+	numPoints := pick("Pick how many points to clear", 10, 25, 50).(int)
+
+	for i := range symbols {
+		key := iex.ChartCacheKey{
+			Token:    token,
+			Symbol:   symbols[i],
+			Interval: iex.DailyInterval,
+		}
+
+		val, err := cache.Get(ctx, key)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		chartPoints := val.Chart.ChartPoints
+		if len(chartPoints) != 0 {
+			trimIndex := len(chartPoints) - numPoints
+			if trimIndex < 0 {
+				trimIndex = 0
+			}
+			chartPoints = chartPoints[:trimIndex]
+		}
+
+		val = &iex.ChartCacheValue{
+			Chart: &iex.Chart{
+				Symbol:      symbols[i],
+				ChartPoints: chartPoints,
+			},
+			LastUpdateTime: time.Time{},
+		}
+
+		if err := cache.Put(ctx, key, val); err != nil {
+			fmt.Println(err)
+			continue
+		}
 	}
 }
 
