@@ -92,9 +92,9 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 				s.bounds.Max.X, chartThumbSize.Y/2)
 			switch {
 			case input.MousePos.In(top):
-				s.scrollDown()
-			case input.MousePos.In(bottom):
 				s.scrollUp()
+			case input.MousePos.In(bottom):
+				s.scrollDown()
 			}
 		}
 	}
@@ -154,6 +154,14 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 }
 
 func (s *sidebar) scrollUp() {
+	// Don't allow a gap at the top.
+	s.scrollOffset += sidebarScrollAmount.Y
+	if s.scrollOffset > 0 {
+		s.scrollOffset = 0
+	}
+}
+
+func (s *sidebar) scrollDown() {
 	// Don't scroll if there is no need.
 	overflow := s.ContentSize().Y - s.bounds.Dy()
 	if overflow <= 0 {
@@ -166,14 +174,6 @@ func (s *sidebar) scrollUp() {
 		scroll = available
 	}
 	s.scrollOffset -= scroll
-}
-
-func (s *sidebar) scrollDown() {
-	// Don't allow a gap at the top.
-	s.scrollOffset += sidebarScrollAmount.Y
-	if s.scrollOffset > 0 {
-		s.scrollOffset = 0
-	}
 }
 
 // Update moves the animation one step forward.
