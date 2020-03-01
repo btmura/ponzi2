@@ -399,7 +399,7 @@ func (ch *Chart) ProcessInput(mousePos image.Point, mouseLeftButtonReleased bool
 	ch.dailyStochasticAxis.SetBounds(dlr)
 	ch.weeklyStochasticAxis.SetBounds(wlr)
 
-	ch.legend.SetBounds(plr, llr)
+	ch.legend.SetBounds(pr, llr)
 	ch.legend.ProcessInput(ch.mousePos)
 }
 
