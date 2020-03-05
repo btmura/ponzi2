@@ -134,16 +134,19 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		// Float the dragged slot's thumbnail to be under the mouse cursor.
 		s.draggedSlot.SetThumbnailBounds(rect.FromCenterPointAndSize(input.MousePos, chartThumbSize))
 
-		// Move the dragged slot up or down.
-		swapIndex := draggedSlotIndex - 1
+		// Determine whether to move the dragged slot up or down.
+		dy := -1
 		if c := rect.CenterPoint(s.draggedSlot.Bounds()); input.MousePos.Y < c.Y {
-			swapIndex = draggedSlotIndex + 1
+			dy = +1
 		}
 
-		// Swap with adjacent slot if the mouse has moved over it.
-		if swapIndex >= 0 && swapIndex < len(s.slots) && input.MousePos.In(s.slots[swapIndex].Bounds()) {
-			i, j := draggedSlotIndex, swapIndex
-			s.slots[i], s.slots[j] = s.slots[j], s.slots[i]
+		// Find the slot to swap with and swap it.
+		for i := draggedSlotIndex + dy; i >= 0 && i < len(s.slots); i += dy {
+			if input.MousePos.In(s.slots[i].Bounds()) {
+				j, k := draggedSlotIndex, i
+				s.slots[j], s.slots[k] = s.slots[k], s.slots[j]
+				break
+			}
 		}
 	}
 
