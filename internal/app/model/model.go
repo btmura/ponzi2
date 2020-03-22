@@ -237,6 +237,38 @@ func (m *Model) RemoveSidebarSymbol(symbol string) (removed bool, err error) {
 	return false, nil
 }
 
+// SetSidebarSymbol replaces the sidebar symbols with the given symbols.
+func (m *Model) SetSidebarSymbols(symbols []string) error {
+	for _, s := range symbols {
+		if err := ValidateSymbol(s); err != nil {
+			return err
+		}
+	}
+
+	leftOver := map[string]bool{}
+	for _, s := range m.sidebarSymbols {
+		leftOver[s] = true
+	}
+
+	var newSidebarSymbols []string
+	for _, s := range symbols {
+		newSidebarSymbols = append(newSidebarSymbols, s)
+		if !m.containsSymbol(s) {
+			m.symbol2Stock[s] = &Stock{Symbol: s}
+		}
+		delete(leftOver, s)
+	}
+	m.sidebarSymbols = newSidebarSymbols
+
+	for s := range leftOver {
+		if !m.containsSymbol(s) {
+			delete(m.symbol2Stock, s)
+		}
+	}
+
+	return nil
+}
+
 // Stock returns the stock for the symbol if it is in the model. Nil otherwise.
 func (m *Model) Stock(symbol string) (*Stock, error) {
 	if err := ValidateSymbol(symbol); err != nil {

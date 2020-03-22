@@ -1,5 +1,4 @@
 // Package ui contains code for the view in the MVC pattern.
-// TODO(btmura): package should not export mutable types like Chart that could interrupt the game loop
 package ui
 
 import (
@@ -99,6 +98,9 @@ type UI struct {
 	// inputSymbolSubmittedCallback is called when a new symbol is entered.
 	inputSymbolSubmittedCallback func(symbol string)
 
+	// sidebarChangeCallback is called when the sidebar changes.
+	sidebarChangeCallback func(symbols []string)
+
 	// chartZoomChangeCallback is called when the chart is zoomed in or out.
 	chartZoomChangeCallback func(zoomChange view.ZoomChange)
 
@@ -169,19 +171,13 @@ func (c *uiChart) Render(fudge float32) {
 // New creates a new View.
 func New() *UI {
 	return &UI{
-		symbolToChartMap:                map[string]*chart.Chart{},
-		symbolToChartThumbMap:           map[string]*chart.Thumb{},
-		chartRange:                      model.OneYear,
-		chartThumbRange:                 model.OneYear,
-		sidebar:                         new(sidebar),
-		instructionsTextBox:             text.NewBox(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER..."),
-		inputSymbolTextBox:              text.NewBox(inputSymbolTextRenderer, ""),
-		inputSymbolSubmittedCallback:    func(symbol string) {},
-		chartZoomChangeCallback:         func(zoomChange view.ZoomChange) {},
-		chartRefreshButtonClickCallback: func(symbol string) {},
-		chartAddButtonClickCallback:     func(symbol string) {},
-		thumbRemoveButtonClickCallback:  func(symbol string) {},
-		thumbClickCallback:              func(symbol string) {},
+		symbolToChartMap:      map[string]*chart.Chart{},
+		symbolToChartThumbMap: map[string]*chart.Thumb{},
+		chartRange:            model.OneYear,
+		chartThumbRange:       model.OneYear,
+		sidebar:               newSidebar(),
+		instructionsTextBox:   text.NewBox(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER..."),
+		inputSymbolTextBox:    text.NewBox(inputSymbolTextRenderer, ""),
 	}
 }
 
@@ -253,6 +249,10 @@ func (u *UI) Init(_ context.Context) (cleanup func(), err error) {
 
 	win.SetScrollCallback(func(win *glfw.Window, xoff, yoff float64) {
 		u.handleScrollEvent(yoff)
+	})
+
+	u.sidebar.SetChangeCallback(func(sidebar *Sidebar) {
+		u.handleSidebarChangeEvent(sidebar)
 	})
 
 	return func() { glfw.Terminate() }, nil
@@ -364,7 +364,9 @@ func (u *UI) handleKeyEvent(key glfw.Key, action glfw.Action) {
 		}
 
 	case glfw.KeyEnter:
-		u.inputSymbolSubmittedCallback(u.inputSymbolTextBox.Text())
+		if u.inputSymbolSubmittedCallback != nil {
+			u.inputSymbolSubmittedCallback(u.inputSymbolTextBox.Text())
+		}
 		u.inputSymbolTextBox.SetText("")
 	}
 }
@@ -437,7 +439,40 @@ func (u *UI) handleScrollEvent(yoff float64) {
 
 		u.chartRange = r
 
-		u.chartZoomChangeCallback(zoomChange)
+		if u.chartZoomChangeCallback != nil {
+			u.chartZoomChangeCallback(zoomChange)
+		}
+	}
+}
+
+func (u *UI) handleSidebarChangeEvent(sidebar *Sidebar) {
+	if sidebar == nil {
+		log.Error("sidebar is nil")
+		return
+	}
+
+	if u.sidebarChangeCallback == nil {
+		log.Error("sidebar change callback is nil")
+		return
+	}
+
+	var symbols []string
+
+	for _, slot := range sidebar.Slots {
+		if slot.Thumbnail == nil {
+			log.Error("sidebar reporting slot with nil thumbnail")
+			continue
+		}
+
+		for s, th := range u.symbolToChartThumbMap {
+			if th == slot.Thumbnail {
+				symbols = append(symbols, s)
+			}
+		}
+	}
+
+	if u.sidebarChangeCallback != nil {
+		u.sidebarChangeCallback(symbols)
 	}
 }
 
@@ -605,57 +640,38 @@ func (u *UI) render(fudge float32) {
 }
 
 // SetInputSymbolSubmittedCallback sets the callback for when a new symbol is entered.
-func (u *UI) SetInputSymbolSubmittedCallback(cb func(symbol string)) error {
-	if cb == nil {
-		return errors.Errorf("missing callback")
-	}
+func (u *UI) SetInputSymbolSubmittedCallback(cb func(symbol string)) {
 	u.inputSymbolSubmittedCallback = cb
-	return nil
+}
+
+// SetSidebarChangeCallback sets the callback for when the sidebar changes.
+func (u *UI) SetSidebarChangeCallback(cb func(symbols []string)) {
+	u.sidebarChangeCallback = cb
 }
 
 // SetChartZoomChangeCallback sets the callback for when the chart is zoomed in or out.
-func (u *UI) SetChartZoomChangeCallback(cb func(zoomChange view.ZoomChange)) error {
-	if cb == nil {
-		return errors.Errorf("missing callback")
-	}
+func (u *UI) SetChartZoomChangeCallback(cb func(zoomChange view.ZoomChange)) {
 	u.chartZoomChangeCallback = cb
-	return nil
 }
 
 // SetChartRefreshButtonClickCallback sets the callback for when the main chart's refresh button is clicked.
-func (u *UI) SetChartRefreshButtonClickCallback(cb func(symbol string)) error {
-	if cb == nil {
-		return errors.Errorf("missing callback")
-	}
+func (u *UI) SetChartRefreshButtonClickCallback(cb func(symbol string)) {
 	u.chartRefreshButtonClickCallback = cb
-	return nil
 }
 
 // SetChartAddButtonClickCallback sets the callback for when the main chart's add button is clicked.
-func (u *UI) SetChartAddButtonClickCallback(cb func(symbol string)) error {
-	if cb == nil {
-		return errors.Errorf("missing callback")
-	}
+func (u *UI) SetChartAddButtonClickCallback(cb func(symbol string)) {
 	u.chartAddButtonClickCallback = cb
-	return nil
 }
 
 // SetThumbRemoveButtonClickCallback sets the callback for when a thumb's remove button is clicked.
-func (u *UI) SetThumbRemoveButtonClickCallback(cb func(symbol string)) error {
-	if cb == nil {
-		return errors.Errorf("missing callback")
-	}
+func (u *UI) SetThumbRemoveButtonClickCallback(cb func(symbol string)) {
 	u.thumbRemoveButtonClickCallback = cb
-	return nil
 }
 
 // SetThumbClickCallback sets the callback for when a thumb is clicked.
-func (u *UI) SetThumbClickCallback(cb func(symbol string)) error {
-	if cb == nil {
-		return errors.Errorf("missing callback")
-	}
+func (u *UI) SetThumbClickCallback(cb func(symbol string)) {
 	u.thumbClickCallback = cb
-	return nil
 }
 
 // SetChart sets the main chart to the given symbol and data.

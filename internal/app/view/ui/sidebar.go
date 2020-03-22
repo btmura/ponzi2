@@ -15,11 +15,23 @@ var (
 	sidebarScrollAmount = image.Pt(0, chartThumbSize.Y+viewPadding)
 )
 
+// Sidebar is the sidebar that displays thumbnails of stocks.
+type Sidebar struct {
+	// Slots are the sidebar's slots that have thumbnails.
+	Slots []*SidebarSlot
+}
+
+// SidebarSlot is a slot in the sidebar that has a thumbnail.
+type SidebarSlot struct {
+	// Thumbnail is the thumbnail shown in the sidebar slot.
+	Thumbnail *chart.Thumb
+}
+
 type sidebar struct {
-	// slots are slots which can have a thumbnail or be a drop site.
+	// slots are slots which can have a Thumbnail or be a drop site.
 	slots []*sidebarSlot
 
-	// draggedSlot if not nil is the slot with the thumbnail being dragged.
+	// draggedSlot if not nil is the slot with the Thumbnail being dragged.
 	draggedSlot *sidebarSlot
 
 	// scrollOffset stores the Y offset accumulated from scroll event.
@@ -27,6 +39,13 @@ type sidebar struct {
 
 	// bounds is the rectangle to draw within.
 	bounds image.Rectangle
+
+	// changeCallback is a callback fired when the sidebar changes.
+	changeCallback func(sidebar *Sidebar)
+}
+
+func newSidebar() *sidebar {
+	return new(sidebar)
 }
 
 func (s *sidebar) AddChartThumb(th *chart.Thumb) {
@@ -106,6 +125,8 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 	)
 	slotBounds = slotBounds.Sub(image.Pt(0, s.scrollOffset))
 
+	wasDragging := s.draggedSlot != nil
+
 	if !input.MouseLeftButtonDragging {
 		s.draggedSlot = nil
 	}
@@ -130,6 +151,8 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		slotBounds = slotBounds.Sub(image.Pt(0, chartThumbSize.Y+viewPadding))
 	}
 
+	stillDragging := s.draggedSlot != nil
+
 	if s.draggedSlot != nil {
 		// Float the dragged slot's thumbnail to be under the mouse cursor.
 		s.draggedSlot.SetThumbnailBounds(rect.FromCenterPointAndSize(input.MousePos, chartThumbSize))
@@ -153,6 +176,18 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 	// Forward the input such as clicks to the adjusted sidebar now.
 	for _, slot := range s.slots {
 		slot.ProcessInput(input)
+	}
+
+	if wasDragging && !stillDragging && s.changeCallback != nil {
+		sidebar := new(Sidebar)
+		for _, slot := range s.slots {
+			if slot.thumbnail != nil {
+				sidebar.Slots = append(sidebar.Slots, &SidebarSlot{Thumbnail: slot.thumbnail})
+			}
+		}
+		input.ScheduledCallbacks = append(input.ScheduledCallbacks, func() {
+			s.changeCallback(sidebar)
+		})
 	}
 }
 
@@ -209,11 +244,19 @@ func (s *sidebar) Render(fudge float32) {
 	}
 }
 
+func (s *sidebar) SetChangeCallback(cb func(sidebar *Sidebar)) {
+	s.changeCallback = cb
+}
+
+func (s *sidebar) Close() {
+	s.changeCallback = nil
+}
+
 type sidebarSlot struct {
 	// bounds is the rectangle to draw the slot within. Can be empty for collapsed slots.
 	bounds image.Rectangle
 
-	// thumbnail is an optional stock thumbnail. Could have bounds outside the slot if dragged.
+	// Thumbnail is an optional stock Thumbnail. Could have bounds outside the slot if dragged.
 	thumbnail *chart.Thumb
 
 	// fader fades out the slot.

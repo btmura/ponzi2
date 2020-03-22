@@ -88,6 +88,12 @@ func (c *Controller) RunLoop() error {
 		}
 	})
 
+	c.ui.SetSidebarChangeCallback(func(symbols []string) {
+		if err := c.setSidebarSymbols(symbols); err != nil {
+			log.Errorf("setSidebarSymbols: %v", err)
+		}
+	})
+
 	c.ui.SetChartZoomChangeCallback(func(zoomChange view.ZoomChange) {
 		if err := c.refreshCurrentStock(ctx); err != nil {
 			log.Errorf("refreshCurrentStock: %v", err)
@@ -96,7 +102,7 @@ func (c *Controller) RunLoop() error {
 
 	c.ui.SetChartRefreshButtonClickCallback(func(symbol string) {
 		if err := c.refreshAllStocks(ctx); err != nil {
-			log.Errorf("refreshStocks: %v", err)
+			log.Errorf("refreshAllStocks: %v", err)
 		}
 	})
 
@@ -218,7 +224,25 @@ func (c *Controller) removeChartThumb(symbol string) error {
 		return nil
 	}
 
-	c.ui.RemoveChartThumb(symbol)
+	if err := c.ui.RemoveChartThumb(symbol); err != nil {
+		return err
+	}
+
+	c.configSaver.save(toConfig(c.model))
+
+	return nil
+}
+
+func (c *Controller) setSidebarSymbols(symbols []string) error {
+	for _, s := range symbols {
+		if err := model.ValidateSymbol(s); err != nil {
+			return err
+		}
+	}
+
+	if err := c.model.SetSidebarSymbols(symbols); err != nil {
+		return err
+	}
 
 	c.configSaver.save(toConfig(c.model))
 

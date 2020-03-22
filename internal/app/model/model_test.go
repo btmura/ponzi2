@@ -143,6 +143,30 @@ func TestRemoveSidebarSymbol(t *testing.T) {
 	}
 }
 
+func TestSetSidebarSymbols(t *testing.T) {
+	m := New()
+
+	m.AddSidebarSymbol("SPY")
+	m.AddSidebarSymbol("AAPL")
+	m.AddSidebarSymbol("CEF")
+
+	if diff := cmp.Diff([]string{"SPY", "AAPL", "CEF"}, m.SidebarSymbols()); diff != "" {
+		t.Errorf("diff (-want, +got)\n%s", diff)
+	}
+
+	m.SetSidebarSymbols([]string{"SPY", "CEF", "AAPL"})
+
+	if diff := cmp.Diff([]string{"SPY", "CEF", "AAPL"}, m.SidebarSymbols()); diff != "" {
+		t.Errorf("diff (-want, +got)\n%s", diff)
+	}
+
+	m.SetSidebarSymbols([]string{"SPY"})
+
+	if diff := cmp.Diff([]string{"SPY"}, m.SidebarSymbols()); diff != "" {
+		t.Errorf("diff (-want, +got)\n%s", diff)
+	}
+}
+
 func TestUpdateStockQuote(t *testing.T) {
 	old := now
 	defer func() { now = old }()
