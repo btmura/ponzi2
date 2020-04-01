@@ -8,6 +8,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
 	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
@@ -278,14 +279,14 @@ func (ch *Chart) SetBounds(bounds image.Rectangle) {
 	ch.fullBounds = bounds
 }
 
-func (ch *Chart) ProcessInput(mousePos image.Point, mouseLeftButtonReleased bool, scheduledCallbacks *[]func()) {
+func (ch *Chart) ProcessInput(input *view.Input) {
 	bounds := ch.fullBounds
 
 	ch.frameBubble.SetBounds(bounds)
-	ch.mousePos = mousePos
+	ch.mousePos = input.MousePos
 
 	ch.header.SetBounds(bounds)
-	r, _ := ch.header.ProcessInput(mousePos, mouseLeftButtonReleased, scheduledCallbacks)
+	r, _ := ch.header.ProcessInput(input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
 
 	ch.bodyBounds = r
 	ch.loadingTextBox.SetBounds(r)
