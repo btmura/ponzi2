@@ -166,7 +166,7 @@ func (t *Thumb) ProcessInput(input *view.Input) {
 	t.mousePos = input.MousePos
 
 	t.header.SetBounds(t.fullBounds)
-	r, clicks := t.header.ProcessInput(input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
+	r, clicks := t.header.ProcessInput(input)
 
 	t.bodyBounds = r
 	t.loadingTextBox.SetBounds(r)

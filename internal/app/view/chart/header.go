@@ -6,6 +6,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
 	"github.com/btmura/ponzi2/internal/app/view/button"
 	"github.com/btmura/ponzi2/internal/app/view/color"
@@ -186,15 +187,7 @@ func (h *header) SetBounds(bounds image.Rectangle) {
 	h.bounds = bounds
 }
 
-func (h *header) ProcessInput(
-	mousePos image.Point,
-	mouseLeftButtonReleased bool,
-	scheduledCallbacks *[]func(),
-) (
-	body image.Rectangle,
-	clicks headerClicks,
-) {
-
+func (h *header) ProcessInput(input *view.Input) (body image.Rectangle, clicks headerClicks) {
 	height := h.padding + h.symbolQuoteTextRenderer.LineHeight() + h.padding
 	buttonSize := image.Pt(height, height)
 
@@ -203,17 +196,17 @@ func (h *header) ProcessInput(
 	bounds := image.Rectangle{Min: r.Max.Sub(buttonSize), Max: r.Max}
 
 	if h.removeButton.enabled {
-		clicks.RemoveButtonClicked = h.removeButton.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
+		clicks.RemoveButtonClicked = h.removeButton.ProcessInput(bounds, input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
 		bounds = rect.Translate(bounds, -buttonSize.X, 0)
 	}
 
 	if h.addButton.enabled {
-		clicks.AddButtonClicked = h.addButton.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
+		clicks.AddButtonClicked = h.addButton.ProcessInput(bounds, input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
 		bounds = rect.Translate(bounds, -buttonSize.X, 0)
 	}
 
 	if h.refreshButton.enabled || h.refreshButton.Spinning() {
-		clicks.RefreshButtonClicked = h.refreshButton.ProcessInput(bounds, mousePos, mouseLeftButtonReleased, scheduledCallbacks)
+		clicks.RefreshButtonClicked = h.refreshButton.ProcessInput(bounds, input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
 		bounds = rect.Translate(bounds, -buttonSize.X, 0)
 	}
 
