@@ -84,9 +84,6 @@ func (b *Box) SetBounds(bounds image.Rectangle) {
 	b.dirty = true
 }
 
-// ProcessInput processes the input.
-func (b *Box) ProcessInput() {}
-
 // Update updates the state by one frame and returns true if another update is needed for animation.
 func (b *Box) Update() (dirty bool) {
 	if !b.dirty {

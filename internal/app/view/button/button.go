@@ -5,6 +5,7 @@ import (
 	math "math"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
 )
 
@@ -36,15 +37,13 @@ func (b *Button) StopSpinning() {
 	b.spinning.Stop()
 }
 
-func (b *Button) ProcessInput(
-	bounds image.Rectangle,
-	mousePos image.Point,
-	mouseLeftButtonReleased bool,
-	scheduledCallbacks *[]func(),
-) (clicked bool) {
+func (b *Button) SetBounds(bounds image.Rectangle) {
 	b.bounds = bounds
-	if mouseLeftButtonReleased && mousePos.In(bounds) {
-		*scheduledCallbacks = append(*scheduledCallbacks, b.clickCallback)
+}
+
+func (b *Button) ProcessInput(input *view.Input) (clicked bool) {
+	if input.MouseLeftButtonReleased && input.MousePos.In(b.bounds) {
+		input.ScheduledCallbacks = append(input.ScheduledCallbacks, b.clickCallback)
 		return true
 	}
 	return false

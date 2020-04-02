@@ -292,9 +292,6 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	ch.loadingTextBox.SetBounds(r)
 	ch.errorTextBox.SetBounds(r)
 
-	ch.loadingTextBox.ProcessInput()
-	ch.errorTextBox.ProcessInput()
-
 	// Calculate percentage needed for each section.
 	const (
 		volumePercent            = 0.13

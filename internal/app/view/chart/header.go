@@ -196,17 +196,20 @@ func (h *header) ProcessInput(input *view.Input) (body image.Rectangle, clicks h
 	bounds := image.Rectangle{Min: r.Max.Sub(buttonSize), Max: r.Max}
 
 	if h.removeButton.enabled {
-		clicks.RemoveButtonClicked = h.removeButton.ProcessInput(bounds, input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
+		h.removeButton.SetBounds(bounds)
+		clicks.RemoveButtonClicked = h.removeButton.ProcessInput(input)
 		bounds = rect.Translate(bounds, -buttonSize.X, 0)
 	}
 
 	if h.addButton.enabled {
-		clicks.AddButtonClicked = h.addButton.ProcessInput(bounds, input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
+		h.addButton.SetBounds(bounds)
+		clicks.AddButtonClicked = h.addButton.ProcessInput(input)
 		bounds = rect.Translate(bounds, -buttonSize.X, 0)
 	}
 
 	if h.refreshButton.enabled || h.refreshButton.Spinning() {
-		clicks.RefreshButtonClicked = h.refreshButton.ProcessInput(bounds, input.MousePos, input.MouseLeftButtonReleased, &input.ScheduledCallbacks)
+		h.refreshButton.SetBounds(bounds)
+		clicks.RefreshButtonClicked = h.refreshButton.ProcessInput(input)
 		bounds = rect.Translate(bounds, -buttonSize.X, 0)
 	}
 
