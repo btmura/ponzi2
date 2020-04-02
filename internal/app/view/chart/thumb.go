@@ -187,11 +187,11 @@ func (t *Thumb) ProcessInput(input *view.Input) {
 	dr, wr := rects[1], rects[0]
 
 	t.dailyStochastic.SetBounds(dr)
-	t.dailyStochasticCursor.ProcessInput(t.mousePos)
+	t.dailyStochasticCursor.ProcessInput(input)
 	t.dailyStochasticTimeline.SetBounds(dr)
 
 	t.weeklyStochastic.SetBounds(wr)
-	t.weeklyStochasticCursor.ProcessInput(t.mousePos)
+	t.weeklyStochasticCursor.ProcessInput(input)
 	t.weeklyStochasticTimeline.SetBounds(wr)
 }
 

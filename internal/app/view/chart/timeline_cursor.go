@@ -7,6 +7,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/errors"
 )
@@ -67,8 +68,8 @@ func (t *timelineCursor) SetBounds(timelineRect, labelRect image.Rectangle) {
 }
 
 // ProcessInput processes input.
-func (t *timelineCursor) ProcessInput(mousePos image.Point) {
-	t.mousePos = mousePos
+func (t *timelineCursor) ProcessInput(input *view.Input) {
+	t.mousePos = input.MousePos
 }
 
 func (t *timelineCursor) Render(fudge float32) {

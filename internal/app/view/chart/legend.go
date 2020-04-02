@@ -9,6 +9,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/color"
 )
 
@@ -43,8 +44,8 @@ func (l *legend) SetBounds(priceRect, labelRect image.Rectangle) {
 	l.labelRect = labelRect
 }
 
-func (l *legend) ProcessInput(mousePos image.Point) {
-	l.mousePos = mousePos
+func (l *legend) ProcessInput(input *view.Input) {
+	l.mousePos = input.MousePos
 }
 
 func (l *legend) Render(fudge float32) {

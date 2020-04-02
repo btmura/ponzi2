@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/color"
 )
 
@@ -28,8 +29,8 @@ func (s *stochasticCursor) SetBounds(stoRect, labelRect image.Rectangle) {
 	s.labelRect = labelRect
 }
 
-func (s *stochasticCursor) ProcessInput(mousePos image.Point) {
-	s.mousePos = mousePos
+func (s *stochasticCursor) ProcessInput(input *view.Input) {
+	s.mousePos = input.MousePos
 }
 
 func (s *stochasticCursor) SetData() {

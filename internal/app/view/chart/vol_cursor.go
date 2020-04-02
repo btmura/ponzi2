@@ -5,6 +5,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/color"
 )
 
@@ -52,8 +53,8 @@ func (v *volumeCursor) SetBounds(volRect, labelRect image.Rectangle) {
 	v.labelRect = labelRect
 }
 
-func (v *volumeCursor) ProcessInput(mousePos image.Point) {
-	v.mousePos = mousePos
+func (v *volumeCursor) ProcessInput(input *view.Input) {
+	v.mousePos = input.MousePos
 }
 
 func (v *volumeCursor) Render(fudge float32) {
