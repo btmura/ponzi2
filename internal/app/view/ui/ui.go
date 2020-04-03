@@ -566,9 +566,6 @@ func (u *UI) processInput() []func() {
 	u.instructionsTextBox.SetBounds(bounds)
 	u.inputSymbolTextBox.SetBounds(bounds)
 
-	u.instructionsTextBox.ProcessInput()
-	u.inputSymbolTextBox.ProcessInput()
-
 	for i := 0; i < len(u.charts); i++ {
 		ch := u.charts[i]
 		ch.SetBounds(bounds)
