@@ -125,11 +125,11 @@ type UI struct {
 	// mousePos is the current global mouse position.
 	mousePos image.Point
 
-	// mouseLeftButtonDraggingStartPos is the position when the left mouse button was pressed.
-	mouseLeftButtonDraggingStartPos image.Point
-
 	// mouseLeftButtonPressed is whether the left mouse button was pressed.
 	mouseLeftButtonPressed bool
+
+	// mouseLeftButtonPressedPos is the position when the left mouse button was pressed.
+	mouseLeftButtonPressedPos image.Point
 
 	// mouseLeftButtonPressedCount is the number of loop iterations the left
 	// mouse button has been pressed. Used to determine dragging.
@@ -546,20 +546,22 @@ func (u *UI) processInput() []func() {
 	input := &view.Input{
 		MousePos:                u.mousePos,
 		MouseLeftButtonDragging: u.mouseLeftButtonPressedCount > fps/2,
-		MouseLeftButtonReleased: u.mouseLeftButtonReleased,
 		Scroll:                  u.scroll,
 	}
 
 	if u.mouseLeftButtonPressed {
-		u.mouseLeftButtonDraggingStartPos = u.mousePos
+		u.mouseLeftButtonPressedPos = u.mousePos
 	}
 
 	if u.mouseLeftButtonReleased {
-		u.mouseLeftButtonDraggingStartPos = u.mousePos
+		input.MouseLeftButtonClicked = &view.MouseClickEvent{
+			MousePressedPos:  u.mouseLeftButtonPressedPos,
+			MouseReleasedPos: u.mousePos,
+		}
 	}
 
 	if input.MouseLeftButtonDragging {
-		input.MouseLeftButtonDraggingStartedPos = u.mouseLeftButtonDraggingStartPos
+		input.MouseLeftButtonDraggingStartedPos = u.mouseLeftButtonPressedPos
 	}
 
 	bounds := m.chartBounds

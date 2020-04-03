@@ -42,7 +42,7 @@ func (b *Button) SetBounds(bounds image.Rectangle) {
 }
 
 func (b *Button) ProcessInput(input *view.Input) (clicked bool) {
-	if input.MouseLeftButtonReleased && input.MousePos.In(b.bounds) {
+	if input.MouseLeftButtonClicked.In(b.bounds) {
 		input.ScheduledCallbacks = append(input.ScheduledCallbacks, b.clickCallback)
 		return true
 	}

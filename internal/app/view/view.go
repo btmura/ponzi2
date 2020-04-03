@@ -38,8 +38,8 @@ type Input struct {
 	// Only set when MouseLeftButtonDragging is true.
 	MouseLeftButtonDraggingStartedPos image.Point
 
-	// MouseLeftButtonReleased is whether the left mouse button was released.
-	MouseLeftButtonReleased bool
+	// MouseLeftButtonClicked is non-nil when the left mouse button was pressed and released.
+	MouseLeftButtonClicked *MouseClickEvent
 
 	// Scroll is the up or down scroll direction or unspecified if the user did not scroll.
 	Scroll ScrollDirection
@@ -48,8 +48,17 @@ type Input struct {
 	ScheduledCallbacks []func()
 }
 
-// LeftClickInBounds returns true if the left mouse button was clicked within
+// MouseClickEvent tracks a mouse click which is a press followed by a release.
+type MouseClickEvent struct {
+	// MousePressedPos is where the mouse was pressed.
+	MousePressedPos image.Point
+
+	// MouseReleasedPos is where the mouse was released.
+	MouseReleasedPos image.Point
+}
+
+// In returns true if the left mouse button was clicked within
 // the bounds. Doesn't take into account overlapping view parts.
-func (i *Input) LeftClickInBounds(bounds image.Rectangle) bool {
-	return i.MouseLeftButtonReleased && i.MousePos.In(bounds)
+func (m *MouseClickEvent) In(bounds image.Rectangle) bool {
+	return m != nil && m.MousePressedPos.In(bounds) && m.MouseReleasedPos.In(bounds)
 }

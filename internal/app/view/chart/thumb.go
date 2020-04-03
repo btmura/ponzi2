@@ -172,7 +172,7 @@ func (t *Thumb) ProcessInput(input *view.Input) {
 	t.loadingTextBox.SetBounds(r)
 	t.errorTextBox.SetBounds(r)
 
-	if !clicks.HasClicks() && input.LeftClickInBounds(t.fullBounds) {
+	if !clicks.HasClicks() && input.MouseLeftButtonClicked.In(t.fullBounds) {
 		input.ScheduledCallbacks = append(input.ScheduledCallbacks, t.thumbClickCallback)
 	}
 
