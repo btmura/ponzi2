@@ -31,15 +31,11 @@ type Input struct {
 	// MousePos is the current global mouse position.
 	MousePos image.Point
 
-	// MouseLeftButtonDragging is whether the left mouse button is dragging.
-	MouseLeftButtonDragging bool
-
-	// MouseLeftButtonDraggingStartedPos is the global mouse position where the dragging started.
-	// Only set when MouseLeftButtonDragging is true.
-	MouseLeftButtonDraggingStartedPos image.Point
-
 	// MouseLeftButtonClicked is non-nil when the left mouse button was pressed and released.
 	MouseLeftButtonClicked *MouseClickEvent
+
+	// MouseLeftButtonDragging is non-nil when the mouse is being dragged from press to release.
+	MouseLeftButtonDragging *MouseDraggingEvent
 
 	// Scroll is the up or down scroll direction or unspecified if the user did not scroll.
 	Scroll ScrollDirection
@@ -61,4 +57,18 @@ type MouseClickEvent struct {
 // the bounds. Doesn't take into account overlapping view parts.
 func (m *MouseClickEvent) In(bounds image.Rectangle) bool {
 	return m != nil && m.MousePressedPos.In(bounds) && m.MouseReleasedPos.In(bounds)
+}
+
+// MouseDraggingEvent tracks a drag and drop mouse motion from drag to release.
+type MouseDraggingEvent struct {
+	// PressedPos is always a non-empty Point where the mouse was originally pressed.
+	PressedPos image.Point
+
+	// ReleasedPos is a non-empty Point when the mouse button is finally released.
+	ReleasedPos image.Point
+}
+
+// PressedIn return true if the left mouse button was pressed within the bounds.
+func (m *MouseDraggingEvent) PressedIn(bounds image.Rectangle) bool {
+	return m != nil && m.PressedPos.In(bounds) && m.PressedPos.In(bounds)
 }

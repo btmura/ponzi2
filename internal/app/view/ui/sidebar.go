@@ -102,7 +102,7 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		}
 
 		// Scroll up or down if dragging and hovering over the bumpers.
-		if input.MouseLeftButtonDragging && s.draggedSlot != nil {
+		if input.MouseLeftButtonDragging != nil && s.draggedSlot != nil {
 			top := image.Rect(
 				s.bounds.Min.X, s.bounds.Max.Y-chartThumbSize.Y/2,
 				s.bounds.Max.X, s.bounds.Max.Y)
@@ -127,7 +127,7 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 
 	wasDragging := s.draggedSlot != nil
 
-	if !input.MouseLeftButtonDragging {
+	if input.MouseLeftButtonDragging == nil {
 		s.draggedSlot = nil
 	}
 
@@ -137,9 +137,7 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		slot.SetThumbnailBounds(slotBounds)
 
 		if s.draggedSlot == nil {
-			dragging := input.MouseLeftButtonDragging &&
-				input.MouseLeftButtonDraggingStartedPos.In(slotBounds)
-			if dragging {
+			if input.MouseLeftButtonDragging.PressedIn(slotBounds) {
 				s.draggedSlot = slot
 			}
 		}

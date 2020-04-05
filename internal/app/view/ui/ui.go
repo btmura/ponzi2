@@ -541,28 +541,47 @@ func (u *UI) WakeLoop() {
 }
 
 func (u *UI) processInput() []func() {
-	m := u.metrics()
-
 	input := &view.Input{
-		MousePos:                u.mousePos,
-		MouseLeftButtonDragging: u.mouseLeftButtonPressedCount > fps/2,
-		Scroll:                  u.scroll,
+		MousePos: u.mousePos,
+		Scroll:   u.scroll,
 	}
 
-	if u.mouseLeftButtonPressed {
+	dragging := u.mouseLeftButtonPressedCount > fps/2
+
+	switch {
+	case u.mouseLeftButtonPressed:
 		u.mouseLeftButtonPressedPos = u.mousePos
-	}
 
-	if u.mouseLeftButtonReleased {
-		input.MouseLeftButtonClicked = &view.MouseClickEvent{
-			MousePressedPos:  u.mouseLeftButtonPressedPos,
-			MouseReleasedPos: u.mousePos,
+	case dragging && !u.mouseLeftButtonReleased:
+		input.MouseLeftButtonDragging = &view.MouseDraggingEvent{
+			PressedPos: u.mouseLeftButtonPressedPos,
+		}
+
+	case u.mouseLeftButtonReleased:
+		if dragging {
+			input.MouseLeftButtonDragging = &view.MouseDraggingEvent{
+				PressedPos:  u.mouseLeftButtonPressedPos,
+				ReleasedPos: u.mousePos,
+			}
+		} else {
+			input.MouseLeftButtonClicked = &view.MouseClickEvent{
+				MousePressedPos:  u.mouseLeftButtonPressedPos,
+				MouseReleasedPos: u.mousePos,
+			}
 		}
 	}
 
-	if input.MouseLeftButtonDragging {
-		input.MouseLeftButtonDraggingStartedPos = u.mouseLeftButtonPressedPos
-	}
+	// Reset any flags for the next inputContext.
+	defer func() {
+		if u.mouseLeftButtonPressedCount > 0 {
+			u.mouseLeftButtonPressedCount++
+		}
+		u.mouseLeftButtonPressed = false
+		u.mouseLeftButtonReleased = false
+		u.scroll = view.ScrollDirectionUnspecified
+	}()
+
+	m := u.metrics()
 
 	bounds := m.chartBounds
 	u.instructionsTextBox.SetBounds(bounds)
@@ -576,14 +595,6 @@ func (u *UI) processInput() []func() {
 
 	u.sidebar.SetBounds(m.sidebarBounds)
 	u.sidebar.ProcessInput(input)
-
-	// Reset any flags for the next inputContext.
-	if u.mouseLeftButtonPressedCount > 0 {
-		u.mouseLeftButtonPressedCount++
-	}
-	u.mouseLeftButtonPressed = false
-	u.mouseLeftButtonReleased = false
-	u.scroll = view.ScrollDirectionUnspecified
 
 	return input.ScheduledCallbacks
 }
