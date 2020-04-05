@@ -70,9 +70,6 @@ type Thumb struct {
 
 	// bodyBounds is a sub-rect of fullBounds without the header.
 	bodyBounds image.Rectangle
-
-	// mousePos is the current mouse position.
-	mousePos image.Point
 }
 
 // NewThumb creates a Thumb.
@@ -163,8 +160,6 @@ func (t *Thumb) SetBounds(bounds image.Rectangle) {
 
 // ProcessInput processes input.
 func (t *Thumb) ProcessInput(input *view.Input) {
-	t.mousePos = input.MousePos
-
 	t.header.SetBounds(t.fullBounds)
 	r, clicks := t.header.ProcessInput(input)
 

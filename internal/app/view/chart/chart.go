@@ -110,9 +110,6 @@ type Chart struct {
 
 	// bodyBounds is a sub-rect of fullBounds without the header.
 	bodyBounds image.Rectangle
-
-	// mousePos is the current mouse position.
-	mousePos image.Point
 }
 
 // NewChart creates a new Chart.
@@ -283,7 +280,6 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	bounds := ch.fullBounds
 
 	ch.frameBubble.SetBounds(bounds)
-	ch.mousePos = input.MousePos
 
 	ch.header.SetBounds(bounds)
 	r, _ := ch.header.ProcessInput(input)

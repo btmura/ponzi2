@@ -542,8 +542,7 @@ func (u *UI) WakeLoop() {
 
 func (u *UI) processInput() []func() {
 	input := &view.Input{
-		MousePos: u.mousePos,
-		Scroll:   u.scroll,
+		Scroll: u.scroll,
 	}
 
 	dragging := u.mouseLeftButtonPressedCount > fps/2
@@ -555,12 +554,14 @@ func (u *UI) processInput() []func() {
 	case dragging && !u.mouseLeftButtonReleased:
 		input.MouseLeftButtonDragging = &view.MouseDraggingEvent{
 			PressedPos: u.mouseLeftButtonPressedPos,
+			MovedPos:   u.mousePos,
 		}
 
 	case u.mouseLeftButtonReleased:
 		if dragging {
 			input.MouseLeftButtonDragging = &view.MouseDraggingEvent{
 				PressedPos:  u.mouseLeftButtonPressedPos,
+				MovedPos:    u.mousePos,
 				ReleasedPos: u.mousePos,
 			}
 		} else {
@@ -568,6 +569,11 @@ func (u *UI) processInput() []func() {
 				PressedPos:  u.mouseLeftButtonPressedPos,
 				ReleasedPos: u.mousePos,
 			}
+		}
+
+	default:
+		input.MouseMoved = &view.MouseMoveEvent{
+			Pos: u.mousePos,
 		}
 	}
 

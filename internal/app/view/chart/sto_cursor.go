@@ -20,8 +20,8 @@ type stochasticCursor struct {
 	// labelRect is the rectangle where the axis labels are drawn.
 	labelRect image.Rectangle
 
-	// mousePos is the current mouse position.
-	mousePos image.Point
+	// mouseMoved is a non-nil mouse move event when the mouse is moving.
+	mouseMoved *view.MouseMoveEvent
 }
 
 func (s *stochasticCursor) SetBounds(stoRect, labelRect image.Rectangle) {
@@ -30,7 +30,7 @@ func (s *stochasticCursor) SetBounds(stoRect, labelRect image.Rectangle) {
 }
 
 func (s *stochasticCursor) ProcessInput(input *view.Input) {
-	s.mousePos = input.MousePos
+	s.mouseMoved = input.MouseMoved
 }
 
 func (s *stochasticCursor) SetData() {
@@ -42,13 +42,17 @@ func (s *stochasticCursor) Render(fudge float32) {
 		return
 	}
 
-	renderCursorLines(s.stoRect, s.mousePos)
-
-	if !s.mousePos.In(s.stoRect) {
+	if s.mouseMoved == nil {
 		return
 	}
 
-	perc := float32(s.mousePos.Y-s.stoRect.Min.Y) / float32(s.stoRect.Dy())
+	renderCursorLines(s.stoRect, s.mouseMoved.Pos)
+
+	if !s.mouseMoved.In(s.stoRect) {
+		return
+	}
+
+	perc := float32(s.mouseMoved.Pos.Y-s.stoRect.Min.Y) / float32(s.stoRect.Dy())
 	l := makeStochasticLabel(perc)
 	tp := image.Point{
 		X: s.labelRect.Max.X - l.size.X,
@@ -58,7 +62,7 @@ func (s *stochasticCursor) Render(fudge float32) {
 	bubbleRect := image.Rectangle{Min: tp, Max: tp.Add(l.size)}
 	bubbleRect = bubbleRect.Inset(-axisLabelPadding)
 
-	if s.mousePos.In(bubbleRect) {
+	if s.mouseMoved.In(bubbleRect) {
 		tp.X = s.labelRect.Min.X
 		bubbleRect = image.Rectangle{Min: tp, Max: tp.Add(l.size)}
 		bubbleRect = bubbleRect.Inset(-axisLabelPadding)

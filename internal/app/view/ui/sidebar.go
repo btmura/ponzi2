@@ -92,7 +92,7 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		s.scrollOffset = 0
 	} else {
 		// Scroll up or down if the scroll event occurred within the sidebar bounds.
-		if input.MousePos.In(s.bounds) {
+		if input.MouseMoved.In(s.bounds) {
 			switch input.Scroll {
 			case view.ScrollUp:
 				s.scrollUp()
@@ -103,6 +103,7 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 
 		// Scroll up or down if dragging and hovering over the bumpers.
 		if input.MouseLeftButtonDragging != nil && s.draggedSlot != nil {
+			pos := input.MouseLeftButtonDragging.MovedPos
 			top := image.Rect(
 				s.bounds.Min.X, s.bounds.Max.Y-chartThumbSize.Y/2,
 				s.bounds.Max.X, s.bounds.Max.Y)
@@ -110,9 +111,9 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 				s.bounds.Min.X, 0,
 				s.bounds.Max.X, chartThumbSize.Y/2)
 			switch {
-			case input.MousePos.In(top):
+			case pos.In(top):
 				s.scrollUp()
-			case input.MousePos.In(bottom):
+			case pos.In(bottom):
 				s.scrollDown()
 			}
 		}
@@ -152,18 +153,20 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 	stillDragging := s.draggedSlot != nil
 
 	if s.draggedSlot != nil {
+		pos := input.MouseLeftButtonDragging.MovedPos
+
 		// Float the dragged slot's thumbnail to be under the mouse cursor.
-		s.draggedSlot.SetThumbnailBounds(rect.FromCenterPointAndSize(input.MousePos, chartThumbSize))
+		s.draggedSlot.SetThumbnailBounds(rect.FromCenterPointAndSize(pos, chartThumbSize))
 
 		// Determine whether to move the dragged slot up or down.
 		dy := -1
-		if c := rect.CenterPoint(s.draggedSlot.Bounds()); input.MousePos.Y < c.Y {
+		if c := rect.CenterPoint(s.draggedSlot.Bounds()); pos.Y < c.Y {
 			dy = +1
 		}
 
 		// Find the slot to swap with and swap it.
 		for i := draggedSlotIndex + dy; i >= 0 && i < len(s.slots); i += dy {
-			if input.MousePos.In(s.slots[i].Bounds()) {
+			if pos.In(s.slots[i].Bounds()) {
 				j, k := draggedSlotIndex, i
 				s.slots[j], s.slots[k] = s.slots[k], s.slots[j]
 				break

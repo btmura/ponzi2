@@ -28,8 +28,8 @@ const (
 
 // Input contains input events to be passed down the view hierarchy.
 type Input struct {
-	// MousePos is the current global mouse position.
-	MousePos image.Point
+	// MouseMoved is non-nil when the mouse is just moving without being clicked or dragged.
+	MouseMoved *MouseMoveEvent
 
 	// MouseLeftButtonClicked is non-nil when the left mouse button was pressed and released.
 	MouseLeftButtonClicked *MouseClickEvent
@@ -42,6 +42,20 @@ type Input struct {
 
 	// ScheduledCallbacks are callbacks to be called at the end of Render.
 	ScheduledCallbacks []func()
+}
+
+// MouseMoveEvent tracks the mouse when it is just moving without being clicked or dragged.
+type MouseMoveEvent struct {
+	// Pos is where the mouse is on the screen in global coordinates.
+	Pos image.Point
+}
+
+// In returns true if the mouse was moved within the bounds.
+func (m *MouseMoveEvent) In(bounds image.Rectangle) bool {
+	if m == nil {
+		return false
+	}
+	return m != nil && m.Pos.In(bounds)
 }
 
 // MouseClickEvent tracks a mouse click which is a press followed by a release.
@@ -63,6 +77,9 @@ func (m *MouseClickEvent) In(bounds image.Rectangle) bool {
 type MouseDraggingEvent struct {
 	// PressedPos is always a non-empty Point where the mouse was originally pressed.
 	PressedPos image.Point
+
+	// MovedPos is always a non-empty Point where the mouse is currently moving.
+	MovedPos image.Point
 
 	// ReleasedPos is a non-empty Point when the mouse button is finally released.
 	ReleasedPos image.Point
