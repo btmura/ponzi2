@@ -46,17 +46,17 @@ type Input struct {
 
 // MouseClickEvent tracks a mouse click which is a press followed by a release.
 type MouseClickEvent struct {
-	// MousePressedPos is where the mouse was pressed.
-	MousePressedPos image.Point
+	// PressedPos is where the mouse was pressed.
+	PressedPos image.Point
 
-	// MouseReleasedPos is where the mouse was released.
-	MouseReleasedPos image.Point
+	// ReleasedPos is where the mouse was released.
+	ReleasedPos image.Point
 }
 
 // In returns true if the left mouse button was clicked within
 // the bounds. Doesn't take into account overlapping view parts.
 func (m *MouseClickEvent) In(bounds image.Rectangle) bool {
-	return m != nil && m.MousePressedPos.In(bounds) && m.MouseReleasedPos.In(bounds)
+	return m != nil && m.PressedPos.In(bounds) && m.ReleasedPos.In(bounds)
 }
 
 // MouseDraggingEvent tracks a drag and drop mouse motion from drag to release.

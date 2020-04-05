@@ -565,8 +565,8 @@ func (u *UI) processInput() []func() {
 			}
 		} else {
 			input.MouseLeftButtonClicked = &view.MouseClickEvent{
-				MousePressedPos:  u.mouseLeftButtonPressedPos,
-				MouseReleasedPos: u.mousePos,
+				PressedPos:  u.mouseLeftButtonPressedPos,
+				ReleasedPos: u.mousePos,
 			}
 		}
 	}
