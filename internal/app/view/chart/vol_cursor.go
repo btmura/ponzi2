@@ -24,8 +24,8 @@ type volumeCursor struct {
 	// labelRect is the rectangle where the axis labels are drawn.
 	labelRect image.Rectangle
 
-	// mouseMoved is a non-nil mouse move event when the mouse is moving.
-	mouseMoved *view.MouseMoveEvent
+	// mousePos is the current mouse position. Nil for no mouse input.
+	mousePos *view.MousePosition
 }
 
 func (v *volumeCursor) SetData(ts *model.TradingSessionSeries) {
@@ -54,7 +54,7 @@ func (v *volumeCursor) SetBounds(volRect, labelRect image.Rectangle) {
 }
 
 func (v *volumeCursor) ProcessInput(input *view.Input) {
-	v.mouseMoved = input.MouseMoved
+	v.mousePos = input.MousePos
 }
 
 func (v *volumeCursor) Render(fudge float32) {
@@ -62,17 +62,17 @@ func (v *volumeCursor) Render(fudge float32) {
 		return
 	}
 
-	if v.mouseMoved == nil {
+	if v.mousePos == nil {
 		return
 	}
 
-	renderCursorLines(v.volRect, v.mouseMoved.Pos)
+	renderCursorLines(v.volRect, v.mousePos.Point)
 
-	if !v.mouseMoved.In(v.volRect) {
+	if !v.mousePos.In(v.volRect) {
 		return
 	}
 
-	perc := float32(v.mouseMoved.Pos.Y-v.volRect.Min.Y) / float32(v.volRect.Dy())
+	perc := float32(v.mousePos.Y-v.volRect.Min.Y) / float32(v.volRect.Dy())
 	l := makeVolumeLabel(v.maxVolume, perc)
 	textPt := image.Point{
 		X: v.labelRect.Max.X - l.size.X,

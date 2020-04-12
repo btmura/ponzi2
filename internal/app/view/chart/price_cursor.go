@@ -24,8 +24,8 @@ type priceCursor struct {
 	// labelRect is the rectangle where the axis labels are drawn.
 	labelRect image.Rectangle
 
-	// mouseMoved is a non-nil mouse move event when the mouse is moving.
-	mouseMoved *view.MouseMoveEvent
+	// mousePos is the current mouse position. Nil for no mouse input.
+	mousePos *view.MousePosition
 }
 
 func (p *priceCursor) SetData(ts *model.TradingSessionSeries) {
@@ -48,7 +48,7 @@ func (p *priceCursor) SetBounds(priceRect, labelRect image.Rectangle) {
 }
 
 func (p *priceCursor) ProcessInput(input *view.Input) {
-	p.mouseMoved = input.MouseMoved
+	p.mousePos = input.MousePos
 }
 
 func (p *priceCursor) Render(fudge float32) {
@@ -56,17 +56,17 @@ func (p *priceCursor) Render(fudge float32) {
 		return
 	}
 
-	if p.mouseMoved == nil {
+	if p.mousePos == nil {
 		return
 	}
 
-	renderCursorLines(p.priceRect, p.mouseMoved.Pos)
+	renderCursorLines(p.priceRect, p.mousePos.Point)
 
-	if !p.mouseMoved.In(p.priceRect) {
+	if !p.mousePos.In(p.priceRect) {
 		return
 	}
 
-	perc := float32(p.mouseMoved.Pos.Y-p.priceRect.Min.Y) / float32(p.priceRect.Dy())
+	perc := float32(p.mousePos.Y-p.priceRect.Min.Y) / float32(p.priceRect.Dy())
 	v := p.priceRange[0] + (p.priceRange[1]-p.priceRange[0])*perc
 	l := makePriceLabel(v)
 

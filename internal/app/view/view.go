@@ -28,43 +28,40 @@ const (
 
 // Input contains input events to be passed down the view hierarchy.
 type Input struct {
-	// MouseMoved is non-nil when the mouse is just moving without being clicked or dragged.
-	MouseMoved *MouseMoveEvent
+	// MousePos is the current mouse position. Nil if a view does not want to report mouse input.
+	MousePos *MousePosition
 
-	// MouseLeftButtonClicked is non-nil when the left mouse button was pressed and released.
+	// MouseLeftButtonClicked reports a left mouse button click. Nil if no click happened.
 	MouseLeftButtonClicked *MouseClickEvent
 
-	// MouseLeftButtonDragging is non-nil when the mouse is being dragged from press to release.
+	// MouseLeftButtonDragging reports the mouse being dragged with the left button held.
+	// Nil if no click happened.
 	MouseLeftButtonDragging *MouseDraggingEvent
 
-	// Scroll is the up or down scroll direction or unspecified if the user did not scroll.
-	Scroll ScrollDirection
+	// MouseScrolled reports a mouse scroll wheel event. Nil if no scroll happened.
+	MouseScrolled *MouseScrollEvent
 
 	// ScheduledCallbacks are callbacks to be called at the end of Render.
 	ScheduledCallbacks []func()
 }
 
-// MouseMoveEvent tracks the mouse when it is just moving without being clicked or dragged.
-type MouseMoveEvent struct {
-	// Pos is where the mouse is on the screen in global coordinates.
-	Pos image.Point
+// MousePosition is the position of the mouse.
+type MousePosition struct {
+	image.Point
 }
 
-// In returns true if the mouse was moved within the bounds.
-func (m *MouseMoveEvent) In(bounds image.Rectangle) bool {
-	if m == nil {
-		return false
-	}
-	return m != nil && m.Pos.In(bounds)
+// In returns true if the mouse position is within the bounds.
+func (m *MousePosition) In(bounds image.Rectangle) bool {
+	return m != nil && m.Point.In(bounds)
 }
 
-// MouseClickEvent tracks a mouse click which is a press followed by a release.
+// MouseClickEvent reports a mouse click that just happened.
 type MouseClickEvent struct {
 	// PressedPos is where the mouse was pressed.
-	PressedPos image.Point
+	PressedPos MousePosition
 
 	// ReleasedPos is where the mouse was released.
-	ReleasedPos image.Point
+	ReleasedPos MousePosition
 }
 
 // In returns true if the left mouse button was clicked within
@@ -73,19 +70,34 @@ func (m *MouseClickEvent) In(bounds image.Rectangle) bool {
 	return m != nil && m.PressedPos.In(bounds) && m.ReleasedPos.In(bounds)
 }
 
-// MouseDraggingEvent tracks a drag and drop mouse motion from drag to release.
+// MouseDraggingEvent reports a drag and drop mouse motion from drag to release.
 type MouseDraggingEvent struct {
-	// PressedPos is always a non-empty Point where the mouse was originally pressed.
-	PressedPos image.Point
+	// CurrentPos is the current mouse position.
+	CurrentPos MousePosition
 
-	// MovedPos is always a non-empty Point where the mouse is currently moving.
-	MovedPos image.Point
+	// PressedPos is where the mouse button was originally pressed.
+	PressedPos MousePosition
 
-	// ReleasedPos is a non-empty Point when the mouse button is finally released.
-	ReleasedPos image.Point
+	// ReleasedPos is where the mouse button was finally released if it has been.
+	// Nil if the mouse has not been released yet.
+	ReleasedPos *MousePosition
 }
 
 // PressedIn return true if the left mouse button was pressed within the bounds.
 func (m *MouseDraggingEvent) PressedIn(bounds image.Rectangle) bool {
 	return m != nil && m.PressedPos.In(bounds) && m.PressedPos.In(bounds)
+}
+
+// MouseScrollEvent reports a mouse scroll wheel event.
+type MouseScrollEvent struct {
+	// CurrentPos is the current mouse position.
+	CurrentPos MousePosition
+
+	// Direction is the direction the scroll wheel went. Always a non-unspecified value.
+	Direction ScrollDirection
+}
+
+// In returns true if the mouse scroll happened within the bounds.
+func (m *MouseScrollEvent) In(bounds image.Rectangle) bool {
+	return m != nil && m.CurrentPos.In(bounds)
 }

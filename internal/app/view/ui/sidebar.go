@@ -34,7 +34,7 @@ type sidebar struct {
 	// draggedSlot if not nil is the slot with the Thumbnail being dragged.
 	draggedSlot *sidebarSlot
 
-	// scrollOffset stores the Y offset accumulated from scroll event.
+	// scrollOffset stores the Y offset accumulated from mouseScrollDirection event.
 	scrollOffset int
 
 	// bounds is the rectangle to draw within.
@@ -85,15 +85,15 @@ func (s *sidebar) SetBounds(bounds image.Rectangle) {
 }
 
 func (s *sidebar) ProcessInput(input *view.Input) {
-	// Adjust the scroll offset due to the mouse wheel or window size.
+	// Adjust the mouseScrollDirection offset due to the mouse wheel or window size.
 	h := s.ContentSize().Y
 	if h == 0 || h < s.bounds.Dy() {
 		// Reset offset if the sidebar is empty or the contents are less than the bounds.
 		s.scrollOffset = 0
 	} else {
-		// Scroll up or down if the scroll event occurred within the sidebar bounds.
-		if input.MouseMoved.In(s.bounds) {
-			switch input.Scroll {
+		// Scroll up or down if the mouseScrollDirection event occurred within the sidebar bounds.
+		if input.MouseScrolled.In(s.bounds) {
+			switch input.MouseScrolled.Direction {
 			case view.ScrollUp:
 				s.scrollUp()
 			case view.ScrollDown:
@@ -103,7 +103,7 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 
 		// Scroll up or down if dragging and hovering over the bumpers.
 		if input.MouseLeftButtonDragging != nil && s.draggedSlot != nil {
-			pos := input.MouseLeftButtonDragging.MovedPos
+			pos := input.MouseLeftButtonDragging.CurrentPos
 			top := image.Rect(
 				s.bounds.Min.X, s.bounds.Max.Y-chartThumbSize.Y/2,
 				s.bounds.Max.X, s.bounds.Max.Y)
@@ -153,10 +153,10 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 	stillDragging := s.draggedSlot != nil
 
 	if s.draggedSlot != nil {
-		pos := input.MouseLeftButtonDragging.MovedPos
+		pos := input.MouseLeftButtonDragging.CurrentPos
 
 		// Float the dragged slot's thumbnail to be under the mouse cursor.
-		s.draggedSlot.SetThumbnailBounds(rect.FromCenterPointAndSize(pos, chartThumbSize))
+		s.draggedSlot.SetThumbnailBounds(rect.FromCenterPointAndSize(pos.Point, chartThumbSize))
 
 		// Determine whether to move the dragged slot up or down.
 		dy := -1
@@ -201,7 +201,7 @@ func (s *sidebar) scrollUp() {
 }
 
 func (s *sidebar) scrollDown() {
-	// Don't scroll if there is no need.
+	// Don't mouseScrollDirection if there is no need.
 	overflow := s.ContentSize().Y - s.bounds.Dy()
 	if overflow <= 0 {
 		return

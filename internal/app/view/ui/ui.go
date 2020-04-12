@@ -122,14 +122,14 @@ type UI struct {
 	// winSize is the current window's size used to measure and draw the UI.
 	winSize image.Point
 
-	// mousePos is the current global mouse position.
-	mousePos image.Point
+	// mousePos is the next mouse position to report in global coordinates.
+	mousePos view.MousePosition
 
 	// mouseLeftButtonPressed is whether the left mouse button was pressed.
 	mouseLeftButtonPressed bool
 
-	// mouseLeftButtonPressedPos is the position when the left mouse button was pressed.
-	mouseLeftButtonPressedPos image.Point
+	// mouseLeftButtonPressedPos is the is the position when the left mouse button was pressed.
+	mouseLeftButtonPressedPos *view.MousePosition
 
 	// mouseLeftButtonPressedCount is the number of loop iterations the left
 	// mouse button has been pressed. Used to determine dragging.
@@ -138,8 +138,8 @@ type UI struct {
 	// mouseLeftButtonReleased is whether the left mouse button was released.
 	mouseLeftButtonReleased bool
 
-	// scroll is the scroll direction to report. Unspecified if no scroll occurred.
-	scroll view.ScrollDirection
+	// mouseScrollDirection is the next mouse scroll event to report. Nil if no scroll has happened.
+	mouseScrollDirection view.ScrollDirection
 }
 
 type uiChart struct {
@@ -284,7 +284,7 @@ type viewMetrics struct {
 	// sidebarBounds is where to draw the sidebar that can move up or down.
 	sidebarBounds image.Rectangle
 
-	// chartRegion is where to detect scroll events for the chart.
+	// chartRegion is where to detect mouseScrollDirection events for the chart.
 	chartRegion image.Rectangle
 }
 
@@ -376,7 +376,9 @@ func (u *UI) handleCursorPosEvent(x, y float64) {
 	defer u.WakeLoop()
 
 	// Flip Y-axis since the OpenGL coordinate system makes lower left the origin.
-	u.mousePos = image.Pt(int(x), u.winSize.Y-int(y))
+	u.mousePos = view.MousePosition{
+		Point: image.Pt(int(x), u.winSize.Y-int(y)),
+	}
 }
 
 func (u *UI) handleMouseButtonEvent(button glfw.MouseButton, action glfw.Action) {
@@ -407,9 +409,11 @@ func (u *UI) handleScrollEvent(yoff float64) {
 
 	switch {
 	case yoff < 0: // Scroll wheel down
-		u.scroll = view.ScrollDown
+		u.mouseScrollDirection = view.ScrollDown
 	case yoff > 0: // Scroll wheel up.
-		u.scroll = view.ScrollUp
+		u.mouseScrollDirection = view.ScrollUp
+	default:
+		u.mouseScrollDirection = view.ScrollDirectionUnspecified
 	}
 
 	// TODO(btmura): Move the code below to the Chart's ProcessInput method.
@@ -541,39 +545,43 @@ func (u *UI) WakeLoop() {
 }
 
 func (u *UI) processInput() []func() {
+	mousePos := u.mousePos
+
 	input := &view.Input{
-		Scroll: u.scroll,
+		MousePos: &mousePos,
 	}
 
 	dragging := u.mouseLeftButtonPressedCount > fps/2
 
 	switch {
 	case u.mouseLeftButtonPressed:
-		u.mouseLeftButtonPressedPos = u.mousePos
+		u.mouseLeftButtonPressedPos = &mousePos
 
 	case dragging && !u.mouseLeftButtonReleased:
 		input.MouseLeftButtonDragging = &view.MouseDraggingEvent{
-			PressedPos: u.mouseLeftButtonPressedPos,
-			MovedPos:   u.mousePos,
+			CurrentPos: mousePos,
+			PressedPos: *u.mouseLeftButtonPressedPos,
 		}
 
 	case u.mouseLeftButtonReleased:
 		if dragging {
 			input.MouseLeftButtonDragging = &view.MouseDraggingEvent{
-				PressedPos:  u.mouseLeftButtonPressedPos,
-				MovedPos:    u.mousePos,
-				ReleasedPos: u.mousePos,
+				CurrentPos:  mousePos,
+				PressedPos:  *u.mouseLeftButtonPressedPos,
+				ReleasedPos: &mousePos,
 			}
 		} else {
 			input.MouseLeftButtonClicked = &view.MouseClickEvent{
-				PressedPos:  u.mouseLeftButtonPressedPos,
-				ReleasedPos: u.mousePos,
+				PressedPos:  *u.mouseLeftButtonPressedPos,
+				ReleasedPos: mousePos,
 			}
 		}
+	}
 
-	default:
-		input.MouseMoved = &view.MouseMoveEvent{
-			Pos: u.mousePos,
+	if u.mouseScrollDirection != view.ScrollDirectionUnspecified {
+		input.MouseScrolled = &view.MouseScrollEvent{
+			CurrentPos: mousePos,
+			Direction:  u.mouseScrollDirection,
 		}
 	}
 
@@ -584,7 +592,7 @@ func (u *UI) processInput() []func() {
 		}
 		u.mouseLeftButtonPressed = false
 		u.mouseLeftButtonReleased = false
-		u.scroll = view.ScrollDirectionUnspecified
+		u.mouseScrollDirection = view.ScrollDirectionUnspecified
 	}()
 
 	m := u.metrics()

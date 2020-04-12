@@ -23,8 +23,8 @@ type legend struct {
 	priceRect image.Rectangle
 	labelRect image.Rectangle
 
-	// mouseMoved is a non-nil mouse move event when the mouse is moving.
-	mouseMoved *view.MouseMoveEvent
+	// mousePos is the current mouse position. Nil for no mouse input.
+	mousePos *view.MousePosition
 }
 
 func (l *legend) SetData(
@@ -47,7 +47,7 @@ func (l *legend) SetBounds(priceRect, labelRect image.Rectangle) {
 }
 
 func (l *legend) ProcessInput(input *view.Input) {
-	l.mouseMoved = input.MouseMoved
+	l.mousePos = input.MousePos
 }
 
 func (l *legend) Render(fudge float32) {
@@ -59,7 +59,7 @@ func (l *legend) Render(fudge float32) {
 }
 
 func (l *legend) renderMATrackLineLegend(fudge float32) {
-	if l.mouseMoved == nil || !l.mouseMoved.In(l.priceRect) {
+	if l.mousePos == nil || !l.mousePos.In(l.priceRect) {
 		return
 	}
 
@@ -70,7 +70,7 @@ func (l *legend) renderMATrackLineLegend(fudge float32) {
 	ms200 := l.movingAverageSeries200.MovingAverages
 
 	mal := legendLabel{
-		percent: float32(l.mouseMoved.Pos.X-l.priceRect.Min.X) / float32(l.priceRect.Dx()),
+		percent: float32(l.mousePos.X-l.priceRect.Min.X) / float32(l.priceRect.Dx()),
 	}
 
 	i := int(math.Floor(float64(len(ts)) * float64(mal.percent)))
@@ -97,7 +97,7 @@ func (l *legend) renderMATrackLineLegend(fudge float32) {
 }
 
 func (l *legend) renderCandleTrackLineLegend(fudge float32) {
-	if l.mouseMoved == nil || !l.mouseMoved.In(l.priceRect) {
+	if l.mousePos == nil || !l.mousePos.In(l.priceRect) {
 		return
 	}
 
@@ -105,7 +105,7 @@ func (l *legend) renderCandleTrackLineLegend(fudge float32) {
 	ts := l.tradingSessionSeries.TradingSessions
 
 	pl := legendLabel{
-		percent: float32(l.mouseMoved.Pos.X-l.priceRect.Min.X) / float32(l.priceRect.Dx()),
+		percent: float32(l.mousePos.X-l.priceRect.Min.X) / float32(l.priceRect.Dx()),
 	}
 
 	i := int(math.Floor(float64(len(ts)) * float64(pl.percent)))

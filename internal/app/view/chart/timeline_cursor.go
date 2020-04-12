@@ -30,8 +30,8 @@ type timelineCursor struct {
 	// labelRect is the rectangle where the axis labels are drawn.
 	labelRect image.Rectangle
 
-	// mouseMoved is a non-nil mouse move event when the mouse is moving.
-	mouseMoved *view.MouseMoveEvent
+	// mousePos is the current mouse position. Nil for no mouse input.
+	mousePos *view.MousePosition
 }
 
 func (t *timelineCursor) SetData(r model.Range, ts *model.TradingSessionSeries) error {
@@ -69,7 +69,7 @@ func (t *timelineCursor) SetBounds(timelineRect, labelRect image.Rectangle) {
 
 // ProcessInput processes input.
 func (t *timelineCursor) ProcessInput(input *view.Input) {
-	t.mouseMoved = input.MouseMoved
+	t.mousePos = input.MousePos
 }
 
 func (t *timelineCursor) Render(fudge float32) {
@@ -77,15 +77,15 @@ func (t *timelineCursor) Render(fudge float32) {
 		return
 	}
 
-	if t.mouseMoved == nil {
+	if t.mousePos == nil {
 		return
 	}
 
-	if t.mouseMoved.Pos.X < t.bounds.Min.X || t.mouseMoved.Pos.X > t.bounds.Max.X {
+	if t.mousePos.X < t.bounds.Min.X || t.mousePos.X > t.bounds.Max.X {
 		return
 	}
 
-	percent := float32(t.mouseMoved.Pos.X-t.bounds.Min.X) / float32(t.bounds.Dx())
+	percent := float32(t.mousePos.X-t.bounds.Min.X) / float32(t.bounds.Dx())
 
 	i := int(math.Floor(float64(len(t.dates))*float64(percent) + 0.5))
 	if i >= len(t.dates) {
@@ -96,7 +96,7 @@ func (t *timelineCursor) Render(fudge float32) {
 	textSize := axisLabelTextRenderer.Measure(text)
 
 	textPt := image.Point{
-		X: t.mouseMoved.Pos.X - textSize.X/2,
+		X: t.mousePos.X - textSize.X/2,
 		Y: t.labelRect.Min.Y + t.labelRect.Dy()/2 - textSize.Y/2,
 	}
 	bubbleRect := image.Rectangle{
