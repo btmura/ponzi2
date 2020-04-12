@@ -6,7 +6,6 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/config"
 	"github.com/btmura/ponzi2/internal/app/model"
-	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/chart"
 	"github.com/btmura/ponzi2/internal/app/view/ui"
 	"github.com/btmura/ponzi2/internal/errors"
@@ -94,7 +93,7 @@ func (c *Controller) RunLoop() error {
 		}
 	})
 
-	c.ui.SetChartZoomChangeCallback(func(zoomChange view.ZoomChange) {
+	c.ui.SetChartZoomChangeCallback(func(zoomChange ui.ZoomChange) {
 		if err := c.refreshCurrentStock(ctx); err != nil {
 			log.Errorf("refreshCurrentStock: %v", err)
 		}

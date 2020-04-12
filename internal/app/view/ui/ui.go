@@ -59,6 +59,17 @@ const viewPadding = 10
 
 var inputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
 
+// ZoomChange specifies whether the user has zoomed in or not.
+type ZoomChange int
+
+// ZoomChange values.
+//go:generate stringer -type=ZoomChange
+const (
+	ZoomChangeUnspecified ZoomChange = iota
+	ZoomIn
+	ZoomOut
+)
+
 func init() {
 	// This is needed to arrange that main() runs on main thread for GLFW.
 	// See documentation for functions that are only allowed to be called
@@ -102,7 +113,7 @@ type UI struct {
 	sidebarChangeCallback func(symbols []string)
 
 	// chartZoomChangeCallback is called when the chart is zoomed in or out.
-	chartZoomChangeCallback func(zoomChange view.ZoomChange)
+	chartZoomChangeCallback func(zoomChange ZoomChange)
 
 	// chartRefreshButtonClickCallback is called when the main chart's refresh button is clicked.
 	chartRefreshButtonClickCallback func(symbol string)
@@ -422,16 +433,16 @@ func (u *UI) handleScrollEvent(yoff float64) {
 
 	switch {
 	case u.mousePos.In(m.chartRegion):
-		zoomChange := view.ZoomChangeUnspecified
+		zoomChange := ZoomChangeUnspecified
 
 		switch {
 		case yoff < 0: // Scroll wheel down
-			zoomChange = view.ZoomOut
+			zoomChange = ZoomOut
 		case yoff > 0: // Scroll wheel up
-			zoomChange = view.ZoomIn
+			zoomChange = ZoomIn
 		}
 
-		if zoomChange == view.ZoomChangeUnspecified {
+		if zoomChange == ZoomChangeUnspecified {
 			return
 		}
 
@@ -674,7 +685,7 @@ func (u *UI) SetSidebarChangeCallback(cb func(symbols []string)) {
 }
 
 // SetChartZoomChangeCallback sets the callback for when the chart is zoomed in or out.
-func (u *UI) SetChartZoomChangeCallback(cb func(zoomChange view.ZoomChange)) {
+func (u *UI) SetChartZoomChangeCallback(cb func(zoomChange ZoomChange)) {
 	u.chartZoomChangeCallback = cb
 }
 
@@ -873,7 +884,7 @@ func (u *UI) ChartThumbRange() model.Range {
 	return u.chartThumbRange
 }
 
-func nextRange(r model.Range, zoomChange view.ZoomChange) model.Range {
+func nextRange(r model.Range, zoomChange ZoomChange) model.Range {
 	// zoomRanges are the ranges from most zoomed out to most zoomed in.
 	var zoomRanges = []model.Range{
 		model.OneYear,
@@ -890,11 +901,11 @@ func nextRange(r model.Range, zoomChange view.ZoomChange) model.Range {
 
 	// Adjust the zoom one increment.
 	switch zoomChange {
-	case view.ZoomIn:
+	case ZoomIn:
 		if i+1 < len(zoomRanges) {
 			i++
 		}
-	case view.ZoomOut:
+	case ZoomOut:
 		if i-1 >= 0 {
 			i--
 		}

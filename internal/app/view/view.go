@@ -15,17 +15,6 @@ const (
 	ScrollDown
 )
 
-// ZoomChange specifies whether the user has zoomed in or not.
-type ZoomChange int
-
-// ZoomChange values.
-//go:generate stringer -type=ZoomChange
-const (
-	ZoomChangeUnspecified ZoomChange = iota
-	ZoomIn
-	ZoomOut
-)
-
 // Input contains input events to be passed down the view hierarchy.
 type Input struct {
 	// MousePos is the current mouse position. Nil if a view does not want to report mouse input.
