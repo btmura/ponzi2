@@ -59,17 +59,6 @@ const viewPadding = 10
 
 var inputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
 
-// ZoomChange specifies whether the user has zoomed in or not.
-type ZoomChange int
-
-// ZoomChange values.
-//go:generate stringer -type=ZoomChange
-const (
-	ZoomChangeUnspecified ZoomChange = iota
-	ZoomIn
-	ZoomOut
-)
-
 func init() {
 	// This is needed to arrange that main() runs on main thread for GLFW.
 	// See documentation for functions that are only allowed to be called
@@ -84,12 +73,6 @@ type UI struct {
 
 	// symbolToChartThumbMap maps symbol to ChartThumbnail.
 	symbolToChartThumbMap map[string]*chart.Thumb
-
-	// chartRange is the current data range to use for Charts.
-	chartRange model.Range
-
-	// chartThumbRange is the current data range to use for ChartThumbnails.
-	chartThumbRange model.Range
 
 	// titleBar renders the window titleBar.
 	titleBar *titleBar
@@ -113,7 +96,7 @@ type UI struct {
 	sidebarChangeCallback func(symbols []string)
 
 	// chartZoomChangeCallback is called when the chart is zoomed in or out.
-	chartZoomChangeCallback func(zoomChange ZoomChange)
+	chartZoomChangeCallback func(zoomChange chart.ZoomChange)
 
 	// chartRefreshButtonClickCallback is called when the main chart's refresh button is clicked.
 	chartRefreshButtonClickCallback func(symbol string)
@@ -184,8 +167,6 @@ func New() *UI {
 	return &UI{
 		symbolToChartMap:      map[string]*chart.Chart{},
 		symbolToChartThumbMap: map[string]*chart.Thumb{},
-		chartRange:            model.OneYear,
-		chartThumbRange:       model.OneYear,
 		sidebar:               newSidebar(),
 		instructionsTextBox:   text.NewBox(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER..."),
 		inputSymbolTextBox:    text.NewBox(inputSymbolTextRenderer, ""),
@@ -287,66 +268,6 @@ func (u *UI) handleSizeEvent(width, height int) {
 	u.winSize = s
 }
 
-// viewMetrics has dynamic metrics used to render the view.
-type viewMetrics struct {
-	// chartBounds is where to draw the main chart.
-	chartBounds image.Rectangle
-
-	// sidebarBounds is where to draw the sidebar that can move up or down.
-	sidebarBounds image.Rectangle
-
-	// chartRegion is where to detect mouseScrollDirection events for the chart.
-	chartRegion image.Rectangle
-}
-
-func (u *UI) metrics() viewMetrics {
-	// +---+---------+---+
-	// |   | padding |   |
-	// |   +---------+   |
-	// |   |         |   |
-	// |   |         |   |
-	// | p | chart   | p |
-	// |   |         |   |
-	// |   |         |   |
-	// |   +---------+   |
-	// |   | padding |   |
-	// +---+---------+---+
-
-	sidebarSize := u.sidebar.ContentSize()
-
-	if sidebarSize.Y == 0 {
-		cb := image.Rect(0, 0, u.winSize.X, u.winSize.Y)
-		cb = cb.Inset(viewPadding)
-		return viewMetrics{chartBounds: cb, chartRegion: cb}
-	}
-
-	cb := image.Rect(viewPadding+sidebarSize.X, 0, u.winSize.X, u.winSize.Y)
-	cb = cb.Inset(viewPadding)
-
-	// +---+---------+---+---------+---+
-	// |   |         |   | padding |   |
-	// |   |         |   +---------+   |
-	// |   |         |   |         |   |
-	// |   |         |   |         |   |
-	// | p | sidebar | p | chart   | p |
-	// |   |         |   |         |   |
-	// |   |         |   |         |   |
-	// |   |         |   +---------+   |
-	// |   |         |   | padding |   |
-	// +---+---------+---+---------+---+
-
-	sb := image.Rect(
-		viewPadding, 0,
-		viewPadding+sidebarSize.X, u.winSize.Y,
-	)
-
-	return viewMetrics{
-		chartBounds:   cb,
-		sidebarBounds: sb,
-		chartRegion:   cb,
-	}
-}
-
 func (u *UI) handleCharEvent(char rune) {
 	log.Debugf("char: %c", char)
 	defer u.WakeLoop()
@@ -426,38 +347,6 @@ func (u *UI) handleScrollEvent(yoff float64) {
 	default:
 		u.mouseScrollDirection = view.ScrollDirectionUnspecified
 	}
-
-	// TODO(btmura): Move the code below to the Chart's ProcessInput method.
-
-	m := u.metrics()
-
-	switch {
-	case u.mousePos.In(m.chartRegion):
-		zoomChange := ZoomChangeUnspecified
-
-		switch {
-		case yoff < 0: // Scroll wheel down
-			zoomChange = ZoomOut
-		case yoff > 0: // Scroll wheel up
-			zoomChange = ZoomIn
-		}
-
-		if zoomChange == ZoomChangeUnspecified {
-			return
-		}
-
-		r := nextRange(u.chartRange, zoomChange)
-
-		if u.chartRange == r {
-			return
-		}
-
-		u.chartRange = r
-
-		if u.chartZoomChangeCallback != nil {
-			u.chartZoomChangeCallback(zoomChange)
-		}
-	}
 }
 
 func (u *UI) handleSidebarChangeEvent(sidebar *Sidebar) {
@@ -491,6 +380,17 @@ func (u *UI) handleSidebarChangeEvent(sidebar *Sidebar) {
 	}
 }
 
+func (u *UI) handleChartZoomChangeEvent(zoomChange chart.ZoomChange) {
+	if zoomChange == chart.ZoomChangeUnspecified {
+		log.Error("chart zoom change is unspecified")
+		return
+	}
+
+	if u.chartZoomChangeCallback != nil {
+		u.chartZoomChangeCallback(zoomChange)
+	}
+}
+
 // RunLoop runs the "game loop".
 func (u *UI) RunLoop(ctx context.Context, runLoopHook func(context.Context) error) error {
 start:
@@ -507,7 +407,7 @@ start:
 			return err
 		}
 
-		callbacks := u.processInput()
+		u.processInput()
 
 		i := 0
 		for ; i < minUpdates || i < maxUpdates && lag >= updateSec; i++ {
@@ -529,16 +429,6 @@ start:
 		u.win.SwapBuffers()
 		log.Debugf("updates: %o lag(%f)/updateSec(%f)=fudge(%f) dirty: %t render: %v", i, lag, updateSec, fudge, dirty, time.Since(now).Seconds())
 
-		// Call any callbacks scheduled by views.
-		for _, cb := range callbacks {
-			cb()
-		}
-
-		// Mark dirty since new charts or slots may have been added.
-		if len(callbacks) != 0 {
-			dirty = true
-		}
-
 		glfw.PollEvents()
 		if !dirty {
 			log.Debugf("wait events")
@@ -555,7 +445,7 @@ func (u *UI) WakeLoop() {
 	glfw.PostEmptyEvent()
 }
 
-func (u *UI) processInput() []func() {
+func (u *UI) processInput() {
 	mousePos := u.mousePos
 
 	input := &view.Input{
@@ -621,7 +511,9 @@ func (u *UI) processInput() []func() {
 	u.sidebar.SetBounds(m.sidebarBounds)
 	u.sidebar.ProcessInput(input)
 
-	return input.ScheduledCallbacks
+	for _, cb := range input.ScheduledCallbacks {
+		cb()
+	}
 }
 
 func (u *UI) update() (dirty bool) {
@@ -674,6 +566,62 @@ func (u *UI) render(fudge float32) {
 	u.sidebar.Render(fudge)
 }
 
+// viewMetrics has dynamic metrics used to render the view.
+type viewMetrics struct {
+	// chartBounds is where to draw the main chart.
+	chartBounds image.Rectangle
+
+	// sidebarBounds is where to draw the sidebar that can move up or down.
+	sidebarBounds image.Rectangle
+}
+
+func (u *UI) metrics() viewMetrics {
+	// +---+---------+---+
+	// |   | padding |   |
+	// |   +---------+   |
+	// |   |         |   |
+	// |   |         |   |
+	// | p | chart   | p |
+	// |   |         |   |
+	// |   |         |   |
+	// |   +---------+   |
+	// |   | padding |   |
+	// +---+---------+---+
+
+	sidebarSize := u.sidebar.ContentSize()
+
+	if sidebarSize.Y == 0 {
+		cb := image.Rect(0, 0, u.winSize.X, u.winSize.Y)
+		cb = cb.Inset(viewPadding)
+		return viewMetrics{chartBounds: cb}
+	}
+
+	cb := image.Rect(viewPadding+sidebarSize.X, 0, u.winSize.X, u.winSize.Y)
+	cb = cb.Inset(viewPadding)
+
+	// +---+---------+---+---------+---+
+	// |   |         |   | padding |   |
+	// |   |         |   +---------+   |
+	// |   |         |   |         |   |
+	// |   |         |   |         |   |
+	// | p | sidebar | p | chart   | p |
+	// |   |         |   |         |   |
+	// |   |         |   |         |   |
+	// |   |         |   +---------+   |
+	// |   |         |   | padding |   |
+	// +---+---------+---+---------+---+
+
+	sb := image.Rect(
+		viewPadding, 0,
+		viewPadding+sidebarSize.X, u.winSize.Y,
+	)
+
+	return viewMetrics{
+		chartBounds:   cb,
+		sidebarBounds: sb,
+	}
+}
+
 // SetInputSymbolSubmittedCallback sets the callback for when a new symbol is entered.
 func (u *UI) SetInputSymbolSubmittedCallback(cb func(symbol string)) {
 	u.inputSymbolSubmittedCallback = cb
@@ -685,7 +633,7 @@ func (u *UI) SetSidebarChangeCallback(cb func(symbols []string)) {
 }
 
 // SetChartZoomChangeCallback sets the callback for when the chart is zoomed in or out.
-func (u *UI) SetChartZoomChangeCallback(cb func(zoomChange ZoomChange)) {
+func (u *UI) SetChartZoomChangeCallback(cb func(chart.ZoomChange)) {
 	u.chartZoomChangeCallback = cb
 }
 
@@ -741,6 +689,10 @@ func (u *UI) SetChart(symbol string, data *chart.Data) error {
 		if u.chartAddButtonClickCallback != nil {
 			u.chartAddButtonClickCallback(symbol)
 		}
+	})
+
+	ch.SetZoomChangeCallback(func(zoomChange chart.ZoomChange) {
+		u.handleChartZoomChangeEvent(zoomChange)
 	})
 
 	defer u.WakeLoop()
@@ -810,14 +762,14 @@ func (u *UI) SetLoading(symbol string, dataRange model.Range) error {
 	}
 
 	for s, ch := range u.symbolToChartMap {
-		if s == symbol && u.chartRange == dataRange {
+		if s == symbol {
 			ch.SetLoading(true)
 			ch.SetError(nil)
 		}
 	}
 
 	for s, th := range u.symbolToChartThumbMap {
-		if s == symbol && u.chartThumbRange == dataRange {
+		if s == symbol {
 			th.SetLoading(true)
 			th.SetError(nil)
 		}
@@ -826,7 +778,7 @@ func (u *UI) SetLoading(symbol string, dataRange model.Range) error {
 	return nil
 }
 
-// SetData loads the data to charts and slots matching the symbol and range.
+// SetData loads the data to charts and thumbnails matching the symbol and range.
 func (u *UI) SetData(symbol string, data *chart.Data) error {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		return err
@@ -872,44 +824,4 @@ func (u *UI) SetError(symbol string, updateErr error) error {
 	}
 
 	return nil
-}
-
-// ChartRange returns the range desired by the main chart.
-func (u *UI) ChartRange() model.Range {
-	return u.chartRange
-}
-
-// ChartThumbRange returns the range desired by the chart thumbnails.
-func (u *UI) ChartThumbRange() model.Range {
-	return u.chartThumbRange
-}
-
-func nextRange(r model.Range, zoomChange ZoomChange) model.Range {
-	// zoomRanges are the ranges from most zoomed out to most zoomed in.
-	var zoomRanges = []model.Range{
-		model.OneYear,
-		model.OneDay,
-	}
-
-	// Find the current zoom range.
-	i := 0
-	for j := range zoomRanges {
-		if zoomRanges[j] == r {
-			i = j
-		}
-	}
-
-	// Adjust the zoom one increment.
-	switch zoomChange {
-	case ZoomIn:
-		if i+1 < len(zoomRanges) {
-			i++
-		}
-	case ZoomOut:
-		if i-1 >= 0 {
-			i--
-		}
-	}
-
-	return zoomRanges[i]
 }

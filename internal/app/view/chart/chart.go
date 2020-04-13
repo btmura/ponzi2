@@ -16,6 +16,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/text"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/log"
 )
 
 // Embed resources into the application. Get esc from github.com/mjibson/esc.
@@ -42,6 +43,17 @@ var (
 var (
 	cursorHorizLine = vao.HorizLine(color.LightGray)
 	cursorVertLine  = vao.VertLine(color.LightGray)
+)
+
+// ZoomChange specifies whether the user has zoomed in or not.
+type ZoomChange int
+
+// ZoomChange values.
+//go:generate stringer -type=ZoomChange
+const (
+	ZoomChangeUnspecified ZoomChange = iota
+	ZoomIn
+	ZoomOut
 )
 
 // Chart shows a stock chart for a single stock.
@@ -110,6 +122,9 @@ type Chart struct {
 
 	// bodyBounds is a sub-rect of fullBounds without the header.
 	bodyBounds image.Rectangle
+
+	// zoomChangeCallback is fired when the zoom is changed. Nil if no callback registered.
+	zoomChangeCallback func(zoomChange ZoomChange)
 }
 
 // NewChart creates a new Chart.
@@ -395,6 +410,25 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 
 	ch.legend.SetBounds(pr, llr)
 	ch.legend.ProcessInput(input)
+
+	if input.MouseScrolled.In(bounds) && ch.zoomChangeCallback != nil {
+		zoomChange := ZoomChangeUnspecified
+		switch input.MouseScrolled.Direction {
+		case view.ScrollDown:
+			zoomChange = ZoomOut
+		case view.ScrollUp:
+			zoomChange = ZoomIn
+		default:
+			log.Error("mouse scroll event missing direction")
+			return
+		}
+
+		input.ScheduledCallbacks = append(input.ScheduledCallbacks, func() {
+			if ch.zoomChangeCallback != nil {
+				ch.zoomChangeCallback(zoomChange)
+			}
+		})
+	}
 }
 
 // Update updates the Chart.
@@ -507,6 +541,11 @@ func (ch *Chart) SetAddButtonClickCallback(cb func()) {
 	ch.header.SetAddButtonClickCallback(cb)
 }
 
+// SetZoomChangeCallback sets the callback for zoom changes.
+func (ch *Chart) SetZoomChangeCallback(cb func(zoomChange ZoomChange)) {
+	ch.zoomChangeCallback = cb
+}
+
 // Close frees the resources backing the chart.
 func (ch *Chart) Close() {
 	ch.header.Close()
@@ -531,6 +570,7 @@ func (ch *Chart) Close() {
 	ch.weeklyStochasticTimeline.Close()
 	ch.timelineAxis.Close()
 	ch.timelineCursor.Close()
+	ch.zoomChangeCallback = nil
 }
 
 func renderCursorLines(r image.Rectangle, mousePos image.Point) {

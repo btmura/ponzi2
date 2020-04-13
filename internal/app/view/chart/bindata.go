@@ -6,6 +6,8 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/base64"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -100,7 +102,24 @@ func (f *_escFile) Close() error {
 }
 
 func (f *_escFile) Readdir(count int) ([]os.FileInfo, error) {
-	return nil, nil
+	if !f.isDir {
+		return nil, fmt.Errorf(" escFile.Readdir: '%s' is not directory", f.name)
+	}
+
+	fis, ok := _escDirs[f.local]
+	if !ok {
+		return nil, fmt.Errorf(" escFile.Readdir: '%s' is directory, but we have no info about content of this dir, local=%s", f.name, f.local)
+	}
+	limit := count
+	if count <= 0 || limit > len(fis) {
+		limit = len(fis)
+	}
+
+	if len(fis) == 0 && count > 0 {
+		return nil, io.EOF
+	}
+
+	return fis[0:limit], nil
 }
 
 func (f *_escFile) Stat() (os.FileInfo, error) {
@@ -191,6 +210,7 @@ func _escFSMustString(useLocal bool, name string) string {
 var _escData = map[string]*_escFile{
 
 	"/data/addbutton.png": {
+		name:    "addbutton.png",
 		local:   "data/addbutton.png",
 		size:    170,
 		modtime: 1337,
@@ -202,6 +222,7 @@ R3wDK6qyBhXPSSpbSxg6eHn8Iplv5oPEPF39XNY5JTQBAgAA//+yDEtFqgAAAA==
 	},
 
 	"/data/erroricon.png": {
+		name:    "erroricon.png",
 		local:   "data/erroricon.png",
 		size:    605,
 		modtime: 1337,
@@ -221,6 +242,7 @@ z/X5vV6BgYGBwdPVz2WdU0ITIAAA//+HYlJ7XQIAAA==
 	},
 
 	"/data/refreshbutton.png": {
+		name:    "refreshbutton.png",
 		local:   "data/refreshbutton.png",
 		size:    687,
 		modtime: 1337,
@@ -241,6 +263,7 @@ zXn+Sil1rrX+rARBEARBEARBEBriH/cd6xTO/96gAAAAAElFTkSuQmCCAQAA///Ye4OhrwIAAA==
 	},
 
 	"/data/removebutton.png": {
+		name:    "removebutton.png",
 		local:   "data/removebutton.png",
 		size:    530,
 		modtime: 1337,
@@ -258,13 +281,19 @@ RK5CYIIBAAD//+DMCYgSAgAA
 `,
 	},
 
-	"/": {
-		isDir: true,
-		local: "",
-	},
-
 	"/data": {
+		name:  "data",
+		local: `data`,
 		isDir: true,
-		local: "data",
+	},
+}
+
+var _escDirs = map[string][]os.FileInfo{
+
+	"data": {
+		_escData["/data/addbutton.png"],
+		_escData["/data/erroricon.png"],
+		_escData["/data/refreshbutton.png"],
+		_escData["/data/removebutton.png"],
 	},
 }
