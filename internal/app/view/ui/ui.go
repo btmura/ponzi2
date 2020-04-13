@@ -55,6 +55,11 @@ const (
 	maxUpdates = 1000
 )
 
+// draggingMinimumPressCount is how many input cycles the mouse button must be pressed
+// till the UI considers it a drag and drop event.
+const draggingMinimumPressCount = 5
+
+// viewPadding is padding between visual elements in the UI.
 const viewPadding = 10
 
 var inputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
@@ -452,7 +457,7 @@ func (u *UI) processInput() {
 		MousePos: &mousePos,
 	}
 
-	dragging := u.mouseLeftButtonPressedCount > fps/2
+	dragging := u.mouseLeftButtonPressedCount > draggingMinimumPressCount
 
 	switch {
 	case u.mouseLeftButtonPressed:
