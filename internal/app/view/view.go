@@ -34,6 +34,15 @@ type Input struct {
 	ScheduledCallbacks []func()
 }
 
+// ClearMouseInput removes mouse input from the Input.
+// This is used if a view handles the mouse input and does not want another view to handle them.
+func (i *Input) ClearMouseInput() {
+	i.MousePos = nil
+	i.MouseLeftButtonClicked = nil
+	i.MouseLeftButtonDragging = nil
+	i.MouseScrolled = nil
+}
+
 // MousePosition is the position of the mouse.
 type MousePosition struct {
 	image.Point

@@ -502,14 +502,14 @@ func (u *UI) processInput() {
 	u.instructionsTextBox.SetBounds(bounds)
 	u.inputSymbolTextBox.SetBounds(bounds)
 
+	u.sidebar.SetBounds(m.sidebarBounds)
+	u.sidebar.ProcessInput(input)
+
 	for i := 0; i < len(u.charts); i++ {
 		ch := u.charts[i]
 		ch.SetBounds(bounds)
 		ch.ProcessInput(input)
 	}
-
-	u.sidebar.SetBounds(m.sidebarBounds)
-	u.sidebar.ProcessInput(input)
 
 	for _, cb := range input.ScheduledCallbacks {
 		cb()

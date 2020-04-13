@@ -137,10 +137,8 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		slot.SetBounds(slotBounds)
 		slot.SetThumbnailBounds(slotBounds)
 
-		if s.draggedSlot == nil {
-			if input.MouseLeftButtonDragging.PressedIn(slotBounds) {
-				s.draggedSlot = slot
-			}
+		if s.draggedSlot == nil && input.MouseLeftButtonDragging.PressedIn(slotBounds) {
+			s.draggedSlot = slot
 		}
 
 		if s.draggedSlot == slot {
@@ -174,11 +172,17 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		}
 	}
 
-	// Forward the input such as clicks to the adjusted sidebar now.
+	// Clear the mouse input if we are dragging and absorbing the mouse events.
+	if stillDragging {
+		input.ClearMouseInput()
+	}
+
+	// Forward the input to the individual slots.
 	for _, slot := range s.slots {
 		slot.ProcessInput(input)
 	}
 
+	// Schedule a change event once the drag and drop is done.
 	if wasDragging && !stillDragging && s.changeCallback != nil {
 		sidebar := new(Sidebar)
 		for _, slot := range s.slots {
