@@ -23,15 +23,16 @@ type Sidebar struct {
 
 // SidebarSlot is a slot in the sidebar that has a thumbnail.
 type SidebarSlot struct {
-	// Thumbnail is the thumbnail shown in the sidebar slot.
-	Thumbnail *chart.Thumb
+	// Thumb is the thumbnail shown in the sidebar slot.
+	Thumb *chart.Thumb
 }
 
+// sidebar manages the sidebar to display and edit stock thumbnails.
 type sidebar struct {
-	// slots are slots which can have a Thumbnail or be a drop site.
+	// slots are slots which can have a Thumb or be a drop site.
 	slots []*sidebarSlot
 
-	// draggedSlot if not nil is the slot with the Thumbnail being dragged.
+	// draggedSlot if not nil is the slot with the Thumb being dragged.
 	draggedSlot *sidebarSlot
 
 	// scrollOffset stores the Y offset accumulated from mouseScrollDirection event.
@@ -44,17 +45,29 @@ type sidebar struct {
 	changeCallback func(sidebar *Sidebar)
 }
 
+// sidebarSlot is a drag and drop container for single thumbnail.
+type sidebarSlot struct {
+	// bounds is the rectangle to draw the slot within.
+	bounds image.Rectangle
+
+	// thumb is an optional stock thumbnail. Could have bounds outside the slot if dragged.
+	thumb *chart.Thumb
+
+	// fader fades out the slot.
+	fader *view.Fader
+}
+
 func newSidebar() *sidebar {
 	return new(sidebar)
 }
 
-func (s *sidebar) AddChartThumb(th *chart.Thumb) {
-	s.slots = append(s.slots, newSidebarSlot(th))
+func (s *sidebar) AddChartThumb(thumb *chart.Thumb) {
+	s.slots = append(s.slots, newSidebarSlot(thumb))
 }
 
-func (s *sidebar) RemoveChartThumb(th *chart.Thumb) {
+func (s *sidebar) RemoveChartThumb(thumb *chart.Thumb) {
 	for _, slot := range s.slots {
-		if slot.thumbnail == th {
+		if slot.thumb == thumb {
 			slot.FadeOut()
 			break
 		}
@@ -135,7 +148,7 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 	draggedSlotIndex := -1
 	for i, slot := range s.slots {
 		slot.SetBounds(slotBounds)
-		slot.SetThumbnailBounds(slotBounds)
+		slot.SetThumbBounds(slotBounds)
 
 		if s.draggedSlot == nil && input.MouseLeftButtonDragging.PressedIn(slotBounds) {
 			s.draggedSlot = slot
@@ -154,7 +167,7 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		pos := input.MouseLeftButtonDragging.CurrentPos
 
 		// Float the dragged slot's thumbnail to be under the mouse cursor.
-		s.draggedSlot.SetThumbnailBounds(rect.FromCenterPointAndSize(pos.Point, chartThumbSize))
+		s.draggedSlot.SetThumbBounds(rect.FromCenterPointAndSize(pos.Point, chartThumbSize))
 
 		// Determine whether to move the dragged slot up or down.
 		dy := -1
@@ -186,8 +199,8 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 	if wasDragging && !stillDragging && s.changeCallback != nil {
 		sidebar := new(Sidebar)
 		for _, slot := range s.slots {
-			if slot.thumbnail != nil {
-				sidebar.Slots = append(sidebar.Slots, &SidebarSlot{Thumbnail: slot.thumbnail})
+			if slot.thumb != nil {
+				sidebar.Slots = append(sidebar.Slots, &SidebarSlot{Thumb: slot.thumb})
 			}
 		}
 		input.ScheduledCallbacks = append(input.ScheduledCallbacks, func() {
@@ -257,21 +270,10 @@ func (s *sidebar) Close() {
 	s.changeCallback = nil
 }
 
-type sidebarSlot struct {
-	// bounds is the rectangle to draw the slot within. Can be empty for collapsed slots.
-	bounds image.Rectangle
-
-	// Thumbnail is an optional stock Thumbnail. Could have bounds outside the slot if dragged.
-	thumbnail *chart.Thumb
-
-	// fader fades out the slot.
-	fader *view.Fader
-}
-
-func newSidebarSlot(th *chart.Thumb) *sidebarSlot {
+func newSidebarSlot(thumb *chart.Thumb) *sidebarSlot {
 	return &sidebarSlot{
-		thumbnail: th,
-		fader:     view.NewFader(1 * fps),
+		thumb: thumb,
+		fader: view.NewFader(1 * fps),
 	}
 }
 
@@ -291,20 +293,20 @@ func (s *sidebarSlot) Bounds() image.Rectangle {
 	return s.bounds
 }
 
-func (s *sidebarSlot) SetThumbnailBounds(bounds image.Rectangle) {
-	if s.thumbnail != nil {
-		s.thumbnail.SetBounds(bounds)
+func (s *sidebarSlot) SetThumbBounds(bounds image.Rectangle) {
+	if s.thumb != nil {
+		s.thumb.SetBounds(bounds)
 	}
 }
 
 func (s *sidebarSlot) ProcessInput(input *view.Input) {
-	if s.thumbnail != nil {
-		s.thumbnail.ProcessInput(input)
+	if s.thumb != nil {
+		s.thumb.ProcessInput(input)
 	}
 }
 
 func (s *sidebarSlot) Update() (dirty bool) {
-	if s.thumbnail != nil && s.thumbnail.Update() {
+	if s.thumb != nil && s.thumb.Update() {
 		dirty = true
 	}
 	if s.fader.Update() {
@@ -315,15 +317,15 @@ func (s *sidebarSlot) Update() (dirty bool) {
 
 func (s *sidebarSlot) Render(fudge float32) {
 	s.fader.Render(func(fudge float32) {
-		if s.thumbnail != nil {
-			s.thumbnail.Render(fudge)
+		if s.thumb != nil {
+			s.thumb.Render(fudge)
 		}
 	}, fudge)
 }
 
 func (s *sidebarSlot) Close() {
-	if s.thumbnail != nil {
-		s.thumbnail.Close()
-		s.thumbnail = nil
+	if s.thumb != nil {
+		s.thumb.Close()
+		s.thumb = nil
 	}
 }

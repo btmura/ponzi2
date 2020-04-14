@@ -368,13 +368,13 @@ func (u *UI) handleSidebarChangeEvent(sidebar *Sidebar) {
 	var symbols []string
 
 	for _, slot := range sidebar.Slots {
-		if slot.Thumbnail == nil {
+		if slot.Thumb == nil {
 			log.Error("sidebar reporting slot with nil thumbnail")
 			continue
 		}
 
 		for s, th := range u.symbolToChartThumbMap {
-			if th == slot.Thumbnail {
+			if th == slot.Thumb {
 				symbols = append(symbols, s)
 			}
 		}
