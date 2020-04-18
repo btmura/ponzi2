@@ -33,7 +33,7 @@ type sidebar struct {
 	slots []*sidebarSlot
 
 	// draggedSlot if not nil is the slot with the Thumb being dragged.
-	draggedSlot *sidebarSlot
+	draggedSlot *draggedSidebarSlot
 
 	// scrollOffset stores the Y offset accumulated from mouseScrollDirection event.
 	scrollOffset int
@@ -55,6 +55,15 @@ type sidebarSlot struct {
 
 	// fader fades out the slot.
 	fader *view.Fader
+}
+
+// draggedSidebarSlot has additional info about the dragged slot.
+type draggedSidebarSlot struct {
+	// sidebarSlot is the slot being dragged.
+	*sidebarSlot
+
+	// mousePressOffset is an offset from the center of the slot.
+	mousePressOffset image.Point
 }
 
 func newSidebar() *sidebar {
@@ -151,10 +160,13 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		slot.SetThumbBounds(slotBounds)
 
 		if s.draggedSlot == nil && input.MouseLeftButtonDragging.PressedIn(slotBounds) {
-			s.draggedSlot = slot
+			s.draggedSlot = &draggedSidebarSlot{
+				sidebarSlot:      slot,
+				mousePressOffset: input.MouseLeftButtonDragging.CurrentPos.Sub(rect.CenterPoint(slotBounds)),
+			}
 		}
 
-		if s.draggedSlot == slot {
+		if s.draggedSlot != nil && s.draggedSlot.sidebarSlot == slot {
 			draggedSlotIndex = i
 		}
 
@@ -164,10 +176,10 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 	stillDragging := s.draggedSlot != nil
 
 	if s.draggedSlot != nil {
-		pos := input.MouseLeftButtonDragging.CurrentPos
+		pos := input.MouseLeftButtonDragging.CurrentPos.Sub(s.draggedSlot.mousePressOffset)
 
 		// Float the dragged slot's thumbnail to be under the mouse cursor.
-		s.draggedSlot.SetThumbBounds(rect.FromCenterPointAndSize(pos.Point, chartThumbSize))
+		s.draggedSlot.SetThumbBounds(rect.FromCenterPointAndSize(pos, chartThumbSize))
 
 		// Determine whether to move the dragged slot up or down.
 		dy := -1
@@ -252,9 +264,10 @@ func (s *sidebar) Update() (dirty bool) {
 func (s *sidebar) Render(fudge float32) {
 	// Draw the non-dragged thumbnails first, so they appear under the dragged thumbnail.
 	for _, slot := range s.slots {
-		if slot != s.draggedSlot {
-			slot.Render(fudge)
+		if s.draggedSlot != nil && s.draggedSlot.sidebarSlot == slot {
+			continue
 		}
+		slot.Render(fudge)
 	}
 
 	if s.draggedSlot != nil {
