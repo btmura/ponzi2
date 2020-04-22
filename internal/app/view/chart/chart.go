@@ -36,7 +36,7 @@ var (
 const axisLabelPadding = 4
 
 var (
-	axisLabelBubble       = rect.Bubble{Rounding: 6}
+	axisLabelBubble       = rect.NewBubble(6)
 	axisLabelTextRenderer = gfx.NewTextRenderer(goregular.TTF, 12)
 )
 
@@ -130,7 +130,7 @@ type Chart struct {
 // NewChart creates a new Chart.
 func NewChart(fps int) *Chart {
 	return &Chart{
-		frameBubble: &rect.Bubble{Rounding: chartRounding},
+		frameBubble: rect.NewBubble(chartRounding),
 		header: newHeader(&headerArgs{
 			SymbolQuoteTextRenderer: chartSymbolQuoteTextRenderer,
 			QuotePrinter:            chartQuotePrinter,

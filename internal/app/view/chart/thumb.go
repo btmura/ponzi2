@@ -75,7 +75,7 @@ type Thumb struct {
 // NewThumb creates a Thumb.
 func NewThumb(fps int) *Thumb {
 	return &Thumb{
-		frameBubble: &rect.Bubble{Rounding: thumbRounding},
+		frameBubble: rect.NewBubble(thumbRounding),
 
 		header: newHeader(&headerArgs{
 			SymbolQuoteTextRenderer: thumbSymbolQuoteTextRenderer,

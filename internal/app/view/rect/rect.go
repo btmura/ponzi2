@@ -31,11 +31,16 @@ const gapFudge = 2
 
 // Bubble is a rounded rectangle with a fill and stroke color.
 type Bubble struct {
-	// Rounding is how rounded the corners of the bubble are.
-	Rounding int
+	// rounding is how rounded the corners of the bubble are.
+	rounding int
 
 	// bounds is the bounds to draw within.
 	bounds image.Rectangle
+}
+
+// NewBubble returns a new Bubble.
+func NewBubble(rounding int) *Bubble {
+	return &Bubble{rounding: rounding}
 }
 
 // SetBounds sets the bounds to draw within.
@@ -48,8 +53,8 @@ func (b *Bubble) Render(fudge float32) {
 	if b.bounds.Empty() {
 		return
 	}
-	fillRoundedRect(b.bounds, b.Rounding)
-	strokeRoundedRect(b.bounds, b.Rounding)
+	fillRoundedRect(b.bounds, b.rounding)
+	strokeRoundedRect(b.bounds, b.rounding)
 }
 
 // fillRoundedRect renders a filled rounded rectangle within r.
