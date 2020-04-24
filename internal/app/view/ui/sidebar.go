@@ -205,8 +205,8 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		}
 	}
 
-	// Clear the mouse input if we are dragging and absorbing the mouse events.
-	if stillDragging {
+	// Absorb mouse event while dragging or if dragging released.
+	if stillDragging || wasDragging && !stillDragging {
 		input.ClearMouseInput()
 	}
 
