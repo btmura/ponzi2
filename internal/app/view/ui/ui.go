@@ -257,12 +257,13 @@ func (u *UI) Init(_ context.Context) (cleanup func(), err error) {
 
 func (u *UI) handleSizeEvent(width, height int) {
 	log.Debugf("width: %d height: %d", width, height)
-	defer u.WakeLoop()
 
 	s := image.Pt(width, height)
-	if u.winSize == s {
+	if s == u.winSize {
 		return
 	}
+
+	defer u.WakeLoop()
 
 	gl.Viewport(0, 0, int32(s.X), int32(s.Y))
 
@@ -275,21 +276,24 @@ func (u *UI) handleSizeEvent(width, height int) {
 
 func (u *UI) handleCharEvent(char rune) {
 	log.Debugf("char: %c", char)
-	defer u.WakeLoop()
 
 	char = unicode.ToUpper(char)
-	if _, ok := acceptedChars[char]; ok {
-		u.inputSymbolTextBox.SetText(u.inputSymbolTextBox.Text() + string(char))
+	if _, ok := acceptedChars[char]; !ok {
+		return
 	}
+
+	u.inputSymbolTextBox.SetText(u.inputSymbolTextBox.Text() + string(char))
+	u.WakeLoop()
 }
 
 func (u *UI) handleKeyEvent(key glfw.Key, action glfw.Action) {
 	log.Debugf("key: %v action: %v", key, action)
-	defer u.WakeLoop()
 
 	if action != glfw.Release {
 		return
 	}
+
+	defer u.WakeLoop()
 
 	switch key {
 	case glfw.KeyEscape:
@@ -310,21 +314,25 @@ func (u *UI) handleKeyEvent(key glfw.Key, action glfw.Action) {
 
 func (u *UI) handleCursorPosEvent(x, y float64) {
 	log.Debugf("x: %f y: %f", x, y)
-	defer u.WakeLoop()
 
 	// Flip Y-axis since the OpenGL coordinate system makes lower left the origin.
-	u.mousePos = view.MousePosition{
-		Point: image.Pt(int(x), u.winSize.Y-int(y)),
+	pos := view.MousePosition{Point: image.Pt(int(x), u.winSize.Y-int(y))}
+	if pos == u.mousePos {
+		return
 	}
+
+	u.mousePos = pos
+	u.WakeLoop()
 }
 
 func (u *UI) handleMouseButtonEvent(button glfw.MouseButton, action glfw.Action) {
 	log.Debugf("button: %v action: %v", button, action)
-	defer u.WakeLoop()
 
 	if button != glfw.MouseButtonLeft {
 		return
 	}
+
+	defer u.WakeLoop()
 
 	switch action {
 	case glfw.Press:
