@@ -73,6 +73,9 @@ type MouseDraggingEvent struct {
 	// CurrentPos is the current mouse position.
 	CurrentPos MousePosition
 
+	// PreviousPos is the previous mouse position.
+	PreviousPos MousePosition
+
 	// PressedPos is where the mouse button was originally pressed.
 	PressedPos MousePosition
 

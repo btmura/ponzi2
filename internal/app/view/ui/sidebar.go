@@ -3,10 +3,9 @@ package ui
 import (
 	"image"
 
-	"github.com/btmura/ponzi2/internal/app/view/rect"
-
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/chart"
+	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
 // Internal constants.
@@ -176,6 +175,9 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 	stillDragging := s.draggedSlot != nil
 
 	if s.draggedSlot != nil {
+		currentPos := input.MouseLeftButtonDragging.CurrentPos
+		previousPos := &input.MouseLeftButtonDragging.PreviousPos
+
 		// Determine the center from where the user pressed and held.
 		center := input.MouseLeftButtonDragging.CurrentPos.Sub(s.draggedSlot.mousePressOffset)
 
@@ -183,24 +185,27 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		thumbBounds := rect.FromCenterPointAndSize(center, chartThumbSize)
 		s.draggedSlot.SetThumbBounds(thumbBounds)
 
-		// Determine whether to move the dragged slot up or down.
-		dy := -1
-		if c := rect.CenterPoint(s.draggedSlot.Bounds()); center.Y < c.Y {
+		// Determine whether to move the dragged slot up or down
+		// by checking whether we are moving up or down with the mouse.
+		var dy int
+		switch {
+		case currentPos.Y < previousPos.Y:
 			dy = +1
+		case currentPos.Y > previousPos.Y:
+			dy = -1
 		}
 
 		// Find the slot to swap with and swap it.
-		for i := draggedSlotIndex + dy; i >= 0 && i < len(s.slots); i += dy {
-			b := s.slots[i].Bounds()
-
-			// Check whether the thumbnail's edges overlap with the slot's thumbnail.
-			overlapX := thumbBounds.Min.X >= b.Min.X && thumbBounds.Min.X < b.Max.X ||
-				thumbBounds.Max.X >= b.Min.X && thumbBounds.Max.X < b.Max.X
-
-			if overlapX && b.Min.Y >= center.Y && center.Y < b.Max.Y {
-				j, k := draggedSlotIndex, i
-				s.slots[j], s.slots[k] = s.slots[k], s.slots[j]
-				break
+		if dy != 0 {
+			for i := draggedSlotIndex + dy; i >= 0 && i < len(s.slots); i += dy {
+				b := s.slots[i].Bounds()
+				xOverlaps := b.Overlaps(thumbBounds)
+				yOverlaps := b.Min.Y <= currentPos.Y && currentPos.Y < b.Max.Y
+				if xOverlaps && yOverlaps {
+					j, k := draggedSlotIndex, i
+					s.slots[j], s.slots[k] = s.slots[k], s.slots[j]
+					break
+				}
 			}
 		}
 	}

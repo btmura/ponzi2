@@ -124,6 +124,9 @@ type UI struct {
 	// mousePos is the next mouse position to report in global coordinates.
 	mousePos view.MousePosition
 
+	// mousePreviousPos is the previous mouse position reported in global coordinates.
+	mousePreviousPos view.MousePosition
+
 	// mouseLeftButtonPressed is whether the left mouse button was pressed.
 	mouseLeftButtonPressed bool
 
@@ -321,6 +324,7 @@ func (u *UI) handleCursorPosEvent(x, y float64) {
 		return
 	}
 
+	u.mousePreviousPos = u.mousePos
 	u.mousePos = pos
 	u.WakeLoop()
 }
@@ -473,8 +477,9 @@ func (u *UI) processInput() {
 
 	case dragging && !u.mouseLeftButtonReleased:
 		input.MouseLeftButtonDragging = &view.MouseDraggingEvent{
-			CurrentPos: mousePos,
-			PressedPos: *u.mouseLeftButtonPressedPos,
+			CurrentPos:  mousePos,
+			PreviousPos: u.mousePreviousPos,
+			PressedPos:  *u.mouseLeftButtonPressedPos,
 		}
 
 	case u.mouseLeftButtonReleased:
