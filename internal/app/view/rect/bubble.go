@@ -9,7 +9,7 @@ import (
 )
 
 // gapFudge is how much to extend the borders to close gaps in OpenGL rendering.
-const gapFudge = 2
+const gapFudge = 1
 
 // Rounded corner VAOs used to render the rounded rectangle corners.
 var (
