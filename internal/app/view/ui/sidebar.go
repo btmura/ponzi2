@@ -6,6 +6,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/chart"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
+	"github.com/btmura/ponzi2/internal/log"
 )
 
 // Internal constants.
@@ -48,6 +49,9 @@ type sidebar struct {
 type sidebarSlot struct {
 	// bounds is the rectangle to draw the slot within.
 	bounds image.Rectangle
+
+	// thumbBounds is the bounds of the thumbnail.
+	thumbBounds image.Rectangle
 
 	// thumb is an optional stock thumbnail. Could have bounds outside the slot if dragged.
 	thumb *chart.Thumb
@@ -153,8 +157,7 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		s.draggedSlot = nil
 	}
 
-	draggedSlotIndex := -1
-	for i, slot := range s.slots {
+	for _, slot := range s.slots {
 		slot.SetBounds(slotBounds)
 		slot.SetThumbBounds(slotBounds)
 
@@ -165,19 +168,12 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 			}
 		}
 
-		if s.draggedSlot != nil && s.draggedSlot.sidebarSlot == slot {
-			draggedSlotIndex = i
-		}
-
 		slotBounds = slotBounds.Sub(image.Pt(0, chartThumbSize.Y+viewPadding))
 	}
 
 	stillDragging := s.draggedSlot != nil
 
 	if s.draggedSlot != nil {
-		currentPos := input.MouseLeftButtonDragging.CurrentPos
-		previousPos := &input.MouseLeftButtonDragging.PreviousPos
-
 		// Determine the center from where the user pressed and held.
 		center := input.MouseLeftButtonDragging.CurrentPos.Sub(s.draggedSlot.mousePressOffset)
 
@@ -185,29 +181,7 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		thumbBounds := rect.FromCenterPointAndSize(center, chartThumbSize)
 		s.draggedSlot.SetThumbBounds(thumbBounds)
 
-		// Determine whether to move the dragged slot up or down
-		// by checking whether we are moving up or down with the mouse.
-		var dy int
-		switch {
-		case currentPos.Y < previousPos.Y:
-			dy = +1
-		case currentPos.Y > previousPos.Y:
-			dy = -1
-		}
-
-		// Find the slot to swap with and swap it.
-		if dy != 0 {
-			for i := draggedSlotIndex + dy; i >= 0 && i < len(s.slots); i += dy {
-				b := s.slots[i].Bounds()
-				xOverlaps := b.Overlaps(thumbBounds)
-				yOverlaps := b.Min.Y <= currentPos.Y && currentPos.Y < b.Max.Y
-				if xOverlaps && yOverlaps {
-					j, k := draggedSlotIndex, i
-					s.slots[j], s.slots[k] = s.slots[k], s.slots[j]
-					break
-				}
-			}
-		}
+		s.moveDraggedSlotUpOrDown(input)
 	}
 
 	// Absorb mouse event while dragging or if dragging released.
@@ -243,7 +217,7 @@ func (s *sidebar) scrollUp() {
 }
 
 func (s *sidebar) scrollDown() {
-	// Don't mouseScrollDirection if there is no need.
+	// Don't scroll if there is no need.
 	overflow := s.ContentSize().Y - s.bounds.Dy()
 	if overflow <= 0 {
 		return
@@ -255,6 +229,63 @@ func (s *sidebar) scrollDown() {
 		scroll = available
 	}
 	s.scrollOffset -= scroll
+}
+
+func (s *sidebar) moveDraggedSlotUpOrDown(input *view.Input) {
+	if s.draggedSlot == nil {
+		log.Error("draggedSlot should not be nil")
+		return
+	}
+
+	if input.MouseLeftButtonDragging == nil {
+		log.Error("should be dragging if dragged slot exists")
+		return
+	}
+
+	// Determine whether to move the dragged slot up or down
+	// by checking whether the mouse is moving up or down.
+
+	currentPos := input.MouseLeftButtonDragging.CurrentPos
+	previousPos := input.MouseLeftButtonDragging.PreviousPos
+
+	var dy int
+	switch {
+	case currentPos.Y < previousPos.Y:
+		dy = +1
+	case currentPos.Y > previousPos.Y:
+		dy = -1
+	}
+
+	// If the mouse is not moving, then we don't need to do anything.
+	if dy == 0 {
+		return
+	}
+
+	// Find the index of the dragged slot.
+	draggedSlotIndex := -1
+	for i := range s.slots {
+		if s.draggedSlot.sidebarSlot == s.slots[i] {
+			draggedSlotIndex = i
+			break
+		}
+	}
+
+	if draggedSlotIndex < 0 {
+		log.Error("should find dragged slot if draggedSlot exists")
+		return
+	}
+
+	// Find the slot to swap with and swap it.
+	for i := draggedSlotIndex + dy; i >= 0 && i < len(s.slots); i += dy {
+		b := s.slots[i].Bounds()
+		xOverlaps := b.Overlaps(s.draggedSlot.ThumbBounds())
+		yOverlaps := b.Min.Y <= currentPos.Y && currentPos.Y < b.Max.Y
+		if xOverlaps && yOverlaps {
+			j, k := draggedSlotIndex, i
+			s.slots[j], s.slots[k] = s.slots[k], s.slots[j]
+			break
+		}
+	}
 }
 
 // Update moves the animation one step forward.
@@ -320,9 +351,17 @@ func (s *sidebarSlot) Bounds() image.Rectangle {
 }
 
 func (s *sidebarSlot) SetThumbBounds(bounds image.Rectangle) {
-	if s.thumb != nil {
-		s.thumb.SetBounds(bounds)
+	s.thumbBounds = bounds
+
+	if s.thumb == nil {
+		log.Error("thumbnail should not be nil")
+		return
 	}
+	s.thumb.SetBounds(bounds)
+}
+
+func (s *sidebarSlot) ThumbBounds() image.Rectangle {
+	return s.thumbBounds
 }
 
 func (s *sidebarSlot) ProcessInput(input *view.Input) {
