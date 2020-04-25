@@ -110,82 +110,19 @@ func (s *sidebar) SetBounds(bounds image.Rectangle) {
 }
 
 func (s *sidebar) ProcessInput(input *view.Input) {
-	// Adjust the mouseScrollDirection offset due to the mouse wheel or window size.
-	h := s.ContentSize().Y
-	if h == 0 || h < s.bounds.Dy() {
-		// Reset offset if the sidebar is empty or the contents are less than the bounds.
-		s.scrollOffset = 0
-	} else {
-		// Scroll up or down if the mouseScrollDirection event occurred within the sidebar bounds.
-		if input.MouseScrolled.In(s.bounds) {
-			switch input.MouseScrolled.Direction {
-			case view.ScrollUp:
-				s.scrollUp()
-			case view.ScrollDown:
-				s.scrollDown()
-			}
-		}
+	// Adjust the scroll offset due to mouse wheel scrolling or dragging over the bumpers.
+	s.adjustScrollOffset(input)
 
-		// Scroll up or down if dragging and hovering over the bumpers.
-		if input.MouseLeftButtonDragging != nil && s.draggedSlot != nil {
-			pos := input.MouseLeftButtonDragging.CurrentPos
-			top := image.Rect(
-				s.bounds.Min.X, s.bounds.Max.Y-chartThumbSize.Y/2,
-				s.bounds.Max.X, s.bounds.Max.Y)
-			bottom := image.Rect(
-				s.bounds.Min.X, 0,
-				s.bounds.Max.X, chartThumbSize.Y/2)
-			switch {
-			case pos.In(top):
-				s.scrollUp()
-			case pos.In(bottom):
-				s.scrollDown()
-			}
-		}
-	}
+	// Set each slot's bounds on the screen.
+	s.setSlotBounds()
 
-	// Go down the sidebar and assign bounds to each slot and identify the dragged slot.
-	slotBounds := image.Rect(
-		s.bounds.Min.X, s.bounds.Max.Y-viewPadding-chartThumbSize.Y,
-		s.bounds.Max.X, s.bounds.Max.Y-viewPadding,
-	)
-	slotBounds = slotBounds.Sub(image.Pt(0, s.scrollOffset))
-
+	// Find the slot being dragged and update its position.
 	wasDragging := s.draggedSlot != nil
-
-	if input.MouseLeftButtonDragging == nil {
-		s.draggedSlot = nil
-	}
-
-	for _, slot := range s.slots {
-		slot.SetBounds(slotBounds)
-		slot.SetThumbBounds(slotBounds)
-
-		if s.draggedSlot == nil && input.MouseLeftButtonDragging.PressedIn(slotBounds) {
-			s.draggedSlot = &draggedSidebarSlot{
-				sidebarSlot:      slot,
-				mousePressOffset: input.MouseLeftButtonDragging.CurrentPos.Sub(rect.CenterPoint(slotBounds)),
-			}
-		}
-
-		slotBounds = slotBounds.Sub(image.Pt(0, chartThumbSize.Y+viewPadding))
-	}
-
+	s.setDraggedSlot(input)
 	stillDragging := s.draggedSlot != nil
 
-	if s.draggedSlot != nil {
-		// Determine the center from where the user pressed and held.
-		center := input.MouseLeftButtonDragging.CurrentPos.Sub(s.draggedSlot.mousePressOffset)
-
-		// Float the dragged slot's thumbnail to be under the mouse cursor.
-		thumbBounds := rect.FromCenterPointAndSize(center, chartThumbSize)
-		s.draggedSlot.SetThumbBounds(thumbBounds)
-
-		s.moveDraggedSlotUpOrDown(input)
-	}
-
-	// Absorb mouse event while dragging or if dragging released.
-	if stillDragging || wasDragging && !stillDragging {
+	// Absorb mouse event if dragging was released or still dragging.
+	if wasDragging && !stillDragging || stillDragging {
 		input.ClearMouseInput()
 	}
 
@@ -195,16 +132,45 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 	}
 
 	// Schedule a change event once the drag and drop is done.
-	if wasDragging && !stillDragging && s.changeCallback != nil {
-		sidebar := new(Sidebar)
-		for _, slot := range s.slots {
-			if slot.thumb != nil {
-				sidebar.Slots = append(sidebar.Slots, &SidebarSlot{Thumb: slot.thumb})
-			}
+	if wasDragging && !stillDragging {
+		s.fireSidebarChangeCallback(input)
+	}
+}
+
+func (s *sidebar) adjustScrollOffset(input *view.Input) {
+	// Adjust the mouseScrollDirection offset due to the mouse wheel or window size.
+	h := s.ContentSize().Y
+	if h == 0 || h < s.bounds.Dy() {
+		// Reset offset if the sidebar is empty or the contents are less than the bounds.
+		s.scrollOffset = 0
+		return
+	}
+
+	// Scroll up or down if the mouseScrollDirection event occurred within the sidebar bounds.
+	if input.MouseScrolled.In(s.bounds) {
+		switch input.MouseScrolled.Direction {
+		case view.ScrollUp:
+			s.scrollUp()
+		case view.ScrollDown:
+			s.scrollDown()
 		}
-		input.ScheduledCallbacks = append(input.ScheduledCallbacks, func() {
-			s.changeCallback(sidebar)
-		})
+	}
+
+	// Scroll up or down if dragging and hovering over the bumpers.
+	if input.MouseLeftButtonDragging != nil && s.draggedSlot != nil {
+		pos := input.MouseLeftButtonDragging.CurrentPos
+		top := image.Rect(
+			s.bounds.Min.X, s.bounds.Max.Y-chartThumbSize.Y/2,
+			s.bounds.Max.X, s.bounds.Max.Y)
+		bottom := image.Rect(
+			s.bounds.Min.X, 0,
+			s.bounds.Max.X, chartThumbSize.Y/2)
+		switch {
+		case pos.In(top):
+			s.scrollUp()
+		case pos.In(bottom):
+			s.scrollDown()
+		}
 	}
 }
 
@@ -231,7 +197,50 @@ func (s *sidebar) scrollDown() {
 	s.scrollOffset -= scroll
 }
 
-func (s *sidebar) moveDraggedSlotUpOrDown(input *view.Input) {
+// setSlotBounds goes through the sidebar and assign bounds to each slot.
+func (s *sidebar) setSlotBounds() {
+	slotBounds := image.Rect(
+		s.bounds.Min.X, s.bounds.Max.Y-viewPadding-chartThumbSize.Y,
+		s.bounds.Max.X, s.bounds.Max.Y-viewPadding,
+	)
+	slotBounds = slotBounds.Sub(image.Pt(0, s.scrollOffset))
+
+	for _, slot := range s.slots {
+		slot.SetBounds(slotBounds)
+		slot.SetThumbBounds(slotBounds)
+		slotBounds = slotBounds.Sub(image.Pt(0, chartThumbSize.Y+viewPadding))
+	}
+}
+
+// setDraggedSlot finds the slot being dragged and updates its position.
+func (s *sidebar) setDraggedSlot(input *view.Input) {
+	if input.MouseLeftButtonDragging == nil {
+		s.draggedSlot = nil
+	}
+
+	for _, slot := range s.slots {
+		if s.draggedSlot == nil && input.MouseLeftButtonDragging.PressedIn(slot.Bounds()) {
+			s.draggedSlot = &draggedSidebarSlot{
+				sidebarSlot:      slot,
+				mousePressOffset: input.MouseLeftButtonDragging.CurrentPos.Sub(rect.CenterPoint(slot.Bounds())),
+			}
+		}
+	}
+
+	if s.draggedSlot != nil {
+		// Determine the center from where the user pressed and held.
+		center := input.MouseLeftButtonDragging.CurrentPos.Sub(s.draggedSlot.mousePressOffset)
+
+		// Float the dragged slot's thumbnail to be under the mouse cursor.
+		thumbBounds := rect.FromCenterPointAndSize(center, chartThumbSize)
+		s.draggedSlot.SetThumbBounds(thumbBounds)
+
+		s.moveDraggedSlot(input)
+	}
+}
+
+// moveDraggedSlot moves the dragged slot up or down depending on the mouse position.
+func (s *sidebar) moveDraggedSlot(input *view.Input) {
 	if s.draggedSlot == nil {
 		log.Error("draggedSlot should not be nil")
 		return
@@ -286,6 +295,24 @@ func (s *sidebar) moveDraggedSlotUpOrDown(input *view.Input) {
 			break
 		}
 	}
+}
+
+// fireSidebarChangeCallback schedules the sidebar change callback.
+func (s *sidebar) fireSidebarChangeCallback(input *view.Input) {
+	if s.changeCallback == nil {
+		return
+	}
+
+	sidebar := new(Sidebar)
+	for _, slot := range s.slots {
+		if slot.thumb != nil {
+			sidebar.Slots = append(sidebar.Slots, &SidebarSlot{Thumb: slot.thumb})
+		}
+	}
+
+	input.ScheduledCallbacks = append(input.ScheduledCallbacks, func() {
+		s.changeCallback(sidebar)
+	})
 }
 
 // Update moves the animation one step forward.
