@@ -529,7 +529,7 @@ func (u *UI) processInput() {
 		ch.ProcessInput(input)
 	}
 
-	for _, cb := range input.ScheduledCallbacks {
+	for _, cb := range input.FiredCallbacks() {
 		cb()
 	}
 }

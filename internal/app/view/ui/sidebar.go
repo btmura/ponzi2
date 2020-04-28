@@ -310,7 +310,7 @@ func (s *sidebar) fireSidebarChangeCallback(input *view.Input) {
 		}
 	}
 
-	input.ScheduledCallbacks = append(input.ScheduledCallbacks, func() {
+	input.AddFiredCallback(func() {
 		s.changeCallback(sidebar)
 	})
 }

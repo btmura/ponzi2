@@ -168,7 +168,7 @@ func (t *Thumb) ProcessInput(input *view.Input) {
 	t.errorTextBox.SetBounds(r)
 
 	if !clicks.HasClicks() && input.MouseLeftButtonClicked.In(t.fullBounds) {
-		input.ScheduledCallbacks = append(input.ScheduledCallbacks, t.thumbClickCallback)
+		input.AddFiredCallback(t.thumbClickCallback)
 	}
 
 	rects := rect.Slice(r, 0.5)

@@ -1,3 +1,4 @@
+// Package view
 package view
 
 import (
@@ -30,8 +31,8 @@ type Input struct {
 	// MouseScrolled reports a mouse scroll wheel event. Nil if no scroll happened.
 	MouseScrolled *MouseScrollEvent
 
-	// ScheduledCallbacks are callbacks to be called at the end of Render.
-	ScheduledCallbacks []func()
+	// firedCallbacks are callbacks that were fired while processing input.
+	firedCallbacks []func()
 }
 
 // ClearMouseInput removes mouse input from the Input.
@@ -41,6 +42,16 @@ func (i *Input) ClearMouseInput() {
 	i.MouseLeftButtonClicked = nil
 	i.MouseLeftButtonDragging = nil
 	i.MouseScrolled = nil
+}
+
+// AddFiredCallback records a callback that was fired while processing input.
+func (i *Input) AddFiredCallback(cb func()) {
+	i.firedCallbacks = append(i.firedCallbacks, cb)
+}
+
+// FiredCallbacks returns the callbacks that were filed while processing input.
+func (i *Input) FiredCallbacks() []func() {
+	return i.firedCallbacks
 }
 
 // MousePosition is the position of the mouse.

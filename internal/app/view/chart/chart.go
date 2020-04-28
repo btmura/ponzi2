@@ -423,7 +423,7 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 			return
 		}
 
-		input.ScheduledCallbacks = append(input.ScheduledCallbacks, func() {
+		input.AddFiredCallback(func() {
 			if ch.zoomChangeCallback != nil {
 				ch.zoomChangeCallback(zoomChange)
 			}
