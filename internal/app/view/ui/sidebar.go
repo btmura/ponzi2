@@ -11,8 +11,14 @@ import (
 
 // Internal constants.
 var (
-	chartThumbSize      = image.Pt(155, 105)
-	sidebarScrollAmount = image.Pt(0, chartThumbSize.Y+viewPadding)
+	// thumbSize is the size of the thumbanls in the sidebar.
+	thumbSize = image.Pt(155, 105)
+
+	// wheelScrollAmount is how much to scroll when the mouse scroll wheel is used.
+	wheelScrollAmount = image.Pt(0, thumbSize.Y+viewPadding)
+
+	// bumperScrollAmount is how much to scroll when dragging over the bumpers which are the edges of the sidebar.
+	bumperScrollAmount = image.Pt(0, (thumbSize.Y+viewPadding)/4)
 )
 
 // Sidebar is the sidebar that displays thumbnails of stocks.
@@ -94,7 +100,7 @@ func (s *sidebar) ContentSize() image.Point {
 		return image.Pt(0, 0)
 	}
 
-	height := num * chartThumbSize.Y
+	height := num * thumbSize.Y
 	if num > 1 {
 		// Add padding between thumbnails.
 		height += (num - 1) * viewPadding
@@ -102,7 +108,7 @@ func (s *sidebar) ContentSize() image.Point {
 		// Add padding on top and bottom.
 		height += 2 * viewPadding
 	}
-	return image.Pt(chartThumbSize.X, height)
+	return image.Pt(thumbSize.X, height)
 }
 
 func (s *sidebar) SetBounds(bounds image.Rectangle) {
@@ -146,43 +152,47 @@ func (s *sidebar) adjustScrollOffset(input *view.Input) {
 		return
 	}
 
-	// Scroll up or down if the mouseScrollDirection event occurred within the sidebar bounds.
-	if input.MouseScrolled.In(s.bounds) {
-		switch input.MouseScrolled.Direction {
-		case view.ScrollUp:
-			s.scrollUp()
-		case view.ScrollDown:
-			s.scrollDown()
-		}
-	}
-
 	// Scroll up or down if dragging and hovering over the bumpers.
 	if input.MouseLeftButtonDragging != nil && s.draggedSlot != nil {
 		pos := input.MouseLeftButtonDragging.CurrentPos
 		top := image.Rect(
-			s.bounds.Min.X, s.bounds.Max.Y-chartThumbSize.Y/2,
+			s.bounds.Min.X, s.bounds.Max.Y-thumbSize.Y/2,
 			s.bounds.Max.X, s.bounds.Max.Y)
 		bottom := image.Rect(
 			s.bounds.Min.X, 0,
-			s.bounds.Max.X, chartThumbSize.Y/2)
+			s.bounds.Max.X, thumbSize.Y/2)
 		switch {
 		case pos.In(top):
-			s.scrollUp()
+			s.scrollUp(bumperScrollAmount.Y)
+			return
 		case pos.In(bottom):
-			s.scrollDown()
+			s.scrollDown(bumperScrollAmount.Y)
+			return
+		}
+	}
+
+	// Scroll up or down if the mouseScrollDirection event occurred within the sidebar bounds.
+	if input.MouseScrolled.In(s.bounds) {
+		switch input.MouseScrolled.Direction {
+		case view.ScrollUp:
+			s.scrollUp(wheelScrollAmount.Y)
+			return
+		case view.ScrollDown:
+			s.scrollDown(wheelScrollAmount.Y)
+			return
 		}
 	}
 }
 
-func (s *sidebar) scrollUp() {
+func (s *sidebar) scrollUp(scrollAmount int) {
 	// Don't allow a gap at the top.
-	s.scrollOffset += sidebarScrollAmount.Y
+	s.scrollOffset += scrollAmount
 	if s.scrollOffset > 0 {
 		s.scrollOffset = 0
 	}
 }
 
-func (s *sidebar) scrollDown() {
+func (s *sidebar) scrollDown(scrollAmount int) {
 	// Don't scroll if there is no need.
 	overflow := s.ContentSize().Y - s.bounds.Dy()
 	if overflow <= 0 {
@@ -190,7 +200,7 @@ func (s *sidebar) scrollDown() {
 	}
 
 	// Don't allow a gap at the bottom.
-	scroll := sidebarScrollAmount.Y
+	scroll := scrollAmount
 	if available := s.scrollOffset + overflow; scroll > available {
 		scroll = available
 	}
@@ -200,7 +210,7 @@ func (s *sidebar) scrollDown() {
 // setSlotBounds goes through the sidebar and assign bounds to each slot.
 func (s *sidebar) setSlotBounds() {
 	slotBounds := image.Rect(
-		s.bounds.Min.X, s.bounds.Max.Y-viewPadding-chartThumbSize.Y,
+		s.bounds.Min.X, s.bounds.Max.Y-viewPadding-thumbSize.Y,
 		s.bounds.Max.X, s.bounds.Max.Y-viewPadding,
 	)
 	slotBounds = slotBounds.Sub(image.Pt(0, s.scrollOffset))
@@ -208,7 +218,7 @@ func (s *sidebar) setSlotBounds() {
 	for _, slot := range s.slots {
 		slot.SetBounds(slotBounds)
 		slot.SetThumbBounds(slotBounds)
-		slotBounds = slotBounds.Sub(image.Pt(0, chartThumbSize.Y+viewPadding))
+		slotBounds = slotBounds.Sub(image.Pt(0, thumbSize.Y+viewPadding))
 	}
 }
 
@@ -232,7 +242,7 @@ func (s *sidebar) setDraggedSlot(input *view.Input) {
 		center := input.MouseLeftButtonDragging.CurrentPos.Sub(s.draggedSlot.mousePressOffset)
 
 		// Float the dragged slot's thumbnail to be under the mouse cursor.
-		thumbBounds := rect.FromCenterPointAndSize(center, chartThumbSize)
+		thumbBounds := rect.FromCenterPointAndSize(center, thumbSize)
 		s.draggedSlot.SetThumbBounds(thumbBounds)
 
 		s.moveDraggedSlot(input)
