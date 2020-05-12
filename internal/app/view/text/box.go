@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/view/color"
 )
 
 // Box draws text that is horizontally and vertically centered.
@@ -15,7 +16,7 @@ type Box struct {
 	text string
 
 	// color is the color to render the text in.
-	color [4]float32
+	color color.RGBA
 
 	// padding is the padding around the text.
 	padding int
@@ -34,7 +35,7 @@ type Box struct {
 type Option func(c *Box)
 
 // Color returns an option to set the text color.
-func Color(color [4]float32) Option {
+func Color(color color.RGBA) Option {
 	return func(b *Box) {
 		b.color = color
 	}
@@ -52,7 +53,7 @@ func NewBox(textRenderer *gfx.TextRenderer, text string, opts ...Option) *Box {
 	b := &Box{
 		textRenderer: textRenderer,
 		text:         text,
-		color:        [4]float32{1, 1, 1, 1},
+		color:        color.RGBA{1, 1, 1, 1},
 		dirty:        true,
 	}
 	for _, o := range opts {
@@ -110,7 +111,7 @@ func (b *Box) Update() (dirty bool) {
 }
 
 // Render renders the current state to the screen.
-func (b *Box) Render(fudge float32) {
+func (b *Box) Render(float32) {
 	if b.text == "" {
 		return
 	}
@@ -119,5 +120,5 @@ func (b *Box) Render(fudge float32) {
 		return
 	}
 
-	b.textRenderer.Render(b.text, b.adjustedBounds.Min, b.color, gfx.TextRenderMaxWidth(b.adjustedBounds.Dx()))
+	b.textRenderer.Render(b.text, b.adjustedBounds.Min, gfx.TextColor(b.color), gfx.TextRenderMaxWidth(b.adjustedBounds.Dx()))
 }
