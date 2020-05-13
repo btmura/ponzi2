@@ -5,6 +5,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/view/color"
+	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
 // Box draws text that is horizontally and vertically centered.
@@ -21,11 +22,14 @@ type Box struct {
 	// padding is the padding around the text.
 	padding int
 
+	// bubble is the bubble around the text. Nil for no bubble.
+	bubble *rect.Bubble
+
 	// bounds is the rectangle with global coords that should be drawn within.
 	bounds image.Rectangle
 
-	// adjustedBounds is the adjusted bounds shrink-wrapped around the text.
-	adjustedBounds image.Rectangle
+	// textBounds is the adjusted bounds shrink-wrapped around the text.
+	textBounds image.Rectangle
 
 	// dirty is true if the text or bounds has changed and requires an update.
 	dirty bool
@@ -45,6 +49,13 @@ func Color(color color.RGBA) Option {
 func Padding(padding int) Option {
 	return func(b *Box) {
 		b.padding = padding
+	}
+}
+
+// Bubble returns an option to set the bubble.
+func Bubble(bubble *rect.Bubble) Option {
+	return func(b *Box) {
+		b.bubble = bubble
 	}
 }
 
@@ -91,18 +102,24 @@ func (b *Box) Update() (dirty bool) {
 		return false
 	}
 
+	// Figure out the width of the text. Trim to fit within bounds.
 	textSize := b.textRenderer.Measure(b.text)
 	if textSize.X > b.bounds.Dx()-b.padding {
 		textSize.X = b.bounds.Dx() - b.padding
 	}
 
+	// Figure out the shrink-wrapped bounds of the text.
 	textPt := image.Point{
 		X: b.bounds.Min.X + b.bounds.Dx()/2 - textSize.X/2,
 		Y: b.bounds.Min.Y + b.bounds.Dy()/2 - textSize.Y/2,
 	}
-	b.adjustedBounds = image.Rectangle{
+	b.textBounds = image.Rectangle{
 		Min: textPt,
 		Max: textPt.Add(textSize),
+	}
+
+	if b.bubble != nil {
+		b.bubble.SetBounds(b.textBounds.Inset(-b.padding))
 	}
 
 	b.dirty = false
@@ -111,7 +128,7 @@ func (b *Box) Update() (dirty bool) {
 }
 
 // Render renders the current state to the screen.
-func (b *Box) Render(float32) {
+func (b *Box) Render(fudge float32) {
 	if b.text == "" {
 		return
 	}
@@ -120,5 +137,9 @@ func (b *Box) Render(float32) {
 		return
 	}
 
-	b.textRenderer.Render(b.text, b.adjustedBounds.Min, gfx.TextColor(b.color), gfx.TextRenderMaxWidth(b.adjustedBounds.Dx()))
+	if b.bubble != nil {
+		b.bubble.Render(fudge)
+	}
+
+	b.textRenderer.Render(b.text, b.textBounds.Min, gfx.TextColor(b.color), gfx.TextRenderMaxWidth(b.textBounds.Dx()))
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/chart"
+	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/text"
 	"github.com/btmura/ponzi2/internal/errors"
 	"github.com/btmura/ponzi2/internal/log"
@@ -61,6 +62,9 @@ const draggingMinimumPressCount = 5
 
 // viewPadding is padding between visual elements in the UI.
 const viewPadding = 10
+
+// inputSymbolBubbleRounding is the rounding of the input symbol bubble.
+const inputSymbolBubbleRounding = 10
 
 var inputSymbolTextRenderer = gfx.NewTextRenderer(goregular.TTF, 48)
 
@@ -180,7 +184,9 @@ func New() *UI {
 		symbolToChartThumbMap: map[string]*chart.Thumb{},
 		sidebar:               newSidebar(),
 		instructionsTextBox:   text.NewBox(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER..."),
-		inputSymbolTextBox:    text.NewBox(inputSymbolTextRenderer, ""),
+		inputSymbolTextBox: text.NewBox(inputSymbolTextRenderer, "",
+			text.Bubble(rect.NewBubble(inputSymbolBubbleRounding)),
+			text.Padding(viewPadding)),
 	}
 }
 
@@ -519,9 +525,8 @@ func (u *UI) prepareInput() *view.Input {
 func (u *UI) processInput(input *view.Input) {
 	m := u.metrics()
 
-	bounds := m.chartBounds
-	u.instructionsTextBox.SetBounds(bounds)
-	u.inputSymbolTextBox.SetBounds(bounds)
+	u.instructionsTextBox.SetBounds(m.chartBounds)
+	u.inputSymbolTextBox.SetBounds(m.winBounds)
 
 	u.updateInputSymbolTextBox(input)
 
@@ -530,7 +535,7 @@ func (u *UI) processInput(input *view.Input) {
 
 	for i := 0; i < len(u.charts); i++ {
 		ch := u.charts[i]
-		ch.SetBounds(bounds)
+		ch.SetBounds(m.chartBounds)
 		ch.ProcessInput(input)
 	}
 
@@ -627,6 +632,9 @@ func (u *UI) render(fudge float32) {
 
 // viewMetrics has dynamic metrics used to render the view.
 type viewMetrics struct {
+	// winBounds is main window.
+	winBounds image.Rectangle
+
 	// chartBounds is where to draw the main chart.
 	chartBounds image.Rectangle
 
@@ -647,16 +655,19 @@ func (u *UI) metrics() viewMetrics {
 	// |   | padding |   |
 	// +---+---------+---+
 
+	m := viewMetrics{
+		winBounds: image.Rect(0, 0, u.winSize.X, u.winSize.Y),
+	}
+
 	sidebarSize := u.sidebar.ContentSize()
 
 	if sidebarSize.Y == 0 {
-		cb := image.Rect(0, 0, u.winSize.X, u.winSize.Y)
-		cb = cb.Inset(viewPadding)
-		return viewMetrics{chartBounds: cb}
+		m.chartBounds = m.winBounds.Inset(viewPadding)
+		return m
 	}
 
-	cb := image.Rect(viewPadding+sidebarSize.X, 0, u.winSize.X, u.winSize.Y)
-	cb = cb.Inset(viewPadding)
+	m.chartBounds = image.Rect(viewPadding+sidebarSize.X, 0, u.winSize.X, u.winSize.Y)
+	m.chartBounds = m.chartBounds.Inset(viewPadding)
 
 	// +---+---------+---+---------+---+
 	// |   |         |   | padding |   |
@@ -670,15 +681,12 @@ func (u *UI) metrics() viewMetrics {
 	// |   |         |   | padding |   |
 	// +---+---------+---+---------+---+
 
-	sb := image.Rect(
+	m.sidebarBounds = image.Rect(
 		viewPadding, 0,
 		viewPadding+sidebarSize.X, u.winSize.Y,
 	)
 
-	return viewMetrics{
-		chartBounds:   cb,
-		sidebarBounds: sb,
-	}
+	return m
 }
 
 // SetInputSymbolSubmittedCallback sets the callback for when a new symbol is entered.
