@@ -11,7 +11,7 @@ import (
 
 // Internal constants.
 var (
-	// thumbSize is the size of the thumbanls in the sidebar.
+	// thumbSize is the size of the thumbnails in the sidebar.
 	thumbSize = image.Pt(155, 105)
 
 	// wheelScrollAmount is how much to scroll when the mouse scroll wheel is used.
@@ -80,10 +80,18 @@ func newSidebar() *sidebar {
 }
 
 func (s *sidebar) AddChartThumb(thumb *chart.Thumb) {
+	if thumb == nil {
+		log.Error("thumb should not be nil")
+		return
+	}
 	s.slots = append(s.slots, newSidebarSlot(thumb))
 }
 
 func (s *sidebar) RemoveChartThumb(thumb *chart.Thumb) {
+	if thumb == nil {
+		log.Error("thumb should not be nil")
+		return
+	}
 	for _, slot := range s.slots {
 		if slot.thumb == thumb {
 			slot.FadeOut()
@@ -116,6 +124,11 @@ func (s *sidebar) SetBounds(bounds image.Rectangle) {
 }
 
 func (s *sidebar) ProcessInput(input *view.Input) {
+	if input == nil {
+		log.Error("input should not be nil")
+		return
+	}
+
 	// Adjust the scroll offset due to mouse wheel scrolling or dragging over the bumpers.
 	s.adjustScrollOffset(input)
 
@@ -144,6 +157,11 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 }
 
 func (s *sidebar) adjustScrollOffset(input *view.Input) {
+	if input == nil {
+		log.Error("input should not be nil")
+		return
+	}
+
 	// Adjust the mouseScrollDirection offset due to the mouse wheel or window size.
 	h := s.ContentSize().Y
 	if h == 0 || h < s.bounds.Dy() {
@@ -179,6 +197,9 @@ func (s *sidebar) adjustScrollOffset(input *view.Input) {
 			return
 		case view.ScrollDown:
 			s.scrollDown(wheelScrollAmount.Y)
+			return
+		default:
+			log.Errorf("unsupported scroll direction: %v", input.MouseScrolled.Direction)
 			return
 		}
 	}
@@ -224,6 +245,11 @@ func (s *sidebar) setSlotBounds() {
 
 // setDraggedSlot finds the slot being dragged and updates its position.
 func (s *sidebar) setDraggedSlot(input *view.Input) {
+	if input == nil {
+		log.Error("input should not be nil")
+		return
+	}
+
 	if input.MouseLeftButtonDragging == nil {
 		s.draggedSlot = nil
 	}
@@ -251,6 +277,11 @@ func (s *sidebar) setDraggedSlot(input *view.Input) {
 
 // moveDraggedSlot moves the dragged slot up or down depending on the mouse position.
 func (s *sidebar) moveDraggedSlot(input *view.Input) {
+	if input == nil {
+		log.Error("input should not be nil")
+		return
+	}
+
 	if s.draggedSlot == nil {
 		log.Error("draggedSlot should not be nil")
 		return
@@ -309,6 +340,11 @@ func (s *sidebar) moveDraggedSlot(input *view.Input) {
 
 // fireSidebarChangeCallback schedules the sidebar change callback.
 func (s *sidebar) fireSidebarChangeCallback(input *view.Input) {
+	if input == nil {
+		log.Error("input should not be nil")
+		return
+	}
+
 	if s.changeCallback == nil {
 		return
 	}
@@ -402,6 +438,11 @@ func (s *sidebarSlot) ThumbBounds() image.Rectangle {
 }
 
 func (s *sidebarSlot) ProcessInput(input *view.Input) {
+	if input == nil {
+		log.Error("input should not be nil")
+		return
+	}
+
 	if s.thumb != nil {
 		s.thumb.ProcessInput(input)
 	}
