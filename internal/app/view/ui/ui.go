@@ -142,6 +142,9 @@ type UI struct {
 
 	// mouseScrollDirection is the next mouse scroll event to report. Nil if no scroll has happened.
 	mouseScrollDirection view.ScrollDirection
+
+	// keyReleased is the key released. Unspecified if no key was released.
+	keyReleased *view.KeyReleaseEvent
 }
 
 type uiChart struct {
@@ -278,40 +281,27 @@ func (u *UI) handleSizeEvent(width, height int) {
 }
 
 func (u *UI) handleCharEvent(char rune) {
-	log.Debugf("char: %c", char)
-
-	char = unicode.ToUpper(char)
-	if _, ok := acceptedChars[char]; !ok {
-		return
-	}
-
-	u.inputSymbolTextBox.SetText(u.inputSymbolTextBox.Text() + string(char))
+	u.keyReleased = &view.KeyReleaseEvent{Char: char}
 	u.WakeLoop()
 }
 
 func (u *UI) handleKeyEvent(key glfw.Key, action glfw.Action) {
-	log.Debugf("key: %v action: %v", key, action)
-
 	if action != glfw.Release {
 		return
 	}
 
-	defer u.WakeLoop()
-
 	switch key {
 	case glfw.KeyEscape:
-		u.inputSymbolTextBox.SetText("")
+		u.keyReleased = &view.KeyReleaseEvent{Key: view.KeyEscape}
+		u.WakeLoop()
 
 	case glfw.KeyBackspace:
-		if l := len(u.inputSymbolTextBox.Text()); l > 0 {
-			u.inputSymbolTextBox.SetText(u.inputSymbolTextBox.Text()[:l-1])
-		}
+		u.keyReleased = &view.KeyReleaseEvent{Key: view.KeyBackspace}
+		u.WakeLoop()
 
 	case glfw.KeyEnter:
-		if u.inputSymbolSubmittedCallback != nil {
-			u.inputSymbolSubmittedCallback(u.inputSymbolTextBox.Text())
-		}
-		u.inputSymbolTextBox.SetText("")
+		u.keyReleased = &view.KeyReleaseEvent{Key: view.KeyEnter}
+		u.WakeLoop()
 	}
 }
 
@@ -424,7 +414,8 @@ start:
 			return err
 		}
 
-		u.processInput()
+		input := u.prepareInput()
+		u.processInput(input)
 
 		i := 0
 		for ; i < minUpdates || i < maxUpdates && lag >= updateSec; i++ {
@@ -462,7 +453,9 @@ func (u *UI) WakeLoop() {
 	glfw.PostEmptyEvent()
 }
 
-func (u *UI) processInput() {
+// prepareInput creates a view.Input for the current game loop iteration
+// and cleans up for the next game loop iteration.
+func (u *UI) prepareInput() *view.Input {
 	mousePos := u.mousePos
 
 	input := &view.Input{
@@ -504,21 +497,33 @@ func (u *UI) processInput() {
 		}
 	}
 
-	// Reset any flags for the next inputContext.
-	defer func() {
-		if u.mouseLeftButtonPressedCount > 0 {
-			u.mouseLeftButtonPressedCount++
+	if u.keyReleased != nil {
+		input.KeyReleased = &view.KeyReleaseEvent{
+			Char: u.keyReleased.Char,
+			Key:  u.keyReleased.Key,
 		}
-		u.mouseLeftButtonPressed = false
-		u.mouseLeftButtonReleased = false
-		u.mouseScrollDirection = view.ScrollDirectionUnspecified
-	}()
+	}
 
+	// Reset any flags for the next input.
+	if u.mouseLeftButtonPressedCount > 0 {
+		u.mouseLeftButtonPressedCount++
+	}
+	u.mouseLeftButtonPressed = false
+	u.mouseLeftButtonReleased = false
+	u.mouseScrollDirection = view.ScrollDirectionUnspecified
+	u.keyReleased = nil
+
+	return input
+}
+
+func (u *UI) processInput(input *view.Input) {
 	m := u.metrics()
 
 	bounds := m.chartBounds
 	u.instructionsTextBox.SetBounds(bounds)
 	u.inputSymbolTextBox.SetBounds(bounds)
+
+	u.updateInputSymbolTextBox(input)
 
 	u.sidebar.SetBounds(m.sidebarBounds)
 	u.sidebar.ProcessInput(input)
@@ -531,6 +536,42 @@ func (u *UI) processInput() {
 
 	for _, cb := range input.FiredCallbacks() {
 		cb()
+	}
+}
+
+func (u *UI) updateInputSymbolTextBox(input *view.Input) {
+	b := u.inputSymbolTextBox
+
+	if char := input.KeyReleased.GetChar(); char != 0 {
+		char = unicode.ToUpper(char)
+		if _, ok := acceptedChars[char]; !ok {
+			return
+		}
+
+		b.SetText(b.Text() + string(char))
+		input.ClearKeyboardInput()
+	}
+
+	switch input.KeyReleased.GetKey() {
+	case view.KeyEscape:
+		b.SetText("")
+		input.ClearKeyboardInput()
+
+	case view.KeyBackspace:
+		if l := len(b.Text()); l > 0 {
+			b.SetText(b.Text()[:l-1])
+			input.ClearKeyboardInput()
+		}
+
+	case view.KeyEnter:
+		txt := b.Text()
+		input.AddFiredCallback(func() {
+			if u.inputSymbolSubmittedCallback != nil {
+				u.inputSymbolSubmittedCallback(txt)
+			}
+		})
+		b.SetText("")
+		input.ClearKeyboardInput()
 	}
 }
 

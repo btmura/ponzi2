@@ -16,6 +16,18 @@ const (
 	ScrollDown
 )
 
+// Key is a key on the keyboard. Currently, it is just for special keys like Enter.
+type Key int
+
+// Key values.
+//go:generate stringer -type Key
+const (
+	KeyUnspecified Key = iota
+	KeyEnter
+	KeyEscape
+	KeyBackspace
+)
+
 // Input contains input events to be passed down the view hierarchy.
 type Input struct {
 	// MousePos is the current mouse position. Nil if a view does not want to report mouse input.
@@ -31,6 +43,9 @@ type Input struct {
 	// MouseScrolled reports a mouse scroll wheel event. Nil if no scroll happened.
 	MouseScrolled *MouseScrollEvent
 
+	// KeyReleased reports a key released. Nil if no key was released.
+	KeyReleased *KeyReleaseEvent
+
 	// firedCallbacks are callbacks that were fired while processing input.
 	firedCallbacks []func()
 }
@@ -42,6 +57,12 @@ func (i *Input) ClearMouseInput() {
 	i.MouseLeftButtonClicked = nil
 	i.MouseLeftButtonDragging = nil
 	i.MouseScrolled = nil
+}
+
+// ClearKeyboardInput removes keyboard input from the Input.
+// This is used if a view handles the keyboard input and does not want another view to handle them.
+func (i *Input) ClearKeyboardInput() {
+	i.KeyReleased = nil
 }
 
 // AddFiredCallback records a callback that was fired while processing input.
@@ -112,4 +133,29 @@ type MouseScrollEvent struct {
 // In returns true if the mouse scroll happened within the bounds.
 func (m *MouseScrollEvent) In(bounds image.Rectangle) bool {
 	return m != nil && m.CurrentPos.In(bounds)
+}
+
+// KeyReleased reports that a key was released.
+type KeyReleaseEvent struct {
+	// Char is the character entered by the user. Zero if not a character.
+	Char rune
+
+	// Key is the key released by the user. Unspecified if no key was pressed.
+	Key Key
+}
+
+// GetChar returns the released char or zero if no char was released.
+func (k *KeyReleaseEvent) GetChar() rune {
+	if k == nil {
+		return 0
+	}
+	return k.Char
+}
+
+// GetKey returns the released key or unspecified if no key was released.
+func (k *KeyReleaseEvent) GetKey() Key {
+	if k == nil {
+		return KeyUnspecified
+	}
+	return k.Key
 }
