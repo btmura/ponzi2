@@ -145,6 +145,8 @@ func modelSource(src iex.Source) (model.Source, error) {
 		return model.PreviousClose, nil
 	case iex.IEXPrice:
 		return model.IEXPrice, nil
+	case iex.IEXLastTrade:
+		return model.IEXLastTrade, nil
 	default:
 		return 0, errors.Errorf("unrecognized iex source: %v", src)
 	}

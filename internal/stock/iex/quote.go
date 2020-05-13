@@ -51,6 +51,7 @@ const (
 	Close
 	PreviousClose
 	IEXPrice
+	IEXLastTrade
 )
 
 // GetQuotesRequest is the request for GetQuotes.
@@ -208,6 +209,8 @@ func quoteSource(latestSource string) (Source, error) {
 		return PreviousClose, nil
 	case "IEX price":
 		return IEXPrice, nil
+	case "IEX Last Trade":
+		return IEXLastTrade, nil
 	default:
 		return SourceUnspecified, errors.Errorf("unrecognized source: %q", latestSource)
 	}
@@ -230,11 +233,11 @@ func quoteDate(latestSource Source, latestTime string) (time.Time, error) {
 			n.Year(), n.Month(), n.Day(),
 			t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), t.Location()), nil
 
-	case PreviousClose, Close:
+	case PreviousClose, Close, IEXLastTrade:
 		return time.ParseInLocation("January 2, 2006", latestTime, loc)
 
 	default:
-		return time.Time{}, errors.Errorf("couldn't parse quote date with source(%q) and time(%q)", latestSource, latestTime)
+		return time.Time{}, errors.Errorf("couldn't parse quote date with source(%v) and time(%q)", latestSource, latestTime)
 	}
 }
 

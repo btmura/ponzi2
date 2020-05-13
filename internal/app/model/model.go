@@ -78,6 +78,7 @@ const (
 	Close
 	PreviousClose
 	IEXPrice
+	IEXLastTrade
 )
 
 // Range is the range to specify in the request.

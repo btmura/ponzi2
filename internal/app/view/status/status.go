@@ -14,6 +14,7 @@ var displaySources = map[model.Source]string{
 	model.Close:                     "Close",
 	model.PreviousClose:             "Previous Close",
 	model.IEXPrice:                  "IEX Price",
+	model.IEXLastTrade:              "IEX Last Trade",
 }
 
 // Join combines the non-empty strings in the slice together with spaces.
