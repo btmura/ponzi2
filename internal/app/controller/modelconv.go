@@ -53,6 +53,8 @@ func modelOneYearChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error)
 	m50 := modelMovingAverages(ds, 50)
 	m200 := modelMovingAverages(ds, 200)
 
+	v20 := modelAverageVolumes(ds, 20)
+
 	dsto := modelStochastics(ds)
 	wsto := modelStochastics(ws)
 
@@ -77,6 +79,15 @@ func modelOneYearChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error)
 			return vs
 		}
 
+		trimmedAverageVolumes := func(vs []*model.AverageVolume) []*model.AverageVolume {
+			for i, v := range vs {
+				if v.Date == start {
+					return vs[i:]
+				}
+			}
+			return vs
+		}
+
 		trimmedStochastics := func(vs []*model.Stochastic) []*model.Stochastic {
 			for i, v := range vs {
 				if v.Date == start {
@@ -90,6 +101,7 @@ func modelOneYearChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error)
 		m25 = trimmedMovingAverages(m25)
 		m50 = trimmedMovingAverages(m50)
 		m200 = trimmedMovingAverages(m200)
+		v20 = trimmedAverageVolumes(v20)
 		dsto = trimmedStochastics(dsto)
 		wsto = trimmedStochastics(wsto)
 	}
@@ -100,6 +112,7 @@ func modelOneYearChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error)
 		MovingAverageSeries25:  &model.MovingAverageSeries{MovingAverages: m25},
 		MovingAverageSeries50:  &model.MovingAverageSeries{MovingAverages: m50},
 		MovingAverageSeries200: &model.MovingAverageSeries{MovingAverages: m200},
+		AverageVolumeSeries:    &model.AverageVolumeSeries{AverageVolumes: v20},
 		DailyStochasticSeries:  &model.StochasticSeries{Stochastics: dsto},
 		WeeklyStochasticSeries: &model.StochasticSeries{Stochastics: wsto},
 	}, nil
@@ -278,6 +291,28 @@ func modelMovingAverages(ts []*model.TradingSession, n int) []*model.MovingAvera
 		})
 	}
 	return ms
+}
+
+func modelAverageVolumes(ts []*model.TradingSession, n int) []*model.AverageVolume {
+	average := func(i, n int) (avg float32) {
+		if i+1-n < 0 {
+			return 0 // Not enough data
+		}
+		var sum float32
+		for j := 0; j < n; j++ {
+			sum += float32(ts[i-j].Volume)
+		}
+		return sum / float32(n)
+	}
+
+	var vs []*model.AverageVolume
+	for i := range ts {
+		vs = append(vs, &model.AverageVolume{
+			Date:  ts[i].Date,
+			Value: average(i, n),
+		})
+	}
+	return vs
 }
 
 func modelStochastics(ts []*model.TradingSession) []*model.Stochastic {

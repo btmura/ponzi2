@@ -45,6 +45,7 @@ type Chart struct {
 	MovingAverageSeries25  *MovingAverageSeries
 	MovingAverageSeries50  *MovingAverageSeries
 	MovingAverageSeries200 *MovingAverageSeries
+	AverageVolumeSeries    *AverageVolumeSeries
 	DailyStochasticSeries  *StochasticSeries
 	WeeklyStochasticSeries *StochasticSeries
 	LastUpdateTime         time.Time
@@ -128,6 +129,21 @@ type MovingAverage struct {
 	Date time.Time
 
 	// Value is the moving average value.
+	Value float32
+}
+
+// AverageVolumeSeries is a time series of average volume values.
+type AverageVolumeSeries struct {
+	// AverageVolumes are sorted by date in ascending order.
+	AverageVolumes []*AverageVolume
+}
+
+// AverageVolume is a single data point in a AverageVolumeSeries.
+type AverageVolume struct {
+	// Date is the start date of the data point.
+	Date time.Time
+
+	// Value is the average volume value.
 	Value float32
 }
 

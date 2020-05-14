@@ -251,7 +251,7 @@ func (ch *Chart) SetData(data *Data) error {
 		ch.movingAverage200.SetData(ts, dc.MovingAverageSeries200)
 	}
 
-	ch.volume.SetData(ts)
+	ch.volume.SetData(ts, dc.AverageVolumeSeries)
 	ch.volumeAxis.SetData(ts)
 	ch.volumeCursor.SetData(ts)
 	if err := ch.volumeTimeline.SetData(dc.Range, ts); err != nil {

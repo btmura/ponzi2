@@ -18,20 +18,22 @@ type volume struct {
 	// renderable is whether the ChartVolume can be rendered.
 	renderable bool
 
-	// maxVolume is the maximum volume used for rendering measurements.
-	maxVolume int
+	volumeRange [2]int
 
 	// MaxLabelSize is the maximum label size useful for rendering measurements.
 	MaxLabelSize image.Point
 
-	// volBars is the VAO with the colored volume bars.
-	volBars *gfx.VAO
+	// bars is the VAO with the colored volume bars.
+	bars *gfx.VAO
+
+	// avgLine is the VAO with the average volume line.
+	avgLine *gfx.VAO
 
 	// bounds is the rectangle with global coords that should be drawn within.
 	bounds image.Rectangle
 }
 
-func (v *volume) SetData(ts *model.TradingSessionSeries) {
+func (v *volume) SetData(ts *model.TradingSessionSeries, vs *model.AverageVolumeSeries) {
 	// Reset everything.
 	v.Close()
 
@@ -40,18 +42,18 @@ func (v *volume) SetData(ts *model.TradingSessionSeries) {
 		return
 	}
 
-	// Find the maximum volume.
-	v.maxVolume = 0
-	for _, s := range ts.TradingSessions {
-		if v.maxVolume < s.Volume {
-			v.maxVolume = s.Volume
-		}
-	}
+	v.volumeRange = volumeRange(ts.TradingSessions)
 
 	// Measure the max label size by creating a label with the max value.
-	v.MaxLabelSize = makeVolumeLabel(v.maxVolume, 1).size
+	v.MaxLabelSize = makeVolumeLabel(v.volumeRange[1], 1).size
 
-	v.volBars = volumeBarsVAO(ts.TradingSessions, v.maxVolume)
+	v.bars = volumeBarsVAO(ts.TradingSessions, v.volumeRange[1])
+
+	var values []float32
+	for _, m := range vs.AverageVolumes {
+		values = append(values, m.Value)
+	}
+	v.avgLine = vao.DataLine(values, [2]float32{float32(v.volumeRange[0]), float32(v.volumeRange[1])}, color.White)
 
 	v.renderable = true
 }
@@ -60,25 +62,37 @@ func (v *volume) SetBounds(bounds image.Rectangle) {
 	v.bounds = bounds
 }
 
-func (v *volume) Render(fudge float32) {
+func (v *volume) Render(float32) {
 	if !v.renderable {
 		return
 	}
 
 	gfx.SetModelMatrixRect(v.bounds)
-
-	// Render lines for the 20% and 80% levels.
 	volumeHorizRuleSet.Render()
-
-	// Render the volume bars.
-	v.volBars.Render()
+	v.bars.Render()
+	v.avgLine.Render()
 }
 
 func (v *volume) Close() {
 	v.renderable = false
-	if v.volBars != nil {
-		v.volBars.Delete()
+	if v.bars != nil {
+		v.bars.Delete()
 	}
+	if v.avgLine != nil {
+		v.avgLine.Delete()
+	}
+}
+
+func volumeRange(ts []*model.TradingSession) [2]int {
+	var high int
+
+	for _, s := range ts {
+		if s.Volume > high {
+			high = s.Volume
+		}
+	}
+
+	return [2]int{0, high}
 }
 
 // volumeLabel is a right-justified Y-axis label with the volume.
