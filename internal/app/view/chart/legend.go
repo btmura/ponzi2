@@ -151,11 +151,12 @@ func (l *legend) chartLegendMALabelText(ma25 *model.MovingAverage, ma50 *model.M
 
 func (l *legend) chartLegendCandleLabelText(candle *model.TradingSession) string {
 	legendOHLCVC := string(strings.Join([]string{
-		"O:", strconv.FormatFloat(float64(candle.Open), 'f', 2, 32),
+		candle.Date.Format("1/2/2006"),
+		"   O:", strconv.FormatFloat(float64(candle.Open), 'f', 2, 32),
 		"   H:", strconv.FormatFloat(float64(candle.High), 'f', 2, 32),
 		"   L:", strconv.FormatFloat(float64(candle.Low), 'f', 2, 32),
 		"   C:", strconv.FormatFloat(float64(candle.Close), 'f', 2, 32),
 		"   V:", strconv.Itoa(candle.Volume), "   ",
-		strconv.FormatFloat(float64(candle.Change), 'f', 2, 32), "%"}, ""))
+		strconv.FormatFloat(float64(candle.PercentChange), 'f', 2, 32), "%"}, ""))
 	return fmt.Sprintf("%s", legendOHLCVC)
 }
