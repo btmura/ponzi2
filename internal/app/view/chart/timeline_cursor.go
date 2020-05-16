@@ -9,7 +9,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/color"
-	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/log"
 )
 
 // timelineCursor renders the time corresponding to the mouse pointer
@@ -39,14 +39,14 @@ type timelineCursorData struct {
 	TradingSessionSeries *model.TradingSessionSeries
 }
 
-func (t *timelineCursor) SetData(data timelineCursorData) error {
+func (t *timelineCursor) SetData(data timelineCursorData) {
 	// Reset everything.
 	t.Close()
 
 	// Bail out if there is no data yet.
 	ts := data.TradingSessionSeries
 	if ts == nil {
-		return nil
+		return
 	}
 
 	t.dates = nil
@@ -60,12 +60,11 @@ func (t *timelineCursor) SetData(data timelineCursorData) error {
 	case model.OneYear:
 		t.layout = "1/2/06"
 	default:
-		return errors.Errorf("bad range: %v", data.Range)
+		log.Errorf("bad range: %v", data.Range)
+		return
 	}
 
 	t.renderable = true
-
-	return nil
 }
 
 func (t *timelineCursor) SetBounds(timelineRect, labelRect image.Rectangle) {
