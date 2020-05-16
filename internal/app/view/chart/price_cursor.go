@@ -28,11 +28,16 @@ type priceCursor struct {
 	mousePos *view.MousePosition
 }
 
-func (p *priceCursor) SetData(ts *model.TradingSessionSeries) {
+type priceCursorData struct {
+	TradingSessionSeries *model.TradingSessionSeries
+}
+
+func (p *priceCursor) SetData(data priceCursorData) {
 	// Reset everything.
 	p.Close()
 
 	// Bail out if there is no data yet.
+	ts := data.TradingSessionSeries
 	if ts == nil {
 		return
 	}

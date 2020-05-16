@@ -15,7 +15,6 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/status"
 	"github.com/btmura/ponzi2/internal/app/view/text"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
-	"github.com/btmura/ponzi2/internal/errors"
 	"github.com/btmura/ponzi2/internal/log"
 )
 
@@ -205,24 +204,17 @@ type Data struct {
 }
 
 // SetData sets the data to be shown on the chart.
-func (ch *Chart) SetData(data *Data) error {
-	if data == nil {
-		return errors.Errorf("missing data")
-	}
-
+func (ch *Chart) SetData(data Data) {
 	if !ch.hasStockUpdated && data.Chart != nil {
 		ch.fadeIn.Start()
 	}
 	ch.hasStockUpdated = data.Chart != nil
 
-	if err := ch.header.SetData(data); err != nil {
-		return err
-	}
+	ch.header.SetData(data)
 
 	dc := data.Chart
-
 	if dc == nil {
-		return nil
+		return
 	}
 
 	switch dc.Range {
@@ -233,58 +225,50 @@ func (ch *Chart) SetData(data *Data) error {
 		ch.showMovingAverages = true
 		ch.showStochastics = true
 	default:
-		return errors.Errorf("bad range: %v", dc.Range)
+		log.Errorf("bad range: %v", dc.Range)
+		return
 	}
 
 	ts := dc.TradingSessionSeries
 
-	ch.prices.SetData(ts)
-	ch.priceAxis.SetData(ts)
-	ch.priceCursor.SetData(ts)
-	if err := ch.priceTimeline.SetData(dc.Range, ts); err != nil {
-		return err
-	}
+	ch.prices.SetData(priceData{ts})
+	ch.priceAxis.SetData(priceAxisData{ts})
+	ch.priceCursor.SetData(priceCursorData{ts})
+	ch.priceTimeline.SetData(timelineData{dc.Range, ts})
 
 	if ch.showMovingAverages {
-		ch.movingAverage25.SetData(ts, dc.MovingAverageSeries25)
-		ch.movingAverage50.SetData(ts, dc.MovingAverageSeries50)
-		ch.movingAverage200.SetData(ts, dc.MovingAverageSeries200)
+		ch.movingAverage25.SetData(movingAverageData{ts, dc.MovingAverageSeries25})
+		ch.movingAverage50.SetData(movingAverageData{ts, dc.MovingAverageSeries50})
+		ch.movingAverage200.SetData(movingAverageData{ts, dc.MovingAverageSeries200})
 	}
 
-	ch.volume.SetData(ts, dc.AverageVolumeSeries)
-	ch.volumeAxis.SetData(ts)
-	ch.volumeCursor.SetData(ts)
-	if err := ch.volumeTimeline.SetData(dc.Range, ts); err != nil {
-		return err
-	}
+	ch.volume.SetData(volumeData{ts, dc.AverageVolumeSeries})
+	ch.volumeAxis.SetData(volumeAxisData{ts})
+	ch.volumeCursor.SetData(volumeCursorData{ts})
+	ch.volumeTimeline.SetData(timelineData{dc.Range, ts})
 
 	if ch.showStochastics {
-		ch.dailyStochastics.SetData(dc.DailyStochasticSeries)
-		ch.dailyStochasticAxis.SetData(dc.DailyStochasticSeries)
-		ch.dailyStochasticCursor.SetData()
-		if err := ch.dailyStochasticTimeline.SetData(dc.Range, ts); err != nil {
-			return err
-		}
+		ch.dailyStochastics.SetData(stochasticData{dc.DailyStochasticSeries})
+		ch.dailyStochasticAxis.SetData(stochasticAxisData{dc.DailyStochasticSeries})
+		ch.dailyStochasticCursor.SetData(stochasticCursorData{})
+		ch.dailyStochasticTimeline.SetData(timelineData{dc.Range, ts})
 
-		ch.weeklyStochastics.SetData(dc.WeeklyStochasticSeries)
-		ch.weeklyStochasticAxis.SetData(dc.WeeklyStochasticSeries)
-		ch.weeklyStochasticCursor.SetData()
-		if err := ch.weeklyStochasticTimeline.SetData(dc.Range, ts); err != nil {
-			return err
-		}
+		ch.weeklyStochastics.SetData(stochasticData{dc.WeeklyStochasticSeries})
+		ch.weeklyStochasticAxis.SetData(stochasticAxisData{dc.WeeklyStochasticSeries})
+		ch.weeklyStochasticCursor.SetData(stochasticCursorData{})
+		ch.weeklyStochasticTimeline.SetData(timelineData{dc.Range, ts})
 	}
 
-	if err := ch.timelineAxis.SetData(dc.Range, ts); err != nil {
-		return err
-	}
+	ch.timelineAxis.SetData(timelineAxisData{dc.Range, ts})
+	ch.timelineCursor.SetData(timelineCursorData{dc.Range, ts})
 
-	if err := ch.timelineCursor.SetData(dc.Range, ts); err != nil {
-		return err
-	}
-
-	ch.legend.SetData(ts, dc.MovingAverageSeries25, dc.MovingAverageSeries50, dc.MovingAverageSeries200, ch.showMovingAverages)
-
-	return nil
+	ch.legend.SetData(legendData{
+		ts,
+		dc.MovingAverageSeries25,
+		dc.MovingAverageSeries50,
+		dc.MovingAverageSeries200,
+		ch.showMovingAverages,
+	})
 }
 
 func (ch *Chart) SetBounds(bounds image.Rectangle) {

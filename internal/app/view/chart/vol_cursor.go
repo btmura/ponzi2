@@ -28,11 +28,16 @@ type volumeCursor struct {
 	mousePos *view.MousePosition
 }
 
-func (v *volumeCursor) SetData(ts *model.TradingSessionSeries) {
+type volumeCursorData struct {
+	TradingSessionSeries *model.TradingSessionSeries
+}
+
+func (v *volumeCursor) SetData(data volumeCursorData) {
 	// Reset everything.
 	v.Close()
 
 	// Bail out if there is no data yet.
+	ts := data.TradingSessionSeries
 	if ts == nil {
 		return
 	}

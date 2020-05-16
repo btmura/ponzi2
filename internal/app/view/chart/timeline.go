@@ -7,7 +7,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
-	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/log"
 )
 
 // timeline renders the vertical lines behind a chart's technicals.
@@ -22,28 +22,29 @@ type timeline struct {
 	lineRect image.Rectangle
 }
 
-func (t *timeline) SetData(r model.Range, ts *model.TradingSessionSeries) error {
+type timelineData struct {
+	Range                model.Range
+	TradingSessionSeries *model.TradingSessionSeries
+}
+
+func (t *timeline) SetData(data timelineData) {
 	// Reset everything.
 	t.Close()
 
 	// Bail out if there is no data yet.
+	ts := data.TradingSessionSeries
 	if ts == nil {
-		return nil
+		return
 	}
 
-	vals, err := weekLineValues(r, ts.TradingSessions)
-	if err != nil {
-		return err
-	}
+	vals := weekLineValues(data.Range, ts.TradingSessions)
 
 	t.lineVAO = vao.VertRuleSet(vals, [2]float32{0, 1}, color.Gray)
 
 	t.renderable = true
-
-	return nil
 }
 
-func weekLineValues(r model.Range, ts []*model.TradingSession) ([]float32, error) {
+func weekLineValues(r model.Range, ts []*model.TradingSession) []float32 {
 	var values []float32
 
 	for i := range ts {
@@ -69,13 +70,13 @@ func weekLineValues(r model.Range, ts []*model.TradingSession) ([]float32, error
 			}
 
 		default:
-			return nil, errors.Errorf("bad range: %v", r)
+			log.Errorf("bad range: %v", r)
 		}
 
 		values = append(values, float32(i)/float32(len(ts)))
 	}
 
-	return values, nil
+	return values
 }
 
 func (t *timeline) SetBounds(lineRect image.Rectangle) {
@@ -83,7 +84,7 @@ func (t *timeline) SetBounds(lineRect image.Rectangle) {
 }
 
 // Render renders the chart lines.
-func (t *timeline) Render(fudge float32) {
+func (t *timeline) Render(float32) {
 	if !t.renderable {
 		return
 	}

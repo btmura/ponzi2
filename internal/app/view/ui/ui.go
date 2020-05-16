@@ -725,7 +725,7 @@ func (u *UI) SetThumbClickCallback(cb func(symbol string)) {
 }
 
 // SetChart sets the main chart to the given symbol and data.
-func (u *UI) SetChart(symbol string, data *chart.Data) error {
+func (u *UI) SetChart(symbol string, data chart.Data) error {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		return err
 	}
@@ -738,13 +738,8 @@ func (u *UI) SetChart(symbol string, data *chart.Data) error {
 	ch := chart.NewChart(fps)
 	u.symbolToChartMap[symbol] = ch
 
-	if err := u.titleBar.SetData(data); err != nil {
-		return err
-	}
-
-	if err := ch.SetData(data); err != nil {
-		return err
-	}
+	u.titleBar.SetData(data)
+	ch.SetData(data)
 
 	ch.SetRefreshButtonClickCallback(func() {
 		if u.chartRefreshButtonClickCallback != nil {
@@ -772,7 +767,7 @@ func (u *UI) SetChart(symbol string, data *chart.Data) error {
 }
 
 // AddChartThumb adds a thumbnail with the given symbol and data.
-func (u *UI) AddChartThumb(symbol string, data *chart.Data) error {
+func (u *UI) AddChartThumb(symbol string, data chart.Data) error {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		return err
 	}
@@ -780,9 +775,7 @@ func (u *UI) AddChartThumb(symbol string, data *chart.Data) error {
 	th := chart.NewThumb(fps)
 	u.symbolToChartThumbMap[symbol] = th
 
-	if err := th.SetData(data); err != nil {
-		return err
-	}
+	th.SetData(data)
 
 	th.SetRemoveButtonClickCallback(func() {
 		if u.thumbRemoveButtonClickCallback != nil {
@@ -846,29 +839,20 @@ func (u *UI) SetLoading(symbol string, dataRange model.Range) error {
 }
 
 // SetData loads the data to charts and thumbnails matching the symbol and range.
-func (u *UI) SetData(symbol string, data *chart.Data) error {
+func (u *UI) SetData(symbol string, data chart.Data) error {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		return err
 	}
 
 	if ch, ok := u.symbolToChartMap[symbol]; ok {
 		ch.SetLoading(false)
-
-		if err := u.titleBar.SetData(data); err != nil {
-			return err
-		}
-
-		if err := ch.SetData(data); err != nil {
-			return err
-		}
+		u.titleBar.SetData(data)
+		ch.SetData(data)
 	}
 
 	if th, ok := u.symbolToChartThumbMap[symbol]; ok {
 		th.SetLoading(false)
-
-		if err := th.SetData(data); err != nil {
-			return err
-		}
+		th.SetData(data)
 	}
 
 	return nil

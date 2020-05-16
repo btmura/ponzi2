@@ -14,7 +14,6 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/status"
 	"github.com/btmura/ponzi2/internal/app/view/text"
-	"github.com/btmura/ponzi2/internal/errors"
 )
 
 const (
@@ -117,39 +116,26 @@ func (t *Thumb) SetError(err error) {
 }
 
 // SetData sets the data to be shown on the chart.
-func (t *Thumb) SetData(data *Data) error {
-	if data == nil {
-		return errors.Errorf("missing data")
-	}
-
+func (t *Thumb) SetData(data Data) {
 	if !t.hasStockUpdated && data.Chart != nil {
 		t.fadeIn.Start()
 	}
 	t.hasStockUpdated = data.Chart != nil
 
-	if err := t.header.SetData(data); err != nil {
-		return err
-	}
+	t.header.SetData(data)
 
 	dc := data.Chart
-
 	if dc == nil {
-		return nil
+		return
 	}
 
-	t.dailyStochastic.SetData(dc.DailyStochasticSeries)
-	t.dailyStochasticCursor.SetData()
-	if err := t.dailyStochasticTimeline.SetData(dc.Range, dc.TradingSessionSeries); err != nil {
-		return err
-	}
+	t.dailyStochastic.SetData(stochasticData{dc.DailyStochasticSeries})
+	t.dailyStochasticCursor.SetData(stochasticCursorData{})
+	t.dailyStochasticTimeline.SetData(timelineData{dc.Range, dc.TradingSessionSeries})
 
-	t.weeklyStochastic.SetData(dc.WeeklyStochasticSeries)
-	t.weeklyStochasticCursor.SetData()
-	if err := t.weeklyStochasticTimeline.SetData(dc.Range, dc.TradingSessionSeries); err != nil {
-		return err
-	}
-
-	return nil
+	t.weeklyStochastic.SetData(stochasticData{dc.WeeklyStochasticSeries})
+	t.weeklyStochasticCursor.SetData(stochasticCursorData{})
+	t.weeklyStochasticTimeline.SetData(timelineData{dc.Range, dc.TradingSessionSeries})
 }
 
 // SetBounds sets the bounds to draw within.

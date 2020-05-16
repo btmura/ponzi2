@@ -35,11 +35,16 @@ type price struct {
 	bounds image.Rectangle
 }
 
-func (p *price) SetData(ts *model.TradingSessionSeries) {
+type priceData struct {
+	TradingSessionSeries *model.TradingSessionSeries
+}
+
+func (p *price) SetData(data priceData) {
 	// Reset everything.
 	p.Close()
 
 	// Bail out if there is no data yet.
+	ts := data.TradingSessionSeries
 	if ts == nil {
 		return
 	}

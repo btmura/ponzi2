@@ -33,12 +33,19 @@ type volume struct {
 	bounds image.Rectangle
 }
 
-func (v *volume) SetData(ts *model.TradingSessionSeries, vs *model.AverageVolumeSeries) {
+type volumeData struct {
+	TradingSessionSeries *model.TradingSessionSeries
+	AverageVolumeSeries  *model.AverageVolumeSeries
+}
+
+func (v *volume) SetData(data volumeData) {
 	// Reset everything.
 	v.Close()
 
 	// Bail out if there is no data yet.
-	if ts == nil {
+	ts := data.TradingSessionSeries
+	vs := data.AverageVolumeSeries
+	if ts == nil || vs == nil {
 		return
 	}
 

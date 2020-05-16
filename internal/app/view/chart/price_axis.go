@@ -22,11 +22,16 @@ type priceAxis struct {
 	labelRect image.Rectangle
 }
 
-func (p *priceAxis) SetData(ts *model.TradingSessionSeries) {
+type priceAxisData struct {
+	TradingSessionSeries *model.TradingSessionSeries
+}
+
+func (p *priceAxis) SetData(data priceAxisData) {
 	// Reset everything.
 	p.Close()
 
 	// Bail out if there is no data yet.
+	ts := data.TradingSessionSeries
 	if ts == nil {
 		return
 	}

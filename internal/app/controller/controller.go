@@ -262,16 +262,16 @@ func (c *Controller) setSidebarSymbols(symbols []string) error {
 	return nil
 }
 
-func (c *Controller) chartData(symbol string, dataRange model.Range) (*chart.Data, error) {
+func (c *Controller) chartData(symbol string, dataRange model.Range) (chart.Data, error) {
 	if symbol == "" {
-		return nil, errors.Errorf("missing symbol")
+		return chart.Data{}, errors.Errorf("missing symbol")
 	}
 
-	data := &chart.Data{Symbol: symbol}
+	data := chart.Data{Symbol: symbol}
 
 	st, err := c.model.Stock(symbol)
 	if err != nil {
-		return nil, err
+		return data, err
 	}
 
 	if st == nil {

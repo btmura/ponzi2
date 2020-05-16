@@ -7,7 +7,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/color"
-	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/log"
 )
 
 // longTime is a time that takes the most display width for measuring purposes.
@@ -31,38 +31,36 @@ type timelineAxis struct {
 	timelineRect image.Rectangle
 }
 
-func (t *timelineAxis) SetData(r model.Range, ts *model.TradingSessionSeries) error {
+type timelineAxisData struct {
+	Range                model.Range
+	TradingSessionSeries *model.TradingSessionSeries
+}
+
+func (t *timelineAxis) SetData(data timelineAxisData) {
 	// Reset everything.
 	t.Close()
 
 	// Bail out if there is no data yet.
+	ts := data.TradingSessionSeries
 	if ts == nil {
-		return nil
+		return
 	}
 
-	t.dataRange = r
+	t.dataRange = data.Range
 
-	txt, err := timelineLabelText(r, longTime)
-	if err != nil {
-		return err
-	}
+	txt := timelineLabelText(t.dataRange, longTime)
 	t.MaxLabelSize = axisLabelTextRenderer.Measure(txt)
 
-	labels, err := makeTimelineLabels(r, ts.TradingSessions)
-	if err != nil {
-		return err
-	}
-	t.labels = labels
+	t.labels = makeTimelineLabels(t.dataRange, ts.TradingSessions)
 
 	t.renderable = true
-	return nil
 }
 
 func (t *timelineAxis) SetBounds(timelineRect image.Rectangle) {
 	t.timelineRect = timelineRect
 }
 
-func (t *timelineAxis) Render(fudge float32) {
+func (t *timelineAxis) Render(float32) {
 	if !t.renderable {
 		return
 	}
@@ -87,18 +85,19 @@ type timelineLabel struct {
 	size    image.Point
 }
 
-func timelineLabelText(r model.Range, t time.Time) (string, error) {
+func timelineLabelText(r model.Range, t time.Time) string {
 	switch r {
 	case model.OneDay:
-		return t.Format("3:04"), nil
+		return t.Format("3:04")
 	case model.OneYear:
-		return t.Format("Jan"), nil
+		return t.Format("Jan")
 	default:
-		return "", errors.Errorf("bad range: %v", r)
+		log.Errorf("bad range: %v", r)
+		return ""
 	}
 }
 
-func makeTimelineLabels(r model.Range, ts []*model.TradingSession) ([]timelineLabel, error) {
+func makeTimelineLabels(r model.Range, ts []*model.TradingSession) []timelineLabel {
 	var ls []timelineLabel
 
 	for i := range ts {
@@ -124,15 +123,13 @@ func makeTimelineLabels(r model.Range, ts []*model.TradingSession) ([]timelineLa
 			}
 
 		default:
-			return nil, errors.Errorf("bad range: %v", r)
+			log.Errorf("bad range: %v", r)
+			return nil
 		}
 
 		// Generate the label text and its position.
 
-		txt, err := timelineLabelText(r, ts[i].Date)
-		if err != nil {
-			return nil, err
-		}
+		txt := timelineLabelText(r, ts[i].Date)
 
 		ls = append(ls, timelineLabel{
 			percent: float32(i) / float32(len(ts)),
@@ -141,5 +138,5 @@ func makeTimelineLabels(r model.Range, ts []*model.TradingSession) ([]timelineLa
 		})
 	}
 
-	return ls, nil
+	return ls
 }

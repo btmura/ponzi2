@@ -34,11 +34,17 @@ type timelineCursor struct {
 	mousePos *view.MousePosition
 }
 
-func (t *timelineCursor) SetData(r model.Range, ts *model.TradingSessionSeries) error {
+type timelineCursorData struct {
+	Range                model.Range
+	TradingSessionSeries *model.TradingSessionSeries
+}
+
+func (t *timelineCursor) SetData(data timelineCursorData) error {
 	// Reset everything.
 	t.Close()
 
 	// Bail out if there is no data yet.
+	ts := data.TradingSessionSeries
 	if ts == nil {
 		return nil
 	}
@@ -48,13 +54,13 @@ func (t *timelineCursor) SetData(r model.Range, ts *model.TradingSessionSeries) 
 		t.dates = append(t.dates, s.Date)
 	}
 
-	switch r {
+	switch data.Range {
 	case model.OneDay:
 		t.layout = "03:04"
 	case model.OneYear:
 		t.layout = "1/2/06"
 	default:
-		return errors.Errorf("bad range: %v", r)
+		return errors.Errorf("bad range: %v", data.Range)
 	}
 
 	t.renderable = true

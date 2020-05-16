@@ -12,7 +12,6 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
-	"github.com/btmura/ponzi2/internal/errors"
 )
 
 var (
@@ -31,7 +30,7 @@ type header struct {
 	quoteText string
 
 	// quoteColor is the color to render the quote text.
-	quoteColor [4]float32
+	quoteColor color.RGBA
 
 	// symbolQuoteTextRenderer renders the symbol and quote text.
 	symbolQuoteTextRenderer *gfx.TextRenderer
@@ -133,11 +132,7 @@ func (h *header) SetError(err error) {
 }
 
 // SetData sets the data to be shown on the chart.
-func (h *header) SetData(data *Data) error {
-	if data == nil {
-		return errors.Errorf("missing data")
-	}
-
+func (h *header) SetData(data Data) {
 	if !h.hasStockUpdated && data.Chart != nil {
 		h.fadeIn.Start()
 	}
@@ -162,8 +157,6 @@ func (h *header) SetData(data *Data) error {
 	default:
 		h.quoteColor = color.White
 	}
-
-	return nil
 }
 
 // headerClicks reports what buttons were clicked.
@@ -283,7 +276,7 @@ func (h *header) Render(fudge float32) {
 		if w := buttonEdge - pt.X; w > 0 {
 			old := gfx.Alpha()
 			gfx.SetAlpha(old * h.fadeIn.Value(fudge))
-			pt.X += h.symbolQuoteTextRenderer.Render(h.quoteText, pt, h.quoteColor, gfx.TextRenderMaxWidth(w))
+			pt.X += h.symbolQuoteTextRenderer.Render(h.quoteText, pt, gfx.TextColor(h.quoteColor), gfx.TextRenderMaxWidth(w))
 			gfx.SetAlpha(old)
 		}
 	}

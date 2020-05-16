@@ -27,18 +27,20 @@ type legend struct {
 	mousePos *view.MousePosition
 }
 
-func (l *legend) SetData(
-	ts *model.TradingSessionSeries,
-	ms25 *model.MovingAverageSeries,
-	ms50 *model.MovingAverageSeries,
-	ms200 *model.MovingAverageSeries,
-	showMovingAverages bool) {
+type legendData struct {
+	TradingSessionSeries   *model.TradingSessionSeries
+	MovingAverageSeries25  *model.MovingAverageSeries
+	MovingAverageSeries50  *model.MovingAverageSeries
+	MovingAverageSeries200 *model.MovingAverageSeries
+	ShowMovingAverages     bool
+}
 
-	l.tradingSessionSeries = ts
-	l.movingAverageSeries25 = ms25
-	l.movingAverageSeries50 = ms50
-	l.movingAverageSeries200 = ms200
-	l.showMovingAverages = showMovingAverages
+func (l *legend) SetData(data legendData) {
+	l.tradingSessionSeries = data.TradingSessionSeries
+	l.movingAverageSeries25 = data.MovingAverageSeries25
+	l.movingAverageSeries50 = data.MovingAverageSeries50
+	l.movingAverageSeries200 = data.MovingAverageSeries200
+	l.showMovingAverages = data.ShowMovingAverages
 }
 
 func (l *legend) SetBounds(priceRect, labelRect image.Rectangle) {

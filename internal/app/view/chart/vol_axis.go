@@ -22,11 +22,16 @@ type volumeAxis struct {
 	labelRect image.Rectangle
 }
 
-func (v *volumeAxis) SetData(ts *model.TradingSessionSeries) {
+type volumeAxisData struct {
+	TradingSessionSeries *model.TradingSessionSeries
+}
+
+func (v *volumeAxis) SetData(data volumeAxisData) {
 	// Reset everything.
 	v.Close()
 
 	// Bail out if there is no data yet.
+	ts := data.TradingSessionSeries
 	if ts == nil {
 		return
 	}
@@ -52,7 +57,7 @@ func (v *volumeAxis) SetBounds(labelRect image.Rectangle) {
 	v.labelRect = labelRect
 }
 
-func (v *volumeAxis) Render(fudge float32) {
+func (v *volumeAxis) Render(float32) {
 	if !v.renderable {
 		return
 	}

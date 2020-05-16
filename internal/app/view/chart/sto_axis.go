@@ -18,11 +18,16 @@ type stochasticAxis struct {
 	labelRect image.Rectangle
 }
 
-func (s *stochasticAxis) SetData(ss *model.StochasticSeries) {
+type stochasticAxisData struct {
+	StochasticSeries *model.StochasticSeries
+}
+
+func (s *stochasticAxis) SetData(data stochasticAxisData) {
 	// Reset everything.
 	s.Close()
 
 	// Bail out if there is not enough data yet.
+	ss := data.StochasticSeries
 	if ss == nil {
 		return
 	}

@@ -5,26 +5,38 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
+	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 )
 
 type movingAverage struct {
 	renderable bool
-	color      [4]float32
+	color      color.RGBA
 	line       *gfx.VAO
 	bounds     image.Rectangle
 }
 
-func newMovingAverage(color [4]float32) *movingAverage {
+func newMovingAverage(color color.RGBA) *movingAverage {
 	return &movingAverage{color: color}
 }
 
-func (m *movingAverage) SetData(ts *model.TradingSessionSeries, ms *model.MovingAverageSeries) {
+type movingAverageData struct {
+	TradingSessionSeries *model.TradingSessionSeries
+	MovingAverageSeries  *model.MovingAverageSeries
+}
+
+func (m *movingAverage) SetData(data movingAverageData) {
 	// Reset everything.
 	m.Close()
 
 	// Bail out if there is not enough data yet.
-	if ts == nil || ms == nil {
+	ts := data.TradingSessionSeries
+	if ts == nil {
+		return
+	}
+
+	ms := data.MovingAverageSeries
+	if ms == nil {
 		return
 	}
 

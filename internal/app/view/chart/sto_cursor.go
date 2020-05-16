@@ -33,7 +33,9 @@ func (s *stochasticCursor) ProcessInput(input *view.Input) {
 	s.mousePos = input.MousePos
 }
 
-func (s *stochasticCursor) SetData() {
+type stochasticCursorData struct{}
+
+func (s *stochasticCursor) SetData(stochasticCursorData) {
 	s.renderable = true
 }
 

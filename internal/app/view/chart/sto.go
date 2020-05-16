@@ -14,22 +14,27 @@ var stochasticHorizRuleSet = vao.HorizRuleSet([]float32{0.2, 0.8}, [2]float32{0,
 
 type stochastic struct {
 	renderable   bool
-	dColor       [4]float32
+	dColor       color.RGBA
 	lineKVAO     *gfx.VAO
 	lineDVAO     *gfx.VAO
 	MaxLabelSize image.Point
 	bounds       image.Rectangle
 }
 
-func newStochastic(dColor [4]float32) *stochastic {
+func newStochastic(dColor color.RGBA) *stochastic {
 	return &stochastic{dColor: dColor}
 }
 
-func (s *stochastic) SetData(ss *model.StochasticSeries) {
+type stochasticData struct {
+	StochasticSeries *model.StochasticSeries
+}
+
+func (s *stochastic) SetData(data stochasticData) {
 	// Reset everything.
 	s.Close()
 
 	// Bail out if there is not enough data yet.
+	ss := data.StochasticSeries
 	if ss == nil {
 		return
 	}
@@ -54,7 +59,7 @@ func (s *stochastic) SetBounds(bounds image.Rectangle) {
 	s.bounds = bounds
 }
 
-func (s *stochastic) Render(fudge float32) {
+func (s *stochastic) Render(float32) {
 	if !s.renderable {
 		return
 	}
