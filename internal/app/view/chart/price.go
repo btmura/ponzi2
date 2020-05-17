@@ -63,7 +63,7 @@ func (p *price) SetBounds(bounds image.Rectangle) {
 	p.bounds = bounds
 }
 
-func (p *price) Render(fudge float32) {
+func (p *price) Render(float32) {
 	if !p.renderable {
 		return
 	}
@@ -168,7 +168,7 @@ func priceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32) (st
 		return 2*(value-priceRange[0])/(priceRange[1]-priceRange[0]) - 1
 	}
 
-	for i, s := range ds {
+	for _, s := range ds {
 		if s.Empty() {
 			moveOver()
 			continue
@@ -184,6 +184,7 @@ func priceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32) (st
 		}
 
 		// Add the vertices needed to create the candlestick.
+		idxOffset := len(vertices) / 3
 		vertices = append(vertices,
 			midX, highY, 0, // 0
 			midX, topY, 0, // 1
@@ -196,7 +197,7 @@ func priceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32) (st
 		)
 
 		// Add the colors corresponding to the vertices.
-		var c [4]float32
+		var c color.RGBA
 		switch {
 		case s.Close > s.Open:
 			c = color.Green
@@ -207,19 +208,19 @@ func priceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32) (st
 		}
 
 		colors = append(colors,
-			c[0], c[1], c[2], c[3],
-			c[0], c[1], c[2], c[3],
-			c[0], c[1], c[2], c[3],
-			c[0], c[1], c[2], c[3],
-			c[0], c[1], c[2], c[3],
-			c[0], c[1], c[2], c[3],
-			c[0], c[1], c[2], c[3],
-			c[0], c[1], c[2], c[3],
+			c[0], c[1], c[2], c[3], // 0
+			c[0], c[1], c[2], c[3], // 1
+			c[0], c[1], c[2], c[3], // 2
+			c[0], c[1], c[2], c[3], // 3
+			c[0], c[1], c[2], c[3], // 4
+			c[0], c[1], c[2], c[3], // 5
+			c[0], c[1], c[2], c[3], // 6
+			c[0], c[1], c[2], c[3], // 7
 		)
 
-		// idx is function to refer to the vertices above.
+		// idx is a function to refer to the vertices above.
 		idx := func(j uint16) uint16 {
-			return uint16(i)*8 + j
+			return uint16(idxOffset) + j
 		}
 
 		// Add the vertex indices to render the candlestick.
