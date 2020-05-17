@@ -237,7 +237,7 @@ func modelTradingSessions(quote *iex.Quote, chart *iex.Chart) []*model.TradingSe
 		return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 	}
 
-	if clean(t.Date) == clean(ts[len(ts)-1].Date) {
+	if clean(t.Date).Equal(clean(ts[len(ts)-1].Date)) {
 		return ts
 	}
 
