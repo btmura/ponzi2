@@ -16,7 +16,7 @@ var priceHorizLine = vao.HorizLine(color.Gray)
 
 // price shows the candlesticks and price labels for a single stock.
 type price struct {
-	// renderable is whether the ChartPrices can be rendered.
+	// renderable is whether the prices can be rendered.
 	renderable bool
 
 	// priceRange represents the inclusive range from min to max price.
