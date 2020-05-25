@@ -25,6 +25,7 @@ const (
 	chartRounding       = 10
 	chartSectionPadding = 5
 	chartTextPadding    = 20
+	chartVolumePercent  = 0.25
 )
 
 var (
@@ -77,16 +78,6 @@ type Chart struct {
 	volumeCursor   *volumeCursor
 	volumeTimeline *timeline
 
-	dailyStochastics        *stochastic
-	dailyStochasticAxis     *stochasticAxis
-	dailyStochasticCursor   *stochasticCursor
-	dailyStochasticTimeline *timeline
-
-	weeklyStochastics        *stochastic
-	weeklyStochasticAxis     *stochasticAxis
-	weeklyStochasticCursor   *stochasticCursor
-	weeklyStochasticTimeline *timeline
-
 	timelineAxis   *timelineAxis
 	timelineCursor *timelineCursor
 
@@ -112,9 +103,6 @@ type Chart struct {
 
 	// showMovingAverages is whether to render the moving averages.
 	showMovingAverages bool
-
-	// showStochastics is whether to show stochastics.
-	showStochastics bool
 
 	// fullBounds is the rect with global coords that should be drawn within.
 	fullBounds image.Rectangle
@@ -153,16 +141,6 @@ func NewChart(fps int) *Chart {
 		volumeAxis:     new(volumeAxis),
 		volumeCursor:   new(volumeCursor),
 		volumeTimeline: new(timeline),
-
-		dailyStochastics:        newStochastic(color.Yellow),
-		dailyStochasticAxis:     new(stochasticAxis),
-		dailyStochasticCursor:   new(stochasticCursor),
-		dailyStochasticTimeline: new(timeline),
-
-		weeklyStochastics:        newStochastic(color.Purple),
-		weeklyStochasticAxis:     new(stochasticAxis),
-		weeklyStochasticCursor:   new(stochasticCursor),
-		weeklyStochasticTimeline: new(timeline),
 
 		timelineAxis:   new(timelineAxis),
 		timelineCursor: new(timelineCursor),
@@ -220,10 +198,8 @@ func (ch *Chart) SetData(data Data) {
 	switch dc.Range {
 	case model.OneDay:
 		ch.showMovingAverages = false
-		ch.showStochastics = false
 	case model.OneYear:
 		ch.showMovingAverages = true
-		ch.showStochastics = true
 	default:
 		log.Errorf("bad range: %v", dc.Range)
 		return
@@ -246,18 +222,6 @@ func (ch *Chart) SetData(data Data) {
 	ch.volumeAxis.SetData(volumeAxisData{ts})
 	ch.volumeCursor.SetData(volumeCursorData{ts})
 	ch.volumeTimeline.SetData(timelineData{dc.Range, ts})
-
-	if ch.showStochastics {
-		ch.dailyStochastics.SetData(stochasticData{dc.DailyStochasticSeries})
-		ch.dailyStochasticAxis.SetData(stochasticAxisData{dc.DailyStochasticSeries})
-		ch.dailyStochasticCursor.SetData(stochasticCursorData{})
-		ch.dailyStochasticTimeline.SetData(timelineData{dc.Range, ts})
-
-		ch.weeklyStochastics.SetData(stochasticData{dc.WeeklyStochasticSeries})
-		ch.weeklyStochasticAxis.SetData(stochasticAxisData{dc.WeeklyStochasticSeries})
-		ch.weeklyStochasticCursor.SetData(stochasticCursorData{})
-		ch.weeklyStochasticTimeline.SetData(timelineData{dc.Range, ts})
-	}
 
 	ch.timelineAxis.SetData(timelineAxisData{dc.Range, ts})
 	ch.timelineCursor.SetData(timelineCursorData{dc.Range, ts})
@@ -287,57 +251,30 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	ch.errorTextBox.SetBounds(r)
 
 	// Calculate percentage needed for each section.
-	const (
-		volumePercent            = 0.13
-		dailyStochasticsPercent  = 0.13
-		weeklyStochasticsPercent = 0.13
-	)
 	timeLabelsPercent := float32(ch.timelineAxis.MaxLabelSize.Y+chartSectionPadding*2) / float32(r.Dy())
 
 	// Divide up the rectangle into sections.
-	var rects []image.Rectangle
-	if ch.showStochastics {
-		rects = rect.Slice(r, timeLabelsPercent, weeklyStochasticsPercent, dailyStochasticsPercent, volumePercent)
-	} else {
-		rects = rect.Slice(r, timeLabelsPercent, volumePercent)
-	}
+	rects := rect.Slice(r, timeLabelsPercent, chartVolumePercent)
 
-	var pr, vr, dr, wr, tr image.Rectangle
-	if ch.showStochastics {
-		pr, vr, dr, wr, tr = rects[4], rects[3], rects[2], rects[1], rects[0]
-	} else {
-		pr, vr, tr = rects[2], rects[1], rects[0]
-	}
+	pr, vr, tr := rects[2], rects[1], rects[0]
 
 	// Create separate rects for each section's labels shown on the right.
-	plr, vlr, dlr, wlr := pr, vr, dr, wr
+	plr, vlr := pr, vr
 
 	// Figure out width to trim off on the right of each rect for the labels.
 	maxWidth := ch.prices.MaxLabelSize.X
 	if w := ch.volume.MaxLabelSize.X; w > maxWidth {
 		maxWidth = w
 	}
-	if ch.showStochastics {
-		if w := ch.dailyStochastics.MaxLabelSize.X; w > maxWidth {
-			maxWidth = w
-		}
-		if w := ch.weeklyStochastics.MaxLabelSize.X; w > maxWidth {
-			maxWidth = w
-		}
-	}
 	maxWidth += chartSectionPadding
 
 	// Set left side of label rects.
 	plr.Min.X = pr.Max.X - maxWidth
 	vlr.Min.X = vr.Max.X - maxWidth
-	dlr.Min.X = dr.Max.X - maxWidth
-	wlr.Min.X = wr.Max.X - maxWidth
 
 	// Trim off the label rects from the main rects.
 	pr.Max.X = plr.Min.X
 	vr.Max.X = vlr.Min.X
-	dr.Max.X = dlr.Min.X
-	wr.Max.X = wlr.Min.X
 
 	// Time labels and its cursors labels overlap and use the same rect.
 	tr.Max.X = plr.Min.X
@@ -346,14 +283,10 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	// Pad all the rects.
 	pr = pr.Inset(chartSectionPadding)
 	vr = vr.Inset(chartSectionPadding)
-	dr = dr.Inset(chartSectionPadding)
-	wr = wr.Inset(chartSectionPadding)
 	tr = tr.Inset(chartSectionPadding)
 
 	plr = plr.Inset(chartSectionPadding)
 	vlr = vlr.Inset(chartSectionPadding)
-	dlr = dlr.Inset(chartSectionPadding)
-	wlr = wlr.Inset(chartSectionPadding)
 	tlr = tlr.Inset(chartSectionPadding)
 
 	ch.prices.SetBounds(pr)
@@ -369,24 +302,12 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	ch.volumeCursor.ProcessInput(input)
 	ch.volumeTimeline.SetBounds(vr)
 
-	ch.dailyStochastics.SetBounds(dr)
-	ch.dailyStochasticCursor.SetBounds(dr, dlr)
-	ch.dailyStochasticCursor.ProcessInput(input)
-	ch.dailyStochasticTimeline.SetBounds(dr)
-
-	ch.weeklyStochastics.SetBounds(wr)
-	ch.weeklyStochasticCursor.SetBounds(wr, wlr)
-	ch.weeklyStochasticCursor.ProcessInput(input)
-	ch.weeklyStochasticTimeline.SetBounds(wr)
-
 	ch.timelineAxis.SetBounds(tr)
 	ch.timelineCursor.SetBounds(tr, tlr)
 	ch.timelineCursor.ProcessInput(input)
 
 	ch.priceAxis.SetBounds(plr)
 	ch.volumeAxis.SetBounds(vlr)
-	ch.dailyStochasticAxis.SetBounds(dlr)
-	ch.weeklyStochasticAxis.SetBounds(wlr)
 
 	ch.legend.SetBounds(pr)
 	ch.legend.ProcessInput(input)
@@ -457,20 +378,10 @@ func (ch *Chart) Render(fudge float32) {
 	defer gfx.SetAlpha(old)
 
 	// Calculate percentage needed for each section.
-	const (
-		volumePercent            = 0.13
-		dailyStochasticsPercent  = 0.13
-		weeklyStochasticsPercent = 0.13
-	)
 	timeLabelsPercent := float32(ch.timelineAxis.MaxLabelSize.Y+chartSectionPadding*2) / float32(r.Dy())
 
 	// Divide up the rectangle into sections.
-	var rects []image.Rectangle
-	if ch.showStochastics {
-		rects = rect.Slice(r, timeLabelsPercent, weeklyStochasticsPercent, dailyStochasticsPercent, volumePercent)
-	} else {
-		rects = rect.Slice(r, timeLabelsPercent, volumePercent)
-	}
+	rects := rect.Slice(r, timeLabelsPercent, chartVolumePercent)
 
 	// Render the dividers between the sections.
 	for i := 0; i < len(rects)-1; i++ {
@@ -479,10 +390,6 @@ func (ch *Chart) Render(fudge float32) {
 
 	ch.priceTimeline.Render(fudge)
 	ch.volumeTimeline.Render(fudge)
-	if ch.showStochastics {
-		ch.dailyStochasticTimeline.Render(fudge)
-		ch.weeklyStochasticTimeline.Render(fudge)
-	}
 
 	ch.prices.Render(fudge)
 	ch.priceAxis.Render(fudge)
@@ -497,16 +404,6 @@ func (ch *Chart) Render(fudge float32) {
 	ch.volume.Render(fudge)
 	ch.volumeAxis.Render(fudge)
 	ch.volumeCursor.Render(fudge)
-
-	if ch.showStochastics {
-		ch.dailyStochastics.Render(fudge)
-		ch.dailyStochasticAxis.Render(fudge)
-		ch.dailyStochasticCursor.Render(fudge)
-
-		ch.weeklyStochastics.Render(fudge)
-		ch.weeklyStochasticAxis.Render(fudge)
-		ch.weeklyStochasticCursor.Render(fudge)
-	}
 
 	ch.timelineAxis.Render(fudge)
 	ch.timelineCursor.Render(fudge)
@@ -543,14 +440,6 @@ func (ch *Chart) Close() {
 	ch.volumeAxis.Close()
 	ch.volumeCursor.Close()
 	ch.volumeTimeline.Close()
-	ch.dailyStochastics.Close()
-	ch.dailyStochasticAxis.Close()
-	ch.dailyStochasticCursor.Close()
-	ch.dailyStochasticTimeline.Close()
-	ch.weeklyStochastics.Close()
-	ch.weeklyStochasticAxis.Close()
-	ch.weeklyStochasticCursor.Close()
-	ch.weeklyStochasticTimeline.Close()
 	ch.timelineAxis.Close()
 	ch.timelineCursor.Close()
 	ch.legend.Close()
