@@ -21,6 +21,13 @@ var (
 
 // RenderLineAtTop renders a VAO in a single pixel horizontal rectangle
 // at the top edge of the rectangle.
+func RenderDiagonalLine(r image.Rectangle) {
+	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Min.Y, r.Max.X, r.Max.Y))
+	horizLine.Render()
+}
+
+// RenderLineAtTop renders a VAO in a single pixel horizontal rectangle
+// at the top edge of the rectangle.
 func RenderLineAtTop(r image.Rectangle) {
 	gfx.SetModelMatrixRect(image.Rect(r.Min.X, r.Max.Y, r.Max.X, r.Max.Y))
 	horizLine.Render()

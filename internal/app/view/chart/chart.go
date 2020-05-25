@@ -104,11 +104,14 @@ type Chart struct {
 	// showMovingAverages is whether to render the moving averages.
 	showMovingAverages bool
 
-	// fullBounds is the rect with global coords that should be drawn within.
-	fullBounds image.Rectangle
+	// bounds is the rect with global coords that should be drawn within.
+	bounds image.Rectangle
 
-	// bodyBounds is a sub-rect of fullBounds without the header.
+	// bodyBounds is the bounds below the header.
 	bodyBounds image.Rectangle
+
+	// sectionDividers are bounds of the sections inside the body to render dividers.
+	sectionDividers []image.Rectangle
 
 	// zoomChangeCallback is fired when the zoom is changed. Nil if no callback registered.
 	zoomChangeCallback func(zoomChange ZoomChange)
@@ -235,11 +238,11 @@ func (ch *Chart) SetData(data Data) {
 }
 
 func (ch *Chart) SetBounds(bounds image.Rectangle) {
-	ch.fullBounds = bounds
+	ch.bounds = bounds
 }
 
 func (ch *Chart) ProcessInput(input *view.Input) {
-	bounds := ch.fullBounds
+	bounds := ch.bounds
 
 	ch.frameBubble.SetBounds(bounds)
 
@@ -257,6 +260,8 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	rects := rect.Slice(r, timeLabelsPercent, chartVolumePercent)
 
 	pr, vr, tr := rects[2], rects[1], rects[0]
+
+	ch.sectionDividers = []image.Rectangle{vr, tr}
 
 	// Create separate rects for each section's labels shown on the right.
 	plr, vlr := pr, vr
@@ -356,9 +361,7 @@ func (ch *Chart) Update() (dirty bool) {
 func (ch *Chart) Render(fudge float32) {
 	ch.frameBubble.Render(fudge)
 	ch.header.Render(fudge)
-
-	r := ch.bodyBounds
-	rect.RenderLineAtTop(r)
+	rect.RenderLineAtTop(ch.bodyBounds)
 
 	// Only show messages if no prior data to show.
 	if !ch.hasStockUpdated {
@@ -377,15 +380,9 @@ func (ch *Chart) Render(fudge float32) {
 	gfx.SetAlpha(old * ch.fadeIn.Value(fudge))
 	defer gfx.SetAlpha(old)
 
-	// Calculate percentage needed for each section.
-	timeLabelsPercent := float32(ch.timelineAxis.MaxLabelSize.Y+chartSectionPadding*2) / float32(r.Dy())
-
-	// Divide up the rectangle into sections.
-	rects := rect.Slice(r, timeLabelsPercent, chartVolumePercent)
-
 	// Render the dividers between the sections.
-	for i := 0; i < len(rects)-1; i++ {
-		rect.RenderLineAtTop(rects[i])
+	for _, r := range ch.sectionDividers {
+		rect.RenderLineAtTop(r)
 	}
 
 	ch.priceTimeline.Render(fudge)
