@@ -85,6 +85,11 @@ func (m *MousePosition) In(bounds image.Rectangle) bool {
 	return m != nil && m.Point.In(bounds)
 }
 
+// WithinX returns true if the mouse position's X is within the bound's X range.
+func (m *MousePosition) WithinX(bounds image.Rectangle) bool {
+	return m != nil && bounds.Min.X <= m.Point.X && m.Point.X <= bounds.Max.X
+}
+
 // MouseClickEvent reports a mouse click that just happened.
 type MouseClickEvent struct {
 	// PressedPos is where the mouse was pressed.

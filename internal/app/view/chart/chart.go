@@ -19,7 +19,7 @@ import (
 )
 
 // Embed resources into the application. Get esc from github.com/mjibson/esc.
-//go:generate esc -o bindata.go -pkg chart -include ".*(ply|png)" -modtime 1337 -private data
+//go:generate esc -o bindata.go -pkg chart -include ".*(ply|png|ttf)" -modtime 1337 -private data
 
 const (
 	chartRounding       = 10
@@ -167,7 +167,7 @@ func NewChart(fps int) *Chart {
 		timelineAxis:   new(timelineAxis),
 		timelineCursor: new(timelineCursor),
 
-		legend: new(legend),
+		legend: newLegend(),
 
 		loadingTextBox: text.NewBox(chartSymbolQuoteTextRenderer, "LOADING...", text.Padding(chartTextPadding)),
 		errorTextBox:   text.NewBox(chartSymbolQuoteTextRenderer, "ERROR", text.Color(color.Orange), text.Padding(chartTextPadding)),
@@ -267,7 +267,6 @@ func (ch *Chart) SetData(data Data) {
 		dc.MovingAverageSeries25,
 		dc.MovingAverageSeries50,
 		dc.MovingAverageSeries200,
-		ch.showMovingAverages,
 	})
 }
 
@@ -340,9 +339,6 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	dr.Max.X = dlr.Min.X
 	wr.Max.X = wlr.Min.X
 
-	// Legend labels and its cursors labels overlap and use the same rect.
-	llr := pr
-
 	// Time labels and its cursors labels overlap and use the same rect.
 	tr.Max.X = plr.Min.X
 	tlr := tr
@@ -392,7 +388,7 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	ch.dailyStochasticAxis.SetBounds(dlr)
 	ch.weeklyStochasticAxis.SetBounds(wlr)
 
-	ch.legend.SetBounds(pr, llr)
+	ch.legend.SetBounds(pr)
 	ch.legend.ProcessInput(input)
 
 	if input.MouseScrolled.In(bounds) && ch.zoomChangeCallback != nil {
@@ -418,6 +414,9 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 // Update updates the Chart.
 func (ch *Chart) Update() (dirty bool) {
 	if ch.header.Update() {
+		dirty = true
+	}
+	if ch.legend.Update() {
 		dirty = true
 	}
 	if ch.loadingTextBox.Update() {
@@ -554,6 +553,7 @@ func (ch *Chart) Close() {
 	ch.weeklyStochasticTimeline.Close()
 	ch.timelineAxis.Close()
 	ch.timelineCursor.Close()
+	ch.legend.Close()
 	ch.zoomChangeCallback = nil
 }
 

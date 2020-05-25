@@ -31,6 +31,10 @@ func NewBubble(rounding int) *Bubble {
 	return &Bubble{rounding: rounding}
 }
 
+func (b *Bubble) Bounds() image.Rectangle {
+	return b.bounds
+}
+
 // SetBounds sets the bounds to draw within.
 func (b *Bubble) SetBounds(bounds image.Rectangle) {
 	b.bounds = bounds

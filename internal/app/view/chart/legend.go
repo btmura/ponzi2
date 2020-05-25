@@ -4,27 +4,72 @@ import (
 	"fmt"
 	"image"
 	"math"
-	"strconv"
-	"strings"
+
+	"golang.org/x/image/font/gofont/goregular"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/color"
+	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
+const (
+	legendBubbleMargin = 6
+	legendTablePadding = 6
+	legendFontSize     = 16
+)
+
+var (
+	legendTextRenderer = gfx.NewTextRenderer(goregular.TTF, legendFontSize)
+
+	// legendGeometricShapeRenderer renderers geometric shapes.
+	// https://www.fileformat.info/info/unicode/font/dejavu_sans_mono/blockview.htm?block=geometric_shapes
+	legendGeometricShapeRenderer = gfx.NewTextRenderer(_escFSMustByte(false, "/data/DejaVuSans.ttf"), legendFontSize)
+)
+
+// legend is a bubble that shows a trading session's stats where the mouse cursor is.
 type legend struct {
-	tradingSessionSeries   *model.TradingSessionSeries
-	movingAverageSeries25  *model.MovingAverageSeries
-	movingAverageSeries50  *model.MovingAverageSeries
-	movingAverageSeries200 *model.MovingAverageSeries
-	showMovingAverages     bool
-
-	priceRect image.Rectangle
-	labelRect image.Rectangle
-
+	// data is the data necessary to render.
+	data legendData
+	// bounds is the bounds to draw the legend within.
+	bounds image.Rectangle
 	// mousePos is the current mouse position. Nil for no mouse input.
 	mousePos *view.MousePosition
+
+	// table has the rows and column updated  for rendering.
+	table legendTable
+	// tableBubble is the bubble to render the table within.
+	tableBubble *rect.Bubble
+
+	// needUpdate is true if the table and tableBubble need updating.
+	needUpdate bool
+	// renderable is true if there is something to render.
+	renderable bool
+}
+
+type legendTable struct {
+	rows    [][3]legendCell
+	columns [3]legendColumn
+}
+
+type legendCell struct {
+	renderer *gfx.TextRenderer
+	text     string
+	color    color.RGBA
+	size     image.Point
+}
+
+func (l *legendCell) Render(pt image.Point) {
+	l.renderer.Render(l.text, pt, gfx.TextColor(l.color))
+}
+
+type legendColumn struct {
+	maxWidth int
+}
+
+func newLegend() *legend {
+	return &legend{tableBubble: rect.NewBubble(10)}
 }
 
 type legendData struct {
@@ -32,131 +77,223 @@ type legendData struct {
 	MovingAverageSeries25  *model.MovingAverageSeries
 	MovingAverageSeries50  *model.MovingAverageSeries
 	MovingAverageSeries200 *model.MovingAverageSeries
-	ShowMovingAverages     bool
 }
 
 func (l *legend) SetData(data legendData) {
-	l.tradingSessionSeries = data.TradingSessionSeries
-	l.movingAverageSeries25 = data.MovingAverageSeries25
-	l.movingAverageSeries50 = data.MovingAverageSeries50
-	l.movingAverageSeries200 = data.MovingAverageSeries200
-	l.showMovingAverages = data.ShowMovingAverages
+	l.data = data
+	l.needUpdate = true
 }
 
-func (l *legend) SetBounds(priceRect, labelRect image.Rectangle) {
-	l.priceRect = priceRect
-	l.labelRect = labelRect
+func (l *legend) SetBounds(bounds image.Rectangle) {
+	if l.bounds == bounds {
+		return
+	}
+	l.bounds = bounds
+	l.needUpdate = true
 }
 
 func (l *legend) ProcessInput(input *view.Input) {
+	if l.mousePos == input.MousePos {
+		return
+	}
 	l.mousePos = input.MousePos
+	l.needUpdate = true
+}
+
+func (l *legend) Update() (dirty bool) {
+	if !l.needUpdate {
+		return false
+	}
+
+	defer func() { l.needUpdate = false }()
+
+	if l.mousePos == nil || !l.mousePos.WithinX(l.bounds) {
+		l.renderable = false
+		return true
+	}
+
+	if l.data.TradingSessionSeries == nil {
+		l.renderable = false
+		return true
+	}
+
+	ts := l.data.TradingSessionSeries.TradingSessions
+	p := float64(l.mousePos.X-l.bounds.Min.X) / float64(l.bounds.Dx())
+	i := int(math.Floor(float64(len(ts)) * p))
+	if i >= len(ts) {
+		i = len(ts) - 1
+	}
+
+	curr := ts[i]
+	prev := curr
+	if i > 0 {
+		prev = ts[i-1]
+	}
+
+	formatFloat := func(value float32) string {
+		return fmt.Sprintf("%.2f", value)
+	}
+
+	formatPercent := func(percentChange float32) string {
+		return fmt.Sprintf("(%+.2f%%)", percentChange)
+	}
+
+	var empty legendCell
+
+	text := func(text string) legendCell {
+		return legendCell{
+			renderer: legendTextRenderer,
+			text:     text,
+			color:    color.White,
+			size:     legendTextRenderer.Measure(text),
+		}
+	}
+
+	symbol := func(text string, color color.RGBA) legendCell {
+		return legendCell{
+			renderer: legendGeometricShapeRenderer,
+			text:     text,
+			color:    color,
+			size:     legendGeometricShapeRenderer.Measure(text),
+		}
+	}
+
+	changeSymbol := func(change float32) legendCell {
+		switch {
+		case change > 0:
+			return symbol("▲", color.Green)
+		case change < 0:
+			return symbol("▼", color.Red)
+		default:
+			return empty
+		}
+	}
+
+	rows := [][3]legendCell{
+		{
+			changeSymbol(curr.Open - prev.Open),
+			text("Open"),
+			text(formatFloat(curr.Open)),
+		},
+		{
+			changeSymbol(curr.High - prev.High),
+			text("High"),
+			text(formatFloat(curr.High)),
+		},
+		{
+			changeSymbol(curr.Low - prev.Low),
+			text("Low"),
+			text(formatFloat(curr.Low)),
+		},
+		{
+			changeSymbol(curr.Close - prev.Close),
+			text("Close"),
+			text(formatFloat(curr.Close)),
+		},
+		{empty, empty, empty},
+		{
+			changeSymbol(curr.Change),
+			text("Change"),
+			text(formatFloat(curr.Change)),
+		},
+		{empty, empty, text(formatPercent(curr.PercentChange))},
+	}
+
+	var m25, m50, m200 []*model.MovingAverage
+
+	if s := l.data.MovingAverageSeries25; s != nil {
+		m25 = s.MovingAverages
+	}
+	if s := l.data.MovingAverageSeries50; s != nil {
+		m50 = s.MovingAverages
+	}
+	if s := l.data.MovingAverageSeries200; s != nil {
+		m200 = s.MovingAverages
+	}
+
+	if len(m25) != 0 || len(m50) != 0 || len(m200) != 0 {
+		rows = append(rows, [3]legendCell{empty, empty, empty})
+	}
+
+	if len(m25) != 0 {
+		rows = append(rows, [3]legendCell{
+			symbol("◼", color.Purple),
+			text("SMA 25"),
+			text(formatFloat(m25[i].Value)),
+		})
+	}
+
+	if len(m50) != 0 {
+		rows = append(rows, [3]legendCell{
+			symbol("◼", color.Yellow),
+			text("SMA 50"),
+			text(formatFloat(m50[i].Value)),
+		})
+	}
+
+	if len(m200) != 0 {
+		rows = append(rows, [3]legendCell{
+			symbol("◼", color.White),
+			text("SMA 200"),
+			text(formatFloat(m200[i].Value)),
+		})
+	}
+
+	columns := [3]legendColumn{}
+	for i := range rows {
+		if w := rows[i][0].size.X; w > columns[0].maxWidth {
+			columns[0].maxWidth = w
+		}
+		if w := rows[i][1].size.X; w > columns[1].maxWidth {
+			columns[1].maxWidth = w
+		}
+		if w := rows[i][2].size.X; w > columns[2].maxWidth {
+			columns[2].maxWidth = w
+		}
+	}
+
+	tableBounds := image.Rect(
+		0,
+		0,
+		legendTablePadding+columns[0].maxWidth+
+			legendTablePadding+columns[1].maxWidth+
+			legendTablePadding+columns[2].maxWidth+legendTablePadding,
+		legendTablePadding+len(rows)*legendTextRenderer.LineHeight()+legendTablePadding,
+	)
+	tableBounds = tableBounds.Add(l.bounds.Inset(legendBubbleMargin).Min)
+
+	l.table = legendTable{rows, columns}
+	l.tableBubble.SetBounds(tableBounds)
+	l.renderable = true
+
+	return true
 }
 
 func (l *legend) Render(fudge float32) {
-	// Renders trackline legend. To display inline comment out the two lines below and uncomment the last line.
-	if l.showMovingAverages {
-		l.renderMATrackLineLegend(fudge)
-	}
-	l.renderCandleTrackLineLegend(fudge)
-}
-
-func (l *legend) renderMATrackLineLegend(fudge float32) {
-	if l.mousePos == nil || !l.mousePos.In(l.priceRect) {
+	if !l.renderable {
 		return
 	}
 
-	// Render moving average trackline legend
-	ts := l.tradingSessionSeries.TradingSessions
-	ms25 := l.movingAverageSeries25.MovingAverages
-	ms50 := l.movingAverageSeries50.MovingAverages
-	ms200 := l.movingAverageSeries200.MovingAverages
+	l.tableBubble.Render(fudge)
 
-	mal := legendLabel{
-		percent: float32(l.mousePos.X-l.priceRect.Min.X) / float32(l.priceRect.Dx()),
+	lowerLeft := l.tableBubble.Bounds().Inset(legendTablePadding).Min
+	for i := len(l.table.rows) - 1; i >= 0; i-- {
+		{
+			row := l.table.rows[i]
+			pt := lowerLeft
+
+			row[0].Render(pt)
+			pt.X += l.table.columns[0].maxWidth + legendTablePadding
+
+			row[1].Render(pt)
+			pt.X += l.table.columns[1].maxWidth + legendTablePadding
+
+			row[2].Render(pt)
+		}
+		lowerLeft.Y += legendTextRenderer.LineHeight()
 	}
-
-	i := int(math.Floor(float64(len(ts)) * float64(mal.percent)))
-	if i >= len(ts) {
-		i = len(ts) - 1
-	}
-
-	mal.text = l.chartLegendMALabelText(ms25[i], ms50[i], ms200[i])
-	mal.size = axisLabelTextRenderer.Measure(mal.text)
-
-	textPt := image.Point{
-		X: l.labelRect.Min.X + l.labelRect.Dx()/2 - mal.size.X/2,
-		Y: l.labelRect.Min.Y + l.labelRect.Dy() - int(math.Floor(float64(mal.size.Y)*float64(2.4))),
-	}
-	bubbleRect := image.Rectangle{
-		Min: textPt,
-		Max: textPt.Add(mal.size),
-	}
-	bubbleRect = bubbleRect.Inset(-axisLabelPadding)
-
-	axisLabelBubble.SetBounds(bubbleRect)
-	axisLabelBubble.Render(fudge)
-	axisLabelTextRenderer.Render(mal.text, textPt, gfx.TextColor(color.White))
 }
 
-func (l *legend) renderCandleTrackLineLegend(fudge float32) {
-	if l.mousePos == nil || !l.mousePos.In(l.priceRect) {
-		return
-	}
-
-	// Render candle trackline legend
-	ts := l.tradingSessionSeries.TradingSessions
-
-	pl := legendLabel{
-		percent: float32(l.mousePos.X-l.priceRect.Min.X) / float32(l.priceRect.Dx()),
-	}
-
-	i := int(math.Floor(float64(len(ts)) * float64(pl.percent)))
-	if i >= len(ts) {
-		i = len(ts) - 1
-	}
-
-	// Candlestick and moving average legends stacked as two chartAxisLabelBubbleSpec lines
-	pl.text = l.chartLegendCandleLabelText(ts[i])
-	pl.size = axisLabelTextRenderer.Measure(pl.text)
-
-	textPt := image.Point{
-		X: l.labelRect.Min.X + l.labelRect.Dx()/2 - pl.size.X/2,
-		Y: l.labelRect.Min.Y + l.labelRect.Dy() - pl.size.Y,
-	}
-	bubbleRect := image.Rectangle{
-		Min: textPt,
-		Max: textPt.Add(pl.size),
-	}
-	bubbleRect = bubbleRect.Inset(-axisLabelPadding)
-
-	axisLabelBubble.SetBounds(bubbleRect)
-	axisLabelBubble.Render(fudge)
-	axisLabelTextRenderer.Render(pl.text, textPt, gfx.TextColor(color.White))
-}
-
-type legendLabel struct {
-	percent float32
-	text    string
-	size    image.Point
-}
-
-func (l *legend) chartLegendMALabelText(ma25 *model.MovingAverage, ma50 *model.MovingAverage, ma200 *model.MovingAverage) string {
-	legendMA := strings.Join([]string{
-		"MA25:", strconv.FormatFloat(float64(ma25.Value), 'f', 1, 32),
-		"   MA50:", strconv.FormatFloat(float64(ma50.Value), 'f', 1, 32),
-		"   MA200:", strconv.FormatFloat(float64(ma200.Value), 'f', 1, 32),
-	}, "")
-	return fmt.Sprintf("%s", legendMA)
-}
-
-func (l *legend) chartLegendCandleLabelText(candle *model.TradingSession) string {
-	legendOHLCVC := string(strings.Join([]string{
-		candle.Date.Format("1/2/2006"),
-		"   O:", strconv.FormatFloat(float64(candle.Open), 'f', 2, 32),
-		"   H:", strconv.FormatFloat(float64(candle.High), 'f', 2, 32),
-		"   L:", strconv.FormatFloat(float64(candle.Low), 'f', 2, 32),
-		"   C:", strconv.FormatFloat(float64(candle.Close), 'f', 2, 32),
-		"   V:", strconv.Itoa(candle.Volume), "   ",
-		strconv.FormatFloat(float64(candle.PercentChange), 'f', 2, 32), "%"}, ""))
-	return fmt.Sprintf("%s", legendOHLCVC)
+func (l *legend) Close() {
+	l.renderable = false
 }
