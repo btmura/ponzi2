@@ -54,7 +54,7 @@ func (m *movingAverage) SetBounds(bounds image.Rectangle) {
 	m.bounds = bounds
 }
 
-func (m *movingAverage) Render(fudge float32) {
+func (m *movingAverage) Render(float32) {
 	if m.line == nil {
 		return
 	}

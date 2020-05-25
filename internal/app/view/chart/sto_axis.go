@@ -45,7 +45,7 @@ func (s *stochasticAxis) SetBounds(labelRect image.Rectangle) {
 	s.labelRect = labelRect
 }
 
-func (s *stochasticAxis) Render(fudge float32) {
+func (s *stochasticAxis) Render(float32) {
 	if !s.renderable {
 		return
 	}

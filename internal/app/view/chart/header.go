@@ -239,7 +239,7 @@ func (h *header) Render(fudge float32) {
 
 	// Render buttons in the upper right corner from right to left.
 	r := h.bounds
-	h.bounds = image.Rectangle{r.Max.Sub(buttonSize), r.Max}
+	h.bounds = image.Rectangle{Min: r.Max.Sub(buttonSize), Max: r.Max}
 
 	if h.removeButton.enabled {
 		h.removeButton.Render(fudge)

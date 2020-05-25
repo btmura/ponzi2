@@ -48,7 +48,7 @@ func (p *priceAxis) SetBounds(labelRect image.Rectangle) {
 	p.labelRect = labelRect
 }
 
-func (p *priceAxis) Render(fudge float32) {
+func (p *priceAxis) Render(float32) {
 	if !p.renderable {
 		return
 	}
