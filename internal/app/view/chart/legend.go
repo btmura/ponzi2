@@ -239,14 +239,10 @@ func (l *legend) Update() (dirty bool) {
 
 	columns := [3]legendColumn{}
 	for i := range rows {
-		if w := rows[i][0].size.X; w > columns[0].maxWidth {
-			columns[0].maxWidth = w
-		}
-		if w := rows[i][1].size.X; w > columns[1].maxWidth {
-			columns[1].maxWidth = w
-		}
-		if w := rows[i][2].size.X; w > columns[2].maxWidth {
-			columns[2].maxWidth = w
+		for j := range columns {
+			if w := rows[i][j].size.X; w > columns[j].maxWidth {
+				columns[j].maxWidth = w
+			}
 		}
 	}
 
