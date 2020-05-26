@@ -17,7 +17,7 @@ import (
 const (
 	legendBubbleMargin = 10
 	legendTablePadding = 10
-	legendFontSize     = 24
+	legendFontSize     = 12
 )
 
 var (
@@ -132,8 +132,12 @@ func (l *legend) Update() (dirty bool) {
 		return fmt.Sprintf("%.2f", value)
 	}
 
-	formatPercent := func(percentChange float32) string {
-		return fmt.Sprintf("(%+.2f%%)", percentChange)
+	formatChange := func(change float32) string {
+		return fmt.Sprintf("%+.2f", change)
+	}
+
+	formatPercentChange := func(percentChange float32) string {
+		return fmt.Sprintf("%+.2f%%", percentChange)
 	}
 
 	var empty legendCell
@@ -168,6 +172,8 @@ func (l *legend) Update() (dirty bool) {
 	}
 
 	rows := [][3]legendCell{
+		{empty, text(curr.Date.Format("1/2/06")), empty},
+		{empty, empty, empty},
 		{
 			changeSymbol(curr.Open - prev.Open),
 			text("Open"),
@@ -192,9 +198,9 @@ func (l *legend) Update() (dirty bool) {
 		{
 			changeSymbol(curr.Change),
 			text("Change"),
-			text(formatFloat(curr.Change)),
+			text(formatChange(curr.Change)),
 		},
-		{empty, empty, text(formatPercent(curr.PercentChange))},
+		{empty, empty, text(formatPercentChange(curr.PercentChange))},
 	}
 
 	var m25, m50, m200 []*model.MovingAverage
