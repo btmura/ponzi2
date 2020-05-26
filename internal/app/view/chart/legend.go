@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	legendBubbleMargin = 6
-	legendTablePadding = 6
-	legendFontSize     = 16
+	legendBubbleMargin = 10
+	legendTablePadding = 10
+	legendFontSize     = 24
 )
 
 var (
