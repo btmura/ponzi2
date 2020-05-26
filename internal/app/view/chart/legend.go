@@ -107,19 +107,21 @@ func (l *legend) Update() (dirty bool) {
 
 	defer func() { l.needUpdate = false }()
 
+	if l.mousePos == nil || !l.mousePos.WithinX(l.bounds) {
+		l.renderable = false
+		return true
+	}
+
 	if l.data.TradingSessionSeries == nil {
 		l.renderable = false
 		return true
 	}
 
 	ts := l.data.TradingSessionSeries.TradingSessions
-	i := len(ts) - 1
-	if l.mousePos.WithinX(l.bounds) {
-		percent := float64(l.mousePos.X-l.bounds.Min.X) / float64(l.bounds.Dx())
-		i = int(math.Floor(float64(len(ts)) * percent))
-		if i >= len(ts) {
-			i = len(ts) - 1
-		}
+	percent := float64(l.mousePos.X-l.bounds.Min.X) / float64(l.bounds.Dx())
+	i := int(math.Floor(float64(len(ts)) * percent))
+	if i >= len(ts) {
+		i = len(ts) - 1
 	}
 
 	curr := ts[i]
