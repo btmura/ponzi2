@@ -111,10 +111,10 @@ type TradingSession struct {
 	PercentChange float32
 }
 
-// Empty returns whether the TradingSession has any data to report.
-func (s *TradingSession) Empty() bool {
+// Skip returns true if the TradingSession should be skipped.
+func (s *TradingSession) Skip() bool {
 	// IEX sets the low and high to -1 when it has no data to report.
-	return s.Low < 0 || s.High < 0
+	return s.Open <= 0 || s.High <= 0 || s.Low <= 0 || s.Close <= 0
 }
 
 // MovingAverageSeries is a time series of moving average values.

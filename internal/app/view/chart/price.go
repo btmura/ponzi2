@@ -109,7 +109,7 @@ func priceRange(ts []*model.TradingSession) [2]float32 {
 	var low float32 = math.MaxFloat32
 	var high float32
 	for _, s := range ts {
-		if s.Empty() {
+		if s.Skip() {
 			continue
 		}
 		if s.Low < low {
@@ -169,7 +169,7 @@ func priceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32) (st
 	}
 
 	for _, s := range ds {
-		if s.Empty() {
+		if s.Skip() {
 			moveOver()
 			continue
 		}
