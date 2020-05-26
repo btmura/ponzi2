@@ -58,7 +58,7 @@ const (
 
 // draggingMinimumPressCount is how many input cycles the mouse button must be pressed
 // till the UI considers it a drag and drop event.
-const draggingMinimumPressCount = 5
+const draggingMinimumPressCount = 10
 
 // viewPadding is padding between visual elements in the UI.
 const viewPadding = 10
