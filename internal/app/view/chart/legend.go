@@ -37,10 +37,8 @@ type legend struct {
 	// mousePos is the current mouse position. Nil for no mouse input.
 	mousePos *view.MousePosition
 
-	// table has the rows and column updated  for rendering.
+	// table renders the information of a single trading session.
 	table legendTable
-	// tableBubble is the bubble to render the table within.
-	tableBubble *rect.Bubble
 
 	// needUpdate is true if the table and tableBubble need updating.
 	needUpdate bool
@@ -49,8 +47,34 @@ type legend struct {
 }
 
 type legendTable struct {
+	bubble  *rect.Bubble
 	rows    [][3]legendCell
 	columns [3]legendColumn
+}
+
+func (l *legendTable) SetBounds(bounds image.Rectangle) {
+	l.bubble.SetBounds(bounds)
+}
+
+func (l *legendTable) Render(fudge float32) {
+	l.bubble.Render(fudge)
+
+	lowerLeft := l.bubble.Bounds().Inset(legendTablePadding).Min
+	for i := len(l.rows) - 1; i >= 0; i-- {
+		{
+			row := l.rows[i]
+			pt := lowerLeft
+
+			row[0].Render(pt)
+			pt.X += l.columns[0].maxWidth + legendTablePadding
+
+			row[1].Render(pt)
+			pt.X += l.columns[1].maxWidth + legendTablePadding
+
+			row[2].Render(pt)
+		}
+		lowerLeft.Y += legendTextRenderer.LineHeight()
+	}
 }
 
 type legendCell struct {
@@ -69,7 +93,7 @@ type legendColumn struct {
 }
 
 func newLegend() *legend {
-	return &legend{tableBubble: rect.NewBubble(10)}
+	return &legend{}
 }
 
 type legendData struct {
@@ -264,8 +288,12 @@ func (l *legend) Update() (dirty bool) {
 	)
 	tableBounds = tableBounds.Add(l.bounds.Inset(legendBubbleMargin).Min)
 
-	l.table = legendTable{rows, columns}
-	l.tableBubble.SetBounds(tableBounds)
+	l.table = legendTable{
+		bubble:  rect.NewBubble(10),
+		rows:    rows,
+		columns: columns,
+	}
+	l.table.SetBounds(tableBounds)
 	l.renderable = true
 
 	return true
@@ -276,24 +304,7 @@ func (l *legend) Render(fudge float32) {
 		return
 	}
 
-	l.tableBubble.Render(fudge)
-
-	lowerLeft := l.tableBubble.Bounds().Inset(legendTablePadding).Min
-	for i := len(l.table.rows) - 1; i >= 0; i-- {
-		{
-			row := l.table.rows[i]
-			pt := lowerLeft
-
-			row[0].Render(pt)
-			pt.X += l.table.columns[0].maxWidth + legendTablePadding
-
-			row[1].Render(pt)
-			pt.X += l.table.columns[1].maxWidth + legendTablePadding
-
-			row[2].Render(pt)
-		}
-		lowerLeft.Y += legendTextRenderer.LineHeight()
-	}
+	l.table.Render(fudge)
 }
 
 func (l *legend) Close() {
