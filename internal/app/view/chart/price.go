@@ -204,7 +204,7 @@ func priceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32) (st
 		case s.Close < s.Open:
 			c = color.Red
 		default:
-			c = color.Yellow
+			c = color.White
 		}
 
 		colors = append(colors,

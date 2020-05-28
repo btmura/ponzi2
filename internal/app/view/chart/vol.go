@@ -173,7 +173,7 @@ func volumeBarsVAO(ds []*model.TradingSession, maxVolume int) *gfx.VAO {
 			add(color.Red)
 
 		default:
-			add(color.Yellow)
+			add(color.White)
 		}
 
 		// idx is function to refer to the vertices above.
