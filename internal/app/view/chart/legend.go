@@ -186,7 +186,18 @@ func (l *legend) Update() (dirty bool) {
 		}
 	}
 
-	changeSymbol := func(change float32) legendCell {
+	whiteArrow := func(change float32) legendCell {
+		switch {
+		case change > 0:
+			return symbol("△", color.White)
+		case change < 0:
+			return symbol("▽", color.White)
+		default:
+			return empty
+		}
+	}
+
+	colorArrow := func(change float32) legendCell {
 		switch {
 		case change > 0:
 			return symbol("▲", color.Green)
@@ -201,28 +212,28 @@ func (l *legend) Update() (dirty bool) {
 		{empty, text(curr.Date.Format("1/2/06")), empty},
 		{empty, empty, empty},
 		{
-			changeSymbol(curr.Open - prev.Open),
+			whiteArrow(curr.Open - prev.Open),
 			text("Open"),
 			text(formatFloat(curr.Open)),
 		},
 		{
-			changeSymbol(curr.High - prev.High),
+			whiteArrow(curr.High - prev.High),
 			text("High"),
 			text(formatFloat(curr.High)),
 		},
 		{
-			changeSymbol(curr.Low - prev.Low),
+			whiteArrow(curr.Low - prev.Low),
 			text("Low"),
 			text(formatFloat(curr.Low)),
 		},
 		{
-			changeSymbol(curr.Close - prev.Close),
+			whiteArrow(curr.Close - prev.Close),
 			text("Close"),
 			text(formatFloat(curr.Close)),
 		},
 		{empty, empty, empty},
 		{
-			changeSymbol(curr.Change),
+			colorArrow(curr.Change),
 			text("Change"),
 			text(formatChange(curr.Change)),
 		},
