@@ -17,7 +17,7 @@ import (
 const (
 	legendBubbleMargin = 10
 	legendTablePadding = 10
-	legendFontSize     = 12
+	legendFontSize     = 20
 )
 
 var (
@@ -298,6 +298,19 @@ func (l *legend) Update() (dirty bool) {
 		legendTablePadding+len(rows)*legendTextRenderer.LineHeight()+legendTablePadding,
 	)
 	tableBounds = tableBounds.Add(l.bounds.Inset(legendBubbleMargin).Min)
+
+	// cursorLineMarginX is the margin around the vertical cursor line.
+	cursorLineMarginX := tableBounds.Dx() / 4
+
+	// Try to draw the legend to the left of the cursor line but put it on the right if necessary.
+	leftX := l.mousePos.X - cursorLineMarginX - tableBounds.Dx()
+	if leftX <= l.bounds.Min.X {
+		leftX = l.mousePos.X + cursorLineMarginX
+	}
+
+	// Translate the legend.
+	dx := leftX - l.bounds.Min.X
+	tableBounds = rect.Translate(tableBounds, dx, 0)
 
 	l.table = legendTable{
 		bubble:  rect.NewBubble(10),
