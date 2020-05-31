@@ -444,13 +444,13 @@ func (ch *Chart) Close() {
 	ch.zoomChangeCallback = nil
 }
 
-func renderCursorLines(r image.Rectangle, mousePos image.Point) {
+func renderCursorLines(r image.Rectangle, mousePos *view.MousePosition) {
 	if mousePos.In(r) {
 		gfx.SetModelMatrixRect(image.Rect(r.Min.X, mousePos.Y, r.Max.X, mousePos.Y))
 		cursorHorizLine.Render()
 	}
 
-	if mousePos.X >= r.Min.X && mousePos.X <= r.Max.X {
+	if mousePos.WithinX(r) {
 		gfx.SetModelMatrixRect(image.Rect(mousePos.X, r.Min.Y, mousePos.X, r.Max.Y))
 		cursorVertLine.Render()
 	}

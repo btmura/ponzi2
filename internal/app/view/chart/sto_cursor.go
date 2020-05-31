@@ -48,7 +48,7 @@ func (s *stochasticCursor) Render(fudge float32) {
 		return
 	}
 
-	renderCursorLines(s.stoRect, s.mousePos.Point)
+	renderCursorLines(s.stoRect, s.mousePos)
 
 	if !s.mousePos.In(s.stoRect) {
 		return

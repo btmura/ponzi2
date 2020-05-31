@@ -76,7 +76,7 @@ func (v *volumeCursor) Render(fudge float32) {
 		return
 	}
 
-	renderCursorLines(v.volRect, v.mousePos.Point)
+	renderCursorLines(v.volRect, v.mousePos)
 
 	if v.mousePos.WithinX(v.volRect) {
 		_, ts := tradingSessionAtX(v.data.TradingSessionSeries.TradingSessions, v.volRect, v.mousePos.X)

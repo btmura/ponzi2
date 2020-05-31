@@ -70,7 +70,7 @@ func (p *priceCursor) Render(fudge float32) {
 		return
 	}
 
-	renderCursorLines(p.priceRect, p.mousePos.Point)
+	renderCursorLines(p.priceRect, p.mousePos)
 
 	if p.mousePos.WithinX(p.priceRect) {
 		_, ts := tradingSessionAtX(p.data.TradingSessionSeries.TradingSessions, p.priceRect, p.mousePos.X)
