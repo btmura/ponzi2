@@ -3,7 +3,6 @@ package chart
 import (
 	"fmt"
 	"image"
-	"math"
 
 	"golang.org/x/image/font/gofont/goregular"
 
@@ -150,17 +149,13 @@ func (l *legend) Update() (dirty bool) {
 		return true
 	}
 
-	ts := l.data.TradingSessionSeries.TradingSessions
-	percent := float64(l.mousePos.X-l.bounds.Min.X) / float64(l.bounds.Dx())
-	i := int(math.Floor(float64(len(ts)) * percent))
-	if i >= len(ts) {
-		i = len(ts) - 1
-	}
+	tss := l.data.TradingSessionSeries.TradingSessions
+	i, ts := tradingSessionAtX(tss, l.bounds, l.mousePos.X)
 
-	curr := ts[i]
+	curr := ts
 	prev := curr
 	if i > 0 {
-		prev = ts[i-1]
+		prev = tss[i-1]
 	}
 
 	formatFloat := func(value float32) string {

@@ -12,6 +12,9 @@ import (
 // volumeCursor renders crosshairs at the mouse pointer
 // with the corresponding volume on the y-axis.
 type volumeCursor struct {
+	// data is the data necessary to render.
+	data volumeCursorData
+
 	// renderable is true if this should be rendered.
 	renderable bool
 
@@ -33,6 +36,8 @@ type volumeCursorData struct {
 }
 
 func (v *volumeCursor) SetData(data volumeCursorData) {
+	v.data = data
+
 	// Reset everything.
 	v.Close()
 
@@ -73,12 +78,23 @@ func (v *volumeCursor) Render(fudge float32) {
 
 	renderCursorLines(v.volRect, v.mousePos.Point)
 
+	if v.mousePos.WithinX(v.volRect) {
+		_, ts := tradingSessionAtX(v.data.TradingSessionSeries.TradingSessions, v.volRect, v.mousePos.X)
+		yPercent := float32(ts.Volume) / float32(v.maxVolume)
+		renderHorizCursorLineAtPercent(v.volRect, yPercent)
+		v.renderLabel(fudge, yPercent)
+	}
+
 	if !v.mousePos.In(v.volRect) {
 		return
 	}
 
-	perc := float32(v.mousePos.Y-v.volRect.Min.Y) / float32(v.volRect.Dy())
-	l := makeVolumeLabel(v.maxVolume, perc)
+	yPercent := float32(v.mousePos.Y-v.volRect.Min.Y) / float32(v.volRect.Dy())
+	v.renderLabel(fudge, yPercent)
+}
+
+func (v *volumeCursor) renderLabel(fudge float32, yPercent float32) {
+	l := makeVolumeLabel(v.maxVolume, yPercent)
 	textPt := image.Point{
 		X: v.labelRect.Max.X - l.size.X,
 		Y: v.labelRect.Min.Y + int(float32(v.labelRect.Dy())*l.percent) - l.size.Y/2,

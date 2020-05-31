@@ -12,6 +12,9 @@ import (
 // priceCursor renders crosshairs at the mouse pointer
 // with corresponding price labels on the y-axis.
 type priceCursor struct {
+	// data is the data necessary to render
+	data priceCursorData
+
 	// renderable is true if this should be rendered.
 	renderable bool
 
@@ -33,6 +36,8 @@ type priceCursorData struct {
 }
 
 func (p *priceCursor) SetData(data priceCursorData) {
+	p.data = data
+
 	// Reset everything.
 	p.Close()
 
@@ -67,17 +72,28 @@ func (p *priceCursor) Render(fudge float32) {
 
 	renderCursorLines(p.priceRect, p.mousePos.Point)
 
+	if p.mousePos.WithinX(p.priceRect) {
+		_, ts := tradingSessionAtX(p.data.TradingSessionSeries.TradingSessions, p.priceRect, p.mousePos.X)
+		yPercent := (ts.Close - p.priceRange[0]) / (p.priceRange[1] - p.priceRange[0])
+		renderHorizCursorLineAtPercent(p.priceRect, yPercent)
+		p.renderLabel(fudge, yPercent)
+	}
+
 	if !p.mousePos.In(p.priceRect) {
 		return
 	}
 
-	perc := float32(p.mousePos.Y-p.priceRect.Min.Y) / float32(p.priceRect.Dy())
-	v := p.priceRange[0] + (p.priceRange[1]-p.priceRange[0])*perc
+	yPercent := float32(p.mousePos.Y-p.priceRect.Min.Y) / float32(p.priceRect.Dy())
+	p.renderLabel(fudge, yPercent)
+}
+
+func (p *priceCursor) renderLabel(fudge float32, yPercent float32) {
+	v := p.priceRange[0] + (p.priceRange[1]-p.priceRange[0])*yPercent
 	l := makePriceLabel(v)
 
 	textPt := image.Point{
 		X: p.labelRect.Max.X - l.size.X,
-		Y: p.labelRect.Min.Y + int(float32(p.labelRect.Dy())*perc) - l.size.Y/2,
+		Y: p.labelRect.Min.Y + int(float32(p.labelRect.Dy())*yPercent) - l.size.Y/2,
 	}
 	bubbleRect := image.Rectangle{
 		Min: textPt,
