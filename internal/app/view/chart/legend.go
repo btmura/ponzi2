@@ -39,6 +39,8 @@ type legend struct {
 
 	// table renders the information of a single trading session.
 	table legendTable
+	// position is the position where the table is rendered.
+	position legendPosition
 
 	// needUpdate is true if the table and tableBubble need updating.
 	needUpdate bool
@@ -91,6 +93,13 @@ func (l *legendCell) Render(pt image.Point) {
 type legendColumn struct {
 	maxWidth int
 }
+
+type legendPosition int
+
+const (
+	legendPositionRight legendPosition = iota
+	legendPositionLeft
+)
 
 func newLegend() *legend {
 	return &legend{}
@@ -303,13 +312,27 @@ func (l *legend) Update() (dirty bool) {
 	cursorLineMarginX := tableBounds.Dx() / 4
 
 	// Try to draw the legend to the left of the cursor line but put it on the right if necessary.
-	leftX := l.mousePos.X - cursorLineMarginX - tableBounds.Dx()
-	if leftX <= l.bounds.Min.X {
-		leftX = l.mousePos.X + cursorLineMarginX
+	lx := l.mousePos.X - cursorLineMarginX - tableBounds.Dx()
+	rx := l.mousePos.X + cursorLineMarginX
+	var x int
+	switch l.position {
+	case legendPositionLeft:
+		x = lx
+		if x <= l.bounds.Min.X {
+			x = rx
+			l.position = legendPositionRight
+		}
+
+	case legendPositionRight:
+		x = rx
+		if x+tableBounds.Dx() >= l.bounds.Max.X {
+			x = lx
+			l.position = legendPositionLeft
+		}
 	}
 
 	// Translate the legend.
-	dx := leftX - l.bounds.Min.X
+	dx := x - l.bounds.Min.X
 	tableBounds = rect.Translate(tableBounds, dx, 0)
 
 	l.table = legendTable{
