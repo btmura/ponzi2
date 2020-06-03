@@ -14,9 +14,10 @@ import (
 )
 
 const (
-	legendBubbleMargin = 10
-	legendTablePadding = 10
-	legendFontSize     = 20
+	legendBubbleMargin   = 10
+	legendBubbleRounding = 10
+	legendTablePadding   = 10
+	legendFontSize       = 20
 )
 
 var (
@@ -38,8 +39,6 @@ type legend struct {
 
 	// table renders the information of a single trading session.
 	table legendTable
-	// position is the position where the table is rendered.
-	position legendPosition
 
 	// needUpdate is true if the table and tableBubble need updating.
 	needUpdate bool
@@ -92,13 +91,6 @@ func (l *legendCell) Render(pt image.Point) {
 type legendColumn struct {
 	maxWidth int
 }
-
-type legendPosition int
-
-const (
-	legendPositionRight legendPosition = iota
-	legendPositionLeft
-)
 
 func newLegend() *legend {
 	return &legend{}
@@ -301,37 +293,25 @@ func (l *legend) Update() (dirty bool) {
 			legendTablePadding+columns[2].maxWidth+legendTablePadding,
 		legendTablePadding+len(rows)*legendTextRenderer.LineHeight()+legendTablePadding,
 	)
-	tableBounds = tableBounds.Add(l.bounds.Inset(legendBubbleMargin).Min)
 
-	// cursorLineMarginX is the margin around the vertical cursor line.
-	cursorLineMarginX := tableBounds.Dx() / 4
+	// Move the table to the lower left.
+	bounds := l.bounds.Inset(legendBubbleMargin)
+	tableBounds = tableBounds.Add(bounds.Min)
 
-	// Try to draw the legend to the left of the cursor line but put it on the right if necessary.
-	lx := l.mousePos.X - cursorLineMarginX - tableBounds.Dx()
-	rx := l.mousePos.X + cursorLineMarginX
-	var x int
-	switch l.position {
-	case legendPositionLeft:
-		x = lx
-		if x <= l.bounds.Min.X {
-			x = rx
-			l.position = legendPositionRight
-		}
+	half := image.Pt(bounds.Min.X+bounds.Dx()/2, bounds.Min.Y+bounds.Dy()/2)
 
-	case legendPositionRight:
-		x = rx
-		if x+tableBounds.Dx() >= l.bounds.Max.X {
-			x = lx
-			l.position = legendPositionLeft
-		}
+	// Move the table to the right if the mouse is on the left half.
+	if l.mousePos.X < half.X {
+		tableBounds = tableBounds.Add(image.Pt(bounds.Dx()-tableBounds.Dx(), 0))
 	}
 
-	// Translate the legend.
-	dx := x - l.bounds.Min.X
-	tableBounds = rect.Translate(tableBounds, dx, 0)
+	// Move the table to the top if the mouse is on the bottom half.
+	if l.mousePos.Y < half.Y {
+		tableBounds = tableBounds.Add(image.Pt(0, bounds.Dy()-tableBounds.Dy()))
+	}
 
 	l.table = legendTable{
-		bubble:  rect.NewBubble(10),
+		bubble:  rect.NewBubble(legendBubbleRounding),
 		rows:    rows,
 		columns: columns,
 	}
