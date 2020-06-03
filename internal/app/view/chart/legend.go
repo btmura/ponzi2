@@ -298,16 +298,9 @@ func (l *legend) Update() (dirty bool) {
 	bounds := l.bounds.Inset(legendBubbleMargin)
 	tableBounds = tableBounds.Add(bounds.Min)
 
-	half := image.Pt(bounds.Min.X+bounds.Dx()/2, bounds.Min.Y+bounds.Dy()/2)
-
-	// Move the table to the right if the mouse is on the left half.
-	if l.mousePos.X < half.X {
+	// Move the table to the right if the mouse is in the bounds.
+	if l.mousePos.In(tableBounds) {
 		tableBounds = tableBounds.Add(image.Pt(bounds.Dx()-tableBounds.Dx(), 0))
-	}
-
-	// Move the table to the top if the mouse is on the bottom half.
-	if l.mousePos.Y < half.Y {
-		tableBounds = tableBounds.Add(image.Pt(0, bounds.Dy()-tableBounds.Dy()))
 	}
 
 	l.table = legendTable{
