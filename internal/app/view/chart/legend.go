@@ -276,6 +276,16 @@ func (l *legend) Update() (dirty bool) {
 		})
 	}
 
+	if curr.Volume != 0 {
+		rows = append(rows,
+			[3]legendCell{empty, empty, empty},
+			[3]legendCell{
+				whiteArrow(float32(curr.Volume) - float32(prev.Volume)),
+				text("Volume"),
+				text(volumeText(curr.Volume)),
+			})
+	}
+
 	columns := [3]legendColumn{}
 	for i := range rows {
 		for j := range columns {

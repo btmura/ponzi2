@@ -110,8 +110,15 @@ type volumeLabel struct {
 }
 
 func makeVolumeLabel(maxVolume int, perc float32) volumeLabel {
-	v := int(float32(maxVolume) * perc)
+	t := volumeText(int(float32(maxVolume) * perc))
+	return volumeLabel{
+		percent: perc,
+		text:    t,
+		size:    axisLabelTextRenderer.Measure(t),
+	}
+}
 
+func volumeText(v int) string {
 	var t string
 	switch {
 	case v > 1000000000:
@@ -123,12 +130,7 @@ func makeVolumeLabel(maxVolume int, perc float32) volumeLabel {
 	default:
 		t = strconv.Itoa(v)
 	}
-
-	return volumeLabel{
-		percent: perc,
-		text:    t,
-		size:    axisLabelTextRenderer.Measure(t),
-	}
+	return t
 }
 
 func volumeBarsVAO(ds []*model.TradingSession, maxVolume int) *gfx.VAO {
