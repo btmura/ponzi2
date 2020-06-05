@@ -78,13 +78,6 @@ func (v *volumeCursor) Render(fudge float32) {
 
 	renderCursorLines(v.volRect, v.mousePos)
 
-	if v.mousePos.WithinX(v.volRect) {
-		_, ts := tradingSessionAtX(v.data.TradingSessionSeries.TradingSessions, v.volRect, v.mousePos.X)
-		yPercent := float32(ts.Volume) / float32(v.maxVolume)
-		renderHorizCursorLineAtPercent(v.volRect, yPercent)
-		v.renderLabel(fudge, yPercent)
-	}
-
 	if !v.mousePos.In(v.volRect) {
 		return
 	}

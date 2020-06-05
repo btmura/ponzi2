@@ -72,13 +72,6 @@ func (p *priceCursor) Render(fudge float32) {
 
 	renderCursorLines(p.priceRect, p.mousePos)
 
-	if p.mousePos.WithinX(p.priceRect) {
-		_, ts := tradingSessionAtX(p.data.TradingSessionSeries.TradingSessions, p.priceRect, p.mousePos.X)
-		yPercent := (ts.Close - p.priceRange[0]) / (p.priceRange[1] - p.priceRange[0])
-		renderHorizCursorLineAtPercent(p.priceRect, yPercent)
-		p.renderLabel(fudge, yPercent)
-	}
-
 	if !p.mousePos.In(p.priceRect) {
 		return
 	}
