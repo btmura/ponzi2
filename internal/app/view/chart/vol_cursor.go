@@ -88,6 +88,7 @@ func (v *volumeCursor) Render(fudge float32) {
 
 func (v *volumeCursor) renderLabel(fudge float32, yPercent float32) {
 	l := makeVolumeLabel(v.maxVolume, yPercent)
+
 	textPt := image.Point{
 		X: v.labelRect.Max.X - l.size.X,
 		Y: v.labelRect.Min.Y + int(float32(v.labelRect.Dy())*l.percent) - l.size.Y/2,
@@ -95,8 +96,16 @@ func (v *volumeCursor) renderLabel(fudge float32, yPercent float32) {
 	bubbleRect := image.Rectangle{
 		Min: textPt,
 		Max: textPt.Add(l.size),
+	}.Inset(-axisLabelPadding)
+
+	// Move the label to the left if the mouse is overlapping.
+	if v.mousePos.In(bubbleRect) {
+		textPt.X = v.labelRect.Min.X
+		bubbleRect = image.Rectangle{
+			Min: textPt,
+			Max: textPt.Add(l.size),
+		}.Inset(-axisLabelPadding)
 	}
-	bubbleRect = bubbleRect.Inset(-axisLabelPadding)
 
 	axisLabelBubble.SetBounds(bubbleRect)
 	axisLabelBubble.Render(fudge)

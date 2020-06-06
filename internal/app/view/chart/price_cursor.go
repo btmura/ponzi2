@@ -91,8 +91,16 @@ func (p *priceCursor) renderLabel(fudge float32, yPercent float32) {
 	bubbleRect := image.Rectangle{
 		Min: textPt,
 		Max: textPt.Add(l.size),
+	}.Inset(-axisLabelPadding)
+
+	// Move the label to the left if the mouse is overlapping.
+	if p.mousePos.In(bubbleRect) {
+		textPt.X = p.labelRect.Min.X
+		bubbleRect = image.Rectangle{
+			Min: textPt,
+			Max: textPt.Add(l.size),
+		}.Inset(-axisLabelPadding)
 	}
-	bubbleRect = bubbleRect.Inset(-axisLabelPadding)
 
 	axisLabelBubble.SetBounds(bubbleRect)
 	axisLabelBubble.Render(fudge)
