@@ -121,7 +121,7 @@ func priceRange(ts []*model.TradingSession) [2]float32 {
 		ohlc[2] = s.Low
 		ohlc[3] = s.Close
 		sort.Slice(ohlc, func(i, j int) bool {
-			return ohlc[i] < ohlc[2]
+			return ohlc[i] < ohlc[j]
 		})
 
 		if ohlc[0] < low {
