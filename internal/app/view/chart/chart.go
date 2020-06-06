@@ -243,11 +243,9 @@ func (ch *Chart) SetBounds(bounds image.Rectangle) {
 }
 
 func (ch *Chart) ProcessInput(input *view.Input) {
-	bounds := ch.bounds
+	ch.frameBubble.SetBounds(ch.bounds)
 
-	ch.frameBubble.SetBounds(bounds)
-
-	ch.header.SetBounds(bounds)
+	ch.header.SetBounds(ch.bounds)
 	r, _ := ch.header.ProcessInput(input)
 
 	ch.bodyBounds = r
@@ -318,7 +316,7 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	ch.legend.SetBounds(pr)
 	ch.legend.ProcessInput(input)
 
-	if input.MouseScrolled.In(bounds) && ch.zoomChangeCallback != nil {
+	if input.MouseScrolled.In(ch.bounds) && ch.zoomChangeCallback != nil {
 		zoomChange := ZoomChangeUnspecified
 		switch input.MouseScrolled.Direction {
 		case view.ScrollDown:

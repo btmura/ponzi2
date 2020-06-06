@@ -14,12 +14,14 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/status"
 	"github.com/btmura/ponzi2/internal/app/view/text"
+	"github.com/btmura/ponzi2/internal/log"
 )
 
 const (
 	thumbRounding       = 6
 	thumbSectionPadding = 2
 	thumbTextPadding    = 10
+	thumbVolumePercent  = 0.4
 )
 
 var (
@@ -35,13 +37,13 @@ type Thumb struct {
 	// header renders the header with the symbol, quote, and buttons.
 	header *header
 
-	dailyStochastic         *stochastic
-	dailyStochasticCursor   *stochasticCursor
-	dailyStochasticTimeline *timeline
+	prices        *price
+	priceCursor   *priceCursor
+	priceTimeline *timeline
 
-	weeklyStochastic         *stochastic
-	weeklyStochasticCursor   *stochasticCursor
-	weeklyStochasticTimeline *timeline
+	volume         *volume
+	volumeCursor   *volumeCursor
+	volumeTimeline *timeline
 
 	// loadingTextBox renders the loading text shown when loading from a fresh state.
 	loadingTextBox *text.Box
@@ -64,11 +66,14 @@ type Thumb struct {
 	// fadeIn fades in the data after it loads.
 	fadeIn *animation.Animation
 
-	// fullBounds is the rect with global coords that should be drawn within.
-	fullBounds image.Rectangle
+	// bounds is the rect with global coords that should be drawn within.
+	bounds image.Rectangle
 
-	// bodyBounds is a sub-rect of fullBounds without the header.
+	// bodyBounds is a sub-rect of bounds without the header.
 	bodyBounds image.Rectangle
+
+	// sectionDividers are bounds of the sections inside the body to render dividers.
+	sectionDividers []image.Rectangle
 }
 
 // NewThumb creates a Thumb.
@@ -85,13 +90,13 @@ func NewThumb(fps int) *Thumb {
 			FPS:                     fps,
 		}),
 
-		dailyStochastic:         newStochastic(color.Yellow),
-		dailyStochasticCursor:   new(stochasticCursor),
-		dailyStochasticTimeline: new(timeline),
+		prices:        new(price),
+		priceCursor:   new(priceCursor),
+		priceTimeline: new(timeline),
 
-		weeklyStochastic:         newStochastic(color.Purple),
-		weeklyStochasticCursor:   new(stochasticCursor),
-		weeklyStochasticTimeline: new(timeline),
+		volume:         new(volume),
+		volumeCursor:   new(volumeCursor),
+		volumeTimeline: new(timeline),
 
 		loadingTextBox: text.NewBox(thumbSymbolQuoteTextRenderer, "LOADING...", text.Padding(thumbTextPadding)),
 		errorTextBox:   text.NewBox(thumbSymbolQuoteTextRenderer, "ERROR", text.Color(color.Orange), text.Padding(thumbTextPadding)),
@@ -129,48 +134,71 @@ func (t *Thumb) SetData(data Data) {
 		return
 	}
 
-	t.dailyStochastic.SetData(stochasticData{dc.DailyStochasticSeries})
-	t.dailyStochasticCursor.SetData(stochasticCursorData{})
-	t.dailyStochasticTimeline.SetData(timelineData{dc.Range, dc.TradingSessionSeries})
+	ts := dc.TradingSessionSeries
+	vs := dc.AverageVolumeSeries
 
-	t.weeklyStochastic.SetData(stochasticData{dc.WeeklyStochasticSeries})
-	t.weeklyStochasticCursor.SetData(stochasticCursorData{})
-	t.weeklyStochasticTimeline.SetData(timelineData{dc.Range, dc.TradingSessionSeries})
+	if len(ts.TradingSessions) != len(vs.AverageVolumes) {
+		log.Error("trading and volumes should be the same length")
+		return
+	}
+
+	const days = 30
+	if l := len(ts.TradingSessions); l > days {
+		ts.TradingSessions = ts.TradingSessions[l-days:]
+	}
+	if l := len(vs.AverageVolumes); l > days {
+		vs.AverageVolumes = vs.AverageVolumes[l-days:]
+	}
+
+	t.prices.SetData(priceData{ts})
+	t.priceCursor.SetData(priceCursorData{ts})
+	t.priceTimeline.SetData(timelineData{dc.Range, ts})
+
+	t.volume.SetData(volumeData{ts, vs})
+	t.volumeCursor.SetData(volumeCursorData{ts})
+	t.volumeTimeline.SetData(timelineData{dc.Range, ts})
 }
 
 // SetBounds sets the bounds to draw within.
 func (t *Thumb) SetBounds(bounds image.Rectangle) {
-	t.fullBounds = bounds
-	t.frameBubble.SetBounds(bounds)
+	t.bounds = bounds
 }
 
 // ProcessInput processes input.
 func (t *Thumb) ProcessInput(input *view.Input) {
-	t.header.SetBounds(t.fullBounds)
+	t.frameBubble.SetBounds(t.bounds)
+
+	t.header.SetBounds(t.bounds)
 	r, clicks := t.header.ProcessInput(input)
 
 	t.bodyBounds = r
 	t.loadingTextBox.SetBounds(r)
 	t.errorTextBox.SetBounds(r)
 
-	if !clicks.HasClicks() && input.MouseLeftButtonClicked.In(t.fullBounds) {
+	if !clicks.HasClicks() && input.MouseLeftButtonClicked.In(t.bounds) {
 		input.AddFiredCallback(t.thumbClickCallback)
 	}
 
-	rects := rect.Slice(r, 0.5)
-	for i := range rects {
-		rects[i] = rects[i].Inset(thumbSectionPadding)
-	}
+	// Divide up the rectangle into sections.
+	rects := rect.Slice(r, thumbVolumePercent)
 
-	dr, wr := rects[1], rects[0]
+	pr, vr := rects[1], rects[0]
 
-	t.dailyStochastic.SetBounds(dr)
-	t.dailyStochasticCursor.ProcessInput(input)
-	t.dailyStochasticTimeline.SetBounds(dr)
+	t.sectionDividers = []image.Rectangle{vr}
 
-	t.weeklyStochastic.SetBounds(wr)
-	t.weeklyStochasticCursor.ProcessInput(input)
-	t.weeklyStochasticTimeline.SetBounds(wr)
+	// Pad all the rects.
+	pr = pr.Inset(thumbSectionPadding)
+	vr = vr.Inset(thumbSectionPadding)
+
+	t.prices.SetBounds(pr)
+	t.priceCursor.SetBounds(pr, pr)
+	t.priceCursor.ProcessInput(input)
+	t.priceTimeline.SetBounds(pr)
+
+	t.volume.SetBounds(vr)
+	t.volumeCursor.SetBounds(vr, vr)
+	t.volumeCursor.ProcessInput(input)
+	t.volumeTimeline.SetBounds(vr)
 }
 
 // Update updates the Thumb.
@@ -215,17 +243,19 @@ func (t *Thumb) Render(fudge float32) {
 	gfx.SetAlpha(old * t.fadeIn.Value(fudge))
 	defer gfx.SetAlpha(old)
 
-	rects := rect.Slice(r, 0.5)
-	rect.RenderLineAtTop(rects[0])
+	// Render the dividers between the sections.
+	for _, r := range t.sectionDividers {
+		rect.RenderLineAtTop(r)
+	}
 
-	t.dailyStochasticTimeline.Render(fudge)
-	t.weeklyStochasticTimeline.Render(fudge)
+	t.priceTimeline.Render(fudge)
+	t.volumeTimeline.Render(fudge)
 
-	t.dailyStochastic.Render(fudge)
-	t.weeklyStochastic.Render(fudge)
+	t.prices.Render(fudge)
+	t.priceCursor.Render(fudge)
 
-	t.dailyStochasticCursor.Render(fudge)
-	t.weeklyStochasticCursor.Render(fudge)
+	t.volume.Render(fudge)
+	t.volumeCursor.Render(fudge)
 }
 
 // SetRemoveButtonClickCallback sets the callback for remove button clicks.
@@ -241,9 +271,11 @@ func (t *Thumb) SetThumbClickCallback(cb func()) {
 // Close frees the resources backing the chart thumbnail.
 func (t *Thumb) Close() {
 	t.header.Close()
-	t.dailyStochastic.Close()
-	t.dailyStochasticTimeline.Close()
-	t.weeklyStochastic.Close()
-	t.weeklyStochasticTimeline.Close()
+	t.prices.Close()
+	t.priceCursor.Close()
+	t.priceTimeline.Close()
+	t.volume.Close()
+	t.volumeCursor.Close()
+	t.volumeTimeline.Close()
 	t.thumbClickCallback = nil
 }
