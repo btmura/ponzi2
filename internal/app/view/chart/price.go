@@ -3,6 +3,7 @@ package chart
 import (
 	"image"
 	"math"
+	"sort"
 	"strconv"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
@@ -108,15 +109,26 @@ func priceRange(ts []*model.TradingSession) [2]float32 {
 
 	var low float32 = math.MaxFloat32
 	var high float32
+	ohlc := make([]float32, 4)
 	for _, s := range ts {
 		if s.Skip() {
 			continue
 		}
-		if s.Low < low {
-			low = s.Low
+
+		// Use all values to handle incorrect data.
+		ohlc[0] = s.Open
+		ohlc[1] = s.High
+		ohlc[2] = s.Low
+		ohlc[3] = s.Close
+		sort.Slice(ohlc, func(i, j int) bool {
+			return ohlc[i] < ohlc[2]
+		})
+
+		if ohlc[0] < low {
+			low = ohlc[0]
 		}
-		if s.High > high {
-			high = s.High
+		if ohlc[3] > high {
+			high = ohlc[3]
 		}
 	}
 
