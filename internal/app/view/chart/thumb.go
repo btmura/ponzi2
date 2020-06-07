@@ -144,10 +144,14 @@ func (t *Thumb) SetData(data Data) {
 
 	const days = 30
 	if l := len(ts.TradingSessions); l > days {
-		ts.TradingSessions = ts.TradingSessions[l-days:]
+		ts = &model.TradingSessionSeries{
+			TradingSessions: ts.TradingSessions[l-days:],
+		}
 	}
 	if l := len(vs.AverageVolumes); l > days {
-		vs.AverageVolumes = vs.AverageVolumes[l-days:]
+		vs = &model.AverageVolumeSeries{
+			AverageVolumes: vs.AverageVolumes[l-days:],
+		}
 	}
 
 	t.prices.SetData(priceData{ts})

@@ -454,14 +454,9 @@ func renderCursorLines(r image.Rectangle, mousePos *view.MousePosition) {
 	}
 }
 
-func renderHorizCursorLineAtPercent(r image.Rectangle, percent float32) {
-	y := r.Min.Y + int(float32(r.Dy())*percent)
-	gfx.SetModelMatrixRect(image.Rect(r.Min.X, y, r.Max.X, y))
-	cursorHorizLine.Render()
-}
-
 func tradingSessionAtX(ts []*model.TradingSession, r image.Rectangle, x int) (int, *model.TradingSession) {
-	xPercent := float64(x-r.Min.X) / float64(r.Dx())
+	dx := x - r.Min.X
+	xPercent := float64(dx) / float64(r.Dx())
 	i := int(math.Floor(float64(len(ts)) * xPercent))
 	if i >= len(ts) {
 		i = len(ts) - 1
