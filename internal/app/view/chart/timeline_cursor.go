@@ -2,8 +2,6 @@ package chart
 
 import (
 	"image"
-	"math"
-	"time"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
@@ -15,11 +13,11 @@ import (
 // timelineCursor renders the time corresponding to the mouse pointer
 // on the x-axis.
 type timelineCursor struct {
+	// data is the data necessary to render.
+	data timelineCursorData
+
 	// renderable is true if this should be rendered.
 	renderable bool
-
-	// dates are session dates shown for the cursor.
-	dates []time.Time
 
 	// layout is the layout to use when printing times.
 	layout string
@@ -49,10 +47,7 @@ func (t *timelineCursor) SetData(data timelineCursorData) {
 		return
 	}
 
-	t.dates = nil
-	for _, s := range ts.TradingSessions {
-		t.dates = append(t.dates, s.Date)
-	}
+	t.data = data
 
 	switch data.Range {
 	case model.OneDay:
@@ -82,22 +77,12 @@ func (t *timelineCursor) Render(fudge float32) {
 		return
 	}
 
-	if t.mousePos == nil {
+	if !t.mousePos.WithinX(t.bounds) {
 		return
 	}
 
-	if t.mousePos.X < t.bounds.Min.X || t.mousePos.X > t.bounds.Max.X {
-		return
-	}
-
-	percent := float32(t.mousePos.X-t.bounds.Min.X) / float32(t.bounds.Dx())
-
-	i := int(math.Floor(float64(len(t.dates))*float64(percent) + 0.5))
-	if i >= len(t.dates) {
-		i = len(t.dates) - 1
-	}
-
-	text := t.dates[i].Format(t.layout)
+	_, ts := tradingSessionAtX(t.data.TradingSessionSeries.TradingSessions, t.bounds, t.mousePos.X)
+	text := ts.Date.Format(t.layout)
 	textSize := axisLabelTextRenderer.Measure(text)
 
 	textPt := image.Point{
