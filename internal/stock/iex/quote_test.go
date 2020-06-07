@@ -27,7 +27,7 @@ func TestDecodeQuotes(t *testing.T) {
 					Symbol:        "CEF",
 					CompanyName:   "Sprott Physical Gold and Silver Trust Units",
 					LatestPrice:   11.71,
-					LatestSource:  IEXRealTimePrice,
+					LatestSource:  RealTimePrice,
 					LatestTime:    time.Date(2018, time.October, 11, 12, 45, 40, 0, loc),
 					LatestUpdate:  time.Unix(1538153140, 524000000),
 					LatestVolume:  478088,
@@ -138,7 +138,7 @@ func TestQuoteSource(t *testing.T) {
 		{
 			desc:              "valid source",
 			inputLatestSource: "IEX real time price",
-			want:              IEXRealTimePrice,
+			want:              RealTimePrice,
 		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
@@ -169,7 +169,7 @@ func TestQuoteDate(t *testing.T) {
 	}{
 		{
 			desc:              "IEX real time price",
-			inputLatestSource: IEXRealTimePrice,
+			inputLatestSource: RealTimePrice,
 			inputLatestTime:   "2:52:11 PM",
 			want:              time.Date(2018, time.October, 11, 14, 52, 11, 0, loc),
 		},

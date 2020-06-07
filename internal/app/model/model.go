@@ -74,12 +74,12 @@ type Source int
 //go:generate stringer -type=Source
 const (
 	SourceUnspecified Source = iota
-	IEXRealTimePrice
+	RealTimePrice
 	FifteenMinuteDelayedPrice
 	Close
 	PreviousClose
-	IEXPrice
-	IEXLastTrade
+	Price
+	LastTrade
 )
 
 // Range is the range to specify in the request.

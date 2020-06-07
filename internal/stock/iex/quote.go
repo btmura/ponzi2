@@ -50,12 +50,12 @@ type Source int
 //go:generate stringer -type=Source
 const (
 	SourceUnspecified Source = iota
-	IEXRealTimePrice
+	RealTimePrice
 	FifteenMinuteDelayedPrice
 	Close
 	PreviousClose
-	IEXPrice
-	IEXLastTrade
+	Price
+	LastTrade
 )
 
 // GetQuotesRequest is the request for GetQuotes.
@@ -208,7 +208,7 @@ func quoteSource(latestSource string) (Source, error) {
 	case "":
 		return SourceUnspecified, nil
 	case "IEX real time price":
-		return IEXRealTimePrice, nil
+		return RealTimePrice, nil
 	case "15 minute delayed price":
 		return FifteenMinuteDelayedPrice, nil
 	case "Close":
@@ -216,9 +216,9 @@ func quoteSource(latestSource string) (Source, error) {
 	case "Previous close":
 		return PreviousClose, nil
 	case "IEX price":
-		return IEXPrice, nil
+		return Price, nil
 	case "IEX Last Trade":
-		return IEXLastTrade, nil
+		return LastTrade, nil
 	default:
 		return SourceUnspecified, errors.Errorf("unrecognized source: %q", latestSource)
 	}
@@ -230,7 +230,7 @@ func quoteDate(latestSource Source, latestTime string) (time.Time, error) {
 	}
 
 	switch latestSource {
-	case IEXPrice, IEXRealTimePrice, FifteenMinuteDelayedPrice:
+	case Price, RealTimePrice, FifteenMinuteDelayedPrice:
 		t, err := time.ParseInLocation("3:04:05 PM", latestTime, loc)
 		if err != nil {
 			return time.Time{}, err
@@ -241,7 +241,7 @@ func quoteDate(latestSource Source, latestTime string) (time.Time, error) {
 			n.Year(), n.Month(), n.Day(),
 			t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), t.Location()), nil
 
-	case PreviousClose, Close, IEXLastTrade:
+	case PreviousClose, Close, LastTrade:
 		return time.ParseInLocation("January 2, 2006", latestTime, loc)
 
 	default:

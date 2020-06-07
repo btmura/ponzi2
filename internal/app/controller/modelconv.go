@@ -148,18 +148,18 @@ func modelSource(src iex.Source) (model.Source, error) {
 	switch src {
 	case iex.SourceUnspecified:
 		return model.SourceUnspecified, nil
-	case iex.IEXRealTimePrice:
-		return model.IEXRealTimePrice, nil
+	case iex.RealTimePrice:
+		return model.RealTimePrice, nil
 	case iex.FifteenMinuteDelayedPrice:
 		return model.FifteenMinuteDelayedPrice, nil
 	case iex.Close:
 		return model.Close, nil
 	case iex.PreviousClose:
 		return model.PreviousClose, nil
-	case iex.IEXPrice:
-		return model.IEXPrice, nil
-	case iex.IEXLastTrade:
-		return model.IEXLastTrade, nil
+	case iex.Price:
+		return model.Price, nil
+	case iex.LastTrade:
+		return model.LastTrade, nil
 	default:
 		return 0, errors.Errorf("unrecognized iex source: %v", src)
 	}

@@ -9,12 +9,12 @@ import (
 )
 
 var displaySources = map[model.Source]string{
-	model.IEXRealTimePrice:          "IEX Real Time",
+	model.RealTimePrice:             "IEX Real Time",
 	model.FifteenMinuteDelayedPrice: "15 Min Delayed",
 	model.Close:                     "Close",
 	model.PreviousClose:             "Previous Close",
-	model.IEXPrice:                  "IEX Price",
-	model.IEXLastTrade:              "IEX Last Trade",
+	model.Price:                     "IEX Price",
+	model.LastTrade:                 "IEX Last Trade",
 }
 
 // Join combines the non-empty strings in the slice together with spaces.
