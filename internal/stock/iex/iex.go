@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"regexp"
 	"time"
+
+	"github.com/btmura/ponzi2/internal/log"
 )
 
 var (
@@ -59,13 +60,19 @@ func dumpResponse(fileName string, r io.Reader) (io.ReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Error(err)
+		}
+	}()
 
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Fprintf(file, "%s", b)
+	if _, err := fmt.Fprintf(file, "%s", b); err != nil {
+		return nil, err
+	}
 
 	return ioutil.NopCloser(bytes.NewBuffer(b)), nil
 }

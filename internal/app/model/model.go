@@ -99,6 +99,21 @@ type TradingSessionSeries struct {
 	TradingSessions []*TradingSession
 }
 
+// DeepCopy returns a deep copy of the series.
+func (t *TradingSessionSeries) DeepCopy() *TradingSessionSeries {
+	if t == nil {
+		return nil
+	}
+	deep := *t
+	if len(deep.TradingSessions) != 0 {
+		deep.TradingSessions = make([]*TradingSession, len(t.TradingSessions))
+		for i, ts := range t.TradingSessions {
+			deep.TradingSessions[i] = ts.DeepCopy()
+		}
+	}
+	return &deep
+}
+
 // TradingSession models a single trading session.
 type TradingSession struct {
 	Date          time.Time
@@ -115,6 +130,15 @@ type TradingSession struct {
 func (s *TradingSession) Skip() bool {
 	// IEX sets the low and high to -1 when it has no data to report.
 	return s.Open <= 0 || s.High <= 0 || s.Low <= 0 || s.Close <= 0
+}
+
+// DeepCopy returns a deep copy of the session.
+func (s *TradingSession) DeepCopy() *TradingSession {
+	if s == nil {
+		return nil
+	}
+	deep := *s
+	return &deep
 }
 
 // MovingAverageSeries is a time series of moving average values.
@@ -138,6 +162,21 @@ type AverageVolumeSeries struct {
 	AverageVolumes []*AverageVolume
 }
 
+// DeepCopy returns a deep copy of the series.
+func (a *AverageVolumeSeries) DeepCopy() *AverageVolumeSeries {
+	if a == nil {
+		return nil
+	}
+	deep := *a
+	if len(deep.AverageVolumes) != 0 {
+		deep.AverageVolumes = make([]*AverageVolume, len(a.AverageVolumes))
+		for i, av := range a.AverageVolumes {
+			deep.AverageVolumes[i] = av.DeepCopy()
+		}
+	}
+	return &deep
+}
+
 // AverageVolume is a single data point in a AverageVolumeSeries.
 type AverageVolume struct {
 	// Date is the start date of the data point.
@@ -145,6 +184,15 @@ type AverageVolume struct {
 
 	// Value is the average volume value.
 	Value float32
+}
+
+// DeepCopy returns a deep copy of the volume.
+func (a *AverageVolume) DeepCopy() *AverageVolume {
+	if a == nil {
+		return nil
+	}
+	deep := *a
+	return &deep
 }
 
 // StochasticSeries is a time series of stochastic values.

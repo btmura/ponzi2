@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/log"
 )
 
 // Quote is a stock quote.
@@ -35,8 +36,11 @@ type Quote struct {
 
 // DeepCopy returns a deep copy of the quote.
 func (q *Quote) DeepCopy() *Quote {
-	copy := *q
-	return &copy
+	if q == nil {
+		return nil
+	}
+	deep := *q
+	return &deep
 }
 
 // Source is the quote data source.
@@ -104,7 +108,11 @@ func (c *Client) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]*Quote
 	if err != nil {
 		return nil, err
 	}
-	defer httpResp.Body.Close()
+	defer func() {
+		if err := httpResp.Body.Close(); err != nil {
+			log.Error(err)
+		}
+	}()
 
 	r := httpResp.Body
 	if c.dumpAPIResponses {

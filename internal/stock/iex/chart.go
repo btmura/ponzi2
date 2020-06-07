@@ -26,14 +26,19 @@ type Chart struct {
 	ChartPoints []*ChartPoint
 }
 
-// DeepCopy retuns a deep copy of the chart.
+// DeepCopy returns a deep copy of the chart.
 func (c *Chart) DeepCopy() *Chart {
-	copy := *c
-	copy.ChartPoints = make([]*ChartPoint, len(c.ChartPoints))
-	for i := range c.ChartPoints {
-		copy.ChartPoints[i] = c.ChartPoints[i].DeepCopy()
+	if c == nil {
+		return nil
 	}
-	return &copy
+	deep := *c
+	if len(deep.ChartPoints) != 0 {
+		deep.ChartPoints = make([]*ChartPoint, len(c.ChartPoints))
+		for i, cp := range c.ChartPoints {
+			deep.ChartPoints[i] = cp.DeepCopy()
+		}
+	}
+	return &deep
 }
 
 // ChartPoint is a single point on the chart.
@@ -50,8 +55,11 @@ type ChartPoint struct {
 
 // DeepCopy returns a deep copy of the chart point.
 func (c *ChartPoint) DeepCopy() *ChartPoint {
-	copy := *c
-	return &copy
+	if c == nil {
+		return nil
+	}
+	deep := *c
+	return &deep
 }
 
 // GetChartsRequest is the request for GetCharts.
@@ -339,7 +347,11 @@ func (c *Client) noCacheGetCharts(ctx context.Context, req *GetChartsRequest) ([
 	if err != nil {
 		return nil, err
 	}
-	defer httpResp.Body.Close()
+	defer func() {
+		if err := httpResp.Body.Close(); err != nil {
+			log.Error(err)
+		}
+	}()
 
 	r := httpResp.Body
 	if c.dumpAPIResponses {
