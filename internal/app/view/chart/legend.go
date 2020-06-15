@@ -98,8 +98,8 @@ func newLegend() *legend {
 
 type legendData struct {
 	TradingSessionSeries   *model.TradingSessionSeries
-	MovingAverageSeries25  *model.MovingAverageSeries
-	MovingAverageSeries50  *model.MovingAverageSeries
+	MovingAverageSeries5   *model.MovingAverageSeries
+	MovingAverageSeries20  *model.MovingAverageSeries
 	MovingAverageSeries200 *model.MovingAverageSeries
 }
 
@@ -236,35 +236,35 @@ func (l *legend) Update() (dirty bool) {
 		{empty, empty, text(formatPercentChange(curr.PercentChange))},
 	}
 
-	var m25, m50, m200 []*model.MovingAverage
+	var m5, m20, m200 []*model.MovingAverage
 
-	if s := l.data.MovingAverageSeries25; s != nil {
-		m25 = s.MovingAverages
+	if s := l.data.MovingAverageSeries5; s != nil {
+		m5 = s.MovingAverages
 	}
-	if s := l.data.MovingAverageSeries50; s != nil {
-		m50 = s.MovingAverages
+	if s := l.data.MovingAverageSeries20; s != nil {
+		m20 = s.MovingAverages
 	}
 	if s := l.data.MovingAverageSeries200; s != nil {
 		m200 = s.MovingAverages
 	}
 
-	if len(m25) != 0 || len(m50) != 0 || len(m200) != 0 {
+	if len(m5) != 0 || len(m20) != 0 || len(m200) != 0 {
 		rows = append(rows, [3]legendCell{empty, empty, empty})
 	}
 
-	if len(m25) != 0 {
+	if len(m5) != 0 {
 		rows = append(rows, [3]legendCell{
 			symbol("◼", color.Purple),
-			text("SMA 25"),
-			text(formatFloat(m25[i].Value)),
+			text("SMA 5"),
+			text(formatFloat(m5[i].Value)),
 		})
 	}
 
-	if len(m50) != 0 {
+	if len(m20) != 0 {
 		rows = append(rows, [3]legendCell{
 			symbol("◼", color.Yellow),
-			text("SMA 50"),
-			text(formatFloat(m50[i].Value)),
+			text("SMA 20"),
+			text(formatFloat(m20[i].Value)),
 		})
 	}
 
