@@ -42,8 +42,8 @@ var (
 )
 
 var (
-	cursorHorizLine = vao.HorizLine(color.LightGray)
-	cursorVertLine  = vao.VertLine(color.LightGray)
+	cursorHorizLine = vao.HorizLine(color.LightGray, color.LightGray)
+	cursorVertLine  = vao.VertLine(color.LightGray, color.LightGray)
 )
 
 // ZoomChange specifies whether the user has zoomed in or not.
@@ -135,7 +135,7 @@ func NewChart(fps int) *Chart {
 		prices:        new(price),
 		priceAxis:     new(priceAxis),
 		priceCursor:   new(priceCursor),
-		priceTimeline: new(timeline),
+		priceTimeline: newTimeline(color.TransparentGray, color.Gray),
 
 		movingAverage5:   newMovingAverage(color.Purple),
 		movingAverage20:  newMovingAverage(color.Yellow),
@@ -144,7 +144,7 @@ func NewChart(fps int) *Chart {
 		volume:         new(volume),
 		volumeAxis:     new(volumeAxis),
 		volumeCursor:   new(volumeCursor),
-		volumeTimeline: new(timeline),
+		volumeTimeline: newTimeline(color.Gray, color.TransparentGray),
 
 		timelineAxis:   new(timelineAxis),
 		timelineCursor: new(timelineCursor),

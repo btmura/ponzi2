@@ -11,7 +11,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 )
 
-var volumeHorizRuleSet = vao.HorizRuleSet([]float32{0.2, 0.8}, [2]float32{0, 1}, color.Gray)
+var volumeHorizRuleSet = vao.HorizRuleSet([]float32{0.2, 0.8}, [2]float32{0, 1}, color.TransparentGray, color.Gray)
 
 // volume renders the volume bars and labels for a single stock.
 type volume struct {

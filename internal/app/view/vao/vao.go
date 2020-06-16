@@ -5,12 +5,13 @@ import (
 	"io"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/view/color"
 )
 
 // Embed resources into the application. Get esc from github.com/mjibson/esc.
 //go:generate esc -o bindata.go -pkg vao -include ".*(ply|png)" -modtime 1337 -private data
 
-func DataLine(yValues []float32, yRange [2]float32, color [4]float32) *gfx.VAO {
+func DataLine(yValues []float32, yRange [2]float32, color color.RGBA) *gfx.VAO {
 	if len(yValues) < 2 {
 		return gfx.EmptyVAO()
 	}
@@ -46,7 +47,7 @@ func DataLine(yValues []float32, yRange [2]float32, color [4]float32) *gfx.VAO {
 }
 
 // HorizRuleSet returns a set of horizontal lines at different y values.
-func HorizRuleSet(yValues []float32, yRange [2]float32, color [4]float32) *gfx.VAO {
+func HorizRuleSet(yValues []float32, yRange [2]float32, color1, color2 color.RGBA) *gfx.VAO {
 	if len(yValues) < 2 {
 		return gfx.EmptyVAO()
 	}
@@ -68,8 +69,8 @@ func HorizRuleSet(yValues []float32, yRange [2]float32, color [4]float32) *gfx.V
 			+1, yc(val), 0,
 		)
 		data.Colors = append(data.Colors,
-			color[0], color[1], color[2], color[3],
-			color[0], color[1], color[2], color[3],
+			color1[0], color1[1], color1[2], color1[3],
+			color2[0], color2[1], color2[2], color2[3],
 		)
 		data.Indices = append(data.Indices, v, v+1)
 		v += 2
@@ -79,7 +80,7 @@ func HorizRuleSet(yValues []float32, yRange [2]float32, color [4]float32) *gfx.V
 }
 
 // VertRuleSet returns a set of vertical lines at different x values.
-func VertRuleSet(xValues []float32, xRange [2]float32, color [4]float32) *gfx.VAO {
+func VertRuleSet(xValues []float32, xRange [2]float32, color1, color2 color.RGBA) *gfx.VAO {
 	if len(xValues) < 2 {
 		return gfx.EmptyVAO()
 	}
@@ -101,8 +102,8 @@ func VertRuleSet(xValues []float32, xRange [2]float32, color [4]float32) *gfx.VA
 			xc(val), +1, 0,
 		)
 		data.Colors = append(data.Colors,
-			color[0], color[1], color[2], color[3],
-			color[0], color[1], color[2], color[3],
+			color1[0], color1[1], color1[2], color1[3],
+			color2[0], color2[1], color2[2], color2[3],
 		)
 		data.Indices = append(data.Indices, v, v+1)
 		v += 2
@@ -112,7 +113,7 @@ func VertRuleSet(xValues []float32, xRange [2]float32, color [4]float32) *gfx.VA
 }
 
 // HorizLine returns a horizontal line from (-1, 0) to (1, 0).
-func HorizLine(color [4]float32) *gfx.VAO {
+func HorizLine(color1, color2 color.RGBA) *gfx.VAO {
 	return gfx.NewVAO(
 		&gfx.VAOVertexData{
 			Mode: gfx.Lines,
@@ -121,8 +122,8 @@ func HorizLine(color [4]float32) *gfx.VAO {
 				+1, 0, 0,
 			},
 			Colors: []float32{
-				color[0], color[1], color[2], color[3],
-				color[0], color[1], color[2], color[3],
+				color1[0], color1[1], color1[2], color1[3],
+				color2[0], color2[1], color2[2], color2[3],
 			},
 			Indices: []uint16{
 				0, 1,
@@ -132,7 +133,7 @@ func HorizLine(color [4]float32) *gfx.VAO {
 }
 
 // VertLine returns a vertical line from (0, -1) to (0, 1).
-func VertLine(color [4]float32) *gfx.VAO {
+func VertLine(color1, color2 color.RGBA) *gfx.VAO {
 	return gfx.NewVAO(
 		&gfx.VAOVertexData{
 			Mode: gfx.Lines,
@@ -141,8 +142,8 @@ func VertLine(color [4]float32) *gfx.VAO {
 				0, +1, 0,
 			},
 			Colors: []float32{
-				color[0], color[1], color[2], color[3],
-				color[0], color[1], color[2], color[3],
+				color1[0], color1[1], color1[2], color1[3],
+				color2[0], color2[1], color2[2], color2[3],
 			},
 			Indices: []uint16{
 				0, 1,

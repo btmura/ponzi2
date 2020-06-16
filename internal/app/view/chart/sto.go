@@ -10,7 +10,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 )
 
-var stochasticHorizRuleSet = vao.HorizRuleSet([]float32{0.2, 0.8}, [2]float32{0, 1}, color.Gray)
+var stochasticHorizRuleSet = vao.HorizRuleSet([]float32{0.2, 0.8}, [2]float32{0, 1}, color.TransparentGray, color.Gray)
 
 type stochastic struct {
 	renderable   bool

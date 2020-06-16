@@ -13,7 +13,7 @@ import (
 )
 
 // priceHorizLine is the horizontal lines rendered behind the candlesticks.
-var priceHorizLine = vao.HorizLine(color.Gray)
+var priceHorizLine = vao.HorizLine(color.TransparentGray, color.Gray)
 
 // price shows the candlesticks and price labels for a single stock.
 type price struct {

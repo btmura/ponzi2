@@ -12,6 +12,12 @@ import (
 
 // timeline renders the vertical lines behind a chart's technicals.
 type timeline struct {
+	// topColor is the color of the line at the top.
+	topColor color.RGBA
+
+	// bottomColor is the color of the line at the bottom.
+	bottomColor color.RGBA
+
 	// renderable is true if this is ready to be rendered.
 	renderable bool
 
@@ -20,6 +26,13 @@ type timeline struct {
 
 	// lineRect is the rectangle to draw the lines within.
 	lineRect image.Rectangle
+}
+
+func newTimeline(topColor, bottomColor color.RGBA) *timeline {
+	return &timeline{
+		topColor:    topColor,
+		bottomColor: bottomColor,
+	}
 }
 
 type timelineData struct {
@@ -39,7 +52,7 @@ func (t *timeline) SetData(data timelineData) {
 
 	vals := weekLineValues(data.Range, ts.TradingSessions)
 
-	t.lineVAO = vao.VertRuleSet(vals, [2]float32{0, 1}, color.Gray)
+	t.lineVAO = vao.VertRuleSet(vals, [2]float32{0, 1}, t.bottomColor, t.topColor)
 
 	t.renderable = true
 }
