@@ -11,7 +11,6 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
-	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/status"
 	"github.com/btmura/ponzi2/internal/app/view/text"
@@ -42,8 +41,8 @@ var (
 )
 
 var (
-	cursorHorizLine = vao.HorizLine(color.LightGray, color.LightGray)
-	cursorVertLine  = vao.VertLine(color.LightGray, color.LightGray)
+	cursorHorizLine = vao.HorizLine(view.LightGray, view.LightGray)
+	cursorVertLine  = vao.VertLine(view.LightGray, view.LightGray)
 )
 
 // ZoomChange specifies whether the user has zoomed in or not.
@@ -135,16 +134,16 @@ func NewChart(fps int) *Chart {
 		prices:        new(price),
 		priceAxis:     new(priceAxis),
 		priceCursor:   new(priceCursor),
-		priceTimeline: newTimeline(color.TransparentGray, color.Gray),
+		priceTimeline: newTimeline(view.TransparentGray, view.Gray),
 
-		movingAverage5:   newMovingAverage(color.Purple),
-		movingAverage20:  newMovingAverage(color.Yellow),
-		movingAverage200: newMovingAverage(color.White),
+		movingAverage5:   newMovingAverage(view.Purple),
+		movingAverage20:  newMovingAverage(view.Yellow),
+		movingAverage200: newMovingAverage(view.White),
 
 		volume:         new(volume),
 		volumeAxis:     new(volumeAxis),
 		volumeCursor:   new(volumeCursor),
-		volumeTimeline: newTimeline(color.Gray, color.TransparentGray),
+		volumeTimeline: newTimeline(view.Gray, view.TransparentGray),
 
 		timelineAxis:   new(timelineAxis),
 		timelineCursor: new(timelineCursor),
@@ -152,7 +151,7 @@ func NewChart(fps int) *Chart {
 		legend: newLegend(),
 
 		loadingTextBox: text.NewBox(chartSymbolQuoteTextRenderer, "LOADING...", text.Padding(chartTextPadding)),
-		errorTextBox:   text.NewBox(chartSymbolQuoteTextRenderer, "ERROR", text.Color(color.Orange), text.Padding(chartTextPadding)),
+		errorTextBox:   text.NewBox(chartSymbolQuoteTextRenderer, "ERROR", text.Color(view.Orange), text.Padding(chartTextPadding)),
 		loading:        true,
 		fadeIn:         animation.New(1 * fps),
 	}

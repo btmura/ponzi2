@@ -5,7 +5,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
-	"github.com/btmura/ponzi2/internal/app/view/color"
+	"github.com/btmura/ponzi2/internal/app/view"
 )
 
 type priceAxis struct {
@@ -79,7 +79,7 @@ func (p *priceAxis) Render(float32) {
 				break
 			}
 
-			axisLabelTextRenderer.Render(l.text, pt, gfx.TextColor(color.White))
+			axisLabelTextRenderer.Render(l.text, pt, gfx.TextColor(view.White))
 		}
 
 		pt = pt.Sub(dp)

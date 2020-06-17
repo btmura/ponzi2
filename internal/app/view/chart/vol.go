@@ -7,11 +7,11 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
-	"github.com/btmura/ponzi2/internal/app/view/color"
+	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 )
 
-var volumeHorizRuleSet = vao.HorizRuleSet([]float32{0.2, 0.8}, [2]float32{0, 1}, color.TransparentGray, color.Gray)
+var volumeHorizRuleSet = vao.HorizRuleSet([]float32{0.2, 0.8}, [2]float32{0, 1}, view.TransparentGray, view.Gray)
 
 // volume renders the volume bars and labels for a single stock.
 type volume struct {
@@ -60,7 +60,7 @@ func (v *volume) SetData(data volumeData) {
 	for _, m := range vs.AverageVolumes {
 		values = append(values, m.Value)
 	}
-	v.avgLine = vao.DataLine(values, [2]float32{float32(v.volumeRange[0]), float32(v.volumeRange[1])}, color.White)
+	v.avgLine = vao.DataLine(values, [2]float32{float32(v.volumeRange[0]), float32(v.volumeRange[1])}, view.White)
 
 	v.renderable = true
 }
@@ -169,13 +169,13 @@ func volumeBarsVAO(ds []*model.TradingSession, maxVolume int) *gfx.VAO {
 
 		switch {
 		case s.Close > s.Open:
-			add(color.Green)
+			add(view.Green)
 
 		case s.Close < s.Open:
-			add(color.Red)
+			add(view.Red)
 
 		default:
-			add(color.White)
+			add(view.White)
 		}
 
 		// idx is function to refer to the vertices above.

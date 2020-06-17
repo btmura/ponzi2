@@ -5,18 +5,18 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
-	"github.com/btmura/ponzi2/internal/app/view/color"
+	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 )
 
 type movingAverage struct {
 	renderable bool
-	color      color.RGBA
+	color      view.Color
 	line       *gfx.VAO
 	bounds     image.Rectangle
 }
 
-func newMovingAverage(color color.RGBA) *movingAverage {
+func newMovingAverage(color view.Color) *movingAverage {
 	return &movingAverage{color: color}
 }
 

@@ -6,7 +6,6 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
-	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/log"
 )
 
@@ -97,7 +96,7 @@ func (t *timelineCursor) Render(fudge float32) {
 
 	axisLabelBubble.SetBounds(bubbleRect)
 	axisLabelBubble.Render(fudge)
-	axisLabelTextRenderer.Render(text, textPt, gfx.TextColor(color.White))
+	axisLabelTextRenderer.Render(text, textPt, gfx.TextColor(view.White))
 }
 
 func (t *timelineCursor) Close() {

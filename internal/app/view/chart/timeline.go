@@ -5,7 +5,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
-	"github.com/btmura/ponzi2/internal/app/view/color"
+	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 	"github.com/btmura/ponzi2/internal/log"
 )
@@ -13,10 +13,10 @@ import (
 // timeline renders the vertical lines behind a chart's technicals.
 type timeline struct {
 	// topColor is the color of the line at the top.
-	topColor color.RGBA
+	topColor view.Color
 
 	// bottomColor is the color of the line at the bottom.
-	bottomColor color.RGBA
+	bottomColor view.Color
 
 	// renderable is true if this is ready to be rendered.
 	renderable bool
@@ -28,7 +28,7 @@ type timeline struct {
 	lineRect image.Rectangle
 }
 
-func newTimeline(topColor, bottomColor color.RGBA) *timeline {
+func newTimeline(topColor, bottomColor view.Color) *timeline {
 	return &timeline{
 		topColor:    topColor,
 		bottomColor: bottomColor,

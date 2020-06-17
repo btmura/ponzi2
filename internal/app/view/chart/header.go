@@ -9,7 +9,6 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
 	"github.com/btmura/ponzi2/internal/app/view/button"
-	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 )
@@ -30,7 +29,7 @@ type header struct {
 	quoteText string
 
 	// quoteColor is the color to render the quote text.
-	quoteColor color.RGBA
+	quoteColor view.Color
 
 	// symbolQuoteTextRenderer renders the symbol and quote text.
 	symbolQuoteTextRenderer *gfx.TextRenderer
@@ -149,13 +148,13 @@ func (h *header) SetData(data Data) {
 
 	switch {
 	case c > 0:
-		h.quoteColor = color.Green
+		h.quoteColor = view.Green
 
 	case c < 0:
-		h.quoteColor = color.Red
+		h.quoteColor = view.Red
 
 	default:
-		h.quoteColor = color.White
+		h.quoteColor = view.White
 	}
 }
 
@@ -270,7 +269,7 @@ func (h *header) Render(fudge float32) {
 	{
 		pt := pt
 		pt.X += h.rounding
-		pt.X += h.symbolQuoteTextRenderer.Render(h.symbol, pt, gfx.TextColor(color.White))
+		pt.X += h.symbolQuoteTextRenderer.Render(h.symbol, pt, gfx.TextColor(view.White))
 		pt.X += h.padding
 
 		if w := buttonEdge - pt.X; w > 0 {

@@ -8,12 +8,12 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
-	"github.com/btmura/ponzi2/internal/app/view/color"
+	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 )
 
 // priceHorizLine is the horizontal lines rendered behind the candlesticks.
-var priceHorizLine = vao.HorizLine(color.TransparentGray, color.Gray)
+var priceHorizLine = vao.HorizLine(view.TransparentGray, view.Gray)
 
 // price shows the candlesticks and price labels for a single stock.
 type price struct {
@@ -209,14 +209,14 @@ func priceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32) (st
 		)
 
 		// Add the colors corresponding to the vertices.
-		var c color.RGBA
+		var c view.Color
 		switch {
 		case s.Close > s.Open:
-			c = color.Green
+			c = view.Green
 		case s.Close < s.Open:
-			c = color.Red
+			c = view.Red
 		default:
-			c = color.White
+			c = view.White
 		}
 
 		colors = append(colors,

@@ -5,7 +5,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
-	"github.com/btmura/ponzi2/internal/app/view/color"
+	"github.com/btmura/ponzi2/internal/app/view"
 )
 
 type stochasticAxis struct {
@@ -54,7 +54,7 @@ func (s *stochasticAxis) Render(float32) {
 	for _, l := range s.labels {
 		x := r.Max.X - l.size.X
 		y := r.Min.Y + int(float32(r.Dy())*l.percent) - l.size.Y/2
-		axisLabelTextRenderer.Render(l.text, image.Pt(x, y), gfx.TextColor(color.White))
+		axisLabelTextRenderer.Render(l.text, image.Pt(x, y), gfx.TextColor(view.White))
 	}
 }
 

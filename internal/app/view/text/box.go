@@ -4,7 +4,7 @@ import (
 	"image"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
-	"github.com/btmura/ponzi2/internal/app/view/color"
+	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
@@ -17,7 +17,7 @@ type Box struct {
 	text string
 
 	// color is the color to render the text in.
-	color color.RGBA
+	color view.Color
 
 	// padding is the padding around the text.
 	padding int
@@ -39,7 +39,7 @@ type Box struct {
 type Option func(c *Box)
 
 // Color returns an option to set the text color.
-func Color(color color.RGBA) Option {
+func Color(color view.Color) Option {
 	return func(b *Box) {
 		b.color = color
 	}
@@ -64,7 +64,7 @@ func NewBox(textRenderer *gfx.TextRenderer, text string, opts ...Option) *Box {
 	b := &Box{
 		textRenderer: textRenderer,
 		text:         text,
-		color:        color.RGBA{1, 1, 1, 1},
+		color:        view.Color{1, 1, 1, 1},
 		dirty:        true,
 	}
 	for _, o := range opts {

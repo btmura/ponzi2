@@ -6,22 +6,22 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
-	"github.com/btmura/ponzi2/internal/app/view/color"
+	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 )
 
-var stochasticHorizRuleSet = vao.HorizRuleSet([]float32{0.2, 0.8}, [2]float32{0, 1}, color.TransparentGray, color.Gray)
+var stochasticHorizRuleSet = vao.HorizRuleSet([]float32{0.2, 0.8}, [2]float32{0, 1}, view.TransparentGray, view.Gray)
 
 type stochastic struct {
 	renderable   bool
-	dColor       color.RGBA
+	dColor       view.Color
 	lineKVAO     *gfx.VAO
 	lineDVAO     *gfx.VAO
 	MaxLabelSize image.Point
 	bounds       image.Rectangle
 }
 
-func newStochastic(dColor color.RGBA) *stochastic {
+func newStochastic(dColor view.Color) *stochastic {
 	return &stochastic{dColor: dColor}
 }
 
@@ -49,7 +49,7 @@ func (s *stochastic) SetData(data stochasticData) {
 		dvals = append(dvals, s.D)
 	}
 	valRange := [2]float32{0, 1}
-	s.lineKVAO = vao.DataLine(kvals, valRange, color.Red)
+	s.lineKVAO = vao.DataLine(kvals, valRange, view.Red)
 	s.lineDVAO = vao.DataLine(dvals, valRange, s.dColor)
 
 	s.renderable = true

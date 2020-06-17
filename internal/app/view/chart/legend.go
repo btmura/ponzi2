@@ -9,7 +9,6 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
-	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
 
@@ -80,7 +79,7 @@ func (l *legendTable) Render(fudge float32) {
 type legendCell struct {
 	renderer *gfx.TextRenderer
 	text     string
-	color    color.RGBA
+	color    view.Color
 	size     image.Point
 }
 
@@ -168,12 +167,12 @@ func (l *legend) Update() (dirty bool) {
 		return legendCell{
 			renderer: legendTextRenderer,
 			text:     text,
-			color:    color.White,
+			color:    view.White,
 			size:     legendTextRenderer.Measure(text),
 		}
 	}
 
-	symbol := func(text string, color color.RGBA) legendCell {
+	symbol := func(text string, color view.Color) legendCell {
 		return legendCell{
 			renderer: legendGeometricShapeRenderer,
 			text:     text,
@@ -185,9 +184,9 @@ func (l *legend) Update() (dirty bool) {
 	whiteArrow := func(change float32) legendCell {
 		switch {
 		case change > 0:
-			return symbol("△", color.White)
+			return symbol("△", view.White)
 		case change < 0:
-			return symbol("▽", color.White)
+			return symbol("▽", view.White)
 		default:
 			return empty
 		}
@@ -196,9 +195,9 @@ func (l *legend) Update() (dirty bool) {
 	colorArrow := func(change float32) legendCell {
 		switch {
 		case change > 0:
-			return symbol("▲", color.Green)
+			return symbol("▲", view.Green)
 		case change < 0:
-			return symbol("▼", color.Red)
+			return symbol("▼", view.Red)
 		default:
 			return empty
 		}
@@ -254,7 +253,7 @@ func (l *legend) Update() (dirty bool) {
 
 	if len(m5) != 0 {
 		rows = append(rows, [3]legendCell{
-			symbol("◼", color.Purple),
+			symbol("◼", view.Purple),
 			text("SMA 5"),
 			text(formatFloat(m5[i].Value)),
 		})
@@ -262,7 +261,7 @@ func (l *legend) Update() (dirty bool) {
 
 	if len(m20) != 0 {
 		rows = append(rows, [3]legendCell{
-			symbol("◼", color.Yellow),
+			symbol("◼", view.Yellow),
 			text("SMA 20"),
 			text(formatFloat(m20[i].Value)),
 		})
@@ -270,7 +269,7 @@ func (l *legend) Update() (dirty bool) {
 
 	if len(m200) != 0 {
 		rows = append(rows, [3]legendCell{
-			symbol("◼", color.White),
+			symbol("◼", view.White),
 			text("SMA 200"),
 			text(formatFloat(m200[i].Value)),
 		})

@@ -5,7 +5,7 @@ import (
 	"image"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
-	"github.com/btmura/ponzi2/internal/app/view/color"
+	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 )
 
@@ -14,8 +14,8 @@ import (
 
 // White horizontal and vertical line VAOs that can be reused anywhere.
 var (
-	horizLine   = vao.HorizLine(color.White, color.White)
-	vertLine    = vao.VertLine(color.White, color.White)
+	horizLine   = vao.HorizLine(view.White, view.White)
+	vertLine    = vao.VertLine(view.White, view.White)
 	squarePlane = gfx.PLYVAO(bytes.NewReader(_escFSMustByte(false, "/data/squareplane.ply")))
 )
 

@@ -10,7 +10,6 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/animation"
-	"github.com/btmura/ponzi2/internal/app/view/color"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/status"
 	"github.com/btmura/ponzi2/internal/app/view/text"
@@ -92,14 +91,14 @@ func NewThumb(fps int) *Thumb {
 
 		prices:        new(price),
 		priceCursor:   new(priceCursor),
-		priceTimeline: newTimeline(color.TransparentGray, color.Gray),
+		priceTimeline: newTimeline(view.TransparentGray, view.Gray),
 
 		volume:         new(volume),
 		volumeCursor:   new(volumeCursor),
-		volumeTimeline: newTimeline(color.Gray, color.TransparentGray),
+		volumeTimeline: newTimeline(view.Gray, view.TransparentGray),
 
 		loadingTextBox: text.NewBox(thumbSymbolQuoteTextRenderer, "LOADING...", text.Padding(thumbTextPadding)),
-		errorTextBox:   text.NewBox(thumbSymbolQuoteTextRenderer, "ERROR", text.Color(color.Orange), text.Padding(thumbTextPadding)),
+		errorTextBox:   text.NewBox(thumbSymbolQuoteTextRenderer, "ERROR", text.Color(view.Orange), text.Padding(thumbTextPadding)),
 		loading:        true,
 		fadeIn:         animation.New(1 * fps),
 	}

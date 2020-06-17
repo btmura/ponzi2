@@ -6,7 +6,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
-	"github.com/btmura/ponzi2/internal/app/view/color"
+	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/log"
 )
 
@@ -71,7 +71,7 @@ func (t *timelineAxis) Render(float32) {
 			X: r.Min.X + int(float32(r.Dx())*l.percent) - l.size.X/2,
 			Y: r.Min.Y + r.Dy()/2 - l.size.Y/2,
 		}
-		axisLabelTextRenderer.Render(l.text, tp, gfx.TextColor(color.White))
+		axisLabelTextRenderer.Render(l.text, tp, gfx.TextColor(view.White))
 	}
 }
 
