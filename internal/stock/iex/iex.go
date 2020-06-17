@@ -12,7 +12,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/btmura/ponzi2/internal/log"
+	"github.com/btmura/ponzi2/internal/logger"
 )
 
 var (
@@ -62,7 +62,7 @@ func dumpResponse(fileName string, r io.Reader) (io.ReadCloser, error) {
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			log.Error(err)
+			logger.Error(err)
 		}
 	}()
 
@@ -80,7 +80,7 @@ func dumpResponse(fileName string, r io.Reader) (io.ReadCloser, error) {
 func mustLoadLocation(name string) *time.Location {
 	loc, err := time.LoadLocation(name)
 	if err != nil {
-		log.Fatalf("time.LoadLocation(%s) failed: %v", name, err)
+		logger.Fatalf("time.LoadLocation(%s) failed: %v", name, err)
 	}
 	return loc
 }

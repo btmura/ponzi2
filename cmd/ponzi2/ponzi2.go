@@ -4,7 +4,7 @@ import (
 	"flag"
 
 	"github.com/btmura/ponzi2/internal/app"
-	"github.com/btmura/ponzi2/internal/log"
+	"github.com/btmura/ponzi2/internal/logger"
 	"github.com/btmura/ponzi2/internal/server"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
@@ -20,27 +20,27 @@ func main() {
 	flag.Parse()
 
 	if *token == "" {
-		log.Fatal("token cannot be empty")
+		logger.Fatal("token cannot be empty")
 	}
 
 	switch {
 	case *remoteAddr != "":
 		c := server.NewClient(*remoteAddr)
 		a := app.New(c, *token)
-		log.Fatal(a.Run())
+		logger.Fatal(a.Run())
 
 	case *enableChartCache:
 		cache, err := iex.OpenGOBChartCache()
 		if err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 		c := iex.NewClient(cache, *dumpAPIResponses)
 		a := app.New(c, *token)
-		log.Fatal(a.Run())
+		logger.Fatal(a.Run())
 
 	default:
 		c := iex.NewClient(new(iex.NoOpChartCache), *dumpAPIResponses)
 		a := app.New(c, *token)
-		log.Fatal(a.Run())
+		logger.Fatal(a.Run())
 	}
 }

@@ -8,7 +8,7 @@ import (
 	"gocloud.dev/server"
 
 	"github.com/btmura/ponzi2/internal/errors"
-	"github.com/btmura/ponzi2/internal/log"
+	"github.com/btmura/ponzi2/internal/logger"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
@@ -29,7 +29,7 @@ func (s *Server) Run(port int) error {
 	http.HandleFunc("/quote", s.quoteHandler)
 
 	addr := fmt.Sprintf(":%d", port)
-	log.Infof("listening on %s", addr)
+	logger.Infof("listening on %s", addr)
 	return srv.ListenAndServe(addr)
 }
 
@@ -43,7 +43,7 @@ func (s *Server) quoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debugf("quote request: %+v", iexReq)
+	logger.Debugf("quote request: %+v", iexReq)
 
 	iexResp, err := s.client.GetQuotes(ctx, iexReq)
 	if err != nil {
@@ -51,7 +51,7 @@ func (s *Server) quoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debugf("quote response: %+v", iexResp)
+	logger.Debugf("quote response: %+v", iexResp)
 
 	enc := gob.NewEncoder(w)
 	if err := enc.Encode(iexResp); err != nil {
@@ -70,7 +70,7 @@ func (s *Server) chartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debugf("chart request: %+v", iexReq)
+	logger.Debugf("chart request: %+v", iexReq)
 
 	iexResp, err := s.client.GetCharts(ctx, iexReq)
 	if err != nil {
@@ -78,7 +78,7 @@ func (s *Server) chartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debugf("chart response: %+v", iexResp)
+	logger.Debugf("chart response: %+v", iexResp)
 
 	enc := gob.NewEncoder(w)
 	if err := enc.Encode(iexResp); err != nil {
@@ -88,7 +88,7 @@ func (s *Server) chartHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func logAndWriteError(w http.ResponseWriter, statusCode int, err error) {
-	log.Error(err)
+	logger.Error(err)
 	w.WriteHeader(statusCode)
 	fmt.Fprint(w, err)
 }

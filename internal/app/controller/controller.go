@@ -9,7 +9,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/chart"
 	"github.com/btmura/ponzi2/internal/app/view/ui"
 	"github.com/btmura/ponzi2/internal/errors"
-	"github.com/btmura/ponzi2/internal/log"
+	"github.com/btmura/ponzi2/internal/logger"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
@@ -91,13 +91,13 @@ func (c *Controller) RunLoop() error {
 
 	c.ui.SetInputSymbolSubmittedCallback(func(symbol string) {
 		if err := c.setChart(ctx, symbol); err != nil {
-			log.Errorf("setChart: %v", err)
+			logger.Errorf("setChart: %v", err)
 		}
 	})
 
 	c.ui.SetSidebarChangeCallback(func(symbols []string) {
 		if err := c.setSidebarSymbols(symbols); err != nil {
-			log.Errorf("setSidebarSymbols: %v", err)
+			logger.Errorf("setSidebarSymbols: %v", err)
 		}
 	})
 
@@ -109,31 +109,31 @@ func (c *Controller) RunLoop() error {
 
 		c.chartRange = r
 		if err := c.refreshCurrentStock(ctx); err != nil {
-			log.Errorf("refreshCurrentStock: %v", err)
+			logger.Errorf("refreshCurrentStock: %v", err)
 		}
 	})
 
 	c.ui.SetChartRefreshButtonClickCallback(func(symbol string) {
 		if err := c.refreshAllStocks(ctx); err != nil {
-			log.Errorf("refreshAllStocks: %v", err)
+			logger.Errorf("refreshAllStocks: %v", err)
 		}
 	})
 
 	c.ui.SetChartAddButtonClickCallback(func(symbol string) {
 		if err := c.addChartThumb(ctx, symbol); err != nil {
-			log.Errorf("addChartThumb: %v", err)
+			logger.Errorf("addChartThumb: %v", err)
 		}
 	})
 
 	c.ui.SetThumbRemoveButtonClickCallback(func(symbol string) {
 		if err := c.removeChartThumb(symbol); err != nil {
-			log.Errorf("removeChartThumb: %v", err)
+			logger.Errorf("removeChartThumb: %v", err)
 		}
 	})
 
 	c.ui.SetThumbClickCallback(func(symbol string) {
 		if err := c.setChart(ctx, symbol); err != nil {
-			log.Errorf("setChart: %v", err)
+			logger.Errorf("setChart: %v", err)
 		}
 	})
 
@@ -360,7 +360,7 @@ func (c *Controller) onStockUpdate(symbol string, q *model.Quote, ch *model.Char
 
 // onStockUpdateError implements the eventHandler interface.
 func (c *Controller) onStockUpdateError(symbol string, updateErr error) error {
-	log.Errorf("stock update for %s failed: %v\n", symbol, updateErr)
+	logger.Errorf("stock update for %s failed: %v\n", symbol, updateErr)
 	return c.ui.SetError(symbol, updateErr)
 }
 

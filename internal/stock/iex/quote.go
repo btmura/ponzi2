@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/btmura/ponzi2/internal/errors"
-	"github.com/btmura/ponzi2/internal/log"
+	"github.com/btmura/ponzi2/internal/logger"
 )
 
 // Quote is a stock quote.
@@ -110,7 +110,7 @@ func (c *Client) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]*Quote
 	}
 	defer func() {
 		if err := httpResp.Body.Close(); err != nil {
-			log.Error(err)
+			logger.Error(err)
 		}
 	}()
 

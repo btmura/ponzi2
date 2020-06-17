@@ -13,7 +13,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/status"
 	"github.com/btmura/ponzi2/internal/app/view/text"
-	"github.com/btmura/ponzi2/internal/log"
+	"github.com/btmura/ponzi2/internal/logger"
 )
 
 const (
@@ -137,7 +137,7 @@ func (t *Thumb) SetData(data Data) {
 	vs := dc.AverageVolumeSeries
 
 	if len(ts.TradingSessions) != len(vs.AverageVolumes) {
-		log.Error("trading and volumes should be the same length")
+		logger.Error("trading and volumes should be the same length")
 		return
 	}
 

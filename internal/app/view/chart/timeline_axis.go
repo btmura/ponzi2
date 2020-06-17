@@ -7,7 +7,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
-	"github.com/btmura/ponzi2/internal/log"
+	"github.com/btmura/ponzi2/internal/logger"
 )
 
 // longTime is a time that takes the most display width for measuring purposes.
@@ -92,7 +92,7 @@ func timelineLabelText(r model.Range, t time.Time) string {
 	case model.OneYear:
 		return t.Format("Jan")
 	default:
-		log.Errorf("bad range: %v", r)
+		logger.Errorf("bad range: %v", r)
 		return ""
 	}
 }
@@ -123,7 +123,7 @@ func makeTimelineLabels(r model.Range, ts []*model.TradingSession) []timelineLab
 			}
 
 		default:
-			log.Errorf("bad range: %v", r)
+			logger.Errorf("bad range: %v", r)
 			return nil
 		}
 

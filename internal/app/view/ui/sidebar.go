@@ -6,7 +6,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/chart"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
-	"github.com/btmura/ponzi2/internal/log"
+	"github.com/btmura/ponzi2/internal/logger"
 )
 
 // Internal constants.
@@ -81,7 +81,7 @@ func newSidebar() *sidebar {
 
 func (s *sidebar) AddChartThumb(thumb *chart.Thumb) {
 	if thumb == nil {
-		log.Error("thumb should not be nil")
+		logger.Error("thumb should not be nil")
 		return
 	}
 	s.slots = append(s.slots, newSidebarSlot(thumb))
@@ -89,7 +89,7 @@ func (s *sidebar) AddChartThumb(thumb *chart.Thumb) {
 
 func (s *sidebar) RemoveChartThumb(thumb *chart.Thumb) {
 	if thumb == nil {
-		log.Error("thumb should not be nil")
+		logger.Error("thumb should not be nil")
 		return
 	}
 	for _, slot := range s.slots {
@@ -125,7 +125,7 @@ func (s *sidebar) SetBounds(bounds image.Rectangle) {
 
 func (s *sidebar) ProcessInput(input *view.Input) {
 	if input == nil {
-		log.Error("input should not be nil")
+		logger.Error("input should not be nil")
 		return
 	}
 
@@ -158,7 +158,7 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 
 func (s *sidebar) adjustScrollOffset(input *view.Input) {
 	if input == nil {
-		log.Error("input should not be nil")
+		logger.Error("input should not be nil")
 		return
 	}
 
@@ -199,7 +199,7 @@ func (s *sidebar) adjustScrollOffset(input *view.Input) {
 			s.scrollDown(wheelScrollAmount.Y)
 			return
 		default:
-			log.Errorf("unsupported scroll direction: %v", input.MouseScrolled.Direction)
+			logger.Errorf("unsupported scroll direction: %v", input.MouseScrolled.Direction)
 			return
 		}
 	}
@@ -246,7 +246,7 @@ func (s *sidebar) setSlotBounds() {
 // setDraggedSlot finds the slot being dragged and updates its position.
 func (s *sidebar) setDraggedSlot(input *view.Input) {
 	if input == nil {
-		log.Error("input should not be nil")
+		logger.Error("input should not be nil")
 		return
 	}
 
@@ -278,17 +278,17 @@ func (s *sidebar) setDraggedSlot(input *view.Input) {
 // moveDraggedSlot moves the dragged slot up or down depending on the mouse position.
 func (s *sidebar) moveDraggedSlot(input *view.Input) {
 	if input == nil {
-		log.Error("input should not be nil")
+		logger.Error("input should not be nil")
 		return
 	}
 
 	if s.draggedSlot == nil {
-		log.Error("draggedSlot should not be nil")
+		logger.Error("draggedSlot should not be nil")
 		return
 	}
 
 	if input.MouseLeftButtonDragging == nil {
-		log.Error("should be dragging if dragged slot exists")
+		logger.Error("should be dragging if dragged slot exists")
 		return
 	}
 
@@ -321,7 +321,7 @@ func (s *sidebar) moveDraggedSlot(input *view.Input) {
 	}
 
 	if draggedSlotIndex < 0 {
-		log.Error("should find dragged slot if draggedSlot exists")
+		logger.Error("should find dragged slot if draggedSlot exists")
 		return
 	}
 
@@ -341,7 +341,7 @@ func (s *sidebar) moveDraggedSlot(input *view.Input) {
 // fireSidebarChangeCallback schedules the sidebar change callback.
 func (s *sidebar) fireSidebarChangeCallback(input *view.Input) {
 	if input == nil {
-		log.Error("input should not be nil")
+		logger.Error("input should not be nil")
 		return
 	}
 
@@ -427,7 +427,7 @@ func (s *sidebarSlot) SetThumbBounds(bounds image.Rectangle) {
 	s.thumbBounds = bounds
 
 	if s.thumb == nil {
-		log.Error("thumbnail should not be nil")
+		logger.Error("thumbnail should not be nil")
 		return
 	}
 	s.thumb.SetBounds(bounds)
@@ -439,7 +439,7 @@ func (s *sidebarSlot) ThumbBounds() image.Rectangle {
 
 func (s *sidebarSlot) ProcessInput(input *view.Input) {
 	if input == nil {
-		log.Error("input should not be nil")
+		logger.Error("input should not be nil")
 		return
 	}
 

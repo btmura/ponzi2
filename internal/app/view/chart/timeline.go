@@ -7,7 +7,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
-	"github.com/btmura/ponzi2/internal/log"
+	"github.com/btmura/ponzi2/internal/logger"
 )
 
 // timeline renders the vertical lines behind a chart's technicals.
@@ -83,7 +83,7 @@ func weekLineValues(r model.Range, ts []*model.TradingSession) []float32 {
 			}
 
 		default:
-			log.Errorf("bad range: %v", r)
+			logger.Errorf("bad range: %v", r)
 		}
 
 		values = append(values, float32(i)/float32(len(ts)))

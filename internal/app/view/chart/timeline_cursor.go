@@ -6,7 +6,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
-	"github.com/btmura/ponzi2/internal/log"
+	"github.com/btmura/ponzi2/internal/logger"
 )
 
 // timelineCursor renders the time corresponding to the mouse pointer
@@ -54,7 +54,7 @@ func (t *timelineCursor) SetData(data timelineCursorData) {
 	case model.OneYear:
 		t.layout = "1/2/06"
 	default:
-		log.Errorf("bad range: %v", data.Range)
+		logger.Errorf("bad range: %v", data.Range)
 		return
 	}
 

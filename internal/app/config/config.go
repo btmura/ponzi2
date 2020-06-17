@@ -8,7 +8,7 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/btmura/ponzi2/internal/log"
+	"github.com/btmura/ponzi2/internal/logger"
 )
 
 // Config configures the app.
@@ -29,7 +29,7 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
-	log.Infof("loading config from %s", cfgPath)
+	logger.Infof("loading config from %s", cfgPath)
 
 	file, err := os.Open(cfgPath)
 	if os.IsNotExist(err) {
@@ -55,7 +55,7 @@ func Save(cfg *Config) error {
 		return err
 	}
 
-	log.Infof("saving config to %s", cfgPath)
+	logger.Infof("saving config to %s", cfgPath)
 
 	file, err := os.OpenFile(cfgPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0660)
 	if err != nil {

@@ -21,7 +21,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/text"
 	"github.com/btmura/ponzi2/internal/errors"
-	"github.com/btmura/ponzi2/internal/log"
+	"github.com/btmura/ponzi2/internal/logger"
 	"github.com/btmura/ponzi2/internal/matrix"
 )
 
@@ -221,7 +221,7 @@ func (u *UI) Init(_ context.Context) (cleanup func(), err error) {
 	if err := gl.Init(); err != nil {
 		return nil, err
 	}
-	log.Infof("OpenGL version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
+	logger.Infof("OpenGL version: %s", gl.GoStr(gl.GetString(gl.VERSION)))
 
 	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
@@ -268,7 +268,7 @@ func (u *UI) Init(_ context.Context) (cleanup func(), err error) {
 }
 
 func (u *UI) handleSizeEvent(width, height int) {
-	log.Debugf("width: %d height: %d", width, height)
+	logger.Debugf("width: %d height: %d", width, height)
 
 	s := image.Pt(width, height)
 	if s == u.winSize {
@@ -312,7 +312,7 @@ func (u *UI) handleKeyEvent(key glfw.Key, action glfw.Action) {
 }
 
 func (u *UI) handleCursorPosEvent(x, y float64) {
-	log.Debugf("x: %f y: %f", x, y)
+	logger.Debugf("x: %f y: %f", x, y)
 
 	// Flip Y-axis since the OpenGL coordinate system makes lower left the origin.
 	pos := view.MousePosition{Point: image.Pt(int(x), u.winSize.Y-int(y))}
@@ -326,7 +326,7 @@ func (u *UI) handleCursorPosEvent(x, y float64) {
 }
 
 func (u *UI) handleMouseButtonEvent(button glfw.MouseButton, action glfw.Action) {
-	log.Debugf("button: %v action: %v", button, action)
+	logger.Debugf("button: %v action: %v", button, action)
 
 	if button != glfw.MouseButtonLeft {
 		return
@@ -364,12 +364,12 @@ func (u *UI) handleScrollEvent(yoff float64) {
 
 func (u *UI) handleSidebarChangeEvent(sidebar *Sidebar) {
 	if sidebar == nil {
-		log.Error("sidebar is nil")
+		logger.Error("sidebar is nil")
 		return
 	}
 
 	if u.sidebarChangeCallback == nil {
-		log.Error("sidebar change callback is nil")
+		logger.Error("sidebar change callback is nil")
 		return
 	}
 
@@ -377,7 +377,7 @@ func (u *UI) handleSidebarChangeEvent(sidebar *Sidebar) {
 
 	for _, slot := range sidebar.Slots {
 		if slot.Thumb == nil {
-			log.Error("sidebar reporting slot with nil thumbnail")
+			logger.Error("sidebar reporting slot with nil thumbnail")
 			continue
 		}
 
@@ -395,7 +395,7 @@ func (u *UI) handleSidebarChangeEvent(sidebar *Sidebar) {
 
 func (u *UI) handleChartZoomChangeEvent(zoomChange chart.ZoomChange) {
 	if zoomChange == chart.ZoomChangeUnspecified {
-		log.Error("chart zoom change is unspecified")
+		logger.Error("chart zoom change is unspecified")
 		return
 	}
 
@@ -441,11 +441,11 @@ start:
 		u.render(fudge)
 
 		u.win.SwapBuffers()
-		log.Debugf("updates: %o lag(%f)/updateSec(%f)=fudge(%f) dirty: %t render: %v", i, lag, updateSec, fudge, dirty, time.Since(now).Seconds())
+		logger.Debugf("updates: %o lag(%f)/updateSec(%f)=fudge(%f) dirty: %t render: %v", i, lag, updateSec, fudge, dirty, time.Since(now).Seconds())
 
 		glfw.PollEvents()
 		if !dirty {
-			log.Debugf("wait events")
+			logger.Debugf("wait events")
 			glfw.WaitEvents()
 			goto start
 		}

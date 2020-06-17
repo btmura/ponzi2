@@ -6,7 +6,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/errors"
-	"github.com/btmura/ponzi2/internal/log"
+	"github.com/btmura/ponzi2/internal/logger"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
@@ -40,7 +40,7 @@ func newStockRefresher(iexClient iexClientInterface, token string, eventControll
 func (s *stockRefresher) refreshLoop() {
 	loc, err := time.LoadLocation("America/New_York")
 	if err != nil {
-		log.Fatalf("time.LoadLocation: %v", err)
+		logger.Fatalf("time.LoadLocation: %v", err)
 	}
 
 	for t := range s.refreshTicker.C {
@@ -49,7 +49,7 @@ func (s *stockRefresher) refreshLoop() {
 		close := time.Date(n.Year(), n.Month(), n.Day(), 16, 0, 0, 0, loc)
 
 		if open.Weekday() == time.Saturday || open.Weekday() == time.Sunday || t.Before(open) || t.After(close) {
-			log.Infof("ignoring refresh ticker at %v", t.Format("1/2/2006 3:04:05 PM"))
+			logger.Infof("ignoring refresh ticker at %v", t.Format("1/2/2006 3:04:05 PM"))
 			continue
 		}
 
@@ -83,7 +83,7 @@ func (s *stockRefresher) refreshOne(ctx context.Context, symbol string, dataRang
 
 func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) error {
 	if !s.enabled {
-		log.Infof("ignoring stock refresh request, refreshing disabled")
+		logger.Infof("ignoring stock refresh request, refreshing disabled")
 		return nil
 	}
 

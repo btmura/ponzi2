@@ -10,7 +10,7 @@ import (
 	_ "gocloud.dev/docstore/memdocstore"
 	_ "gocloud.dev/docstore/mongodocstore"
 
-	"github.com/btmura/ponzi2/internal/log"
+	"github.com/btmura/ponzi2/internal/logger"
 	"github.com/btmura/ponzi2/internal/server"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
@@ -28,37 +28,37 @@ func main() {
 	if envPort := os.Getenv("PORT"); envPort != "" {
 		intPort, err := strconv.Atoi(envPort)
 		if err != nil {
-			log.Fatalf("converting int port failed: %v", err)
+			logger.Fatalf("converting int port failed: %v", err)
 		}
 		*port = intPort
-		log.Infof("overriding port flag with env value: %d", *port)
+		logger.Infof("overriding port flag with env value: %d", *port)
 	}
 
 	if envDocstoreURL := os.Getenv("DOCSTORE_URL"); envDocstoreURL != "" {
 		*docstoreURL = envDocstoreURL
-		log.Infof("overriding docstore_url flag with env value: %s", *docstoreURL)
+		logger.Infof("overriding docstore_url flag with env value: %s", *docstoreURL)
 	}
 
 	if *port == 0 {
-		log.Fatal("port must not be non-zero")
+		logger.Fatal("port must not be non-zero")
 	}
 
 	if *docstoreURL == "" {
-		log.Fatal("docstore URL must not be empty")
+		logger.Fatal("docstore URL must not be empty")
 	}
 
 	coll, err := docstore.OpenCollection(ctx, *docstoreURL)
 	if err != nil {
-		log.Fatalf("opening collection failed: %v", err)
+		logger.Fatalf("opening collection failed: %v", err)
 	}
 	defer func() {
 		if err := coll.Close(); err != nil {
-			log.Infof("closing collection failed: %v", err)
+			logger.Infof("closing collection failed: %v", err)
 		}
 	}()
 
 	d := server.NewDocChartCache(coll)
 	c := iex.NewClient(d, false)
 	s := server.New(c)
-	log.Fatal(s.Run(*port))
+	logger.Fatal(s.Run(*port))
 }

@@ -2,7 +2,7 @@ package controller
 
 import (
 	"github.com/btmura/ponzi2/internal/app/config"
-	"github.com/btmura/ponzi2/internal/log"
+	"github.com/btmura/ponzi2/internal/logger"
 )
 
 type configSaver struct {
@@ -26,7 +26,7 @@ func newConfigSaver() *configSaver {
 func (c *configSaver) saveLoop() {
 	for cfg := range c.queue {
 		if err := config.Save(cfg); err != nil {
-			log.Errorf("failed to save config: %v", err)
+			logger.Errorf("failed to save config: %v", err)
 		}
 	}
 	c.done <- true
@@ -38,7 +38,7 @@ func (c *configSaver) start() {
 
 func (c *configSaver) save(cfg *config.Config) {
 	if !c.enabled {
-		log.Infof("ignoring save request, saving disabled")
+		logger.Infof("ignoring save request, saving disabled")
 		return
 	}
 

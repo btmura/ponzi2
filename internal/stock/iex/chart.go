@@ -17,7 +17,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/btmura/ponzi2/internal/errors"
-	"github.com/btmura/ponzi2/internal/log"
+	"github.com/btmura/ponzi2/internal/logger"
 )
 
 // Chart has points for a stock chart.
@@ -120,7 +120,7 @@ func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart
 
 	dump := func(i int) {
 		for sym, data := range symbol2Data {
-			log.Debugf("[%d] %s: %v", i, sym, data)
+			logger.Debugf("[%d] %s: %v", i, sym, data)
 		}
 	}
 
@@ -153,7 +153,7 @@ func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart
 		latest := midnight(ps[len(ps)-1].Date)
 
 		for {
-			log.Debugf("%s: l: %v t: %v", sym, latest, today)
+			logger.Debugf("%s: l: %v t: %v", sym, latest, today)
 
 			latest = latest.AddDate(0, 0, 1 /* day */)
 
@@ -207,7 +207,7 @@ func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart
 
 	g, gCtx := errgroup.WithContext(ctx)
 	for i, req := range reqs {
-		log.Debugf("%d: api request: %v", i, req)
+		logger.Debugf("%d: api request: %v", i, req)
 		i, req := i, req
 		g.Go(func() error {
 			resp, err := c.noCacheGetCharts(gCtx, req)
@@ -349,7 +349,7 @@ func (c *Client) noCacheGetCharts(ctx context.Context, req *GetChartsRequest) ([
 	}
 	defer func() {
 		if err := httpResp.Body.Close(); err != nil {
-			log.Error(err)
+			logger.Error(err)
 		}
 	}()
 

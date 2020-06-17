@@ -15,7 +15,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/status"
 	"github.com/btmura/ponzi2/internal/app/view/text"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
-	"github.com/btmura/ponzi2/internal/log"
+	"github.com/btmura/ponzi2/internal/logger"
 )
 
 // Embed resources into the application. Get esc from github.com/mjibson/esc.
@@ -204,7 +204,7 @@ func (ch *Chart) SetData(data Data) {
 	case model.OneYear:
 		ch.showMovingAverages = true
 	default:
-		log.Errorf("bad range: %v", dc.Range)
+		logger.Errorf("bad range: %v", dc.Range)
 		return
 	}
 
@@ -323,7 +323,7 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 		case view.ScrollUp:
 			zoomChange = ZoomIn
 		default:
-			log.Error("mouse scroll event missing direction")
+			logger.Error("mouse scroll event missing direction")
 			return
 		}
 
