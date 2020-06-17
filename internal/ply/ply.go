@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/btmura/ponzi2/internal/errors"
-	"github.com/btmura/ponzi2/internal/logger"
 )
 
 // PLY has the elements parsed from a file in the Polygon File Format (PLY).
@@ -63,10 +62,7 @@ func Decode(r io.Reader) (*PLY, error) {
 processHeader:
 	for sc.Scan() {
 		line := sc.Text()
-		switch { // Don't care about checking for ply and format lines.
-		case strings.HasPrefix(line, "comment "):
-			logger.Info(line)
-
+		switch { // Don't care about checking for ply, format, and comment lines.
 		case strings.HasPrefix(line, "element "):
 			ed = &elementDescriptor{}
 			h.elementDescriptors = append(h.elementDescriptors, ed)
@@ -75,6 +71,9 @@ processHeader:
 			}
 
 		case strings.HasPrefix(line, "property list "): // Keep above scalar property match below.
+			if ed == nil {
+				return nil, errors.Errorf("ply: missing element for property list: %s", line)
+			}
 			pd := &propertyDescriptor{list: true}
 			ed.propertyDescriptors = append(ed.propertyDescriptors, pd)
 			if _, err := fmt.Sscanf(line, "property list %s %s %s", &pd.listSizeType, &pd.valueType, &pd.name); err != nil {
@@ -82,6 +81,9 @@ processHeader:
 			}
 
 		case strings.HasPrefix(line, "property "):
+			if ed == nil {
+				return nil, errors.Errorf("ply: missing element for property: %s", line)
+			}
 			pd := &propertyDescriptor{}
 			ed.propertyDescriptors = append(ed.propertyDescriptors, pd)
 			if _, err := fmt.Sscanf(line, "property %s %s", &pd.valueType, &pd.name); err != nil {
