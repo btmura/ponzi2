@@ -45,11 +45,10 @@ func (s *stockRefresher) refreshLoop() {
 
 	for t := range s.refreshTicker.C {
 		n := time.Now()
-		open := time.Date(n.Year(), n.Month(), n.Day(), 9, 30, 0, 0, loc)
-		close := time.Date(n.Year(), n.Month(), n.Day(), 16, 0, 0, 0, loc)
+		openTime := time.Date(n.Year(), n.Month(), n.Day(), 9, 30, 0, 0, loc)
+		closeTime := time.Date(n.Year(), n.Month(), n.Day(), 16, 0, 0, 0, loc)
 
-		if open.Weekday() == time.Saturday || open.Weekday() == time.Sunday || t.Before(open) || t.After(close) {
-			logger.Infof("ignoring refresh ticker at %v", t.Format("1/2/2006 3:04:05 PM"))
+		if openTime.Weekday() == time.Saturday || openTime.Weekday() == time.Sunday || t.Before(openTime) || t.After(closeTime) {
 			continue
 		}
 
