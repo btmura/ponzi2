@@ -118,12 +118,6 @@ func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart
 
 	symbol2Data := map[string]*data{}
 
-	dump := func(i int) {
-		for sym, data := range symbol2Data {
-			logger.Debugf("[%d] %s: %v", i, sym, data)
-		}
-	}
-
 	for _, sym := range req.Symbols {
 		k := ChartCacheKey{req.Token, sym, DailyInterval}
 		v, err := c.chartCache.Get(ctx, k)
@@ -153,8 +147,6 @@ func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart
 		latest := midnight(ps[len(ps)-1].Date)
 
 		for {
-			logger.Debugf("%s: l: %v t: %v", sym, latest, today)
-
 			latest = latest.AddDate(0, 0, 1 /* day */)
 
 			// Don't ask for data in the future. :)
@@ -177,8 +169,6 @@ func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart
 			minChartLast: minChartLast,
 		}
 	}
-
-	dump(0)
 
 	token := req.Token
 	chartLast2Request := map[int]*GetChartsRequest{}
@@ -207,7 +197,6 @@ func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart
 
 	g, gCtx := errgroup.WithContext(ctx)
 	for i, req := range reqs {
-		logger.Debugf("%d: api request: %v", i, req)
 		i, req := i, req
 		g.Go(func() error {
 			resp, err := c.noCacheGetCharts(gCtx, req)
@@ -229,8 +218,6 @@ func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart
 			data.responseChart = ch
 		}
 	}
-
-	dump(1)
 
 	for sym, data := range symbol2Data {
 		switch data.minChartLast {
@@ -263,8 +250,6 @@ func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart
 			}
 		}
 	}
-
-	dump(2)
 
 	for sym, data := range symbol2Data {
 		k := ChartCacheKey{req.Token, sym, DailyInterval}

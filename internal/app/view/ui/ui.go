@@ -7,7 +7,6 @@ import (
 	"image"
 	"image/png"
 	"runtime"
-	"time"
 	"unicode"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
@@ -268,8 +267,6 @@ func (u *UI) Init(_ context.Context) (cleanup func(), err error) {
 }
 
 func (u *UI) handleSizeEvent(width, height int) {
-	logger.Debugf("width: %d height: %d", width, height)
-
 	s := image.Pt(width, height)
 	if s == u.winSize {
 		return
@@ -312,8 +309,6 @@ func (u *UI) handleKeyEvent(key glfw.Key, action glfw.Action) {
 }
 
 func (u *UI) handleCursorPosEvent(x, y float64) {
-	logger.Debugf("x: %f y: %f", x, y)
-
 	// Flip Y-axis since the OpenGL coordinate system makes lower left the origin.
 	pos := view.MousePosition{Point: image.Pt(int(x), u.winSize.Y-int(y))}
 	if pos == u.mousePos {
@@ -326,8 +321,6 @@ func (u *UI) handleCursorPosEvent(x, y float64) {
 }
 
 func (u *UI) handleMouseButtonEvent(button glfw.MouseButton, action glfw.Action) {
-	logger.Debugf("button: %v action: %v", button, action)
-
 	if button != glfw.MouseButtonLeft {
 		return
 	}
@@ -437,15 +430,11 @@ start:
 			fudge = 0
 		}
 
-		now := time.Now()
 		u.render(fudge)
-
 		u.win.SwapBuffers()
-		logger.Debugf("updates: %o lag(%f)/updateSec(%f)=fudge(%f) dirty: %t render: %v", i, lag, updateSec, fudge, dirty, time.Since(now).Seconds())
 
 		glfw.PollEvents()
 		if !dirty {
-			logger.Debugf("wait events")
 			glfw.WaitEvents()
 			goto start
 		}

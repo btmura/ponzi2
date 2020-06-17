@@ -43,15 +43,11 @@ func (s *Server) quoteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Debugf("quote request: %+v", iexReq)
-
 	iexResp, err := s.client.GetQuotes(ctx, iexReq)
 	if err != nil {
 		logAndWriteError(w, http.StatusBadRequest, errors.Errorf("getting quotes failed: %v", err))
 		return
 	}
-
-	logger.Debugf("quote response: %+v", iexResp)
 
 	enc := gob.NewEncoder(w)
 	if err := enc.Encode(iexResp); err != nil {
@@ -70,15 +66,11 @@ func (s *Server) chartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Debugf("chart request: %+v", iexReq)
-
 	iexResp, err := s.client.GetCharts(ctx, iexReq)
 	if err != nil {
 		logAndWriteError(w, http.StatusBadRequest, errors.Errorf("getting charts failed: %v", err))
 		return
 	}
-
-	logger.Debugf("chart response: %+v", iexResp)
 
 	enc := gob.NewEncoder(w)
 	if err := enc.Encode(iexResp); err != nil {
