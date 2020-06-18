@@ -82,7 +82,6 @@ func (s *stockRefresher) refreshOne(ctx context.Context, symbol string, dataRang
 
 func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) error {
 	if !s.enabled {
-		logger.Infof("ignoring stock refresh request, refreshing disabled")
 		return nil
 	}
 

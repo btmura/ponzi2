@@ -38,7 +38,6 @@ func (c *configSaver) start() {
 
 func (c *configSaver) save(cfg *config.Config) {
 	if !c.enabled {
-		logger.Infof("ignoring save request, saving disabled")
 		return
 	}
 
