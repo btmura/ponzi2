@@ -9,12 +9,12 @@ import (
 )
 
 var displaySources = map[model.Source]string{
-	model.RealTimePrice:             "IEX Real Time",
+	model.RealTimePrice:             "Real Time",
 	model.FifteenMinuteDelayedPrice: "15 Min Delayed",
 	model.Close:                     "Close",
 	model.PreviousClose:             "Previous Close",
-	model.Price:                     "IEX Price",
-	model.LastTrade:                 "IEX Last Trade",
+	model.Price:                     "Price",
+	model.LastTrade:                 "Last Trade",
 }
 
 // Join combines the non-empty strings in the slice together with spaces.
@@ -28,7 +28,7 @@ func Join(a ...string) string {
 	return strings.Join(b, " ")
 }
 
-// Paren parethesizes a string if it is not empty.
+// Paren parenthesizes a string if it is not empty.
 func Paren(a string) string {
 	if a == "" {
 		return ""
