@@ -211,6 +211,8 @@ func priceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32) (st
 		// Add the colors corresponding to the vertices.
 		var c view.Color
 		switch {
+		case s.Source == model.RealTimePrice:
+			c = view.Yellow
 		case s.Close > s.Open:
 			c = view.Green
 		case s.Close < s.Open:

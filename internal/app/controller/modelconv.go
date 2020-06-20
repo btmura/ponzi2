@@ -6,6 +6,7 @@ import (
 
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/logger"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
@@ -123,15 +124,10 @@ func modelQuote(q *iex.Quote) (*model.Quote, error) {
 		return nil, errors.Errorf("missing quote")
 	}
 
-	src, err := modelSource(q.LatestSource)
-	if err != nil {
-		return nil, err
-	}
-
 	return &model.Quote{
 		CompanyName:   q.CompanyName,
 		LatestPrice:   q.LatestPrice,
-		LatestSource:  src,
+		LatestSource:  modelSource(q.LatestSource),
 		LatestTime:    q.LatestTime,
 		LatestUpdate:  q.LatestUpdate,
 		LatestVolume:  q.LatestVolume,
@@ -144,24 +140,25 @@ func modelQuote(q *iex.Quote) (*model.Quote, error) {
 	}, nil
 }
 
-func modelSource(src iex.Source) (model.Source, error) {
+func modelSource(src iex.Source) model.Source {
 	switch src {
 	case iex.SourceUnspecified:
-		return model.SourceUnspecified, nil
+		return model.SourceUnspecified
 	case iex.RealTimePrice:
-		return model.RealTimePrice, nil
+		return model.RealTimePrice
 	case iex.FifteenMinuteDelayedPrice:
-		return model.FifteenMinuteDelayedPrice, nil
+		return model.FifteenMinuteDelayedPrice
 	case iex.Close:
-		return model.Close, nil
+		return model.Close
 	case iex.PreviousClose:
-		return model.PreviousClose, nil
+		return model.PreviousClose
 	case iex.Price:
-		return model.Price, nil
+		return model.Price
 	case iex.LastTrade:
-		return model.LastTrade, nil
+		return model.LastTrade
 	default:
-		return 0, errors.Errorf("unrecognized iex source: %v", src)
+		logger.Errorf("unrecognized iex source: %v", src)
+		return model.SourceUnspecified
 	}
 }
 
@@ -184,6 +181,7 @@ func modelTradingSessions(quote *iex.Quote, chart *iex.Chart) []*model.TradingSe
 	for _, p := range chart.ChartPoints {
 		ts = append(ts, &model.TradingSession{
 			Date:          p.Date,
+			Source:        model.Close,
 			Open:          p.Open,
 			High:          p.High,
 			Low:           p.Low,
@@ -220,6 +218,7 @@ func modelTradingSessions(quote *iex.Quote, chart *iex.Chart) []*model.TradingSe
 
 	t := &model.TradingSession{
 		Date:          q.LatestTime,
+		Source:        modelSource(q.LatestSource),
 		Open:          o,
 		High:          h,
 		Low:           l,
