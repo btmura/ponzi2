@@ -42,8 +42,8 @@ type Stock struct {
 type Chart struct {
 	Range                  Range
 	TradingSessionSeries   *TradingSessionSeries
-	MovingAverageSeries5   *MovingAverageSeries
 	MovingAverageSeries20  *MovingAverageSeries
+	MovingAverageSeries50  *MovingAverageSeries
 	MovingAverageSeries200 *MovingAverageSeries
 	AverageVolumeSeries    *AverageVolumeSeries
 	DailyStochasticSeries  *StochasticSeries

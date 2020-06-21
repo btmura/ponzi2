@@ -216,8 +216,8 @@ func (ch *Chart) SetData(data Data) {
 	ch.priceTimeline.SetData(timelineData{dc.Range, ts})
 
 	if ch.showMovingAverages {
-		ch.movingAverage5.SetData(movingAverageData{ts, dc.MovingAverageSeries5})
-		ch.movingAverage20.SetData(movingAverageData{ts, dc.MovingAverageSeries20})
+		ch.movingAverage5.SetData(movingAverageData{ts, dc.MovingAverageSeries20})
+		ch.movingAverage20.SetData(movingAverageData{ts, dc.MovingAverageSeries50})
 		ch.movingAverage200.SetData(movingAverageData{ts, dc.MovingAverageSeries200})
 	}
 
@@ -231,8 +231,8 @@ func (ch *Chart) SetData(data Data) {
 
 	ch.legend.SetData(legendData{
 		ts,
-		dc.MovingAverageSeries5,
 		dc.MovingAverageSeries20,
+		dc.MovingAverageSeries50,
 		dc.MovingAverageSeries200,
 	})
 }

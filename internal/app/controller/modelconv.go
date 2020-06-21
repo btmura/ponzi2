@@ -50,11 +50,11 @@ func modelOneYearChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error)
 	ds := modelTradingSessions(quote, chart)
 	ws := weeklyModelTradingSessions(ds)
 
-	m5 := modelMovingAverages(ds, 5)
 	m20 := modelMovingAverages(ds, 20)
+	m50 := modelMovingAverages(ds, 50)
 	m200 := modelMovingAverages(ds, 200)
 
-	v20 := modelAverageVolumes(ds, 20)
+	v50 := modelAverageVolumes(ds, 50)
 
 	dsto := modelStochastics(ds)
 	wsto := modelStochastics(ws)
@@ -99,10 +99,10 @@ func modelOneYearChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error)
 		}
 
 		ds = trimmedTradingSessions(ds)
-		m5 = trimmedMovingAverages(m5)
 		m20 = trimmedMovingAverages(m20)
+		m50 = trimmedMovingAverages(m50)
 		m200 = trimmedMovingAverages(m200)
-		v20 = trimmedAverageVolumes(v20)
+		v50 = trimmedAverageVolumes(v50)
 		dsto = trimmedStochastics(dsto)
 		wsto = trimmedStochastics(wsto)
 	}
@@ -110,10 +110,10 @@ func modelOneYearChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error)
 	return &model.Chart{
 		Range:                  model.OneYear,
 		TradingSessionSeries:   &model.TradingSessionSeries{TradingSessions: ds},
-		MovingAverageSeries5:   &model.MovingAverageSeries{MovingAverages: m5},
 		MovingAverageSeries20:  &model.MovingAverageSeries{MovingAverages: m20},
+		MovingAverageSeries50:  &model.MovingAverageSeries{MovingAverages: m50},
 		MovingAverageSeries200: &model.MovingAverageSeries{MovingAverages: m200},
-		AverageVolumeSeries:    &model.AverageVolumeSeries{AverageVolumes: v20},
+		AverageVolumeSeries:    &model.AverageVolumeSeries{AverageVolumes: v50},
 		DailyStochasticSeries:  &model.StochasticSeries{Stochastics: dsto},
 		WeeklyStochasticSeries: &model.StochasticSeries{Stochastics: wsto},
 	}, nil
