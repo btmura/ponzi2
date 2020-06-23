@@ -730,6 +730,16 @@ func (u *UI) SetChart(symbol string, data chart.Data) error {
 	u.titleBar.SetData(data)
 	ch.SetData(data)
 
+	ch.SetBarButtonClickCallback(func() {
+		ch.SetStyle(chart.StyleBar)
+		u.sidebar.SetStyle(chart.StyleBar)
+	})
+
+	ch.SetCandlestickButtonClickCallback(func() {
+		ch.SetStyle(chart.StyleCandlestick)
+		u.sidebar.SetStyle(chart.StyleCandlestick)
+	})
+
 	ch.SetRefreshButtonClickCallback(func() {
 		if u.chartRefreshButtonClickCallback != nil {
 			u.chartRefreshButtonClickCallback(symbol)

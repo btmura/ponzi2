@@ -10,6 +10,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/vao"
+	"github.com/btmura/ponzi2/internal/logger"
 )
 
 // priceHorizLine is the horizontal lines rendered behind the candlesticks.
@@ -26,6 +27,12 @@ type price struct {
 	// MaxLabelSize is the maximum label size useful for rendering measurements.
 	MaxLabelSize image.Point
 
+	// style is the chart style whether bars or candlesticks.
+	style Style
+
+	// barLines is the VAO with the price bar lines.
+	barLines *gfx.VAO
+
 	// stickLines is the VAO with the vertical candlestick lines.
 	stickLines *gfx.VAO
 
@@ -34,6 +41,19 @@ type price struct {
 
 	// bounds is the rectangle with global coords that should be drawn within.
 	bounds image.Rectangle
+}
+
+func newPrice() *price {
+	return &price{style: StyleBar}
+}
+
+// SetStyle sets the style whether bars or candlesticks.
+func (p *price) SetStyle(style Style) {
+	if style == StyleUnspecified {
+		logger.Error("unspecified style")
+		return
+	}
+	p.style = style
 }
 
 type priceData struct {
@@ -54,6 +74,8 @@ func (p *price) SetData(data priceData) {
 
 	// Measure the max label size by creating a label with the max value.
 	p.MaxLabelSize = makePriceLabel(p.priceRange[1]).size
+
+	p.barLines = priceBarVAO(ts.TradingSessions, p.priceRange)
 
 	p.stickLines, p.stickRects = priceCandlestickVAOs(ts.TradingSessions, p.priceRange)
 
@@ -88,12 +110,22 @@ func (p *price) Render(float32) {
 	}
 
 	gfx.SetModelMatrixRect(r)
-	p.stickLines.Render()
-	p.stickRects.Render()
+
+	switch p.style {
+	case StyleBar:
+		p.barLines.Render()
+
+	case StyleCandlestick:
+		p.stickLines.Render()
+		p.stickRects.Render()
+	}
 }
 
 func (p *price) Close() {
 	p.renderable = false
+	if p.barLines != nil {
+		p.barLines.Delete()
+	}
 	if p.stickLines != nil {
 		p.stickLines.Delete()
 	}
@@ -157,14 +189,12 @@ func makePriceLabel(v float32) priceLabel {
 	}
 }
 
-func priceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32) (stickLines, stickRects *gfx.VAO) {
-	// Calculate vertices and indices for the candlesticks.
+func priceBarVAO(ts []*model.TradingSession, priceRange [2]float32) *gfx.VAO {
 	var vertices []float32
 	var colors []float32
 	var lineIndices []uint16
-	var triangleIndices []uint16
 
-	stickWidth := 2.0 / float32(len(ds)) // (-1 to 1) on X-axis
+	stickWidth := 2.0 / float32(len(ts)) // (-1 to 1) on X-axis
 	leftX := -1.0 + stickWidth*0.1
 	midX := -1.0 + stickWidth*0.5
 	rightX := -1.0 + stickWidth*0.9
@@ -180,7 +210,98 @@ func priceCandlestickVAOs(ds []*model.TradingSession, priceRange [2]float32) (st
 		return 2*(value-priceRange[0])/(priceRange[1]-priceRange[0]) - 1
 	}
 
-	for _, s := range ds {
+	for _, s := range ts {
+		if s.Skip() {
+			moveOver()
+			continue
+		}
+
+		// Figure out Y coordinates of the key levels.
+		lowY, highY, openY, closeY := calcY(s.Low), calcY(s.High), calcY(s.Open), calcY(s.Close)
+
+		// Add the vertices needed to create the candlestick.
+		idxOffset := len(vertices) / 3
+		vertices = append(vertices,
+			midX, highY, 0, // 0
+			midX, lowY, 0, // 1
+			leftX, openY, 0, // 2
+			midX, openY, 0, // 3
+			rightX, closeY, 0, // 4
+			midX, closeY, 0, // 5
+		)
+
+		// Add the colors corresponding to the vertices.
+		var c view.Color
+		switch {
+		case s.Source == model.RealTimePrice:
+			c = view.Yellow
+		case s.Change > 0:
+			c = view.Green
+		case s.Change < 0:
+			c = view.Red
+		default:
+			c = view.White
+		}
+
+		colors = append(colors,
+			c[0], c[1], c[2], c[3], // 0
+			c[0], c[1], c[2], c[3], // 1
+			c[0], c[1], c[2], c[3], // 2
+			c[0], c[1], c[2], c[3], // 3
+			c[0], c[1], c[2], c[3], // 4
+			c[0], c[1], c[2], c[3], // 5
+		)
+
+		// idx is a function to refer to the vertices above.
+		idx := func(j uint16) uint16 {
+			return uint16(idxOffset) + j
+		}
+
+		// Add the vertex indices to render the candlestick.
+		lineIndices = append(lineIndices,
+			idx(0), idx(1),
+			idx(2), idx(3),
+			idx(4), idx(5),
+		)
+
+		moveOver()
+	}
+
+	lineVAO := gfx.NewVAO(
+		&gfx.VAOVertexData{
+			Mode:     gfx.Lines,
+			Vertices: vertices,
+			Colors:   colors,
+			Indices:  lineIndices,
+		},
+	)
+
+	return lineVAO
+}
+
+func priceCandlestickVAOs(ts []*model.TradingSession, priceRange [2]float32) (stickLines, stickRects *gfx.VAO) {
+	var vertices []float32
+	var colors []float32
+	var lineIndices []uint16
+	var triangleIndices []uint16
+
+	stickWidth := 2.0 / float32(len(ts)) // (-1 to 1) on X-axis
+	leftX := -1.0 + stickWidth*0.1
+	midX := -1.0 + stickWidth*0.5
+	rightX := -1.0 + stickWidth*0.9
+
+	// Move the X coordinates one stick over.
+	moveOver := func() {
+		leftX += stickWidth
+		midX += stickWidth
+		rightX += stickWidth
+	}
+
+	calcY := func(value float32) float32 {
+		return 2*(value-priceRange[0])/(priceRange[1]-priceRange[0]) - 1
+	}
+
+	for _, s := range ts {
 		if s.Skip() {
 			moveOver()
 			continue

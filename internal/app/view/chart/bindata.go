@@ -6680,6 +6680,33 @@ R3wDK6qyBhXPSSpbSxg6eHn8Iplv5oPEPF39XNY5JTQBAgAA//+yDEtFqgAAAA==
 `,
 	},
 
+	"/data/barbutton.png": {
+		name:    "barbutton.png",
+		local:   "data/barbutton.png",
+		size:    211,
+		modtime: 1337,
+		compressed: `
+H4sIAAAAAAAC/+oM8HPn5ZLiYmBg4PX0cAliYGBwAGEONgYGhlWZhfcYGBhmebo4hlTcenvTkK9BQcAl
+8HrFf+1kXVFODu+K/WZudWnLJrxmYmBgKFDaeJt9etCp5wyCsek7/P0ZGJdzV2wq31nnx8ShoHCd7c/d
+p79qF5s7snJsYKyde/5SKqdCQ4Ol9IStp4UcGBhZBBwYGD//Z1+z7Ps8B5CS6vKbdxdwCVxw7XmXl+3u
+fv+zNwMjy5MbDaGx0xiYOBgYGBga0uLOmFgE6TJ16oO4nq5+LuucEpoAAQAA//89At+10wAAAA==
+`,
+	},
+
+	"/data/candlestickbutton.png": {
+		name:    "candlestickbutton.png",
+		local:   "data/candlestickbutton.png",
+		size:    221,
+		modtime: 1337,
+		compressed: `
+H4sIAAAAAAAC/+oM8HPn5ZLiYmBg4PX0cAliYGBwAGEONgYGhlWZhfcYGBiWeLo4hlTcenvTka9BgYc1
+0ODe/1M7pvEKiGRXbDZpu+FZ3zpBiIGBoUH2ZP3vB0FeO0UnfA7hPf5O1qFBUsDm9Nfqs01s6U0cAhss
+06fofF8XbC8/V9CqgYHpWZrDFZ3XDEwcP9LkBVRPg4Q4FBoYmK69Zw77/MXOmYXDgDkpfWfptQJzDSaW
+M7LP7//j/35P+ExaJLuAw4FZkgKmYD0MDAwMC2Zz72B28T5yRmEeiOvp6ueyzimhCRAAAP//WgoMyt0A
+AAA=
+`,
+	},
+
 	"/data/erroricon.png": {
 		name:    "erroricon.png",
 		local:   "data/erroricon.png",
@@ -6752,6 +6779,8 @@ var _escDirs = map[string][]os.FileInfo{
 	"data": {
 		_escData["/data/DejaVuSans.ttf"],
 		_escData["/data/addbutton.png"],
+		_escData["/data/barbutton.png"],
+		_escData["/data/candlestickbutton.png"],
 		_escData["/data/erroricon.png"],
 		_escData["/data/refreshbutton.png"],
 		_escData["/data/removebutton.png"],

@@ -45,6 +45,17 @@ var (
 	cursorVertLine  = vao.VertLine(view.LightGray, view.LightGray)
 )
 
+// Style is the chart style.
+type Style int
+
+// Style values.
+//go:generate stringer -type=Style
+const (
+	StyleUnspecified Style = iota
+	StyleBar
+	StyleCandlestick
+)
+
 // ZoomChange specifies whether the user has zoomed in or not.
 type ZoomChange int
 
@@ -124,6 +135,8 @@ func NewChart(fps int) *Chart {
 		header: newHeader(&headerArgs{
 			SymbolQuoteTextRenderer: chartSymbolQuoteTextRenderer,
 			QuotePrinter:            chartQuotePrinter,
+			ShowBarButton:           true,
+			ShowCandlestickButton:   true,
 			ShowRefreshButton:       true,
 			ShowAddButton:           true,
 			Rounding:                chartRounding,
@@ -131,7 +144,7 @@ func NewChart(fps int) *Chart {
 			FPS:                     fps,
 		}),
 
-		prices:        new(price),
+		prices:        newPrice(),
 		priceAxis:     new(priceAxis),
 		priceCursor:   new(priceCursor),
 		priceTimeline: newTimeline(view.TransparentGray, view.Gray),
@@ -155,6 +168,15 @@ func NewChart(fps int) *Chart {
 		loading:        true,
 		fadeIn:         animation.New(1 * fps),
 	}
+}
+
+// SetStyle sets the Chart's style.
+func (ch *Chart) SetStyle(style Style) {
+	if style == StyleUnspecified {
+		logger.Error("unspecified style")
+		return
+	}
+	ch.prices.SetStyle(style)
 }
 
 // SetLoading toggles the Chart's loading indicator.
@@ -404,6 +426,16 @@ func (ch *Chart) Render(fudge float32) {
 	ch.timelineCursor.Render(fudge)
 
 	ch.legend.Render(fudge)
+}
+
+// SetBarButtonClickCallback sets the callback for bar button clicks.
+func (ch *Chart) SetBarButtonClickCallback(cb func()) {
+	ch.header.SetBarButtonClickCallback(cb)
+}
+
+// SetCandlestickButtonClickCallback sets the callback for the candlestick button clicks.
+func (ch *Chart) SetCandlestickButtonClickCallback(cb func()) {
+	ch.header.SetCandlestickButtonClickCallback(cb)
 }
 
 // SetRefreshButtonClickCallback sets the callback for refresh button clicks.

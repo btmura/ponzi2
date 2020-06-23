@@ -14,10 +14,12 @@ import (
 )
 
 var (
-	addButtonVAO     = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/addbutton.png")))
-	refreshButtonVAO = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/refreshbutton.png")))
-	removeButtonVAO  = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/removebutton.png")))
-	errorIconVAO     = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/erroricon.png")))
+	addButtonVAO         = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/addbutton.png")))
+	barButtonVAO         = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/barbutton.png")))
+	candlestickButtonVAO = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/candlestickbutton.png")))
+	errorIconVAO         = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/erroricon.png")))
+	refreshButtonVAO     = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/refreshbutton.png")))
+	removeButtonVAO      = vao.TexturedSquare(bytes.NewReader(_escFSMustByte(false, "/data/removebutton.png")))
 )
 
 // header shows a header for charts and thumbnails with a clickable button.
@@ -36,6 +38,12 @@ type header struct {
 
 	// quotePrinter is the function used to generate the quote text.
 	quotePrinter func(*model.Quote) string
+
+	// barButton is the button to show price bars.
+	barButton *headerButton
+
+	// candlestickButton is the button to show price candlesticks.
+	candlestickButton *headerButton
 
 	// refreshButton is the button to refresh the chart.
 	refreshButton *headerButton
@@ -81,6 +89,8 @@ type headerButton struct {
 type headerArgs struct {
 	SymbolQuoteTextRenderer *gfx.TextRenderer
 	QuotePrinter            func(*model.Quote) string
+	ShowBarButton           bool
+	ShowCandlestickButton   bool
 	ShowRefreshButton       bool
 	ShowAddButton           bool
 	ShowRemoveButton        bool
@@ -93,6 +103,14 @@ func newHeader(args *headerArgs) *header {
 	return &header{
 		symbolQuoteTextRenderer: args.SymbolQuoteTextRenderer,
 		quotePrinter:            args.QuotePrinter,
+		barButton: &headerButton{
+			Button:  button.New(barButtonVAO, args.FPS),
+			enabled: args.ShowBarButton,
+		},
+		candlestickButton: &headerButton{
+			Button:  button.New(candlestickButtonVAO, args.FPS),
+			enabled: args.ShowCandlestickButton,
+		},
 		refreshButton: &headerButton{
 			Button:  button.New(refreshButtonVAO, args.FPS),
 			enabled: args.ShowRefreshButton,
@@ -160,6 +178,12 @@ func (h *header) SetData(data Data) {
 
 // headerClicks reports what buttons were clicked.
 type headerClicks struct {
+	// BarButtonClicked is true if the bar button was clicked.
+	BarButtonClicked bool
+
+	// CandlestickButtonClicked is true if the candlestick button wan clicked.
+	CandlestickButtonClicked bool
+
 	// AddButtonClicked is true if the add button was clicked.
 	AddButtonClicked bool
 
@@ -172,7 +196,11 @@ type headerClicks struct {
 
 // HasClicks returns true if a clickable part of the header was clicked.
 func (c headerClicks) HasClicks() bool {
-	return c.AddButtonClicked || c.RefreshButtonClicked || c.RemoveButtonClicked
+	return c.BarButtonClicked ||
+		c.CandlestickButtonClicked ||
+		c.AddButtonClicked ||
+		c.RefreshButtonClicked ||
+		c.RemoveButtonClicked
 }
 
 func (h *header) SetBounds(bounds image.Rectangle) {
@@ -205,6 +233,18 @@ func (h *header) ProcessInput(input *view.Input) (body image.Rectangle, clicks h
 		bounds = rect.Translate(bounds, -buttonSize.X, 0)
 	}
 
+	if h.candlestickButton.enabled {
+		h.candlestickButton.SetBounds(bounds)
+		clicks.RemoveButtonClicked = h.candlestickButton.ProcessInput(input)
+		bounds = rect.Translate(bounds, -buttonSize.X, 0)
+	}
+
+	if h.barButton.enabled {
+		h.barButton.SetBounds(bounds)
+		clicks.RemoveButtonClicked = h.barButton.ProcessInput(input)
+		bounds = rect.Translate(bounds, -buttonSize.X, 0)
+	}
+
 	// Don't report clicks when the refresh button is just an indicator.
 	if !h.refreshButton.enabled {
 		clicks.RefreshButtonClicked = false
@@ -216,6 +256,12 @@ func (h *header) ProcessInput(input *view.Input) (body image.Rectangle, clicks h
 }
 
 func (h *header) Update() (dirty bool) {
+	if h.barButton.Update() {
+		dirty = true
+	}
+	if h.candlestickButton.Update() {
+		dirty = true
+	}
 	if h.refreshButton.Update() {
 		dirty = true
 	}
@@ -255,6 +301,16 @@ func (h *header) Render(fudge float32) {
 		h.bounds = rect.Translate(h.bounds, -buttonSize.X, 0)
 	}
 
+	if h.candlestickButton.enabled {
+		h.candlestickButton.Render(fudge)
+		h.bounds = rect.Translate(h.bounds, -buttonSize.X, 0)
+	}
+
+	if h.barButton.enabled {
+		h.barButton.Render(fudge)
+		h.bounds = rect.Translate(h.bounds, -buttonSize.X, 0)
+	}
+
 	if h.hasError {
 		gfx.SetModelMatrixRect(h.bounds)
 		errorIconVAO.Render()
@@ -281,6 +337,16 @@ func (h *header) Render(fudge float32) {
 	}
 }
 
+// SetBarButtonClickCallback sets the callback for bar button clicks.
+func (h *header) SetBarButtonClickCallback(cb func()) {
+	h.barButton.SetClickCallback(cb)
+}
+
+// SetCandlestickButtonClickCallback sets the callback for candlestick clicks.
+func (h *header) SetCandlestickButtonClickCallback(cb func()) {
+	h.candlestickButton.SetClickCallback(cb)
+}
+
 // SetRefreshButtonClickCallback sets the callback for refresh button clicks.
 func (h *header) SetRefreshButtonClickCallback(cb func()) {
 	h.refreshButton.SetClickCallback(cb)
@@ -298,6 +364,8 @@ func (h *header) SetRemoveButtonClickCallback(cb func()) {
 
 // Close frees the resources backing the ChartHeader.
 func (h *header) Close() {
+	h.barButton.Close()
+	h.candlestickButton.Close()
 	h.refreshButton.Close()
 	h.addButton.Close()
 	h.removeButton.Close()

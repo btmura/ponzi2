@@ -89,7 +89,7 @@ func NewThumb(fps int) *Thumb {
 			FPS:                     fps,
 		}),
 
-		prices:        new(price),
+		prices:        newPrice(),
 		priceCursor:   new(priceCursor),
 		priceTimeline: newTimeline(view.TransparentGray, view.Gray),
 
@@ -117,6 +117,15 @@ func (t *Thumb) SetError(err error) {
 		t.errorTextBox.SetText(fmt.Sprintf("ERROR: %v", err))
 	}
 	t.header.SetError(err)
+}
+
+// SetStyle sets the style of the thumbnail.
+func (t *Thumb) SetStyle(style Style) {
+	if style == StyleUnspecified {
+		logger.Error("unspecified style")
+		return
+	}
+	t.prices.SetStyle(style)
 }
 
 // SetData sets the data to be shown on the chart.

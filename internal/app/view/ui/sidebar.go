@@ -79,6 +79,16 @@ func newSidebar() *sidebar {
 	return new(sidebar)
 }
 
+func (s *sidebar) SetStyle(style chart.Style) {
+	if style == chart.StyleUnspecified {
+		logger.Error("unspecified style")
+		return
+	}
+	for _, slot := range s.slots {
+		slot.thumb.SetStyle(style)
+	}
+}
+
 func (s *sidebar) AddChartThumb(thumb *chart.Thumb) {
 	if thumb == nil {
 		logger.Error("thumb should not be nil")
