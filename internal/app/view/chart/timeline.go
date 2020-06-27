@@ -2,6 +2,7 @@ package chart
 
 import (
 	"image"
+	"time"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
@@ -12,26 +13,37 @@ import (
 
 // timeline renders the vertical lines behind a chart's technicals.
 type timeline struct {
-	// topColor is the color of the line at the top.
-	topColor view.Color
+	// majorTopColor is the top color of the major lines.
+	majorTopColor view.Color
 
-	// bottomColor is the color of the line at the bottom.
-	bottomColor view.Color
+	// majorBottomColor is the bottom color of the major lines.
+	majorBottomColor view.Color
+
+	// minorTopColor is the top color of the minor lines.
+	minorTopColor view.Color
+
+	// minorBottomColor is the bottom color of the minor lines.
+	minorBottomColor view.Color
+
+	// majorLineVAO has the vertical lines to be rendered under some technicals.
+	majorLineVAO *gfx.VAO
+
+	// minorLineVAO has the vertical lines to be rendered under some technicals.
+	minorLineVAO *gfx.VAO
 
 	// renderable is true if this is ready to be rendered.
 	renderable bool
 
-	// lineVAO has the vertical lines to be rendered under some technicals.
-	lineVAO *gfx.VAO
-
-	// lineRect is the rectangle to draw the lines within.
-	lineRect image.Rectangle
+	// bounds is the rectangle to draw the lines within.
+	bounds image.Rectangle
 }
 
-func newTimeline(topColor, bottomColor view.Color) *timeline {
+func newTimeline(majorTopColor, majorBottomColor, minorTopColor, minorBottomColor view.Color) *timeline {
 	return &timeline{
-		topColor:    topColor,
-		bottomColor: bottomColor,
+		majorTopColor:    majorTopColor,
+		majorBottomColor: majorBottomColor,
+		minorTopColor:    minorTopColor,
+		minorBottomColor: minorBottomColor,
 	}
 }
 
@@ -50,50 +62,75 @@ func (t *timeline) SetData(data timelineData) {
 		return
 	}
 
-	vals := weekLineValues(data.Range, ts.TradingSessions)
-
-	t.lineVAO = vao.VertRuleSet(vals, [2]float32{0, 1}, t.bottomColor, t.topColor)
+	majorValues, minorValues := weekLineValues(data.Range, ts.TradingSessions)
+	t.majorLineVAO = vao.VertRuleSet(majorValues, [2]float32{0, 1}, t.majorBottomColor, t.majorTopColor)
+	t.minorLineVAO = vao.VertRuleSet(minorValues, [2]float32{0, 1}, t.minorBottomColor, t.minorTopColor)
 
 	t.renderable = true
 }
 
-func weekLineValues(r model.Range, ts []*model.TradingSession) []float32 {
-	var values []float32
-
+func weekLineValues(r model.Range, ts []*model.TradingSession) (majorValues, minorValues []float32) {
+	pendingMonthChanged := false
 	for i := range ts {
-		// Skip if we can't check the previous value.
+		curr := ts[i].Date
+
+		var prev time.Time
 		if i == 0 {
-			continue
+			prev = curr.Add(-time.Hour * 24)
+		} else {
+			prev = ts[i-1].Date
 		}
 
-		// Skip if the values used for the lines aren't changing.
+		ph := prev.Hour()
+		ch := curr.Hour()
+		hourChanged := ph != ch
+
+		_, pw := prev.ISOWeek()
+		_, cw := curr.ISOWeek()
+		weekChanged := pw != cw
+
+		if prev.Month() != curr.Month() {
+			pendingMonthChanged = true
+		}
+
+		addMajor := func() {
+			majorValues = append(majorValues, float32(i)/float32(len(ts)))
+		}
+
+		addMinor := func() {
+			minorValues = append(minorValues, float32(i)/float32(len(ts)))
+		}
+
 		switch r {
 		case model.OneDay:
-			prev := ts[i-1].Date.Hour()
-			curr := ts[i].Date.Hour()
-			if prev == curr {
+			if hourChanged {
 				continue
 			}
 
+			addMinor()
+
 		case model.OneYear:
-			_, prev := ts[i-1].Date.ISOWeek()
-			_, curr := ts[i].Date.ISOWeek()
-			if prev == curr {
+			if !weekChanged {
 				continue
+			}
+
+			if pendingMonthChanged {
+				addMajor()
+				pendingMonthChanged = false
+			} else {
+				addMinor()
 			}
 
 		default:
 			logger.Errorf("bad range: %v", r)
 		}
-
-		values = append(values, float32(i)/float32(len(ts)))
 	}
 
-	return values
+	return majorValues, minorValues
 }
 
-func (t *timeline) SetBounds(lineRect image.Rectangle) {
-	t.lineRect = lineRect
+func (t *timeline) SetBounds(bounds image.Rectangle) {
+	t.bounds = bounds
 }
 
 // Render renders the chart lines.
@@ -102,15 +139,18 @@ func (t *timeline) Render(float32) {
 		return
 	}
 
-	gfx.SetModelMatrixRect(t.lineRect)
-	t.lineVAO.Render()
+	gfx.SetModelMatrixRect(t.bounds)
+	t.majorLineVAO.Render()
+	t.minorLineVAO.Render()
 }
 
 // Close frees the resources backing the chart lines.
 func (t *timeline) Close() {
 	t.renderable = false
-	if t.lineVAO != nil {
-		t.lineVAO.Delete()
-		t.lineVAO = nil
+	if t.majorLineVAO != nil {
+		t.majorLineVAO.Delete()
+	}
+	if t.minorLineVAO != nil {
+		t.minorLineVAO.Delete()
 	}
 }

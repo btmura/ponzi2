@@ -147,7 +147,7 @@ func NewChart(fps int) *Chart {
 		prices:        newPrice(),
 		priceAxis:     new(priceAxis),
 		priceCursor:   new(priceCursor),
-		priceTimeline: newTimeline(view.TransparentGray, view.Gray),
+		priceTimeline: newTimeline(view.TransparentLightGray, view.LightGray, view.TransparentGray, view.Gray),
 
 		movingAverage5:   newMovingAverage(view.Purple),
 		movingAverage20:  newMovingAverage(view.Yellow),
@@ -156,7 +156,7 @@ func NewChart(fps int) *Chart {
 		volume:         new(volume),
 		volumeAxis:     new(volumeAxis),
 		volumeCursor:   new(volumeCursor),
-		volumeTimeline: newTimeline(view.Gray, view.TransparentGray),
+		volumeTimeline: newTimeline(view.LightGray, view.TransparentLightGray, view.Gray, view.TransparentGray),
 
 		timelineAxis:   new(timelineAxis),
 		timelineCursor: new(timelineCursor),

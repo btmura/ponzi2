@@ -91,11 +91,11 @@ func NewThumb(fps int) *Thumb {
 
 		prices:        newPrice(),
 		priceCursor:   new(priceCursor),
-		priceTimeline: newTimeline(view.TransparentGray, view.Gray),
+		priceTimeline: newTimeline(view.TransparentLightGray, view.LightGray, view.TransparentGray, view.Gray),
 
 		volume:         new(volume),
 		volumeCursor:   new(volumeCursor),
-		volumeTimeline: newTimeline(view.Gray, view.TransparentGray),
+		volumeTimeline: newTimeline(view.LightGray, view.TransparentLightGray, view.Gray, view.TransparentGray),
 
 		loadingTextBox: text.NewBox(thumbSymbolQuoteTextRenderer, "LOADING...", text.Padding(thumbTextPadding)),
 		errorTextBox:   text.NewBox(thumbSymbolQuoteTextRenderer, "ERROR", text.Color(view.Orange), text.Padding(thumbTextPadding)),
