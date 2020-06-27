@@ -469,11 +469,11 @@ func (s *sidebarSlot) Update() (dirty bool) {
 }
 
 func (s *sidebarSlot) Render(fudge float32) {
-	s.fader.Render(func(fudge float32) {
+	s.fader.Render(fudge, func() {
 		if s.thumb != nil {
 			s.thumb.Render(fudge)
 		}
-	}, fudge)
+	})
 }
 
 func (s *sidebarSlot) Close() {

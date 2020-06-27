@@ -57,10 +57,10 @@ func (f *Fader) Update() (dirty bool) {
 }
 
 // Render adjusts the alpha, calls the given inner render function, and then restores the alpha.
-func (f *Fader) Render(innerRender func(fudge float32), fudge float32) {
+func (f *Fader) Render(fudge float32, innerRender func()) {
 	old := gfx.Alpha()
 	defer gfx.SetAlpha(old)
 
 	gfx.SetAlpha(old * f.fade.Value(fudge))
-	innerRender(fudge)
+	innerRender()
 }

@@ -172,7 +172,9 @@ func (c *uiChart) Update() (dirty bool) {
 }
 
 func (c *uiChart) Render(fudge float32) {
-	c.Fader.Render(c.Chart.Render, fudge)
+	c.Fader.Render(fudge, func() {
+		c.Chart.Render(fudge)
+	})
 }
 
 // New creates a new View.

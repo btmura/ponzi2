@@ -144,15 +144,15 @@ func (p *price) Render(fudge float32) {
 
 	switch p.style {
 	case StyleBar:
-		p.faders[StyleBar].Render(func(fudge float32) {
+		p.faders[StyleBar].Render(fudge, func() {
 			p.barLines.Render()
-		}, fudge)
+		})
 
 	case StyleCandlestick:
-		p.faders[StyleCandlestick].Render(func(fudge float32) {
+		p.faders[StyleCandlestick].Render(fudge, func() {
 			p.stickLines.Render()
 			p.stickRects.Render()
-		}, fudge)
+		})
 	}
 }
 
