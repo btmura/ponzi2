@@ -96,7 +96,6 @@ type headerArgs struct {
 	ShowRemoveButton        bool
 	Rounding                int
 	Padding                 int
-	FPS                     int
 }
 
 func newHeader(args *headerArgs) *header {
@@ -104,28 +103,28 @@ func newHeader(args *headerArgs) *header {
 		symbolQuoteTextRenderer: args.SymbolQuoteTextRenderer,
 		quotePrinter:            args.QuotePrinter,
 		barButton: &headerButton{
-			Button:  button.New(barButtonVAO, args.FPS),
+			Button:  button.New(barButtonVAO),
 			enabled: args.ShowBarButton,
 		},
 		candlestickButton: &headerButton{
-			Button:  button.New(candlestickButtonVAO, args.FPS),
+			Button:  button.New(candlestickButtonVAO),
 			enabled: args.ShowCandlestickButton,
 		},
 		refreshButton: &headerButton{
-			Button:  button.New(refreshButtonVAO, args.FPS),
+			Button:  button.New(refreshButtonVAO),
 			enabled: args.ShowRefreshButton,
 		},
 		addButton: &headerButton{
-			Button:  button.New(addButtonVAO, args.FPS),
+			Button:  button.New(addButtonVAO),
 			enabled: args.ShowAddButton,
 		},
 		removeButton: &headerButton{
-			Button:  button.New(removeButtonVAO, args.FPS),
+			Button:  button.New(removeButtonVAO),
 			enabled: args.ShowRemoveButton,
 		},
 		rounding: args.Rounding,
 		padding:  args.Padding,
-		fadeIn:   animation.New(1 * args.FPS),
+		fadeIn:   animation.New(1 * view.FPS),
 	}
 }
 

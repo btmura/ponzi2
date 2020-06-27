@@ -5,6 +5,8 @@ import (
 	"image"
 )
 
+const FPS = 120.0
+
 // ScrollDirection specifies the mouse scroll wheel direction.
 type ScrollDirection int
 

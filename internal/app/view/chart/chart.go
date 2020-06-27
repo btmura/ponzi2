@@ -129,7 +129,7 @@ type Chart struct {
 }
 
 // NewChart creates a new Chart.
-func NewChart(fps int) *Chart {
+func NewChart() *Chart {
 	return &Chart{
 		frameBubble: rect.NewBubble(chartRounding),
 		header: newHeader(&headerArgs{
@@ -141,7 +141,6 @@ func NewChart(fps int) *Chart {
 			ShowAddButton:           true,
 			Rounding:                chartRounding,
 			Padding:                 chartSectionPadding,
-			FPS:                     fps,
 		}),
 
 		prices:        newPrice(),
@@ -166,7 +165,7 @@ func NewChart(fps int) *Chart {
 		loadingTextBox: text.NewBox(chartSymbolQuoteTextRenderer, "LOADING...", text.Padding(chartTextPadding)),
 		errorTextBox:   text.NewBox(chartSymbolQuoteTextRenderer, "ERROR", text.Color(view.Orange), text.Padding(chartTextPadding)),
 		loading:        true,
-		fadeIn:         animation.New(1 * fps),
+		fadeIn:         animation.New(1 * view.FPS),
 	}
 }
 
@@ -360,6 +359,9 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 // Update updates the Chart.
 func (ch *Chart) Update() (dirty bool) {
 	if ch.header.Update() {
+		dirty = true
+	}
+	if ch.prices.Update() {
 		dirty = true
 	}
 	if ch.legend.Update() {

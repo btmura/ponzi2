@@ -413,7 +413,7 @@ func (s *sidebar) Close() {
 func newSidebarSlot(thumb *chart.Thumb) *sidebarSlot {
 	return &sidebarSlot{
 		thumb: thumb,
-		fader: view.NewFader(1 * fps),
+		fader: view.NewStartedFader(1 * view.FPS),
 	}
 }
 

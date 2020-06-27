@@ -30,6 +30,9 @@ type price struct {
 	// style is the chart style whether bars or candlesticks.
 	style Style
 
+	// faders has the faders needed to fade in and out the bars and candlesticks.
+	faders map[Style]*view.Fader
+
 	// barLines is the VAO with the price bar lines.
 	barLines *gfx.VAO
 
@@ -44,16 +47,35 @@ type price struct {
 }
 
 func newPrice() *price {
-	return &price{style: StyleBar}
+	return &price{
+		style: StyleBar,
+		faders: map[Style]*view.Fader{
+			StyleBar:         view.NewStartedFader(1.5 * view.FPS),
+			StyleCandlestick: view.NewStoppedFader(1.5 * view.FPS),
+		},
+	}
 }
 
 // SetStyle sets the style whether bars or candlesticks.
-func (p *price) SetStyle(style Style) {
-	if style == StyleUnspecified {
+func (p *price) SetStyle(newStyle Style) {
+	if newStyle == StyleUnspecified {
 		logger.Error("unspecified style")
 		return
 	}
-	p.style = style
+
+	if newStyle == p.style {
+		return
+	}
+
+	p.style = newStyle
+
+	for style, fader := range p.faders {
+		if style == p.style {
+			fader.FadeIn()
+		} else {
+			fader.FadeOut()
+		}
+	}
 }
 
 type priceData struct {
@@ -86,7 +108,16 @@ func (p *price) SetBounds(bounds image.Rectangle) {
 	p.bounds = bounds
 }
 
-func (p *price) Render(float32) {
+func (p *price) Update() (dirty bool) {
+	for _, fader := range p.faders {
+		if fader.Update() {
+			dirty = true
+		}
+	}
+	return dirty
+}
+
+func (p *price) Render(fudge float32) {
 	if !p.renderable {
 		return
 	}
@@ -113,11 +144,15 @@ func (p *price) Render(float32) {
 
 	switch p.style {
 	case StyleBar:
-		p.barLines.Render()
+		p.faders[StyleBar].Render(func(fudge float32) {
+			p.barLines.Render()
+		}, fudge)
 
 	case StyleCandlestick:
-		p.stickLines.Render()
-		p.stickRects.Render()
+		p.faders[StyleCandlestick].Render(func(fudge float32) {
+			p.stickLines.Render()
+			p.stickRects.Render()
+		}, fudge)
 	}
 }
 

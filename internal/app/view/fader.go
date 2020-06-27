@@ -11,17 +11,35 @@ type Fader struct {
 	fade      *animation.Animation
 }
 
-// NewFader returns a Fader that starts fading in.
-func NewFader(numFrames int) *Fader {
+// NewStartedFader returns a Fader that starts fading in.
+func NewStartedFader(numFrames int) *Fader {
 	return &Fader{
 		fade: animation.New(numFrames, animation.Started()),
 	}
 }
 
-// FadeOut starts fading out by reversing the current fade in animation.
+// NewStoppedFader returns a Fader that is stopped.
+func NewStoppedFader(numFrames int) *Fader {
+	return &Fader{
+		fade: animation.New(numFrames),
+	}
+}
+
+// FadeIn starts fading in by reversing the current fade if necessary.
+func (f *Fader) FadeIn() {
+	if f.fadingOut {
+		f.fadingOut = false
+		f.fade = f.fade.Rewinded()
+	}
+	f.fade.Start()
+}
+
+// FadeOut starts fading out by reversing the current fade if necessary.
 func (f *Fader) FadeOut() {
-	f.fadingOut = true
-	f.fade = f.fade.Rewinded()
+	if !f.fadingOut {
+		f.fadingOut = true
+		f.fade = f.fade.Rewinded()
+	}
 	f.fade.Start()
 }
 

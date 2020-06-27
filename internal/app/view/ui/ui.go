@@ -49,8 +49,7 @@ var acceptedChars = map[rune]bool{
 
 // Constants used by Run for the "game loop".
 const (
-	fps        = 120.0
-	updateSec  = 1.0 / fps
+	updateSec  = 1.0 / view.FPS
 	minUpdates = 1
 	maxUpdates = 1000
 )
@@ -158,7 +157,7 @@ type uiChart struct {
 func newUIChart(ch *chart.Chart) *uiChart {
 	return &uiChart{
 		Chart: ch,
-		Fader: view.NewFader(1 * fps),
+		Fader: view.NewStartedFader(1 * view.FPS),
 	}
 }
 
@@ -724,7 +723,7 @@ func (u *UI) SetChart(symbol string, data chart.Data) error {
 		ch.Close()
 	}
 
-	ch := chart.NewChart(fps)
+	ch := chart.NewChart()
 	u.symbolToChartMap[symbol] = ch
 
 	u.titleBar.SetData(data)
@@ -771,7 +770,7 @@ func (u *UI) AddChartThumb(symbol string, data chart.Data) error {
 		return err
 	}
 
-	th := chart.NewThumb(fps)
+	th := chart.NewThumb()
 	u.symbolToChartThumbMap[symbol] = th
 
 	th.SetData(data)

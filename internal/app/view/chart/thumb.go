@@ -76,7 +76,7 @@ type Thumb struct {
 }
 
 // NewThumb creates a Thumb.
-func NewThumb(fps int) *Thumb {
+func NewThumb() *Thumb {
 	return &Thumb{
 		frameBubble: rect.NewBubble(thumbRounding),
 
@@ -86,7 +86,6 @@ func NewThumb(fps int) *Thumb {
 			ShowRemoveButton:        true,
 			Rounding:                thumbRounding,
 			Padding:                 thumbSectionPadding,
-			FPS:                     fps,
 		}),
 
 		prices:        newPrice(),
@@ -100,7 +99,7 @@ func NewThumb(fps int) *Thumb {
 		loadingTextBox: text.NewBox(thumbSymbolQuoteTextRenderer, "LOADING...", text.Padding(thumbTextPadding)),
 		errorTextBox:   text.NewBox(thumbSymbolQuoteTextRenderer, "ERROR", text.Color(view.Orange), text.Padding(thumbTextPadding)),
 		loading:        true,
-		fadeIn:         animation.New(1 * fps),
+		fadeIn:         animation.New(1 * view.FPS),
 	}
 }
 
@@ -214,6 +213,9 @@ func (t *Thumb) ProcessInput(input *view.Input) {
 // Update updates the Thumb.
 func (t *Thumb) Update() (dirty bool) {
 	if t.header.Update() {
+		dirty = true
+	}
+	if t.prices.Update() {
 		dirty = true
 	}
 	if t.loadingTextBox.Update() {

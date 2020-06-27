@@ -18,10 +18,10 @@ type Button struct {
 	bounds image.Rectangle
 }
 
-func New(icon *gfx.VAO, fps int) *Button {
+func New(icon *gfx.VAO) *Button {
 	return &Button{
 		icon:     icon,
-		spinning: animation.New(int(0.5*float32(fps)), animation.Loop()),
+		spinning: animation.New(int(0.5*float32(view.FPS)), animation.Loop()),
 	}
 }
 
