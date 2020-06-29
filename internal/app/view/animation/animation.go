@@ -18,9 +18,9 @@ type Animation struct {
 	state     State
 }
 
-type AnimationOpt func(a *Animation)
+type Opt func(a *Animation)
 
-func New(numFrames int, opts ...AnimationOpt) *Animation {
+func New(numFrames int, opts ...Opt) *Animation {
 	a := &Animation{
 		end:       1,
 		numFrames: numFrames,
@@ -31,20 +31,13 @@ func New(numFrames int, opts ...AnimationOpt) *Animation {
 	return a
 }
 
-func Loop() AnimationOpt {
+func Loop() Opt {
 	return func(a *Animation) {
 		a.loop = true
 	}
 }
 
-func StartEnd(start, end float32) AnimationOpt {
-	return func(a *Animation) {
-		a.start = start
-		a.end = end
-	}
-}
-
-func Started() AnimationOpt {
+func Started() Opt {
 	return func(a *Animation) {
 		a.Start()
 	}
