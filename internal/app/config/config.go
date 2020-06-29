@@ -38,7 +38,11 @@ func Load() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			logger.Errorf("close loaded config failed: %v", err)
+		}
+	}()
 
 	cfg := &Config{}
 	dec := gob.NewDecoder(file)
@@ -61,7 +65,11 @@ func Save(cfg *Config) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			logger.Errorf("closing saved config failed: %v", err)
+		}
+	}()
 
 	return gob.NewEncoder(file).Encode(cfg)
 }
