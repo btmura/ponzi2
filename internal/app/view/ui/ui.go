@@ -75,10 +75,10 @@ func init() {
 
 // The UI renders the UI to view and edit the model's stocks that it observes.
 type UI struct {
-	// symbolToChartMap maps symbol to Chart. Only one entry right now.
+	// symbolToChartMap maps symbol to chart. Only one entry right now.
 	symbolToChartMap map[string]*chart.Chart
 
-	// symbolToChartThumbMap maps symbol to ChartThumbnail.
+	// symbolToChartThumbMap maps symbol to thumbnail.
 	symbolToChartThumbMap map[string]*chart.Thumb
 
 	// titleBar renders the window titleBar.
@@ -104,6 +104,9 @@ type UI struct {
 
 	// chartZoomChangeCallback is called when the chart is zoomed in or out.
 	chartZoomChangeCallback func(zoomChange chart.ZoomChange)
+
+	// chartPriceStyleButtonClickCallback is called when the bar or candlestick buttons are clicked.
+	chartPriceStyleButtonClickCallback func(priceStyle chart.PriceStyle)
 
 	// chartRefreshButtonClickCallback is called when the main chart's refresh button is clicked.
 	chartRefreshButtonClickCallback func(symbol string)
@@ -402,9 +405,10 @@ func (u *UI) handleChartZoomChangeEvent(zoomChange chart.ZoomChange) {
 func (u *UI) RunLoop(ctx context.Context, runLoopHook func(context.Context) error) error {
 start:
 	var lag float64
-	dirty := false
 	prevTime := glfw.GetTime()
 	for !u.win.ShouldClose() {
+		dirty := false
+
 		currTime := glfw.GetTime() /* seconds */
 		elapsed := currTime - prevTime
 		prevTime = currTime
@@ -415,11 +419,15 @@ start:
 		}
 
 		input := u.prepareInput()
-		u.processInput(input)
+		if u.processInput(input) {
+			dirty = true
+		}
 
 		i := 0
 		for ; i < minUpdates || i < maxUpdates && lag >= updateSec; i++ {
-			dirty = u.update()
+			if u.update() {
+				dirty = true
+			}
 			lag -= updateSec
 		}
 		if lag < 0 {
@@ -512,7 +520,7 @@ func (u *UI) prepareInput() *view.Input {
 	return input
 }
 
-func (u *UI) processInput(input *view.Input) {
+func (u *UI) processInput(input *view.Input) (dirty bool) {
 	m := u.metrics()
 
 	u.instructionsTextBox.SetBounds(m.chartBounds)
@@ -532,6 +540,8 @@ func (u *UI) processInput(input *view.Input) {
 	for _, cb := range input.FiredCallbacks() {
 		cb()
 	}
+
+	return len(input.FiredCallbacks()) != 0
 }
 
 func (u *UI) updateInputSymbolTextBox(input *view.Input) {
@@ -694,6 +704,11 @@ func (u *UI) SetChartZoomChangeCallback(cb func(chart.ZoomChange)) {
 	u.chartZoomChangeCallback = cb
 }
 
+// SetChartPriceStyleButtonClickCallback sets the callback for when the bar or candle stick buttons are clicked.
+func (u *UI) SetChartPriceStyleButtonClickCallback(cb func(newPriceStyle chart.PriceStyle)) {
+	u.chartPriceStyleButtonClickCallback = cb
+}
+
 // SetChartRefreshButtonClickCallback sets the callback for when the main chart's refresh button is clicked.
 func (u *UI) SetChartRefreshButtonClickCallback(cb func(symbol string)) {
 	u.chartRefreshButtonClickCallback = cb
@@ -715,7 +730,7 @@ func (u *UI) SetThumbClickCallback(cb func(symbol string)) {
 }
 
 // SetChart sets the main chart to the given symbol and data.
-func (u *UI) SetChart(symbol string, data chart.Data) error {
+func (u *UI) SetChart(symbol string, data chart.Data, priceStyle chart.PriceStyle) error {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		return err
 	}
@@ -725,20 +740,22 @@ func (u *UI) SetChart(symbol string, data chart.Data) error {
 		ch.Close()
 	}
 
-	ch := chart.NewChart()
+	ch := chart.NewChart(priceStyle)
 	u.symbolToChartMap[symbol] = ch
 
 	u.titleBar.SetData(data)
 	ch.SetData(data)
 
 	ch.SetBarButtonClickCallback(func() {
-		ch.SetStyle(chart.StyleBar)
-		u.sidebar.SetStyle(chart.StyleBar)
+		if u.chartPriceStyleButtonClickCallback != nil {
+			u.chartPriceStyleButtonClickCallback(chart.Bar)
+		}
 	})
 
 	ch.SetCandlestickButtonClickCallback(func() {
-		ch.SetStyle(chart.StyleCandlestick)
-		u.sidebar.SetStyle(chart.StyleCandlestick)
+		if u.chartPriceStyleButtonClickCallback != nil {
+			u.chartPriceStyleButtonClickCallback(chart.Candlestick)
+		}
 	})
 
 	ch.SetRefreshButtonClickCallback(func() {
@@ -767,12 +784,12 @@ func (u *UI) SetChart(symbol string, data chart.Data) error {
 }
 
 // AddChartThumb adds a thumbnail with the given symbol and data.
-func (u *UI) AddChartThumb(symbol string, data chart.Data) error {
+func (u *UI) AddChartThumb(symbol string, data chart.Data, priceStyle chart.PriceStyle) error {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		return err
 	}
 
-	th := chart.NewThumb()
+	th := chart.NewThumb(priceStyle)
 	u.symbolToChartThumbMap[symbol] = th
 
 	th.SetData(data)
@@ -875,4 +892,17 @@ func (u *UI) SetError(symbol string, updateErr error) error {
 	}
 
 	return nil
+}
+
+func (u *UI) SetChartPriceStyle(newPriceStyle chart.PriceStyle) {
+	if newPriceStyle == chart.PriceStyleUnspecified {
+		logger.Error("unspecified price style")
+		return
+	}
+
+	for _, ch := range u.symbolToChartMap {
+		ch.SetPriceStyle(newPriceStyle)
+	}
+
+	u.sidebar.SetPriceStyle(newPriceStyle)
 }

@@ -21,11 +21,14 @@ type Controller struct {
 	// ui is the UI that the Controller updates.
 	ui *ui.UI
 
-	// chartRange is the current data range to use for Charts.
+	// chartRange is the current data range to use for charts.
 	chartRange model.Range
 
-	// chartThumbRange is the current data range to use for ChartThumbnails.
+	// chartThumbRange is the current data range to use for thumbnails.
 	chartThumbRange model.Range
+
+	// chartPriceStyle is the current price style for charts and thumbnails.
+	chartPriceStyle chart.PriceStyle
 
 	// stockRefresher offers methods to refresh one or many stocks.
 	stockRefresher *stockRefresher
@@ -50,6 +53,7 @@ func New(iexClient iexClientInterface, token string) *Controller {
 		ui:              ui.New(),
 		chartRange:      model.OneYear,
 		chartThumbRange: model.OneYear,
+		chartPriceStyle: chart.Bar,
 		configSaver:     newConfigSaver(),
 	}
 	c.eventController = newEventController(c)
@@ -89,6 +93,10 @@ func (c *Controller) RunLoop() error {
 		}
 	}
 
+	if priceStyle := cfg.Settings.ChartSettings.PriceStyle; priceStyle != chart.PriceStyleUnspecified {
+		c.setChartPriceStyle(priceStyle)
+	}
+
 	c.ui.SetInputSymbolSubmittedCallback(func(symbol string) {
 		if err := c.setChart(ctx, symbol); err != nil {
 			logger.Errorf("setChart: %v", err)
@@ -111,6 +119,14 @@ func (c *Controller) RunLoop() error {
 		if err := c.refreshCurrentStock(ctx); err != nil {
 			logger.Errorf("refreshCurrentStock: %v", err)
 		}
+	})
+
+	c.ui.SetChartPriceStyleButtonClickCallback(func(newPriceStyle chart.PriceStyle) {
+		if newPriceStyle == chart.PriceStyleUnspecified {
+			logger.Error("unspecified price style")
+			return
+		}
+		c.setChartPriceStyle(newPriceStyle)
 	})
 
 	c.ui.SetChartRefreshButtonClickCallback(func(symbol string) {
@@ -177,7 +193,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 		return err
 	}
 
-	if err := c.ui.SetChart(symbol, data); err != nil {
+	if err := c.ui.SetChart(symbol, data, c.chartPriceStyle); err != nil {
 		return err
 	}
 
@@ -185,7 +201,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 		return err
 	}
 
-	c.configSaver.save(toConfig(c.model))
+	c.configSaver.save(c.makeConfig())
 
 	return nil
 }
@@ -210,7 +226,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 		return err
 	}
 
-	if err := c.ui.AddChartThumb(symbol, data); err != nil {
+	if err := c.ui.AddChartThumb(symbol, data, c.chartPriceStyle); err != nil {
 		return err
 	}
 
@@ -218,7 +234,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 		return err
 	}
 
-	c.configSaver.save(toConfig(c.model))
+	c.configSaver.save(c.makeConfig())
 
 	return nil
 }
@@ -241,7 +257,7 @@ func (c *Controller) removeChartThumb(symbol string) error {
 		return err
 	}
 
-	c.configSaver.save(toConfig(c.model))
+	c.configSaver.save(c.makeConfig())
 
 	return nil
 }
@@ -257,9 +273,24 @@ func (c *Controller) setSidebarSymbols(symbols []string) error {
 		return err
 	}
 
-	c.configSaver.save(toConfig(c.model))
+	c.configSaver.save(c.makeConfig())
 
 	return nil
+}
+
+func (c *Controller) setChartPriceStyle(newPriceStyle chart.PriceStyle) {
+	if newPriceStyle == chart.PriceStyleUnspecified {
+		logger.Error("unspecified price style")
+		return
+	}
+
+	if newPriceStyle == c.chartPriceStyle {
+		return
+	}
+
+	c.chartPriceStyle = newPriceStyle
+	c.ui.SetChartPriceStyle(newPriceStyle)
+	c.configSaver.save(c.makeConfig())
 }
 
 func (c *Controller) chartData(symbol string, dataRange model.Range) (chart.Data, error) {
@@ -404,13 +435,14 @@ func nextRange(r model.Range, zoomChange chart.ZoomChange) model.Range {
 	return zoomRanges[i]
 }
 
-func toConfig(model *model.Model) *config.Config {
+func (c *Controller) makeConfig() *config.Config {
 	cfg := &config.Config{}
-	if s := model.CurrentSymbol(); s != "" {
+	if s := c.model.CurrentSymbol(); s != "" {
 		cfg.CurrentStock = &config.Stock{Symbol: s}
 	}
-	for _, s := range model.SidebarSymbols() {
+	for _, s := range c.model.SidebarSymbols() {
 		cfg.Stocks = append(cfg.Stocks, &config.Stock{Symbol: s})
 	}
+	cfg.Settings.ChartSettings.PriceStyle = c.chartPriceStyle
 	return cfg
 }

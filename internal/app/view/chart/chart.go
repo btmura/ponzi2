@@ -45,15 +45,15 @@ var (
 	cursorVertLine  = vao.VertLine(view.LightGray, view.LightGray)
 )
 
-// Style is the chart style.
-type Style int
+// PriceStyle is visual style of the chart's prices.
+type PriceStyle int
 
-// Style values.
-//go:generate stringer -type=Style
+// PriceStyle values.
+//go:generate stringer -type=PriceStyle
 const (
-	StyleUnspecified Style = iota
-	StyleBar
-	StyleCandlestick
+	PriceStyleUnspecified PriceStyle = iota
+	Bar
+	Candlestick
 )
 
 // ZoomChange specifies whether the user has zoomed in or not.
@@ -129,7 +129,12 @@ type Chart struct {
 }
 
 // NewChart creates a new Chart.
-func NewChart() *Chart {
+func NewChart(priceStyle PriceStyle) *Chart {
+	if priceStyle == PriceStyleUnspecified {
+		logger.Error("unspecified price style")
+		return nil
+	}
+
 	return &Chart{
 		frameBubble: rect.NewBubble(chartRounding),
 		header: newHeader(&headerArgs{
@@ -143,7 +148,7 @@ func NewChart() *Chart {
 			Padding:                 chartSectionPadding,
 		}),
 
-		prices:        newPrice(),
+		prices:        newPrice(priceStyle),
 		priceAxis:     new(priceAxis),
 		priceCursor:   new(priceCursor),
 		priceTimeline: newTimeline(view.TransparentLightGray, view.LightGray, view.TransparentGray, view.Gray),
@@ -169,13 +174,13 @@ func NewChart() *Chart {
 	}
 }
 
-// SetStyle sets the Chart's style.
-func (ch *Chart) SetStyle(style Style) {
-	if style == StyleUnspecified {
-		logger.Error("unspecified style")
+// SetPriceStyle sets the chart's price style.
+func (ch *Chart) SetPriceStyle(newPriceStyle PriceStyle) {
+	if newPriceStyle == PriceStyleUnspecified {
+		logger.Error("unspecified price style")
 		return
 	}
-	ch.prices.SetStyle(style)
+	ch.prices.SetStyle(newPriceStyle)
 }
 
 // SetLoading toggles the Chart's loading indicator.

@@ -79,13 +79,13 @@ func newSidebar() *sidebar {
 	return new(sidebar)
 }
 
-func (s *sidebar) SetStyle(style chart.Style) {
-	if style == chart.StyleUnspecified {
-		logger.Error("unspecified style")
+func (s *sidebar) SetPriceStyle(newPriceStyle chart.PriceStyle) {
+	if newPriceStyle == chart.PriceStyleUnspecified {
+		logger.Error("unspecified price style")
 		return
 	}
 	for _, slot := range s.slots {
-		slot.thumb.SetStyle(style)
+		slot.thumb.SetPriceStyle(newPriceStyle)
 	}
 }
 

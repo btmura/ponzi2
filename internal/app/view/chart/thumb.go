@@ -76,7 +76,12 @@ type Thumb struct {
 }
 
 // NewThumb creates a Thumb.
-func NewThumb() *Thumb {
+func NewThumb(priceStyle PriceStyle) *Thumb {
+	if priceStyle == PriceStyleUnspecified {
+		logger.Error("unspecified price style")
+		return nil
+	}
+
 	return &Thumb{
 		frameBubble: rect.NewBubble(thumbRounding),
 
@@ -88,7 +93,7 @@ func NewThumb() *Thumb {
 			Padding:                 thumbSectionPadding,
 		}),
 
-		prices:        newPrice(),
+		prices:        newPrice(priceStyle),
 		priceCursor:   new(priceCursor),
 		priceTimeline: newTimeline(view.TransparentLightGray, view.LightGray, view.TransparentGray, view.Gray),
 
@@ -101,6 +106,16 @@ func NewThumb() *Thumb {
 		loading:        true,
 		fadeIn:         animation.New(1 * view.FPS),
 	}
+}
+
+// SetPriceStyle sets the style of the thumbnail.
+func (t *Thumb) SetPriceStyle(newPriceStyle PriceStyle) {
+	if newPriceStyle == PriceStyleUnspecified {
+		logger.Error("unspecified price style")
+		return
+	}
+
+	t.prices.SetStyle(newPriceStyle)
 }
 
 // SetLoading toggles the Chart's loading indicator.
@@ -116,15 +131,6 @@ func (t *Thumb) SetError(err error) {
 		t.errorTextBox.SetText(fmt.Sprintf("ERROR: %v", err))
 	}
 	t.header.SetError(err)
-}
-
-// SetStyle sets the style of the thumbnail.
-func (t *Thumb) SetStyle(style Style) {
-	if style == StyleUnspecified {
-		logger.Error("unspecified style")
-		return
-	}
-	t.prices.SetStyle(style)
 }
 
 // SetData sets the data to be shown on the chart.

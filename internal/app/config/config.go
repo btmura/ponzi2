@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/btmura/ponzi2/internal/app/view/chart"
 	"github.com/btmura/ponzi2/internal/logger"
 )
 
@@ -15,11 +16,22 @@ import (
 type Config struct {
 	CurrentStock *Stock
 	Stocks       []*Stock
+	Settings     Settings
 }
 
 // Stock identifies a single stock by symbol.
 type Stock struct {
 	Symbol string
+}
+
+// Settings has the user's settings.
+type Settings struct {
+	ChartSettings ChartSettings
+}
+
+// ChartSettings has the user's chart settings.
+type ChartSettings struct {
+	PriceStyle chart.PriceStyle
 }
 
 // Load loads the user's config from disk.

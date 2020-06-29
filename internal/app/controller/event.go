@@ -76,7 +76,7 @@ func (c *eventController) takeEventLocked() []event {
 	return es
 }
 
-// process takes an event fromt he queue and processes it.
+// process takes an event from the queue and processes it.
 func (c *eventController) process(ctx context.Context) error {
 	for _, e := range c.takeEventLocked() {
 		switch {
