@@ -29,7 +29,7 @@ func NewStoppedFader(numFrames int) *Fader {
 func (f *Fader) FadeIn() {
 	if f.fadingOut {
 		f.fadingOut = false
-		f.fade = f.fade.Rewinded()
+		f.fade = f.fade.Reverse()
 	}
 	f.fade.Start()
 }
@@ -38,7 +38,7 @@ func (f *Fader) FadeIn() {
 func (f *Fader) FadeOut() {
 	if !f.fadingOut {
 		f.fadingOut = true
-		f.fade = f.fade.Rewinded()
+		f.fade = f.fade.Reverse()
 	}
 	f.fade.Start()
 }

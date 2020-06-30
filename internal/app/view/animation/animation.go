@@ -43,11 +43,12 @@ func Started() Opt {
 	}
 }
 
-func (a *Animation) Rewinded() *Animation {
+func (a *Animation) Reverse() *Animation {
 	return &Animation{
-		start:     a.Value(0),
+		start:     a.end,
 		end:       a.start,
-		numFrames: a.currFrame + 1,
+		currFrame: a.numFrames - a.currFrame - 1,
+		numFrames: a.numFrames,
 		loop:      a.loop,
 		state:     a.state,
 	}

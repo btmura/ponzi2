@@ -204,48 +204,48 @@ func TestAnimation_Start_Stop_Update_Value_Loop(t *testing.T) {
 	checkValue(t, 1.0, a, 0)
 }
 
-func TestAnimation_Rewinded(t *testing.T) {
+func TestAnimation_Reverse(t *testing.T) {
 	a := New(3)
-	b := a.Rewinded()
+	b := a.Reverse()
 
 	want := &Animation{
-		start:     0,
+		start:     1,
 		end:       0,
-		currFrame: 0,
-		numFrames: 1,
+		currFrame: 2,
+		numFrames: 3,
 		state:     Stopped,
 	}
 	checkFields(t, want, b)
 	checkValue(t, 0, b, 0)
 
 	a.Start()
-	b = a.Rewinded()
+	b = a.Reverse()
 
 	want = &Animation{
-		start:     0,
+		start:     1,
 		end:       0,
-		currFrame: 0,
-		numFrames: 1,
+		currFrame: 2,
+		numFrames: 3,
 		state:     Running,
 	}
 	checkFields(t, want, b)
 	checkValue(t, 0, b, 0)
 
 	checkUpdate(t, true, a)
-	b = a.Rewinded()
+	b = a.Reverse()
 
 	want = &Animation{
-		start:     0.5,
+		start:     1,
 		end:       0,
-		currFrame: 0,
-		numFrames: 2,
+		currFrame: 1,
+		numFrames: 3,
 		state:     Running,
 	}
 	checkFields(t, want, b)
 	checkValue(t, 0.5, b, 0)
 
 	checkUpdate(t, true, a)
-	b = a.Rewinded()
+	b = a.Reverse()
 
 	want = &Animation{
 		start:     1,
