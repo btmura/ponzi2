@@ -54,7 +54,7 @@ func newPrice(style PriceStyle) *price {
 	return &price{
 		style: style,
 		faders: map[PriceStyle]*view.Fader{
-			Bar:         view.NewStartedFader(1.5 * view.FPS),
+			Bar:         view.NewStoppedFader(1.5 * view.FPS),
 			Candlestick: view.NewStoppedFader(1.5 * view.FPS),
 		},
 	}
@@ -72,14 +72,6 @@ func (p *price) SetStyle(newStyle PriceStyle) {
 	}
 
 	p.style = newStyle
-
-	for style, fader := range p.faders {
-		if style == p.style {
-			fader.FadeIn()
-		} else {
-			fader.FadeOut()
-		}
-	}
 }
 
 type priceData struct {
@@ -113,6 +105,14 @@ func (p *price) SetBounds(bounds image.Rectangle) {
 }
 
 func (p *price) Update() (dirty bool) {
+	for s, fader := range p.faders {
+		if s == p.style {
+			fader.FadeIn()
+		} else {
+			fader.FadeOut()
+		}
+	}
+
 	for _, fader := range p.faders {
 		if fader.Update() {
 			dirty = true

@@ -900,6 +900,8 @@ func (u *UI) SetChartPriceStyle(newPriceStyle chart.PriceStyle) {
 		return
 	}
 
+	defer u.WakeLoop()
+
 	for _, ch := range u.symbolToChartMap {
 		ch.SetPriceStyle(newPriceStyle)
 	}
