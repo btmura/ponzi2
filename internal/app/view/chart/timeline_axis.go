@@ -18,8 +18,8 @@ type timelineAxis struct {
 	// renderable is true if this should be rendered.
 	renderable bool
 
-	// dataRange is range of the data being presented.
-	dataRange model.Range
+	// interval is the interval of the data being presented.
+	interval model.Interval
 
 	// MaxLabelSize is the maximum label size useful for rendering measurements.
 	MaxLabelSize image.Point
@@ -32,7 +32,7 @@ type timelineAxis struct {
 }
 
 type timelineAxisData struct {
-	Range                model.Range
+	Interval             model.Interval
 	TradingSessionSeries *model.TradingSessionSeries
 }
 
@@ -46,12 +46,12 @@ func (t *timelineAxis) SetData(data timelineAxisData) {
 		return
 	}
 
-	t.dataRange = data.Range
+	t.interval = data.Interval
 
-	txt := timelineLabelText(t.dataRange, longTime)
+	txt := timelineLabelText(t.interval, longTime)
 	t.MaxLabelSize = axisLabelTextRenderer.Measure(txt)
 
-	t.labels = makeTimelineLabels(t.dataRange, ts.TradingSessions)
+	t.labels = makeTimelineLabels(t.interval, ts.TradingSessions)
 
 	t.renderable = true
 }
@@ -85,19 +85,19 @@ type timelineLabel struct {
 	size    image.Point
 }
 
-func timelineLabelText(r model.Range, t time.Time) string {
-	switch r {
-	case model.OneDay:
+func timelineLabelText(interval model.Interval, t time.Time) string {
+	switch interval {
+	case model.Intraday:
 		return t.Format("3:04")
-	case model.OneYear:
+	case model.Daily:
 		return t.Format("Jan")
 	default:
-		logger.Errorf("bad range: %v", r)
+		logger.Errorf("bad interval: %v", interval)
 		return ""
 	}
 }
 
-func makeTimelineLabels(r model.Range, ts []*model.TradingSession) []timelineLabel {
+func makeTimelineLabels(interval model.Interval, ts []*model.TradingSession) []timelineLabel {
 	var ls []timelineLabel
 
 	for i := range ts {
@@ -107,15 +107,15 @@ func makeTimelineLabels(r model.Range, ts []*model.TradingSession) []timelineLab
 		}
 
 		// Skip if the values being printed aren't changing.
-		switch r {
-		case model.OneDay:
+		switch interval {
+		case model.Intraday:
 			prev := ts[i-1].Date.Hour()
 			curr := ts[i].Date.Hour()
 			if prev == curr {
 				continue
 			}
 
-		case model.OneYear:
+		case model.Daily:
 			pm := ts[i-1].Date.Month()
 			m := ts[i].Date.Month()
 			if pm == m {
@@ -123,13 +123,13 @@ func makeTimelineLabels(r model.Range, ts []*model.TradingSession) []timelineLab
 			}
 
 		default:
-			logger.Errorf("bad range: %v", r)
+			logger.Errorf("bad interval: %v", interval)
 			return nil
 		}
 
 		// Generate the label text and its position.
 
-		txt := timelineLabelText(r, ts[i].Date)
+		txt := timelineLabelText(interval, ts[i].Date)
 
 		ls = append(ls, timelineLabel{
 			percent: float32(i) / float32(len(ts)),

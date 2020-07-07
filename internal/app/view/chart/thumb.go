@@ -167,11 +167,11 @@ func (t *Thumb) SetData(data Data) {
 
 	t.prices.SetData(priceData{ts})
 	t.priceCursor.SetData(priceCursorData{ts})
-	t.priceTimeline.SetData(timelineData{dc.Range, ts})
+	t.priceTimeline.SetData(timelineData{dc.Interval, ts})
 
 	t.volume.SetData(volumeData{ts, vs})
 	t.volumeCursor.SetData(volumeCursorData{ts})
-	t.volumeTimeline.SetData(timelineData{dc.Range, ts})
+	t.volumeTimeline.SetData(timelineData{dc.Interval, ts})
 }
 
 // SetBounds sets the bounds to draw within.

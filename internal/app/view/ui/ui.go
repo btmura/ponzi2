@@ -828,14 +828,14 @@ func (u *UI) RemoveChartThumb(symbol string) error {
 	return nil
 }
 
-// SetLoading sets the charts and slots matching the symbol and range to loading.
-func (u *UI) SetLoading(symbol string, dataRange model.Range) error {
+// SetLoading sets the charts and slots matching the symbol and interval to loading.
+func (u *UI) SetLoading(symbol string, interval model.Interval) error {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		return err
 	}
 
-	if dataRange == model.RangeUnspecified {
-		return errors.Errorf("range not set")
+	if interval == model.IntervalUnspecified {
+		return errors.Errorf("unspecified interval")
 	}
 
 	for s, ch := range u.symbolToChartMap {

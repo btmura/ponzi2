@@ -48,7 +48,7 @@ func newTimeline(majorTopColor, majorBottomColor, minorTopColor, minorBottomColo
 }
 
 type timelineData struct {
-	Range                model.Range
+	Interval             model.Interval
 	TradingSessionSeries *model.TradingSessionSeries
 }
 
@@ -62,14 +62,14 @@ func (t *timeline) SetData(data timelineData) {
 		return
 	}
 
-	majorValues, minorValues := weekLineValues(data.Range, ts.TradingSessions)
+	majorValues, minorValues := weekLineValues(data.Interval, ts.TradingSessions)
 	t.majorLineVAO = vao.VertRuleSet(majorValues, [2]float32{0, 1}, t.majorBottomColor, t.majorTopColor)
 	t.minorLineVAO = vao.VertRuleSet(minorValues, [2]float32{0, 1}, t.minorBottomColor, t.minorTopColor)
 
 	t.renderable = true
 }
 
-func weekLineValues(r model.Range, ts []*model.TradingSession) (majorValues, minorValues []float32) {
+func weekLineValues(interval model.Interval, ts []*model.TradingSession) (majorValues, minorValues []float32) {
 	pendingMonthChanged := false
 	for i := range ts {
 		curr := ts[i].Date
@@ -101,15 +101,15 @@ func weekLineValues(r model.Range, ts []*model.TradingSession) (majorValues, min
 			minorValues = append(minorValues, float32(i)/float32(len(ts)))
 		}
 
-		switch r {
-		case model.OneDay:
+		switch interval {
+		case model.Intraday:
 			if hourChanged {
 				continue
 			}
 
 			addMinor()
 
-		case model.OneYear:
+		case model.Daily:
 			if !weekChanged {
 				continue
 			}
@@ -122,7 +122,7 @@ func weekLineValues(r model.Range, ts []*model.TradingSession) (majorValues, min
 			}
 
 		default:
-			logger.Errorf("bad range: %v", r)
+			logger.Errorf("bad interval: %v", interval)
 		}
 	}
 

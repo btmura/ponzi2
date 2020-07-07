@@ -64,17 +64,17 @@ func (s *stockRefresher) stop() {
 	s.refreshTicker.Stop()
 }
 
-func (s *stockRefresher) refreshOne(ctx context.Context, symbol string, dataRange model.Range) error {
+func (s *stockRefresher) refreshOne(ctx context.Context, symbol string, interval model.Interval) error {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		return err
 	}
 
-	if dataRange == model.RangeUnspecified {
+	if interval == model.IntervalUnspecified {
 		return errors.Errorf("range not set")
 	}
 
 	d := new(dataRequestBuilder)
-	if err := d.add([]string{symbol}, dataRange); err != nil {
+	if err := d.add([]string{symbol}, interval); err != nil {
 		return err
 	}
 	return s.refresh(ctx, d)
@@ -94,7 +94,7 @@ func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) err
 		for _, sym := range req.symbols {
 			s.eventController.addEventLocked(event{
 				symbol:         sym,
-				dataRange:      req.dataRange,
+				interval:       req.interval,
 				refreshStarted: true,
 			})
 		}
@@ -162,9 +162,9 @@ func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) err
 					continue
 				}
 
-				switch req.dataRange {
-				case model.OneDay:
-					ch, err := modelOneDayChart(stockData.chart)
+				switch req.interval {
+				case model.Intraday:
+					ch, err := modelIntradayChart(stockData.chart)
 					es = append(es, event{
 						symbol:    sym,
 						quote:     q,
@@ -172,8 +172,8 @@ func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) err
 						updateErr: err,
 					})
 
-				case model.OneYear:
-					ch, err := modelOneYearChart(stockData.quote, stockData.chart)
+				case model.Daily:
+					ch, err := modelDailyChart(stockData.quote, stockData.chart)
 					es = append(es, event{
 						symbol:    sym,
 						quote:     q,
@@ -202,18 +202,18 @@ func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) err
 
 // dataRequestBuilder accumulates symbols and data ranges and builds a slice of data requests.
 type dataRequestBuilder struct {
-	range2Symbols map[model.Range][]string
+	interval2Symbols map[model.Interval][]string
 }
 
-func (d *dataRequestBuilder) add(symbols []string, dataRange model.Range) error {
+func (d *dataRequestBuilder) add(symbols []string, interval model.Interval) error {
 	for _, s := range symbols {
 		if err := model.ValidateSymbol(s); err != nil {
 			return err
 		}
 	}
 
-	if dataRange == model.RangeUnspecified {
-		return errors.Errorf("range not set")
+	if interval == model.IntervalUnspecified {
+		return errors.Errorf("interval not set")
 	}
 
 	if len(symbols) == 0 {
@@ -221,7 +221,7 @@ func (d *dataRequestBuilder) add(symbols []string, dataRange model.Range) error 
 	}
 
 	sset := make(map[string]bool)
-	for _, s := range d.range2Symbols[dataRange] {
+	for _, s := range d.interval2Symbols[interval] {
 		sset[s] = true
 	}
 	for _, s := range symbols {
@@ -233,38 +233,38 @@ func (d *dataRequestBuilder) add(symbols []string, dataRange model.Range) error 
 		ss = append(ss, s)
 	}
 
-	if d.range2Symbols == nil {
-		d.range2Symbols = make(map[model.Range][]string)
+	if d.interval2Symbols == nil {
+		d.interval2Symbols = make(map[model.Interval][]string)
 	}
-	d.range2Symbols[dataRange] = ss
+	d.interval2Symbols[interval] = ss
 
 	return nil
 }
 
 type dataRequest struct {
 	symbols       []string
-	dataRange     model.Range
+	interval      model.Interval
 	quotesRequest *iex.GetQuotesRequest
 	chartsRequest *iex.GetChartsRequest
 }
 
 func (d *dataRequestBuilder) dataRequests(token string) ([]*dataRequest, error) {
 	var reqs []*dataRequest
-	for r, ss := range d.range2Symbols {
-		var ir iex.Range
+	for interval, ss := range d.interval2Symbols {
+		var iexRange iex.Range
 
-		switch r {
-		case model.OneDay:
-			ir = iex.OneDay
-		case model.OneYear:
-			ir = iex.TwoYears // Need additional data for weekly stochastics.
+		switch interval {
+		case model.Intraday:
+			iexRange = iex.OneDay
+		case model.Daily:
+			iexRange = iex.TwoYears // Need additional data for weekly stochastics.
 		default:
-			return nil, errors.Errorf("bad range: %v", r)
+			return nil, errors.Errorf("bad interval: %v", interval)
 		}
 
 		reqs = append(reqs, &dataRequest{
-			symbols:   ss,
-			dataRange: r,
+			symbols:  ss,
+			interval: interval,
 			quotesRequest: &iex.GetQuotesRequest{
 				Token:   token,
 				Symbols: ss,
@@ -272,7 +272,7 @@ func (d *dataRequestBuilder) dataRequests(token string) ([]*dataRequest, error) 
 			chartsRequest: &iex.GetChartsRequest{
 				Token:   token,
 				Symbols: ss,
-				Range:   ir,
+				Range:   iexRange,
 			},
 		})
 	}

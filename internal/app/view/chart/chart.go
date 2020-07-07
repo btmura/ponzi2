@@ -224,13 +224,13 @@ func (ch *Chart) SetData(data Data) {
 		return
 	}
 
-	switch dc.Range {
-	case model.OneDay:
+	switch dc.Interval {
+	case model.Intraday:
 		ch.showMovingAverages = false
-	case model.OneYear:
+	case model.Daily:
 		ch.showMovingAverages = true
 	default:
-		logger.Errorf("bad range: %v", dc.Range)
+		logger.Errorf("bad interval: %v", dc.Interval)
 		return
 	}
 
@@ -239,7 +239,7 @@ func (ch *Chart) SetData(data Data) {
 	ch.prices.SetData(priceData{ts})
 	ch.priceAxis.SetData(priceAxisData{ts})
 	ch.priceCursor.SetData(priceCursorData{ts})
-	ch.priceTimeline.SetData(timelineData{dc.Range, ts})
+	ch.priceTimeline.SetData(timelineData{dc.Interval, ts})
 
 	if ch.showMovingAverages {
 		ch.movingAverage5.SetData(movingAverageData{ts, dc.MovingAverageSeries20})
@@ -250,10 +250,10 @@ func (ch *Chart) SetData(data Data) {
 	ch.volume.SetData(volumeData{ts, dc.AverageVolumeSeries})
 	ch.volumeAxis.SetData(volumeAxisData{ts})
 	ch.volumeCursor.SetData(volumeCursorData{ts})
-	ch.volumeTimeline.SetData(timelineData{dc.Range, ts})
+	ch.volumeTimeline.SetData(timelineData{dc.Interval, ts})
 
-	ch.timelineAxis.SetData(timelineAxisData{dc.Range, ts})
-	ch.timelineCursor.SetData(timelineCursorData{dc.Range, ts})
+	ch.timelineAxis.SetData(timelineAxisData{dc.Interval, ts})
+	ch.timelineCursor.SetData(timelineCursorData{dc.Interval, ts})
 
 	ch.legend.SetData(legendData{
 		ts,

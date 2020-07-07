@@ -32,7 +32,7 @@ type timelineCursor struct {
 }
 
 type timelineCursorData struct {
-	Range                model.Range
+	Interval             model.Interval
 	TradingSessionSeries *model.TradingSessionSeries
 }
 
@@ -48,13 +48,13 @@ func (t *timelineCursor) SetData(data timelineCursorData) {
 
 	t.data = data
 
-	switch data.Range {
-	case model.OneDay:
+	switch data.Interval {
+	case model.Intraday:
 		t.layout = "03:04"
-	case model.OneYear:
+	case model.Daily:
 		t.layout = "1/2/06"
 	default:
-		logger.Errorf("bad range: %v", data.Range)
+		logger.Errorf("bad interval: %v", data.Interval)
 		return
 	}
 

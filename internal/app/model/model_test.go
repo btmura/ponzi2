@@ -232,7 +232,7 @@ func TestUpdateStockChart(t *testing.T) {
 	// Add SPY to the model so UpdateStockChart works.
 	m.SetCurrentSymbol("SPY")
 
-	if err := m.UpdateStockChart("", &Chart{Range: OneDay}); err == nil {
+	if err := m.UpdateStockChart("", &Chart{Interval: Intraday}); err == nil {
 		t.Errorf("UpdateStockChart should return an error when the input symbol is invalid.")
 	}
 
@@ -240,7 +240,7 @@ func TestUpdateStockChart(t *testing.T) {
 		t.Errorf("UpdateStockChart should return an error when the input chart is invalid.")
 	}
 
-	c1 := &Chart{Range: OneDay}
+	c1 := &Chart{Interval: Intraday}
 	if err := m.UpdateStockChart("SPY", c1); err != nil {
 		t.Errorf("UpdateStcokChart should not return an error if the inputs are valid.")
 	}
@@ -249,7 +249,7 @@ func TestUpdateStockChart(t *testing.T) {
 		Symbol: "SPY",
 		Charts: []*Chart{
 			{
-				Range:          OneDay,
+				Interval:       Intraday,
 				LastUpdateTime: time.Date(2019, time.March, 10, 30, 0, 0, 0, time.UTC),
 			},
 		},
@@ -263,7 +263,7 @@ func TestUpdateStockChart(t *testing.T) {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
-	c2 := &Chart{Range: OneYear}
+	c2 := &Chart{Interval: Daily}
 	if err := m.UpdateStockChart("SPY", c2); err != nil {
 		t.Errorf("UpdateStockChart should not return an error if the inputs are valid.")
 	}
@@ -272,11 +272,11 @@ func TestUpdateStockChart(t *testing.T) {
 		Symbol: "SPY",
 		Charts: []*Chart{
 			{
-				Range:          OneDay,
+				Interval:       Intraday,
 				LastUpdateTime: time.Date(2019, time.March, 10, 30, 0, 0, 0, time.UTC),
 			},
 			{
-				Range:          OneYear,
+				Interval:       Daily,
 				LastUpdateTime: time.Date(2019, time.March, 10, 30, 0, 0, 0, time.UTC),
 			},
 		},
@@ -403,7 +403,7 @@ func TestValidateChart(t *testing.T) {
 	}{
 		{
 			desc:  "valid",
-			input: &Chart{Range: OneDay},
+			input: &Chart{Interval: Intraday},
 		},
 		{
 			desc:    "missing range",

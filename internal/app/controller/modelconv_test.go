@@ -9,7 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestModelOneDayChart(t *testing.T) {
+func TestModelIntradayChart(t *testing.T) {
 	for _, tt := range []struct {
 		desc    string
 		input   *iex.Chart
@@ -30,7 +30,7 @@ func TestModelOneDayChart(t *testing.T) {
 				},
 			},
 			want: &model.Chart{
-				Range: model.OneDay,
+				Interval: model.Intraday,
 				TradingSessionSeries: &model.TradingSessionSeries{
 					TradingSessions: []*model.TradingSession{
 						{
@@ -47,7 +47,7 @@ func TestModelOneDayChart(t *testing.T) {
 		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
-			got, gotErr := modelOneDayChart(tt.input)
+			got, gotErr := modelIntradayChart(tt.input)
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("diff (-want, +got)\n%s", diff)

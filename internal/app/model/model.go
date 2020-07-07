@@ -40,7 +40,7 @@ type Stock struct {
 
 // Chart has multiple series of data to be graphed.
 type Chart struct {
-	Range                  Range
+	Interval               Interval
 	TradingSessionSeries   *TradingSessionSeries
 	MovingAverageSeries20  *MovingAverageSeries
 	MovingAverageSeries50  *MovingAverageSeries
@@ -82,15 +82,15 @@ const (
 	LastTrade
 )
 
-// Range is the range to specify in the request.
-type Range int
+// Interval is the interval spanned by each trading session.
+type Interval int
 
-// Range values.
-//go:generate stringer -type=Range
+// Interval values.
+//go:generate stringer -type=Interval
 const (
-	RangeUnspecified Range = iota
-	OneDay
-	OneYear
+	IntervalUnspecified Interval = iota
+	Intraday
+	Daily
 )
 
 // TradingSessionSeries is a time series of trading sessions.
@@ -387,7 +387,7 @@ func (m *Model) UpdateStockChart(symbol string, chart *Chart) error {
 	ch.LastUpdateTime = now()
 
 	for i := range st.Charts {
-		if st.Charts[i].Range == ch.Range {
+		if st.Charts[i].Interval == ch.Interval {
 			st.Charts[i] = ch
 			return nil
 		}
@@ -436,8 +436,8 @@ func ValidateChart(ch *Chart) error {
 		return errors.Errorf("missing chart")
 	}
 
-	if ch.Range == RangeUnspecified {
-		return errors.Errorf("missing range")
+	if ch.Interval == IntervalUnspecified {
+		return errors.Errorf("missing interval")
 	}
 
 	return nil

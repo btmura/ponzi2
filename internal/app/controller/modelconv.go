@@ -19,7 +19,7 @@ const (
 	d = 3
 )
 
-func modelOneDayChart(chart *iex.Chart) (*model.Chart, error) {
+func modelIntradayChart(chart *iex.Chart) (*model.Chart, error) {
 	// TODO(btmura): remove duplication with modelTradingSessions
 	var ts []*model.TradingSession
 	for _, p := range chart.ChartPoints {
@@ -39,14 +39,14 @@ func modelOneDayChart(chart *iex.Chart) (*model.Chart, error) {
 	})
 
 	return &model.Chart{
-		Range: model.OneDay,
+		Interval: model.Intraday,
 		TradingSessionSeries: &model.TradingSessionSeries{
 			TradingSessions: ts,
 		},
 	}, nil
 }
 
-func modelOneYearChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
+func modelDailyChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
 	ds := modelTradingSessions(quote, chart)
 	ws := weeklyModelTradingSessions(ds)
 
@@ -108,7 +108,7 @@ func modelOneYearChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error)
 	}
 
 	return &model.Chart{
-		Range:                  model.OneYear,
+		Interval:               model.Daily,
 		TradingSessionSeries:   &model.TradingSessionSeries{TradingSessions: ds},
 		MovingAverageSeries20:  &model.MovingAverageSeries{MovingAverages: m20},
 		MovingAverageSeries50:  &model.MovingAverageSeries{MovingAverages: m50},
@@ -159,19 +159,6 @@ func modelSource(src iex.Source) model.Source {
 	default:
 		logger.Errorf("unrecognized iex source: %v", src)
 		return model.SourceUnspecified
-	}
-}
-
-func modelRange(r iex.Range) (model.Range, error) {
-	switch r {
-	case iex.RangeUnspecified:
-		return model.RangeUnspecified, nil
-	case iex.OneDay:
-		return model.OneDay, nil
-	case iex.TwoYears:
-		return model.OneYear, nil
-	default:
-		return 0, errors.Errorf("unrecognized iex range: %v", r)
 	}
 }
 

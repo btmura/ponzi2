@@ -21,11 +21,11 @@ type Controller struct {
 	// ui is the UI that the Controller updates.
 	ui *ui.UI
 
-	// chartRange is the current data range to use for charts.
-	chartRange model.Range
+	// chartInterval is the current interval to use for charts.
+	chartInterval model.Interval
 
-	// chartThumbRange is the current data range to use for thumbnails.
-	chartThumbRange model.Range
+	// chartThumbInterval is the current interval to use for thumbnails.
+	chartThumbInterval model.Interval
 
 	// chartPriceStyle is the current price style for charts and thumbnails.
 	chartPriceStyle chart.PriceStyle
@@ -49,12 +49,12 @@ type iexClientInterface interface {
 // New creates a new Controller.
 func New(iexClient iexClientInterface, token string) *Controller {
 	c := &Controller{
-		model:           model.New(),
-		ui:              ui.New(),
-		chartRange:      model.OneYear,
-		chartThumbRange: model.OneYear,
-		chartPriceStyle: chart.Bar,
-		configSaver:     newConfigSaver(),
+		model:              model.New(),
+		ui:                 ui.New(),
+		chartInterval:      model.Daily,
+		chartThumbInterval: model.Daily,
+		chartPriceStyle:    chart.Bar,
+		configSaver:        newConfigSaver(),
 	}
 	c.eventController = newEventController(c)
 	c.stockRefresher = newStockRefresher(iexClient, token, c.eventController)
@@ -110,12 +110,12 @@ func (c *Controller) RunLoop() error {
 	})
 
 	c.ui.SetChartZoomChangeCallback(func(zoomChange chart.ZoomChange) {
-		r := nextRange(c.chartRange, zoomChange)
-		if c.chartRange == r {
+		interval := nextInterval(c.chartInterval, zoomChange)
+		if interval == c.chartInterval {
 			return
 		}
 
-		c.chartRange = r
+		c.chartInterval = interval
 		if err := c.refreshCurrentStock(ctx); err != nil {
 			logger.Errorf("refreshCurrentStock: %v", err)
 		}
@@ -188,7 +188,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 		return c.refreshCurrentStock(ctx)
 	}
 
-	data, err := c.chartData(symbol, c.chartRange)
+	data, err := c.chartData(symbol, c.chartInterval)
 	if err != nil {
 		return err
 	}
@@ -218,10 +218,10 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 
 	// If the stock is already added, just refresh it.
 	if !added {
-		return c.stockRefresher.refreshOne(ctx, symbol, c.chartThumbRange)
+		return c.stockRefresher.refreshOne(ctx, symbol, c.chartThumbInterval)
 	}
 
-	data, err := c.chartData(symbol, c.chartThumbRange)
+	data, err := c.chartData(symbol, c.chartThumbInterval)
 	if err != nil {
 		return err
 	}
@@ -230,7 +230,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 		return err
 	}
 
-	if err := c.stockRefresher.refreshOne(ctx, symbol, c.chartThumbRange); err != nil {
+	if err := c.stockRefresher.refreshOne(ctx, symbol, c.chartThumbInterval); err != nil {
 		return err
 	}
 
@@ -293,7 +293,7 @@ func (c *Controller) setChartPriceStyle(newPriceStyle chart.PriceStyle) {
 	c.configSaver.save(c.makeConfig())
 }
 
-func (c *Controller) chartData(symbol string, dataRange model.Range) (chart.Data, error) {
+func (c *Controller) chartData(symbol string, interval model.Interval) (chart.Data, error) {
 	if symbol == "" {
 		return chart.Data{}, errors.Errorf("missing symbol")
 	}
@@ -310,7 +310,7 @@ func (c *Controller) chartData(symbol string, dataRange model.Range) (chart.Data
 	}
 
 	for _, ch := range st.Charts {
-		if ch.Range == dataRange {
+		if ch.Interval == interval {
 			data.Quote = st.Quote
 			data.Chart = ch
 			return data, nil
@@ -323,7 +323,7 @@ func (c *Controller) chartData(symbol string, dataRange model.Range) (chart.Data
 func (c *Controller) refreshCurrentStock(ctx context.Context) error {
 	d := new(dataRequestBuilder)
 	if s := c.model.CurrentSymbol(); s != "" {
-		if err := d.add([]string{s}, c.chartRange); err != nil {
+		if err := d.add([]string{s}, c.chartInterval); err != nil {
 			return err
 		}
 	}
@@ -334,12 +334,12 @@ func (c *Controller) refreshAllStocks(ctx context.Context) error {
 	d := new(dataRequestBuilder)
 
 	if s := c.model.CurrentSymbol(); s != "" {
-		if err := d.add([]string{s}, c.chartRange); err != nil {
+		if err := d.add([]string{s}, c.chartInterval); err != nil {
 			return err
 		}
 	}
 
-	if err := d.add(c.model.SidebarSymbols(), c.chartThumbRange); err != nil {
+	if err := d.add(c.model.SidebarSymbols(), c.chartThumbInterval); err != nil {
 		return err
 	}
 
@@ -347,8 +347,8 @@ func (c *Controller) refreshAllStocks(ctx context.Context) error {
 }
 
 // onStockRefreshStarted implements the eventHandler interface.
-func (c *Controller) onStockRefreshStarted(symbol string, dataRange model.Range) error {
-	return c.ui.SetLoading(symbol, dataRange)
+func (c *Controller) onStockRefreshStarted(symbol string, interval model.Interval) error {
+	return c.ui.SetLoading(symbol, interval)
 }
 
 // onStockUpdate implements the eventHandler interface.
@@ -378,7 +378,7 @@ func (c *Controller) onStockUpdate(symbol string, q *model.Quote, ch *model.Char
 	}
 
 	if q != nil || ch != nil {
-		data, err := c.chartData(symbol, c.chartRange)
+		data, err := c.chartData(symbol, c.chartInterval)
 		if err != nil {
 			return err
 		}
@@ -405,17 +405,17 @@ func (c *Controller) onEventAdded() {
 	c.ui.WakeLoop()
 }
 
-func nextRange(r model.Range, zoomChange chart.ZoomChange) model.Range {
-	// zoomRanges are the ranges from most zoomed out to most zoomed in.
-	var zoomRanges = []model.Range{
-		model.OneYear,
-		model.OneDay,
+func nextInterval(interval model.Interval, zoomChange chart.ZoomChange) model.Interval {
+	// zoomIntervals are the ranges from most zoomed out to most zoomed in.
+	var zoomIntervals = []model.Interval{
+		model.Daily,
+		model.Intraday,
 	}
 
 	// Find the current zoom range.
 	i := 0
-	for j := range zoomRanges {
-		if zoomRanges[j] == r {
+	for j := range zoomIntervals {
+		if zoomIntervals[j] == interval {
 			i = j
 		}
 	}
@@ -423,7 +423,7 @@ func nextRange(r model.Range, zoomChange chart.ZoomChange) model.Range {
 	// Adjust the zoom one increment.
 	switch zoomChange {
 	case chart.ZoomIn:
-		if i+1 < len(zoomRanges) {
+		if i+1 < len(zoomIntervals) {
 			i++
 		}
 	case chart.ZoomOut:
@@ -432,7 +432,7 @@ func nextRange(r model.Range, zoomChange chart.ZoomChange) model.Range {
 		}
 	}
 
-	return zoomRanges[i]
+	return zoomIntervals[i]
 }
 
 func (c *Controller) makeConfig() *config.Config {
