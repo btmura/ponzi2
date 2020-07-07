@@ -41,7 +41,7 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
-	logger.Infof("loading config from %s", cfgPath)
+	logger.Infof("loading from %s", cfgPath)
 
 	file, err := os.Open(cfgPath)
 	if os.IsNotExist(err) {
@@ -52,7 +52,7 @@ func Load() (*Config, error) {
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			logger.Errorf("close loaded config failed: %v", err)
+			logger.Errorf("closing in load failed: %v", err)
 		}
 	}()
 
@@ -71,7 +71,7 @@ func Save(cfg *Config) error {
 		return err
 	}
 
-	logger.Infof("saving config to %s", cfgPath)
+	logger.Infof("saving to %s", cfgPath)
 
 	file, err := os.OpenFile(cfgPath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0660)
 	if err != nil {
@@ -79,7 +79,7 @@ func Save(cfg *Config) error {
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
-			logger.Errorf("closing saved config failed: %v", err)
+			logger.Errorf("closing in save failed: %v", err)
 		}
 	}()
 
