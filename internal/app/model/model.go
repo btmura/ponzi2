@@ -91,6 +91,7 @@ const (
 	IntervalUnspecified Interval = iota
 	Intraday
 	Daily
+	Weekly
 )
 
 // TradingSessionSeries is a time series of trading sessions.

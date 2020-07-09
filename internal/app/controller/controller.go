@@ -116,8 +116,9 @@ func (c *Controller) RunLoop() error {
 		}
 
 		c.chartInterval = interval
-		if err := c.refreshCurrentStock(ctx); err != nil {
-			logger.Errorf("refreshCurrentStock: %v", err)
+		c.chartThumbInterval = interval
+		if err := c.refreshAllStocks(ctx); err != nil {
+			logger.Errorf("refreshAllStocks: %v", err)
 		}
 	})
 
@@ -408,8 +409,8 @@ func (c *Controller) onEventAdded() {
 func nextInterval(interval model.Interval, zoomChange chart.ZoomChange) model.Interval {
 	// zoomIntervals are the ranges from most zoomed out to most zoomed in.
 	var zoomIntervals = []model.Interval{
+		model.Weekly,
 		model.Daily,
-		model.Intraday,
 	}
 
 	// Find the current zoom range.

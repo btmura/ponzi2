@@ -51,7 +51,7 @@ func (t *timelineCursor) SetData(data timelineCursorData) {
 	switch data.Interval {
 	case model.Intraday:
 		t.layout = "03:04"
-	case model.Daily:
+	case model.Daily, model.Weekly:
 		t.layout = "1/2/06"
 	default:
 		logger.Errorf("bad interval: %v", data.Interval)

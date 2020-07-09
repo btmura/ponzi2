@@ -392,7 +392,7 @@ func (u *UI) handleSidebarChangeEvent(sidebar *Sidebar) {
 
 func (u *UI) handleChartZoomChangeEvent(zoomChange chart.ZoomChange) {
 	if zoomChange == chart.ZoomChangeUnspecified {
-		logger.Error("chart zoom change is unspecified")
+		logger.Error("unspecified chart zoom change")
 		return
 	}
 

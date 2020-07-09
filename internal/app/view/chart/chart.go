@@ -227,7 +227,7 @@ func (ch *Chart) SetData(data Data) {
 	switch dc.Interval {
 	case model.Intraday:
 		ch.showMovingAverages = false
-	case model.Daily:
+	case model.Daily, model.Weekly:
 		ch.showMovingAverages = true
 	default:
 		logger.Errorf("bad interval: %v", dc.Interval)

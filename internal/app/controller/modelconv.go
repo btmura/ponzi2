@@ -61,50 +61,13 @@ func modelDailyChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
 
 	if len(ws) > maxDataWeeks {
 		start := ws[len(ws)-maxDataWeeks:][0].Date
-
-		trimmedTradingSessions := func(vs []*model.TradingSession) []*model.TradingSession {
-			for i, v := range vs {
-				if v.Date == start {
-					return vs[i:]
-				}
-			}
-			return vs
-		}
-
-		trimmedMovingAverages := func(vs []*model.MovingAverage) []*model.MovingAverage {
-			for i, v := range vs {
-				if v.Date == start {
-					return vs[i:]
-				}
-			}
-			return vs
-		}
-
-		trimmedAverageVolumes := func(vs []*model.AverageVolume) []*model.AverageVolume {
-			for i, v := range vs {
-				if v.Date == start {
-					return vs[i:]
-				}
-			}
-			return vs
-		}
-
-		trimmedStochastics := func(vs []*model.Stochastic) []*model.Stochastic {
-			for i, v := range vs {
-				if v.Date == start {
-					return vs[i:]
-				}
-			}
-			return vs
-		}
-
-		ds = trimmedTradingSessions(ds)
-		m20 = trimmedMovingAverages(m20)
-		m50 = trimmedMovingAverages(m50)
-		m200 = trimmedMovingAverages(m200)
-		v50 = trimmedAverageVolumes(v50)
-		dsto = trimmedStochastics(dsto)
-		wsto = trimmedStochastics(wsto)
+		ds = trimmedTradingSessions(ds, start)
+		m20 = trimmedMovingAverages(m20, start)
+		m50 = trimmedMovingAverages(m50, start)
+		m200 = trimmedMovingAverages(m200, start)
+		v50 = trimmedAverageVolumes(v50, start)
+		dsto = trimmedStochastics(dsto, start)
+		wsto = trimmedStochastics(wsto, start)
 	}
 
 	return &model.Chart{
@@ -116,6 +79,26 @@ func modelDailyChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
 		AverageVolumeSeries:    &model.AverageVolumeSeries{AverageVolumes: v50},
 		DailyStochasticSeries:  &model.StochasticSeries{Stochastics: dsto},
 		WeeklyStochasticSeries: &model.StochasticSeries{Stochastics: wsto},
+	}, nil
+}
+
+func modelWeeklyChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
+	ds := modelTradingSessions(quote, chart)
+	ws := weeklyModelTradingSessions(ds)
+
+	m20 := modelMovingAverages(ws, 20)
+	m50 := modelMovingAverages(ws, 50)
+	m200 := modelMovingAverages(ws, 200)
+
+	v50 := modelAverageVolumes(ws, 50)
+
+	return &model.Chart{
+		Interval:               model.Weekly,
+		TradingSessionSeries:   &model.TradingSessionSeries{TradingSessions: ws},
+		MovingAverageSeries20:  &model.MovingAverageSeries{MovingAverages: m20},
+		MovingAverageSeries50:  &model.MovingAverageSeries{MovingAverages: m50},
+		MovingAverageSeries200: &model.MovingAverageSeries{MovingAverages: m200},
+		AverageVolumeSeries:    &model.AverageVolumeSeries{AverageVolumes: v50},
 	}, nil
 }
 
@@ -351,4 +334,40 @@ func modelStochastics(ts []*model.TradingSession) []*model.Stochastic {
 	}
 
 	return ms
+}
+
+func trimmedTradingSessions(vs []*model.TradingSession, start time.Time) []*model.TradingSession {
+	for i, v := range vs {
+		if v.Date == start {
+			return vs[i:]
+		}
+	}
+	return vs
+}
+
+func trimmedMovingAverages(vs []*model.MovingAverage, start time.Time) []*model.MovingAverage {
+	for i, v := range vs {
+		if v.Date == start {
+			return vs[i:]
+		}
+	}
+	return vs
+}
+
+func trimmedAverageVolumes(vs []*model.AverageVolume, start time.Time) []*model.AverageVolume {
+	for i, v := range vs {
+		if v.Date == start {
+			return vs[i:]
+		}
+	}
+	return vs
+}
+
+func trimmedStochastics(vs []*model.Stochastic, start time.Time) []*model.Stochastic {
+	for i, v := range vs {
+		if v.Date == start {
+			return vs[i:]
+		}
+	}
+	return vs
 }

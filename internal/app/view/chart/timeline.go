@@ -89,6 +89,10 @@ func weekLineValues(interval model.Interval, ts []*model.TradingSession) (majorV
 		_, cw := curr.ISOWeek()
 		weekChanged := pw != cw
 
+		pm := prev.Month()
+		cm := curr.Month()
+		monthChanged := pm != cm
+
 		if prev.Month() != curr.Month() {
 			pendingMonthChanged = true
 		}
@@ -120,6 +124,13 @@ func weekLineValues(interval model.Interval, ts []*model.TradingSession) (majorV
 			} else {
 				addMinor()
 			}
+
+		case model.Weekly:
+			if !monthChanged {
+				continue
+			}
+
+			addMinor()
 
 		default:
 			logger.Errorf("bad interval: %v", interval)

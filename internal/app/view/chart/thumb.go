@@ -148,7 +148,14 @@ func (t *Thumb) SetData(data Data) {
 	}
 
 	ts := dc.TradingSessionSeries
+	if ts == nil {
+		return
+	}
+
 	vs := dc.AverageVolumeSeries
+	if vs == nil {
+		return
+	}
 
 	if len(ts.TradingSessions) != len(vs.AverageVolumes) {
 		logger.Error("trading and volumes should be the same length")

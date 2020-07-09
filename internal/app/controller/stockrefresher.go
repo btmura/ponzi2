@@ -70,7 +70,7 @@ func (s *stockRefresher) refreshOne(ctx context.Context, symbol string, interval
 	}
 
 	if interval == model.IntervalUnspecified {
-		return errors.Errorf("range not set")
+		return errors.Errorf("unspecified interval")
 	}
 
 	d := new(dataRequestBuilder)
@@ -92,11 +92,13 @@ func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) err
 
 	for _, req := range reqs {
 		for _, sym := range req.symbols {
-			s.eventController.addEventLocked(event{
-				symbol:         sym,
-				interval:       req.interval,
-				refreshStarted: true,
-			})
+			for _, interval := range req.intervals {
+				s.eventController.addEventLocked(event{
+					symbol:         sym,
+					interval:       interval,
+					refreshStarted: true,
+				})
+			}
 		}
 	}
 
@@ -162,24 +164,35 @@ func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) err
 					continue
 				}
 
-				switch req.interval {
-				case model.Intraday:
-					ch, err := modelIntradayChart(stockData.chart)
-					es = append(es, event{
-						symbol:    sym,
-						quote:     q,
-						chart:     ch,
-						updateErr: err,
-					})
+				for _, interval := range req.intervals {
+					switch interval {
+					case model.Intraday:
+						ch, err := modelIntradayChart(stockData.chart)
+						es = append(es, event{
+							symbol:    sym,
+							quote:     q,
+							chart:     ch,
+							updateErr: err,
+						})
 
-				case model.Daily:
-					ch, err := modelDailyChart(stockData.quote, stockData.chart)
-					es = append(es, event{
-						symbol:    sym,
-						quote:     q,
-						chart:     ch,
-						updateErr: err,
-					})
+					case model.Daily:
+						ch, err := modelDailyChart(stockData.quote, stockData.chart)
+						es = append(es, event{
+							symbol:    sym,
+							quote:     q,
+							chart:     ch,
+							updateErr: err,
+						})
+
+					case model.Weekly:
+						ch, err := modelWeeklyChart(stockData.quote, stockData.chart)
+						es = append(es, event{
+							symbol:    sym,
+							quote:     q,
+							chart:     ch,
+							updateErr: err,
+						})
+					}
 				}
 			}
 
@@ -200,12 +213,41 @@ func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) err
 	return nil
 }
 
-// dataRequestBuilder accumulates symbols and data ranges and builds a slice of data requests.
+// dataRequestBuilder accumulates symbols into request groups and then builds the requests.
 type dataRequestBuilder struct {
-	interval2Symbols map[model.Interval][]string
+	symbolGroups map[dataRequestGroup][]string
+}
+
+type dataRequestGroup int
+
+const (
+	dataRequestGroupUnspecified dataRequestGroup = iota
+	intraday
+	dailyWeekly
+)
+
+func (d dataRequestGroup) Intervals() []model.Interval {
+	switch d {
+	case intraday:
+		return []model.Interval{model.Intraday}
+	case dailyWeekly:
+		return []model.Interval{model.Daily, model.Weekly}
+	default:
+		return nil
+	}
+}
+
+var interval2DataRequestGroup = map[model.Interval]dataRequestGroup{
+	model.Intraday: intraday,
+	model.Daily:    dailyWeekly,
+	model.Weekly:   dailyWeekly,
 }
 
 func (d *dataRequestBuilder) add(symbols []string, interval model.Interval) error {
+	if len(symbols) == 0 {
+		return nil
+	}
+
 	for _, s := range symbols {
 		if err := model.ValidateSymbol(s); err != nil {
 			return err
@@ -213,58 +255,54 @@ func (d *dataRequestBuilder) add(symbols []string, interval model.Interval) erro
 	}
 
 	if interval == model.IntervalUnspecified {
-		return errors.Errorf("interval not set")
+		return errors.Errorf("unspecified interval")
 	}
 
-	if len(symbols) == 0 {
-		return nil
-	}
+	group := interval2DataRequestGroup[interval]
 
-	sset := make(map[string]bool)
-	for _, s := range d.interval2Symbols[interval] {
-		sset[s] = true
+	symbolSet := make(map[string]bool)
+	for _, s := range d.symbolGroups[group] {
+		symbolSet[s] = true
 	}
 	for _, s := range symbols {
-		sset[s] = true
+		symbolSet[s] = true
 	}
 
 	var ss []string
-	for s := range sset {
+	for s := range symbolSet {
 		ss = append(ss, s)
 	}
 
-	if d.interval2Symbols == nil {
-		d.interval2Symbols = make(map[model.Interval][]string)
+	if d.symbolGroups == nil {
+		d.symbolGroups = make(map[dataRequestGroup][]string)
 	}
-	d.interval2Symbols[interval] = ss
+	d.symbolGroups[group] = ss
 
 	return nil
 }
 
 type dataRequest struct {
 	symbols       []string
-	interval      model.Interval
+	intervals     []model.Interval
 	quotesRequest *iex.GetQuotesRequest
 	chartsRequest *iex.GetChartsRequest
 }
 
 func (d *dataRequestBuilder) dataRequests(token string) ([]*dataRequest, error) {
 	var reqs []*dataRequest
-	for interval, ss := range d.interval2Symbols {
+	for group, ss := range d.symbolGroups {
 		var iexRange iex.Range
 
-		switch interval {
-		case model.Intraday:
-			iexRange = iex.OneDay
-		case model.Daily:
-			iexRange = iex.TwoYears // Need additional data for weekly stochastics.
+		switch group {
+		case dailyWeekly:
+			iexRange = iex.TwoYears
 		default:
-			return nil, errors.Errorf("bad interval: %v", interval)
+			return nil, errors.Errorf("bad group: %v", group)
 		}
 
 		reqs = append(reqs, &dataRequest{
-			symbols:  ss,
-			interval: interval,
+			symbols:   ss,
+			intervals: group.Intervals(),
 			quotesRequest: &iex.GetQuotesRequest{
 				Token:   token,
 				Symbols: ss,

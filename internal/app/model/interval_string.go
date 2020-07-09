@@ -11,11 +11,12 @@ func _() {
 	_ = x[IntervalUnspecified-0]
 	_ = x[Intraday-1]
 	_ = x[Daily-2]
+	_ = x[Weekly-3]
 }
 
-const _Interval_name = "IntervalUnspecifiedIntradayDaily"
+const _Interval_name = "IntervalUnspecifiedIntradayDailyWeekly"
 
-var _Interval_index = [...]uint8{0, 19, 27, 32}
+var _Interval_index = [...]uint8{0, 19, 27, 32, 38}
 
 func (i Interval) String() string {
 	if i < 0 || i >= Interval(len(_Interval_index)-1) {
