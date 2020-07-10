@@ -21,11 +21,8 @@ type Controller struct {
 	// ui is the UI that the Controller updates.
 	ui *ui.UI
 
-	// chartInterval is the current interval to use for charts.
+	// chartInterval is the current interval to use for charts and thumbnails.
 	chartInterval model.Interval
-
-	// chartThumbInterval is the current interval to use for thumbnails.
-	chartThumbInterval model.Interval
 
 	// chartPriceStyle is the current price style for charts and thumbnails.
 	chartPriceStyle chart.PriceStyle
@@ -49,12 +46,11 @@ type iexClientInterface interface {
 // New creates a new Controller.
 func New(iexClient iexClientInterface, token string) *Controller {
 	c := &Controller{
-		model:              model.New(),
-		ui:                 ui.New(),
-		chartInterval:      model.Daily,
-		chartThumbInterval: model.Daily,
-		chartPriceStyle:    chart.Bar,
-		configSaver:        newConfigSaver(),
+		model:           model.New(),
+		ui:              ui.New(),
+		chartInterval:   model.Daily,
+		chartPriceStyle: chart.Bar,
+		configSaver:     newConfigSaver(),
 	}
 	c.eventController = newEventController(c)
 	c.stockRefresher = newStockRefresher(iexClient, token, c.eventController)
@@ -109,25 +105,20 @@ func (c *Controller) RunLoop() error {
 		}
 	})
 
-	c.ui.SetChartZoomChangeCallback(func(zoomChange chart.ZoomChange) {
-		interval := nextInterval(c.chartInterval, zoomChange)
-		if interval == c.chartInterval {
-			return
-		}
-
-		c.chartInterval = interval
-		c.chartThumbInterval = interval
-		if err := c.refreshAllStocks(ctx); err != nil {
-			logger.Errorf("refreshAllStocks: %v", err)
-		}
-	})
-
 	c.ui.SetChartPriceStyleButtonClickCallback(func(newPriceStyle chart.PriceStyle) {
 		if newPriceStyle == chart.PriceStyleUnspecified {
 			logger.Error("unspecified price style")
 			return
 		}
 		c.setChartPriceStyle(newPriceStyle)
+	})
+
+	c.ui.SetChartZoomChangeCallback(func(zoomChange chart.ZoomChange) {
+		if zoomChange == chart.ZoomChangeUnspecified {
+			logger.Error("unspecified zoom change")
+			return
+		}
+		c.setChartInterval(nextInterval(c.chartInterval, zoomChange))
 	})
 
 	c.ui.SetChartRefreshButtonClickCallback(func(symbol string) {
@@ -189,10 +180,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 		return c.refreshCurrentStock(ctx)
 	}
 
-	data, err := c.chartData(symbol, c.chartInterval)
-	if err != nil {
-		return err
-	}
+	data := c.chartData(symbol, c.chartInterval)
 
 	if err := c.ui.SetChart(symbol, data, c.chartPriceStyle); err != nil {
 		return err
@@ -219,19 +207,16 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 
 	// If the stock is already added, just refresh it.
 	if !added {
-		return c.stockRefresher.refreshOne(ctx, symbol, c.chartThumbInterval)
+		return c.stockRefresher.refreshOne(ctx, symbol, c.chartInterval)
 	}
 
-	data, err := c.chartData(symbol, c.chartThumbInterval)
-	if err != nil {
-		return err
-	}
+	data := c.chartData(symbol, c.chartInterval)
 
 	if err := c.ui.AddChartThumb(symbol, data, c.chartPriceStyle); err != nil {
 		return err
 	}
 
-	if err := c.stockRefresher.refreshOne(ctx, symbol, c.chartThumbInterval); err != nil {
+	if err := c.stockRefresher.refreshOne(ctx, symbol, c.chartInterval); err != nil {
 		return err
 	}
 
@@ -294,31 +279,55 @@ func (c *Controller) setChartPriceStyle(newPriceStyle chart.PriceStyle) {
 	c.configSaver.save(c.makeConfig())
 }
 
-func (c *Controller) chartData(symbol string, interval model.Interval) (chart.Data, error) {
+func (c *Controller) setChartInterval(newInterval model.Interval) {
+	if newInterval == model.IntervalUnspecified {
+		logger.Error("unspecified interval")
+		return
+	}
+
+	if newInterval == c.chartInterval {
+		return
+	}
+
+	c.chartInterval = newInterval
+
+	if s := c.model.CurrentSymbol(); s != "" {
+		data := c.chartData(s, c.chartInterval)
+		c.ui.SetData(s, data)
+	}
+
+	for _, s := range c.model.SidebarSymbols() {
+		data := c.chartData(s, c.chartInterval)
+		c.ui.SetData(s, data)
+	}
+}
+
+func (c *Controller) chartData(symbol string, interval model.Interval) chart.Data {
 	if symbol == "" {
-		return chart.Data{}, errors.Errorf("missing symbol")
+		logger.Error("missing symbol")
+		return chart.Data{}
 	}
 
 	data := chart.Data{Symbol: symbol}
 
 	st, err := c.model.Stock(symbol)
 	if err != nil {
-		return data, err
+		return data
 	}
 
 	if st == nil {
-		return data, nil
+		return data
 	}
 
 	for _, ch := range st.Charts {
 		if ch.Interval == interval {
 			data.Quote = st.Quote
 			data.Chart = ch
-			return data, nil
+			return data
 		}
 	}
 
-	return data, nil
+	return data
 }
 
 func (c *Controller) refreshCurrentStock(ctx context.Context) error {
@@ -340,7 +349,7 @@ func (c *Controller) refreshAllStocks(ctx context.Context) error {
 		}
 	}
 
-	if err := d.add(c.model.SidebarSymbols(), c.chartThumbInterval); err != nil {
+	if err := d.add(c.model.SidebarSymbols(), c.chartInterval); err != nil {
 		return err
 	}
 
@@ -379,12 +388,8 @@ func (c *Controller) onStockUpdate(symbol string, q *model.Quote, ch *model.Char
 	}
 
 	if q != nil || ch != nil {
-		data, err := c.chartData(symbol, c.chartInterval)
-		if err != nil {
-			return err
-		}
-
-		return c.ui.SetData(symbol, data)
+		data := c.chartData(symbol, c.chartInterval)
+		c.ui.SetData(symbol, data)
 	}
 
 	return nil
@@ -393,7 +398,8 @@ func (c *Controller) onStockUpdate(symbol string, q *model.Quote, ch *model.Char
 // onStockUpdateError implements the eventHandler interface.
 func (c *Controller) onStockUpdateError(symbol string, updateErr error) error {
 	logger.Errorf("stock update for %s failed: %v\n", symbol, updateErr)
-	return c.ui.SetError(symbol, updateErr)
+	c.ui.SetError(symbol, updateErr)
+	return nil
 }
 
 // onRefreshAllStocksRequest implements the eventHandler interface.

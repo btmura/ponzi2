@@ -855,10 +855,11 @@ func (u *UI) SetLoading(symbol string, interval model.Interval) error {
 	return nil
 }
 
-// SetData loads the data to charts and thumbnails matching the symbol and range.
-func (u *UI) SetData(symbol string, data chart.Data) error {
+// SetData loads the data to charts and thumbnails matching the symbol and interval.
+func (u *UI) SetData(symbol string, data chart.Data) {
 	if err := model.ValidateSymbol(symbol); err != nil {
-		return err
+		logger.Errorf("invalid symbol: %v", err)
+		return
 	}
 
 	if ch, ok := u.symbolToChartMap[symbol]; ok {
@@ -871,14 +872,13 @@ func (u *UI) SetData(symbol string, data chart.Data) error {
 		th.SetLoading(false)
 		th.SetData(data)
 	}
-
-	return nil
 }
 
 // SetError sets an error on the charts and slots matching the symbol.
-func (u *UI) SetError(symbol string, updateErr error) error {
+func (u *UI) SetError(symbol string, updateErr error) {
 	if err := model.ValidateSymbol(symbol); err != nil {
-		return err
+		logger.Errorf("invalid symbol: %v", err)
+		return
 	}
 
 	if ch, ok := u.symbolToChartMap[symbol]; ok {
@@ -890,8 +890,6 @@ func (u *UI) SetError(symbol string, updateErr error) error {
 		th.SetLoading(false)
 		th.SetError(updateErr)
 	}
-
-	return nil
 }
 
 func (u *UI) SetChartPriceStyle(newPriceStyle chart.PriceStyle) {
