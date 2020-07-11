@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/chart"
 	"github.com/btmura/ponzi2/internal/logger"
 )
@@ -32,6 +33,7 @@ type Settings struct {
 // ChartSettings has the user's chart settings.
 type ChartSettings struct {
 	PriceStyle chart.PriceStyle
+	Interval   model.Interval
 }
 
 // Load loads the user's config from disk.

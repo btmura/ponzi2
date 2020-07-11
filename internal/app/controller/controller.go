@@ -46,11 +46,9 @@ type iexClientInterface interface {
 // New creates a new Controller.
 func New(iexClient iexClientInterface, token string) *Controller {
 	c := &Controller{
-		model:           model.New(),
-		ui:              ui.New(),
-		chartInterval:   model.Daily,
-		chartPriceStyle: chart.Bar,
-		configSaver:     newConfigSaver(),
+		model:       model.New(),
+		ui:          ui.New(),
+		configSaver: newConfigSaver(),
 	}
 	c.eventController = newEventController(c)
 	c.stockRefresher = newStockRefresher(iexClient, token, c.eventController)
@@ -73,6 +71,22 @@ func (c *Controller) RunLoop() error {
 		return err
 	}
 
+	// Apply the user's chart settings.
+	settings := cfg.Settings.ChartSettings
+
+	priceStyle := chart.Bar
+	if p := settings.PriceStyle; p != chart.PriceStyleUnspecified {
+		priceStyle = p
+	}
+	c.setChartPriceStyle(priceStyle)
+
+	interval := model.Daily
+	if i := settings.Interval; i != model.IntervalUnspecified {
+		interval = i
+	}
+	c.setChartInterval(interval)
+
+	// Add the user's stocks to the UI.
 	if cfg.CurrentStock != nil {
 		if s := cfg.CurrentStock.Symbol; s != "" {
 			if err := c.setChart(ctx, s); err != nil {
@@ -87,10 +101,6 @@ func (c *Controller) RunLoop() error {
 				return err
 			}
 		}
-	}
-
-	if priceStyle := cfg.Settings.ChartSettings.PriceStyle; priceStyle != chart.PriceStyleUnspecified {
-		c.setChartPriceStyle(priceStyle)
 	}
 
 	c.ui.SetInputSymbolSubmittedCallback(func(symbol string) {
@@ -300,6 +310,8 @@ func (c *Controller) setChartInterval(newInterval model.Interval) {
 		data := c.chartData(s, c.chartInterval)
 		c.ui.SetData(s, data)
 	}
+
+	c.configSaver.save(c.makeConfig())
 }
 
 func (c *Controller) chartData(symbol string, interval model.Interval) chart.Data {
@@ -451,5 +463,6 @@ func (c *Controller) makeConfig() *config.Config {
 		cfg.Stocks = append(cfg.Stocks, &config.Stock{Symbol: s})
 	}
 	cfg.Settings.ChartSettings.PriceStyle = c.chartPriceStyle
+	cfg.Settings.ChartSettings.Interval = c.chartInterval
 	return cfg
 }
