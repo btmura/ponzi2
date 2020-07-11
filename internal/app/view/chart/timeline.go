@@ -130,7 +130,13 @@ func weekLineValues(interval model.Interval, ts []*model.TradingSession) (majorV
 				continue
 			}
 
-			addMinor()
+			switch cm {
+			case time.January, time.April, time.July, time.October:
+				addMajor()
+
+			default:
+				addMinor()
+			}
 
 		default:
 			logger.Errorf("bad interval: %v", interval)

@@ -89,8 +89,10 @@ func timelineLabelText(interval model.Interval, t time.Time) string {
 	switch interval {
 	case model.Intraday:
 		return t.Format("3:04")
-	case model.Daily, model.Weekly:
+	case model.Daily:
 		return t.Format("Jan")
+	case model.Weekly:
+		return t.Format("Jan")[:1]
 	default:
 		logger.Errorf("bad interval: %v", interval)
 		return ""
