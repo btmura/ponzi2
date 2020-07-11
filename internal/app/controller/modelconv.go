@@ -242,6 +242,13 @@ func weeklyModelTradingSessions(ds []*model.TradingSession) (ws []*model.Trading
 			}
 			ls.Close = p.Close
 			ls.Volume += p.Volume
+			ls.Change = ls.Close - ls.Open
+			if len(ws)-2 >= 0 {
+				prev := ws[len(ws)-2]
+				ls.PercentChange = (ls.Close - prev.Close) / prev.Close
+			} else {
+				ls.PercentChange = 0
+			}
 		}
 	}
 	return ws
