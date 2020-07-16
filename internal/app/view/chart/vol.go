@@ -99,7 +99,8 @@ func volumeRange(ts []*model.TradingSession) [2]int {
 		}
 	}
 
-	return [2]int{0, high}
+	// Set min to 1 so missing zero values are not rendered for average volume lines.
+	return [2]int{1, high}
 }
 
 // volumeLabel is a right-justified Y-axis label with the volume.
