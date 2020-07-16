@@ -139,7 +139,7 @@ func volumeBarsVAO(ds []*model.TradingSession, maxVolume int) *gfx.VAO {
 	dx := 2.0 / float32(len(ds)) // (-1 to 1) on X-axis
 	calcX := func(i int) (leftX, rightX float32) {
 		x := -1.0 + dx*float32(i)
-		return x + dx*0.2, x + dx*0.8
+		return x + dx*0.4, x + dx*0.6
 	}
 	calcY := func(v int) (topY, botY float32) {
 		return 2*float32(v)/float32(maxVolume) - 1, -1
