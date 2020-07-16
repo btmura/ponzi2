@@ -42,7 +42,7 @@ type Stock struct {
 type Chart struct {
 	Interval               Interval
 	TradingSessionSeries   *TradingSessionSeries
-	MovingAverageSeries20  *MovingAverageSeries
+	MovingAverageSeries21  *MovingAverageSeries
 	MovingAverageSeries50  *MovingAverageSeries
 	MovingAverageSeries200 *MovingAverageSeries
 	AverageVolumeSeries    *AverageVolumeSeries

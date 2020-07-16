@@ -59,3 +59,52 @@ func TestModelIntradayChart(t *testing.T) {
 		})
 	}
 }
+
+func TestExponentialMovingAverages(t *testing.T) {
+	for _, tt := range []struct {
+		desc                 string
+		inputTradingSessions []*model.TradingSession
+		inputNumDays         int
+		want                 []*model.MovingAverage
+	}{
+		{
+			inputTradingSessions: []*model.TradingSession{
+				{
+					Date:  time.Date(2018, time.September, 1, 0, 0, 0, 0, time.UTC),
+					Close: 100,
+				},
+				{
+					Date:  time.Date(2018, time.September, 2, 0, 0, 0, 0, time.UTC),
+					Close: 200,
+				},
+				{
+					Date:  time.Date(2018, time.September, 3, 0, 0, 0, 0, time.UTC),
+					Close: 300,
+				},
+			},
+			inputNumDays: 2,
+			want: []*model.MovingAverage{
+				{
+					Date:  time.Date(2018, time.September, 1, 0, 0, 0, 0, time.UTC),
+					Value: 0,
+				},
+				{
+					Date:  time.Date(2018, time.September, 2, 0, 0, 0, 0, time.UTC),
+					Value: 0,
+				},
+				{
+					Date:  time.Date(2018, time.September, 3, 0, 0, 0, 0, time.UTC),
+					Value: 250,
+				},
+			},
+		},
+	} {
+		t.Run(tt.desc, func(t *testing.T) {
+			got := modelExponentialMovingAverages(tt.inputTradingSessions, tt.inputNumDays)
+
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("diff (-want, +got)\n%s", diff)
+			}
+		})
+	}
+}

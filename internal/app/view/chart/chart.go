@@ -80,8 +80,8 @@ type Chart struct {
 	priceCursor   *priceCursor
 	priceTimeline *timeline
 
-	movingAverage5   *movingAverage
-	movingAverage20  *movingAverage
+	movingAverage21  *movingAverage
+	movingAverage50  *movingAverage
 	movingAverage200 *movingAverage
 
 	volume         *volume
@@ -153,8 +153,8 @@ func NewChart(priceStyle PriceStyle) *Chart {
 		priceCursor:   new(priceCursor),
 		priceTimeline: newTimeline(view.TransparentLightGray, view.LightGray, view.TransparentGray, view.Gray),
 
-		movingAverage5:   newMovingAverage(view.Purple),
-		movingAverage20:  newMovingAverage(view.Yellow),
+		movingAverage21:  newMovingAverage(view.Purple),
+		movingAverage50:  newMovingAverage(view.Yellow),
 		movingAverage200: newMovingAverage(view.White),
 
 		volume:         new(volume),
@@ -242,8 +242,8 @@ func (ch *Chart) SetData(data Data) {
 	ch.priceTimeline.SetData(timelineData{dc.Interval, ts})
 
 	if ch.showMovingAverages {
-		ch.movingAverage5.SetData(movingAverageData{ts, dc.MovingAverageSeries20})
-		ch.movingAverage20.SetData(movingAverageData{ts, dc.MovingAverageSeries50})
+		ch.movingAverage21.SetData(movingAverageData{ts, dc.MovingAverageSeries21})
+		ch.movingAverage50.SetData(movingAverageData{ts, dc.MovingAverageSeries50})
 		ch.movingAverage200.SetData(movingAverageData{ts, dc.MovingAverageSeries200})
 	}
 
@@ -257,7 +257,7 @@ func (ch *Chart) SetData(data Data) {
 
 	ch.legend.SetData(legendData{
 		ts,
-		dc.MovingAverageSeries20,
+		dc.MovingAverageSeries21,
 		dc.MovingAverageSeries50,
 		dc.MovingAverageSeries200,
 	})
@@ -322,8 +322,8 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	ch.priceCursor.SetBounds(pr, plr)
 	ch.priceCursor.ProcessInput(input)
 	ch.priceTimeline.SetBounds(pr)
-	ch.movingAverage5.SetBounds(pr)
-	ch.movingAverage20.SetBounds(pr)
+	ch.movingAverage21.SetBounds(pr)
+	ch.movingAverage50.SetBounds(pr)
 	ch.movingAverage200.SetBounds(pr)
 
 	ch.volume.SetBounds(vr)
@@ -420,8 +420,8 @@ func (ch *Chart) Render(fudge float32) {
 	ch.priceCursor.Render(fudge)
 
 	if ch.showMovingAverages {
-		ch.movingAverage5.Render(fudge)
-		ch.movingAverage20.Render(fudge)
+		ch.movingAverage21.Render(fudge)
+		ch.movingAverage50.Render(fudge)
 		ch.movingAverage200.Render(fudge)
 	}
 
@@ -467,8 +467,8 @@ func (ch *Chart) Close() {
 	ch.priceAxis.Close()
 	ch.priceCursor.Close()
 	ch.priceTimeline.Close()
-	ch.movingAverage5.Close()
-	ch.movingAverage20.Close()
+	ch.movingAverage21.Close()
+	ch.movingAverage50.Close()
 	ch.movingAverage200.Close()
 	ch.volume.Close()
 	ch.volumeAxis.Close()

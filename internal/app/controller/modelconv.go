@@ -50,9 +50,9 @@ func modelDailyChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
 	ds := modelTradingSessions(quote, chart)
 	ws := weeklyModelTradingSessions(ds)
 
-	m20 := modelMovingAverages(ds, 20)
-	m50 := modelMovingAverages(ds, 50)
-	m200 := modelMovingAverages(ds, 200)
+	m20 := modelExponentialMovingAverages(ds, 21)
+	m50 := modelExponentialMovingAverages(ds, 50)
+	m200 := modelExponentialMovingAverages(ds, 200)
 
 	v50 := modelAverageVolumes(ds, 50)
 
@@ -73,7 +73,7 @@ func modelDailyChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
 	return &model.Chart{
 		Interval:               model.Daily,
 		TradingSessionSeries:   &model.TradingSessionSeries{TradingSessions: ds},
-		MovingAverageSeries20:  &model.MovingAverageSeries{MovingAverages: m20},
+		MovingAverageSeries21:  &model.MovingAverageSeries{MovingAverages: m20},
 		MovingAverageSeries50:  &model.MovingAverageSeries{MovingAverages: m50},
 		MovingAverageSeries200: &model.MovingAverageSeries{MovingAverages: m200},
 		AverageVolumeSeries:    &model.AverageVolumeSeries{AverageVolumes: v50},
@@ -86,16 +86,16 @@ func modelWeeklyChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) 
 	ds := modelTradingSessions(quote, chart)
 	ws := weeklyModelTradingSessions(ds)
 
-	m20 := modelMovingAverages(ws, 20)
-	m50 := modelMovingAverages(ws, 50)
-	m200 := modelMovingAverages(ws, 200)
+	m21 := modelExponentialMovingAverages(ws, 21)
+	m50 := modelExponentialMovingAverages(ws, 50)
+	m200 := modelExponentialMovingAverages(ws, 200)
 
 	v50 := modelAverageVolumes(ws, 50)
 
 	return &model.Chart{
 		Interval:               model.Weekly,
 		TradingSessionSeries:   &model.TradingSessionSeries{TradingSessions: ws},
-		MovingAverageSeries20:  &model.MovingAverageSeries{MovingAverages: m20},
+		MovingAverageSeries21:  &model.MovingAverageSeries{MovingAverages: m21},
 		MovingAverageSeries50:  &model.MovingAverageSeries{MovingAverages: m50},
 		MovingAverageSeries200: &model.MovingAverageSeries{MovingAverages: m200},
 		AverageVolumeSeries:    &model.AverageVolumeSeries{AverageVolumes: v50},
@@ -254,26 +254,40 @@ func weeklyModelTradingSessions(ds []*model.TradingSession) (ws []*model.Trading
 	return ws
 }
 
-func modelMovingAverages(ts []*model.TradingSession, n int) []*model.MovingAverage {
-	average := func(i, n int) (avg float32) {
-		if i+1-n < 0 {
-			return 0 // Not enough data
+func modelExponentialMovingAverages(ts []*model.TradingSession, n int) []*model.MovingAverage {
+	var values []*model.MovingAverage
+
+	smoothing := 2.0 / (float32(n) + 1.0)
+
+	value := func(i int) (avg float32) {
+		var prevEMA float32
+		switch {
+		case i < n:
+			// Not enough points to calculate SMA.
+			return 0
+
+		case i == n:
+			// Use yesterday's SMA for today's previous EMA.
+			var sum float32
+			for j := 0; j < n; j++ {
+				sum += ts[i-1-j].Close
+			}
+			prevEMA = sum / float32(n)
+
+		default:
+			// Use prev EMA.
+			prevEMA = values[i-1].Value
 		}
-		var sum float32
-		for j := 0; j < n; j++ {
-			sum += ts[i-j].Close
-		}
-		return sum / float32(n)
+		return ts[i].Close*smoothing + prevEMA*(1-smoothing)
 	}
 
-	var ms []*model.MovingAverage
 	for i := range ts {
-		ms = append(ms, &model.MovingAverage{
+		values = append(values, &model.MovingAverage{
 			Date:  ts[i].Date,
-			Value: average(i, n),
+			Value: value(i),
 		})
 	}
-	return ms
+	return values
 }
 
 func modelAverageVolumes(ts []*model.TradingSession, n int) []*model.AverageVolume {
