@@ -46,8 +46,6 @@ type Chart struct {
 	MovingAverageSeries50  *MovingAverageSeries
 	MovingAverageSeries200 *MovingAverageSeries
 	AverageVolumeSeries    *AverageVolumeSeries
-	DailyStochasticSeries  *StochasticSeries
-	WeeklyStochasticSeries *StochasticSeries
 	LastUpdateTime         time.Time
 }
 
@@ -195,24 +193,6 @@ func (a *AverageVolume) DeepCopy() *AverageVolume {
 	}
 	deep := *a
 	return &deep
-}
-
-// StochasticSeries is a time series of stochastic values.
-type StochasticSeries struct {
-	// Stochastics are sorted by date in ascending order.
-	Stochastics []*Stochastic
-}
-
-// Stochastic is a single data point in a StochasticSeries.
-type Stochastic struct {
-	// Date is the start date of the data point.
-	Date time.Time
-
-	// K measures the stock's momentum.
-	K float32
-
-	// D is some moving average of K.
-	D float32
 }
 
 // New creates a new Model.

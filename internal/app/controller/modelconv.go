@@ -13,12 +13,6 @@ import (
 // maxDataWeeks is maximum number of weeks of data to retain.
 const maxDataWeeks = 12 /* months */ * 4 /* weeks = 1 year */
 
-// Stochastic parameters.
-const (
-	k = 10
-	d = 3
-)
-
 func modelIntradayChart(chart *iex.Chart) (*model.Chart, error) {
 	// TODO(btmura): remove duplication with modelTradingSessions
 	var ts []*model.TradingSession
@@ -49,15 +43,10 @@ func modelIntradayChart(chart *iex.Chart) (*model.Chart, error) {
 func modelDailyChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
 	ds := modelTradingSessions(quote, chart)
 	ws := weeklyModelTradingSessions(ds)
-
 	m20 := modelExponentialMovingAverages(ds, 21)
 	m50 := modelExponentialMovingAverages(ds, 50)
 	m200 := modelExponentialMovingAverages(ds, 200)
-
 	v50 := modelAverageVolumes(ds, 50)
-
-	dsto := modelStochastics(ds)
-	wsto := modelStochastics(ws)
 
 	if len(ws) > maxDataWeeks {
 		start := ws[len(ws)-maxDataWeeks:][0].Date
@@ -66,8 +55,6 @@ func modelDailyChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
 		m50 = trimmedMovingAverages(m50, start)
 		m200 = trimmedMovingAverages(m200, start)
 		v50 = trimmedAverageVolumes(v50, start)
-		dsto = trimmedStochastics(dsto, start)
-		wsto = trimmedStochastics(wsto, start)
 	}
 
 	return &model.Chart{
@@ -77,8 +64,6 @@ func modelDailyChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
 		MovingAverageSeries50:  &model.MovingAverageSeries{MovingAverages: m50},
 		MovingAverageSeries200: &model.MovingAverageSeries{MovingAverages: m200},
 		AverageVolumeSeries:    &model.AverageVolumeSeries{AverageVolumes: v50},
-		DailyStochasticSeries:  &model.StochasticSeries{Stochastics: dsto},
-		WeeklyStochasticSeries: &model.StochasticSeries{Stochastics: wsto},
 	}, nil
 }
 
@@ -312,51 +297,6 @@ func modelAverageVolumes(ts []*model.TradingSession, n int) []*model.AverageVolu
 	return vs
 }
 
-func modelStochastics(ts []*model.TradingSession) []*model.Stochastic {
-	// Calculate fast %K for stochastics.
-	fastK := make([]float32, len(ts))
-	for i := range ts {
-		if i+1 < k {
-			continue
-		}
-
-		highestHigh, lowestLow := ts[i].High, ts[i].Low
-		for j := 0; j < k; j++ {
-			if highestHigh < ts[i-j].High {
-				highestHigh = ts[i-j].High
-			}
-			if lowestLow > ts[i-j].Low {
-				lowestLow = ts[i-j].Low
-			}
-		}
-		fastK[i] = (ts[i].Close - lowestLow) / (highestHigh - lowestLow)
-	}
-
-	// Setup slice to hold stochastics.
-	var ms []*model.Stochastic
-	for i := range ts {
-		ms = append(ms, &model.Stochastic{Date: ts[i].Date})
-	}
-
-	// Calculate fast %D (slow %K) for stochastics.
-	for i := range ts {
-		if i+1 < k+d {
-			continue
-		}
-		ms[i].K = (fastK[i] + fastK[i-1] + fastK[i-2]) / 3
-	}
-
-	// Calculate slow %D for stochastics.
-	for i := range ts {
-		if i+1 < k+d+d {
-			continue
-		}
-		ms[i].D = (ms[i].K + ms[i-1].K + ms[i-2].K) / 3
-	}
-
-	return ms
-}
-
 func trimmedTradingSessions(vs []*model.TradingSession, start time.Time) []*model.TradingSession {
 	for i, v := range vs {
 		if v.Date == start {
@@ -376,15 +316,6 @@ func trimmedMovingAverages(vs []*model.MovingAverage, start time.Time) []*model.
 }
 
 func trimmedAverageVolumes(vs []*model.AverageVolume, start time.Time) []*model.AverageVolume {
-	for i, v := range vs {
-		if v.Date == start {
-			return vs[i:]
-		}
-	}
-	return vs
-}
-
-func trimmedStochastics(vs []*model.Stochastic, start time.Time) []*model.Stochastic {
 	for i, v := range vs {
 		if v.Date == start {
 			return vs[i:]
