@@ -20,7 +20,7 @@ type volumeCursor struct {
 	// maxVolume is the maximum volume used for rendering measurements.
 	maxVolume int
 
-	// volRect is the rectangle where the volume bars are drawn.
+	// volRect is the rectangle where the volume barRects are drawn.
 	volRect image.Rectangle
 
 	// labelRect is the rectangle where the axis labels are drawn.

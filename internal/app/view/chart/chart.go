@@ -157,7 +157,7 @@ func NewChart(priceStyle PriceStyle) *Chart {
 		movingAverage50:  newMovingAverage(view.Yellow),
 		movingAverage200: newMovingAverage(view.White),
 
-		volume:         new(volume),
+		volume:         newVolume(priceStyle),
 		volumeAxis:     new(volumeAxis),
 		volumeCursor:   new(volumeCursor),
 		volumeTimeline: newTimeline(view.LightGray, view.TransparentLightGray, view.Gray, view.TransparentGray),
@@ -181,6 +181,7 @@ func (ch *Chart) SetPriceStyle(newPriceStyle PriceStyle) {
 		return
 	}
 	ch.prices.SetStyle(newPriceStyle)
+	ch.volume.SetStyle(newPriceStyle)
 }
 
 // SetLoading toggles the Chart's loading indicator.
@@ -367,6 +368,9 @@ func (ch *Chart) Update() (dirty bool) {
 		dirty = true
 	}
 	if ch.prices.Update() {
+		dirty = true
+	}
+	if ch.volume.Update() {
 		dirty = true
 	}
 	if ch.legend.Update() {

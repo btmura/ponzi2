@@ -97,7 +97,7 @@ func NewThumb(priceStyle PriceStyle) *Thumb {
 		priceCursor:   new(priceCursor),
 		priceTimeline: newTimeline(view.TransparentLightGray, view.LightGray, view.TransparentGray, view.Gray),
 
-		volume:         new(volume),
+		volume:         newVolume(priceStyle),
 		volumeCursor:   new(volumeCursor),
 		volumeTimeline: newTimeline(view.LightGray, view.TransparentLightGray, view.Gray, view.TransparentGray),
 
@@ -116,6 +116,7 @@ func (t *Thumb) SetPriceStyle(newPriceStyle PriceStyle) {
 	}
 
 	t.prices.SetStyle(newPriceStyle)
+	t.volume.SetStyle(newPriceStyle)
 }
 
 // SetLoading toggles the Chart's loading indicator.
@@ -229,6 +230,9 @@ func (t *Thumb) Update() (dirty bool) {
 		dirty = true
 	}
 	if t.prices.Update() {
+		dirty = true
+	}
+	if t.volume.Update() {
 		dirty = true
 	}
 	if t.loadingTextBox.Update() {

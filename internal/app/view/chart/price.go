@@ -26,8 +26,8 @@ type price struct {
 	// MaxLabelSize is the maximum label size useful for rendering measurements.
 	MaxLabelSize image.Point
 
-	// style is the price style whether bars or candlesticks.
-	style PriceStyle
+	// priceStyle is the price style whether bars or candlesticks.
+	priceStyle PriceStyle
 
 	// faders has the faders needed to fade in and out the bars and candlesticks.
 	faders map[PriceStyle]*view.Fader
@@ -45,14 +45,14 @@ type price struct {
 	bounds image.Rectangle
 }
 
-func newPrice(style PriceStyle) *price {
-	if style == PriceStyleUnspecified {
-		logger.Error("unspecified style")
+func newPrice(priceStyle PriceStyle) *price {
+	if priceStyle == PriceStyleUnspecified {
+		logger.Error("unspecified price style")
 		return nil
 	}
 
 	return &price{
-		style: style,
+		priceStyle: priceStyle,
 		faders: map[PriceStyle]*view.Fader{
 			Bar:         view.NewStoppedFader(1.5 * view.FPS),
 			Candlestick: view.NewStoppedFader(1.5 * view.FPS),
@@ -63,15 +63,15 @@ func newPrice(style PriceStyle) *price {
 // SetPriceStyle sets the style whether bars or candlesticks.
 func (p *price) SetStyle(newStyle PriceStyle) {
 	if newStyle == PriceStyleUnspecified {
-		logger.Error("unspecified style")
+		logger.Error("unspecified price style")
 		return
 	}
 
-	if newStyle == p.style {
+	if newStyle == p.priceStyle {
 		return
 	}
 
-	p.style = newStyle
+	p.priceStyle = newStyle
 }
 
 type priceData struct {
@@ -106,7 +106,7 @@ func (p *price) SetBounds(bounds image.Rectangle) {
 
 func (p *price) Update() (dirty bool) {
 	for s, fader := range p.faders {
-		if s == p.style {
+		if s == p.priceStyle {
 			fader.FadeIn()
 		} else {
 			fader.FadeOut()
@@ -146,7 +146,7 @@ func (p *price) Render(fudge float32) {
 
 	gfx.SetModelMatrixRect(r)
 
-	switch p.style {
+	switch p.priceStyle {
 	case Bar:
 		p.faders[Bar].Render(fudge, func() {
 			p.barLines.Render()
