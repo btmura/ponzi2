@@ -35,10 +35,10 @@ type price struct {
 	// barLines is the VAO with the price bar lines.
 	barLines *gfx.VAO
 
-	// stickLines is the VAO with the vertical candlestick lines.
+	// stickLines is the VAO with the volume lines.
 	stickLines *gfx.VAO
 
-	// stickRects ithe VAO with the candlestick boxes without the lines.
+	// stickRects is the VAO with the volume bars.
 	stickRects *gfx.VAO
 
 	// bounds is the rectangle with global coords that should be drawn within.
@@ -296,7 +296,7 @@ func priceBarVAO(ts []*model.TradingSession, priceRange [2]float32) *gfx.VAO {
 		moveOver()
 	}
 
-	lineVAO := gfx.NewVAO(
+	return gfx.NewVAO(
 		&gfx.VAOVertexData{
 			Mode:     gfx.Lines,
 			Vertices: vertices,
@@ -304,8 +304,6 @@ func priceBarVAO(ts []*model.TradingSession, priceRange [2]float32) *gfx.VAO {
 			Indices:  lineIndices,
 		},
 	)
-
-	return lineVAO
 }
 
 func priceCandlestickVAOs(ts []*model.TradingSession, priceRange [2]float32) (stickLines, stickRects *gfx.VAO) {

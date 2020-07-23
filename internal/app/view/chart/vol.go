@@ -14,7 +14,7 @@ import (
 
 var volumeHorizRuleSet = vao.HorizRuleSet([]float32{0.2, 0.8}, [2]float32{0, 1}, view.TransparentGray, view.Gray)
 
-// volume renders the volume barRects and labels for a single stock.
+// volume renders the volume bars and labels for a single stock.
 type volume struct {
 	// renderable is whether the ChartVolume can be rendered.
 	renderable bool
@@ -25,14 +25,14 @@ type volume struct {
 	// MaxLabelSize is the maximum label size useful for rendering measurements.
 	MaxLabelSize image.Point
 
-	// priceStyle is the price style whether barRects or candlesticks.
+	// priceStyle is the price style whether bars or candlesticks.
 	priceStyle PriceStyle
 
-	// faders has the faders needed to fade in and out the barRects and candlesticks.
+	// faders has the faders needed to fade in and out the bars and candlesticks.
 	faders map[PriceStyle]*view.Fader
 
-	// barRects are the volume bars colored to go with price bars.
-	barRects *gfx.VAO
+	// barLines are the volume bars colored to go with price bars.
+	barLines *gfx.VAO
 
 	// stickRects are the volume bars colored to go with candlesticks.
 	stickRects *gfx.VAO
@@ -59,7 +59,7 @@ func newVolume(priceStyle PriceStyle) *volume {
 	}
 }
 
-// SetPriceStyle sets the priceStyle whether barRects or candlesticks.
+// SetPriceStyle sets the priceStyle whether bars or candlesticks.
 func (v *volume) SetStyle(newStyle PriceStyle) {
 	if newStyle == PriceStyleUnspecified {
 		logger.Error("unspecified price style")
@@ -94,9 +94,9 @@ func (v *volume) SetData(data volumeData) {
 	// Measure the max label size by creating a label with the max value.
 	v.MaxLabelSize = makeVolumeLabel(v.volumeRange[1], 1).size
 
-	v.barRects = volumeBarsVAO(ts.TradingSessions, v.volumeRange[1], Bar)
+	v.barLines = volumeLineVAO(ts.TradingSessions, v.volumeRange[1])
 
-	v.stickRects = volumeBarsVAO(ts.TradingSessions, v.volumeRange[1], Candlestick)
+	v.stickRects = volumeBarVAO(ts.TradingSessions, v.volumeRange[1])
 
 	var values []float32
 	for _, m := range vs.AverageVolumes {
@@ -139,7 +139,7 @@ func (v *volume) Render(fudge float32) {
 	switch v.priceStyle {
 	case Bar:
 		v.faders[Bar].Render(fudge, func() {
-			v.barRects.Render()
+			v.barLines.Render()
 		})
 
 	case Candlestick:
@@ -153,8 +153,8 @@ func (v *volume) Render(fudge float32) {
 
 func (v *volume) Close() {
 	v.renderable = false
-	if v.barRects != nil {
-		v.barRects.Delete()
+	if v.barLines != nil {
+		v.barLines.Delete()
 	}
 	if v.stickRects != nil {
 		v.stickRects.Delete()
@@ -208,13 +208,81 @@ func volumeText(v int) string {
 	return t
 }
 
-func volumeBarsVAO(ts []*model.TradingSession, maxVolume int, priceStyle PriceStyle) *gfx.VAO {
+func volumeLineVAO(ts []*model.TradingSession, maxVolume int) *gfx.VAO {
+	var vertices []float32
+	var colors []float32
+	var lineIndices []uint16
+
+	dx := 2.0 / float32(len(ts)) // (-1 to 1) on X-axis
+	calcX := func(i int) (centerX float32) {
+		x := -1.0 + dx*float32(i)
+		return x + dx*.5
+	}
+	calcY := func(v int) (topY, botY float32) {
+		return 2*float32(v)/float32(maxVolume) - 1, -1
+	}
+
+	for i, s := range ts {
+		if s.Skip() {
+			continue
+		}
+
+		centerX := calcX(i)
+		topY, botY := calcY(s.Volume)
+
+		// Add the vertices needed to create the volume bar.
+		idxOffset := len(vertices) / 3
+		vertices = append(vertices,
+			centerX, topY, 0, // 0
+			centerX, botY, 0, // 1
+		)
+
+		// Add the colors corresponding to the vertices.
+		var c view.Color
+		switch {
+		case s.Source == model.RealTimePrice:
+			c = view.Yellow
+		case s.Change > 0:
+			c = view.Green
+		case s.Change < 0:
+			c = view.Red
+		default:
+			c = view.White
+		}
+
+		colors = append(colors,
+			c[0], c[1], c[2], c[3], // 0
+			c[0], c[1], c[2], c[3], // 1
+		)
+
+		// idx is function to refer to the vertices above.
+		idx := func(j uint16) uint16 {
+			return uint16(idxOffset) + j
+		}
+
+		// Add the vertex indices to render the bars.
+		lineIndices = append(lineIndices,
+			idx(0), idx(1),
+		)
+	}
+
+	return gfx.NewVAO(
+		&gfx.VAOVertexData{
+			Mode:     gfx.Lines,
+			Vertices: vertices,
+			Colors:   colors,
+			Indices:  lineIndices,
+		},
+	)
+}
+
+func volumeBarVAO(ts []*model.TradingSession, maxVolume int) *gfx.VAO {
 	data := &gfx.VAOVertexData{Mode: gfx.Triangles}
 
 	dx := 2.0 / float32(len(ts)) // (-1 to 1) on X-axis
 	calcX := func(i int) (leftX, rightX float32) {
 		x := -1.0 + dx*float32(i)
-		return x + dx*0.4, x + dx*0.6
+		return x + dx*0.2, x + dx*0.8
 	}
 	calcY := func(v int) (topY, botY float32) {
 		return 2*float32(v)/float32(maxVolume) - 1, -1
@@ -242,33 +310,14 @@ func volumeBarsVAO(ts []*model.TradingSession, maxVolume int, priceStyle PriceSt
 			)
 		}
 
-		switch priceStyle {
-		case Bar:
-			switch {
-			case s.Change > 0:
-				add(view.Green)
+		switch {
+		case s.Close > s.Open:
+			add(view.Green)
 
-			case s.Change < 0:
-				add(view.Red)
-
-			default:
-				add(view.White)
-			}
-
-		case Candlestick:
-			switch {
-			case s.Close > s.Open:
-				add(view.Green)
-
-			case s.Close < s.Open:
-				add(view.Red)
-
-			default:
-				add(view.White)
-			}
+		case s.Close < s.Open:
+			add(view.Red)
 
 		default:
-			logger.Errorf("missing case for %v", priceStyle)
 			add(view.White)
 		}
 
