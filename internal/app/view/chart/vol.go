@@ -53,8 +53,8 @@ func newVolume(priceStyle PriceStyle) *volume {
 	return &volume{
 		priceStyle: priceStyle,
 		faders: map[PriceStyle]*view.Fader{
-			Bar:         view.NewStoppedFader(1.5 * view.FPS),
-			Candlestick: view.NewStoppedFader(1.5 * view.FPS),
+			Bar:         view.NewStoppedFader(1 * view.FPS),
+			Candlestick: view.NewStoppedFader(1 * view.FPS),
 		},
 	}
 }
@@ -136,15 +136,15 @@ func (v *volume) Render(fudge float32) {
 	gfx.SetModelMatrixRect(v.bounds)
 	volumeHorizRuleSet.Render()
 
-	switch v.priceStyle {
-	case Bar:
-		v.faders[Bar].Render(fudge, func() {
-			v.barLines.Render()
-		})
+	for style, fader := range v.faders {
+		fader.Render(fudge, func() {
+			switch style {
+			case Bar:
+				v.barLines.Render()
 
-	case Candlestick:
-		v.faders[Candlestick].Render(fudge, func() {
-			v.stickRects.Render()
+			case Candlestick:
+				v.stickRects.Render()
+			}
 		})
 	}
 

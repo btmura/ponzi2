@@ -54,8 +54,8 @@ func newPrice(priceStyle PriceStyle) *price {
 	return &price{
 		priceStyle: priceStyle,
 		faders: map[PriceStyle]*view.Fader{
-			Bar:         view.NewStoppedFader(1.5 * view.FPS),
-			Candlestick: view.NewStoppedFader(1.5 * view.FPS),
+			Bar:         view.NewStoppedFader(1 * view.FPS),
+			Candlestick: view.NewStoppedFader(1 * view.FPS),
 		},
 	}
 }
@@ -146,16 +146,16 @@ func (p *price) Render(fudge float32) {
 
 	gfx.SetModelMatrixRect(r)
 
-	switch p.priceStyle {
-	case Bar:
-		p.faders[Bar].Render(fudge, func() {
-			p.barLines.Render()
-		})
+	for style, fader := range p.faders {
+		fader.Render(fudge, func() {
+			switch style {
+			case Bar:
+				p.barLines.Render()
 
-	case Candlestick:
-		p.faders[Candlestick].Render(fudge, func() {
-			p.stickLines.Render()
-			p.stickRects.Render()
+			case Candlestick:
+				p.stickLines.Render()
+				p.stickRects.Render()
+			}
 		})
 	}
 }
