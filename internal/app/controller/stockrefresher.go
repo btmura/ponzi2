@@ -167,12 +167,11 @@ func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) err
 				for _, interval := range req.intervals {
 					switch interval {
 					case model.Intraday:
-						ch, err := modelIntradayChart(stockData.chart)
+						ch := modelIntradayChart(stockData.chart)
 						es = append(es, event{
-							symbol:    sym,
-							quote:     q,
-							chart:     ch,
-							updateErr: err,
+							symbol: sym,
+							quote:  q,
+							chart:  ch,
 						})
 
 					case model.Daily:

@@ -13,8 +13,7 @@ import (
 // maxDataWeeks is maximum number of weeks of data to retain.
 const maxDataWeeks = 12 /* months */ * 4 /* weeks = 1 year */
 
-func modelIntradayChart(chart *iex.Chart) (*model.Chart, error) {
-	// TODO(btmura): remove duplication with modelTradingSessions
+func modelIntradayChart(chart *iex.Chart) *model.Chart {
 	var ts []*model.TradingSession
 	for _, p := range chart.ChartPoints {
 		ts = append(ts, &model.TradingSession{
@@ -37,7 +36,7 @@ func modelIntradayChart(chart *iex.Chart) (*model.Chart, error) {
 		TradingSessionSeries: &model.TradingSessionSeries{
 			TradingSessions: ts,
 		},
-	}, nil
+	}
 }
 
 func modelDailyChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {

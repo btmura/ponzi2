@@ -11,10 +11,9 @@ import (
 
 func TestModelIntradayChart(t *testing.T) {
 	for _, tt := range []struct {
-		desc    string
-		input   *iex.Chart
-		want    *model.Chart
-		wantErr bool
+		desc  string
+		input *iex.Chart
+		want  *model.Chart
 	}{
 		{
 			input: &iex.Chart{
@@ -47,14 +46,10 @@ func TestModelIntradayChart(t *testing.T) {
 		},
 	} {
 		t.Run(tt.desc, func(t *testing.T) {
-			got, gotErr := modelIntradayChart(tt.input)
+			got := modelIntradayChart(tt.input)
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("diff (-want, +got)\n%s", diff)
-			}
-
-			if (gotErr != nil) != tt.wantErr {
-				t.Errorf("got error: %v, wanted err: %t", gotErr, tt.wantErr)
 			}
 		})
 	}
