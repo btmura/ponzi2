@@ -102,7 +102,7 @@ func (v *volume) SetData(data volumeData) {
 	for _, m := range vs.AverageVolumes {
 		values = append(values, m.Value)
 	}
-	v.avgLine = vao.DataLine(values, [2]float32{float32(v.volumeRange[0]), float32(v.volumeRange[1])}, view.White)
+	v.avgLine = vao.DataLine(values, [2]float32{float32(v.volumeRange[0]), float32(v.volumeRange[1])}, view.Red)
 
 	v.renderable = true
 }
@@ -239,7 +239,7 @@ func volumeLineVAO(ts []*model.TradingSession, maxVolume int) *gfx.VAO {
 		case s.Source == model.RealTimePrice:
 			c = view.Yellow
 		case s.Change > 0:
-			c = view.Green
+			c = view.Blue
 		case s.Change < 0:
 			c = view.Red
 		default:
@@ -308,7 +308,7 @@ func volumeBarVAO(ts []*model.TradingSession, maxVolume int) *gfx.VAO {
 
 		switch {
 		case s.Close > s.Open:
-			add(view.Green)
+			add(view.Blue)
 
 		case s.Close < s.Open:
 			add(view.Red)

@@ -12,6 +12,7 @@ var (
 	LightGray            = Color{0.35, 0.35, 0.35, 1}
 	TransparentLightGray = Color{0.15, 0.15, 0.15, 0.5}
 	Orange               = Color{1, 0.5, 0, 1}
+	Blue                 = Color{0, 0.75, 1, 1}
 )
 
 // Color is color with red, green, blue, and alpha components.

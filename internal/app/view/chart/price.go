@@ -256,7 +256,7 @@ func priceBarVAO(ts []*model.TradingSession, priceRange [2]float32) *gfx.VAO {
 		case s.Source == model.RealTimePrice:
 			c = view.Yellow
 		case s.Change > 0:
-			c = view.Green
+			c = view.Blue
 		case s.Change < 0:
 			c = view.Red
 		default:
@@ -348,7 +348,7 @@ func priceCandlestickVAOs(ts []*model.TradingSession, priceRange [2]float32) (st
 		case s.Source == model.RealTimePrice:
 			c = view.Yellow
 		case s.Close > s.Open:
-			c = view.Green
+			c = view.Blue
 		case s.Close < s.Open:
 			c = view.Red
 		default:

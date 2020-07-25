@@ -153,8 +153,8 @@ func NewChart(priceStyle PriceStyle) *Chart {
 		priceCursor:   new(priceCursor),
 		priceTimeline: newTimeline(view.TransparentLightGray, view.LightGray, view.TransparentGray, view.Gray),
 
-		movingAverage21:  newMovingAverage(view.Purple),
-		movingAverage50:  newMovingAverage(view.Yellow),
+		movingAverage21:  newMovingAverage(view.Green),
+		movingAverage50:  newMovingAverage(view.Red),
 		movingAverage200: newMovingAverage(view.White),
 
 		volume:         newVolume(priceStyle),
