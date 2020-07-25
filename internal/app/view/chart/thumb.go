@@ -40,6 +40,10 @@ type Thumb struct {
 	priceCursor   *priceCursor
 	priceTimeline *timeline
 
+	movingAverage21  *movingAverage
+	movingAverage50  *movingAverage
+	movingAverage200 *movingAverage
+
 	volume         *volume
 	volumeCursor   *volumeCursor
 	volumeTimeline *timeline
@@ -96,6 +100,10 @@ func NewThumb(priceStyle PriceStyle) *Thumb {
 		prices:        newPrice(priceStyle),
 		priceCursor:   new(priceCursor),
 		priceTimeline: newTimeline(view.TransparentLightGray, view.LightGray, view.TransparentGray, view.Gray),
+
+		movingAverage21:  newMovingAverage(view.Purple),
+		movingAverage50:  newMovingAverage(view.Yellow),
+		movingAverage200: newMovingAverage(view.White),
 
 		volume:         newVolume(priceStyle),
 		volumeCursor:   new(volumeCursor),
@@ -177,6 +185,10 @@ func (t *Thumb) SetData(data Data) {
 	t.priceCursor.SetData(priceCursorData{ts})
 	t.priceTimeline.SetData(timelineData{dc.Interval, ts})
 
+	t.movingAverage21.SetData(movingAverageData{ts, dc.MovingAverageSeries21})
+	t.movingAverage50.SetData(movingAverageData{ts, dc.MovingAverageSeries50})
+	t.movingAverage200.SetData(movingAverageData{ts, dc.MovingAverageSeries200})
+
 	t.volume.SetData(volumeData{ts, vs})
 	t.volumeCursor.SetData(volumeCursorData{ts})
 	t.volumeTimeline.SetData(timelineData{dc.Interval, ts})
@@ -217,6 +229,9 @@ func (t *Thumb) ProcessInput(input *view.Input) {
 	t.priceCursor.SetBounds(pr, pr)
 	t.priceCursor.ProcessInput(input)
 	t.priceTimeline.SetBounds(pr)
+	t.movingAverage21.SetBounds(pr)
+	t.movingAverage50.SetBounds(pr)
+	t.movingAverage200.SetBounds(pr)
 
 	t.volume.SetBounds(vr)
 	t.volumeCursor.SetBounds(vr, vr)
@@ -251,9 +266,7 @@ func (t *Thumb) Update() (dirty bool) {
 func (t *Thumb) Render(fudge float32) {
 	t.frameBubble.Render(fudge)
 	t.header.Render(fudge)
-
-	r := t.bodyBounds
-	rect.RenderLineAtTop(r)
+	rect.RenderLineAtTop(t.bodyBounds)
 
 	// Only show messages if no prior data to show.
 	if !t.hasStockUpdated {
@@ -283,6 +296,10 @@ func (t *Thumb) Render(fudge float32) {
 	t.prices.Render(fudge)
 	t.priceCursor.Render(fudge)
 
+	t.movingAverage21.Render(fudge)
+	t.movingAverage50.Render(fudge)
+	t.movingAverage200.Render(fudge)
+
 	t.volume.Render(fudge)
 	t.volumeCursor.Render(fudge)
 }
@@ -303,6 +320,9 @@ func (t *Thumb) Close() {
 	t.prices.Close()
 	t.priceCursor.Close()
 	t.priceTimeline.Close()
+	t.movingAverage21.Close()
+	t.movingAverage50.Close()
+	t.movingAverage200.Close()
 	t.volume.Close()
 	t.volumeCursor.Close()
 	t.volumeTimeline.Close()
