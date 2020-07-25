@@ -32,6 +32,7 @@ func DataLine(yValues []float32, yRange [2]float32, color view.Color) *gfx.VAO {
 	var v uint16 // vertex index
 	for i, val := range yValues {
 		if val < minY || val > maxY {
+			first = true
 			continue
 		}
 		data.Vertices = append(data.Vertices, xc(i), yc(val), 0)
