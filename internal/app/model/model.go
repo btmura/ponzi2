@@ -126,12 +126,6 @@ type TradingSession struct {
 	PercentChange float32
 }
 
-// Skip returns true if the TradingSession should be skipped.
-func (s *TradingSession) Skip() bool {
-	// IEX sets the low and high to -1 when it has no data to report.
-	return s.Open <= 0 || s.High <= 0 || s.Low <= 0 || s.Close <= 0
-}
-
 // DeepCopy returns a deep copy of the session.
 func (s *TradingSession) DeepCopy() *TradingSession {
 	if s == nil {

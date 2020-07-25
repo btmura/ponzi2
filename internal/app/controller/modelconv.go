@@ -133,6 +133,10 @@ func modelTradingSessions(quote *iex.Quote, chart *iex.Chart) []*model.TradingSe
 	var ts []*model.TradingSession
 
 	for _, p := range chart.ChartPoints {
+		if p.Open <= 0 || p.High <= 0 || p.Low <= 0 || p.Close <= 0 {
+			logger.Errorf("skipping bad data for %s: %v", chart.Symbol, p)
+			continue
+		}
 		ts = append(ts, &model.TradingSession{
 			Date:          p.Date,
 			Source:        model.Close,

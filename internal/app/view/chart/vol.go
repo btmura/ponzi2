@@ -223,10 +223,6 @@ func volumeLineVAO(ts []*model.TradingSession, maxVolume int) *gfx.VAO {
 	}
 
 	for i, s := range ts {
-		if s.Skip() {
-			continue
-		}
-
 		centerX := calcX(i)
 		topY, botY := calcY(s.Volume)
 

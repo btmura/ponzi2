@@ -181,10 +181,6 @@ func priceRange(ts []*model.TradingSession) [2]float32 {
 	var low float32 = math.MaxFloat32
 	var high float32
 	for _, s := range ts {
-		if s.Skip() {
-			continue
-		}
-
 		if s.Low < low {
 			low = s.Low
 		}
@@ -240,11 +236,6 @@ func priceBarVAO(ts []*model.TradingSession, priceRange [2]float32) *gfx.VAO {
 	}
 
 	for _, s := range ts {
-		if s.Skip() {
-			moveOver()
-			continue
-		}
-
 		// Figure out Y coordinates of the key levels.
 		lowY, highY, openY, closeY := calcY(s.Low), calcY(s.High), calcY(s.Open), calcY(s.Close)
 
@@ -329,11 +320,6 @@ func priceCandlestickVAOs(ts []*model.TradingSession, priceRange [2]float32) (st
 	}
 
 	for _, s := range ts {
-		if s.Skip() {
-			moveOver()
-			continue
-		}
-
 		// Figure out Y coordinates of the key levels.
 		lowY, highY, openY, closeY := calcY(s.Low), calcY(s.High), calcY(s.Open), calcY(s.Close)
 
