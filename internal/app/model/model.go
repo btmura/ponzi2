@@ -141,6 +141,21 @@ type MovingAverageSeries struct {
 	MovingAverages []*MovingAverage
 }
 
+// DeepCopy returns a deep copy of the series.
+func (m *MovingAverageSeries) DeepCopy() *MovingAverageSeries {
+	if m == nil {
+		return nil
+	}
+	deep := *m
+	if len(deep.MovingAverages) != 0 {
+		deep.MovingAverages = make([]*MovingAverage, len(m.MovingAverages))
+		for i, ma := range m.MovingAverages {
+			deep.MovingAverages[i] = ma.DeepCopy()
+		}
+	}
+	return &deep
+}
+
 // MovingAverage is a single data point in a MovingAverageSeries.
 type MovingAverage struct {
 	// Date is the start date of the data point.
@@ -148,6 +163,15 @@ type MovingAverage struct {
 
 	// Value is the moving average value.
 	Value float32
+}
+
+// DeepCopy returns a deep copy of the moving average.
+func (m *MovingAverage) DeepCopy() *MovingAverage {
+	if m == nil {
+		return nil
+	}
+	deep := *m
+	return &deep
 }
 
 // AverageVolumeSeries is a time series of average volume values.

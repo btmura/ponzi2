@@ -157,17 +157,17 @@ func (t *Thumb) SetData(data Data) {
 	}
 
 	ts := dc.TradingSessionSeries
-	if ts == nil {
-		return
-	}
-
+	m21 := dc.MovingAverageSeries21
+	m50 := dc.MovingAverageSeries50
+	m200 := dc.MovingAverageSeries200
 	vs := dc.AverageVolumeSeries
-	if vs == nil {
+
+	if ts == nil || m21 == nil || m50 == nil || m200 == nil || vs == nil {
 		return
 	}
 
-	if len(ts.TradingSessions) != len(vs.AverageVolumes) {
-		logger.Error("trading and volumes should be the same length")
+	if l1, l2, l3, l4, l5 := len(ts.TradingSessions), len(m21.MovingAverages), len(m50.MovingAverages), len(m200.MovingAverages), len(vs.AverageVolumes); l1 != l2 || l2 != l3 || l3 != l4 || l4 != l5 {
+		logger.Error("bad data has different lengths: %d %d %d %d %d", l1, l2, l3, l4, l5)
 		return
 	}
 
@@ -175,6 +175,18 @@ func (t *Thumb) SetData(data Data) {
 	if l := len(ts.TradingSessions); l > days {
 		ts = ts.DeepCopy()
 		ts.TradingSessions = ts.TradingSessions[l-days:]
+	}
+	if l := len(m21.MovingAverages); l > days {
+		m21 = m21.DeepCopy()
+		m21.MovingAverages = m21.MovingAverages[l-days:]
+	}
+	if l := len(m50.MovingAverages); l > days {
+		m50 = m50.DeepCopy()
+		m50.MovingAverages = m50.MovingAverages[l-days:]
+	}
+	if l := len(m200.MovingAverages); l > days {
+		m200 = m200.DeepCopy()
+		m200.MovingAverages = m200.MovingAverages[l-days:]
 	}
 	if l := len(vs.AverageVolumes); l > days {
 		vs = vs.DeepCopy()
@@ -185,9 +197,9 @@ func (t *Thumb) SetData(data Data) {
 	t.priceCursor.SetData(priceCursorData{ts})
 	t.priceTimeline.SetData(timelineData{dc.Interval, ts})
 
-	t.movingAverage21.SetData(movingAverageData{ts, dc.MovingAverageSeries21})
-	t.movingAverage50.SetData(movingAverageData{ts, dc.MovingAverageSeries50})
-	t.movingAverage200.SetData(movingAverageData{ts, dc.MovingAverageSeries200})
+	t.movingAverage21.SetData(movingAverageData{ts, m21})
+	t.movingAverage50.SetData(movingAverageData{ts, m50})
+	t.movingAverage200.SetData(movingAverageData{ts, m200})
 
 	t.volume.SetData(volumeData{ts, vs})
 	t.volumeCursor.SetData(volumeCursorData{ts})
