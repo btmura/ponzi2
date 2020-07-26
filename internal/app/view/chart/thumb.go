@@ -167,7 +167,7 @@ func (t *Thumb) SetData(data Data) {
 	}
 
 	if l1, l2, l3, l4, l5 := len(ts.TradingSessions), len(m21.MovingAverages), len(m50.MovingAverages), len(m200.MovingAverages), len(vs.AverageVolumes); l1 != l2 || l2 != l3 || l3 != l4 || l4 != l5 {
-		logger.Error("bad data has different lengths: %d %d %d %d %d", l1, l2, l3, l4, l5)
+		logger.Errorf("bad data has different lengths: %d %d %d %d %d", l1, l2, l3, l4, l5)
 		return
 	}
 
