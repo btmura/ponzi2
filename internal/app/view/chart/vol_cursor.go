@@ -17,8 +17,8 @@ type volumeCursor struct {
 	// renderable is true if this should be rendered.
 	renderable bool
 
-	// maxVolume is the maximum volume used for rendering measurements.
-	maxVolume int
+	// volumeRange represents the inclusive range from min to max volume.
+	volumeRange [2]int
 
 	// volRect is the rectangle where the volume barLines are drawn.
 	volRect image.Rectangle
@@ -46,13 +46,7 @@ func (v *volumeCursor) SetData(data volumeCursorData) {
 		return
 	}
 
-	// Find the maximum volume.
-	v.maxVolume = 0
-	for _, s := range ts.TradingSessions {
-		if v.maxVolume < s.Volume {
-			v.maxVolume = s.Volume
-		}
-	}
+	v.volumeRange = volumeRange(ts.TradingSessions)
 
 	v.renderable = true
 }
@@ -77,24 +71,25 @@ func (v *volumeCursor) Render(fudge float32) {
 
 	renderCursorLines(v.volRect, v.mousePos)
 
+	v.renderLabel(fudge)
+}
+
+func (v *volumeCursor) renderLabel(fudge float32) {
 	if !v.mousePos.In(v.volRect) {
 		return
 	}
 
 	yPercent := float32(v.mousePos.Y-v.volRect.Min.Y) / float32(v.volRect.Dy())
-	v.renderLabel(fudge, yPercent)
-}
-
-func (v *volumeCursor) renderLabel(fudge float32, yPercent float32) {
-	l := makeVolumeLabel(v.maxVolume, yPercent)
+	value := volumeValue(v.volumeRange, yPercent)
+	label := makeVolumeLabel(value, yPercent)
 
 	textPt := image.Point{
-		X: v.labelRect.Max.X - l.size.X,
-		Y: v.labelRect.Min.Y + int(float32(v.labelRect.Dy())*l.percent) - l.size.Y/2,
+		X: v.labelRect.Max.X - label.size.X,
+		Y: v.labelRect.Min.Y + int(float32(v.labelRect.Dy())*label.percent) - label.size.Y/2,
 	}
 	bubbleRect := image.Rectangle{
 		Min: textPt,
-		Max: textPt.Add(l.size),
+		Max: textPt.Add(label.size),
 	}.Inset(-axisLabelPadding)
 
 	// Move the label to the left if the mouse is overlapping.
@@ -102,13 +97,13 @@ func (v *volumeCursor) renderLabel(fudge float32, yPercent float32) {
 		textPt.X = v.labelRect.Min.X
 		bubbleRect = image.Rectangle{
 			Min: textPt,
-			Max: textPt.Add(l.size),
+			Max: textPt.Add(label.size),
 		}.Inset(-axisLabelPadding)
 	}
 
 	axisLabelBubble.SetBounds(bubbleRect)
 	axisLabelBubble.Render(fudge)
-	axisLabelTextRenderer.Render(l.text, textPt, gfx.TextColor(view.White))
+	axisLabelTextRenderer.Render(label.text, textPt, gfx.TextColor(view.White))
 }
 
 func (v *volumeCursor) Close() {

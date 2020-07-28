@@ -11,7 +11,21 @@ import (
 // Embed resources into the application. Get esc from github.com/mjibson/esc.
 //go:generate esc -o bindata.go -pkg vao -include ".*(ply|png)" -modtime 1337 -private data
 
+// YPercentFunc returns the percent within the Y-axis range that the value is.
+type YPercentFunc func(value float32) (percent float32)
+
 func DataLine(yValues []float32, yRange [2]float32, color view.Color) *gfx.VAO {
+	yPercentFunc := func(v float32) float32 {
+		return (v - yRange[0]) / (yRange[1] - yRange[0])
+	}
+	return innerDataLine(yValues, yRange, yPercentFunc, color)
+}
+
+func DataLineWithYPercentFunc(yValues []float32, yRange [2]float32, yPercentFunc YPercentFunc, color view.Color) *gfx.VAO {
+	return innerDataLine(yValues, yRange, yPercentFunc, color)
+}
+
+func innerDataLine(yValues []float32, yRange [2]float32, yPercentFunc YPercentFunc, color view.Color) *gfx.VAO {
 	if len(yValues) < 2 {
 		return gfx.EmptyVAO()
 	}
@@ -23,7 +37,7 @@ func DataLine(yValues []float32, yRange [2]float32, color view.Color) *gfx.VAO {
 
 	minY, maxY := yRange[0], yRange[1]
 	yc := func(v float32) float32 {
-		return 2.0*(v-minY)/(maxY-minY) - 1.0
+		return 2.0*yPercentFunc(v) - 1.0
 	}
 
 	data := &gfx.VAOVertexData{Mode: gfx.Lines}

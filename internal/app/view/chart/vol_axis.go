@@ -12,8 +12,8 @@ type volumeAxis struct {
 	// renderable is true if this should be rendered.
 	renderable bool
 
-	// maxVolume is the maximum volume used for rendering measurements.
-	maxVolume int
+	// volumeRange represents the inclusive range from min to max volume.
+	volumeRange [2]int
 
 	// labels bundle rendering measurements for volume labels.
 	labels []volumeLabel
@@ -36,18 +36,12 @@ func (v *volumeAxis) SetData(data volumeAxisData) {
 		return
 	}
 
-	// Find the maximum volume.
-	v.maxVolume = 0
-	for _, s := range ts.TradingSessions {
-		if v.maxVolume < s.Volume {
-			v.maxVolume = s.Volume
-		}
-	}
+	v.volumeRange = volumeRange(ts.TradingSessions)
 
 	// Create Y-axis labels for key percentages.
 	v.labels = []volumeLabel{
-		makeVolumeLabel(v.maxVolume, .8),
-		makeVolumeLabel(v.maxVolume, .2),
+		makeVolumeLabel(volumeValue(v.volumeRange, .8), .8),
+		makeVolumeLabel(volumeValue(v.volumeRange, .2), .2),
 	}
 
 	v.renderable = true

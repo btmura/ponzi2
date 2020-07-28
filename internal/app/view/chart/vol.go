@@ -3,6 +3,7 @@ package chart
 import (
 	"fmt"
 	"image"
+	"math"
 	"strconv"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
@@ -94,15 +95,21 @@ func (v *volume) SetData(data volumeData) {
 	// Measure the max label size by creating a label with the max value.
 	v.MaxLabelSize = makeVolumeLabel(v.volumeRange[1], 1).size
 
-	v.barLines = volumeLineVAO(ts.TradingSessions, v.volumeRange[1])
+	v.barLines = volumeLineVAO(ts.TradingSessions, v.volumeRange)
 
-	v.stickRects = volumeBarVAO(ts.TradingSessions, v.volumeRange[1])
+	v.stickRects = volumeBarVAO(ts.TradingSessions, v.volumeRange)
 
 	var values []float32
 	for _, m := range vs.AverageVolumes {
 		values = append(values, m.Value)
 	}
-	v.avgLine = vao.DataLine(values, [2]float32{float32(v.volumeRange[0]), float32(v.volumeRange[1])}, view.Red)
+	v.avgLine = vao.DataLineWithYPercentFunc(
+		values,
+		[2]float32{float32(v.volumeRange[0]), float32(v.volumeRange[1])},
+		func(value float32) (percent float32) {
+			return volumePercent(v.volumeRange, int(value))
+		},
+		view.Red)
 
 	v.renderable = true
 }
@@ -165,16 +172,50 @@ func (v *volume) Close() {
 }
 
 func volumeRange(ts []*model.TradingSession) [2]int {
-	var high int
+	if len(ts) == 0 {
+		return [2]int{0, 0}
+	}
 
+	low, high := math.MaxInt64, 0
 	for _, s := range ts {
+		if s.Volume < low {
+			low = s.Volume
+		}
 		if s.Volume > high {
 			high = s.Volume
 		}
 	}
 
-	// Set min to 1 so missing zero values are not rendered for average volume lines.
-	return [2]int{1, high}
+	if low > high {
+		return [2]int{0, 0}
+	}
+
+	return [2]int{low, high}
+}
+
+func volumePercent(volumeRange [2]int, value int) (percent float32) {
+	log := func(value int) float64 {
+		if value == 0 {
+			return 0
+		}
+		return math.Log(float64(value))
+	}
+	return float32((log(value) - log(volumeRange[0])) / (log(volumeRange[1]) - log(volumeRange[0])))
+}
+
+func volumeValue(volumeRange [2]int, percent float32) (value int) {
+	log := func(value int) float64 {
+		if value == 0 {
+			return 0
+		}
+		return math.Log(float64(value))
+	}
+	return int(
+		math.Pow(
+			math.E,
+			float64(percent)*(log(volumeRange[1])-log(volumeRange[0]))+log(volumeRange[0]),
+		),
+	)
 }
 
 // volumeLabel is a right-justified Y-axis label with the volume.
@@ -184,10 +225,10 @@ type volumeLabel struct {
 	size    image.Point
 }
 
-func makeVolumeLabel(maxVolume int, perc float32) volumeLabel {
-	t := volumeText(int(float32(maxVolume) * perc))
+func makeVolumeLabel(value int, percent float32) volumeLabel {
+	t := volumeText(value)
 	return volumeLabel{
-		percent: perc,
+		percent: percent,
 		text:    t,
 		size:    axisLabelTextRenderer.Measure(t),
 	}
@@ -208,7 +249,7 @@ func volumeText(v int) string {
 	return t
 }
 
-func volumeLineVAO(ts []*model.TradingSession, maxVolume int) *gfx.VAO {
+func volumeLineVAO(ts []*model.TradingSession, volumeRange [2]int) *gfx.VAO {
 	var vertices []float32
 	var colors []float32
 	var lineIndices []uint16
@@ -218,8 +259,8 @@ func volumeLineVAO(ts []*model.TradingSession, maxVolume int) *gfx.VAO {
 		x := -1.0 + dx*float32(i)
 		return x + dx*.5
 	}
-	calcY := func(v int) (topY, botY float32) {
-		return 2*float32(v)/float32(maxVolume) - 1, -1
+	calcY := func(value int) (topY, botY float32) {
+		return 2*volumePercent(volumeRange, value) - 1, -1
 	}
 
 	for i, s := range ts {
@@ -272,7 +313,7 @@ func volumeLineVAO(ts []*model.TradingSession, maxVolume int) *gfx.VAO {
 	)
 }
 
-func volumeBarVAO(ts []*model.TradingSession, maxVolume int) *gfx.VAO {
+func volumeBarVAO(ts []*model.TradingSession, volumeRange [2]int) *gfx.VAO {
 	data := &gfx.VAOVertexData{Mode: gfx.Triangles}
 
 	dx := 2.0 / float32(len(ts)) // (-1 to 1) on X-axis
@@ -280,8 +321,8 @@ func volumeBarVAO(ts []*model.TradingSession, maxVolume int) *gfx.VAO {
 		x := -1.0 + dx*float32(i)
 		return x + dx*0.2, x + dx*0.8
 	}
-	calcY := func(v int) (topY, botY float32) {
-		return 2*float32(v)/float32(maxVolume) - 1, -1
+	calcY := func(value int) (topY, botY float32) {
+		return 2*volumePercent(volumeRange, value) - 1, -1
 	}
 
 	for i, s := range ts {
