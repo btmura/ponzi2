@@ -228,6 +228,7 @@ func weeklyModelTradingSessions(ds []*model.TradingSession) (ws []*model.Trading
 			if ls.Low > p.Low {
 				ls.Low = p.Low
 			}
+			ls.Source = p.Source
 			ls.Close = p.Close
 			ls.Volume += p.Volume
 			ls.Change = ls.Close - ls.Open
