@@ -40,12 +40,9 @@ func (m *movingAverage) SetData(data movingAverageData) {
 		return
 	}
 
-	// Create the graph line VAO.
-	var values []float32
-	for _, m := range ms.MovingAverages {
-		values = append(values, m.Value)
-	}
-	m.line = vao.DataLine(values, priceRange(ts.TradingSessions), m.color)
+	yRange := priceRange(ts.TradingSessions)
+
+	m.line = movingAverageDataLine(ms.MovingAverages, yRange, m.color)
 
 	m.renderable = true
 }
@@ -67,4 +64,12 @@ func (m *movingAverage) Close() {
 	if m.line != nil {
 		m.line.Delete()
 	}
+}
+
+func movingAverageDataLine(ms []*model.MovingAverage, yRange [2]float32, color view.Color) *gfx.VAO {
+	var yPercentValues []float32
+	for _, m := range ms {
+		yPercentValues = append(yPercentValues, pricePercent(yRange, m.Value))
+	}
+	return vao.DataLine(yPercentValues, color)
 }

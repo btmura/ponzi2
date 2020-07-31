@@ -181,10 +181,10 @@ func priceRange(ts []*model.TradingSession) [2]float32 {
 	var low float32 = math.MaxFloat32
 	var high float32
 	for _, s := range ts {
-		if s.Low < low {
+		if s.Low != 0 && s.Low < low {
 			low = s.Low
 		}
-		if s.High > high {
+		if s.High != 0 && s.High > high {
 			high = s.High
 		}
 	}
@@ -199,6 +199,35 @@ func priceRange(ts []*model.TradingSession) [2]float32 {
 	high += padding
 
 	return [2]float32{low, high}
+}
+
+func pricePercent(priceRange [2]float32, value float32) (percent float32) {
+	log := func(value float32) float64 {
+		if value == 0 {
+			return 0
+		}
+		return math.Log(float64(value))
+	}
+	percent = float32((log(value) - log(priceRange[0])) / (log(priceRange[1]) - log(priceRange[0])))
+	if percent >= 0 {
+		return percent
+	}
+	return 0
+}
+
+func priceValue(priceRange [2]float32, percent float32) (value float32) {
+	log := func(value float32) float64 {
+		if value == 0 {
+			return 0
+		}
+		return math.Log(float64(value))
+	}
+	return float32(
+		math.Pow(
+			math.E,
+			float64(percent)*(log(priceRange[1])-log(priceRange[0]))+log(priceRange[0]),
+		),
+	)
 }
 
 type priceLabel struct {
@@ -232,7 +261,7 @@ func priceBarVAO(ts []*model.TradingSession, priceRange [2]float32) *gfx.VAO {
 	}
 
 	calcY := func(value float32) float32 {
-		return 2*(value-priceRange[0])/(priceRange[1]-priceRange[0]) - 1
+		return 2*pricePercent(priceRange, value) - 1
 	}
 
 	for _, s := range ts {
@@ -316,7 +345,7 @@ func priceCandlestickVAOs(ts []*model.TradingSession, priceRange [2]float32) (st
 	}
 
 	calcY := func(value float32) float32 {
-		return 2*(value-priceRange[0])/(priceRange[1]-priceRange[0]) - 1
+		return 2*pricePercent(priceRange, value) - 1
 	}
 
 	for _, s := range ts {

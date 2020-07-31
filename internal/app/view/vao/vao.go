@@ -14,38 +14,25 @@ import (
 // YPercentFunc returns the percent within the Y-axis range that the value is.
 type YPercentFunc func(value float32) (percent float32)
 
-func DataLine(yValues []float32, yRange [2]float32, color view.Color) *gfx.VAO {
-	yPercentFunc := func(v float32) float32 {
-		return (v - yRange[0]) / (yRange[1] - yRange[0])
-	}
-	return innerDataLine(yValues, yRange, yPercentFunc, color)
-}
-
-func DataLineWithYPercentFunc(yValues []float32, yRange [2]float32, yPercentFunc YPercentFunc, color view.Color) *gfx.VAO {
-	return innerDataLine(yValues, yRange, yPercentFunc, color)
-}
-
-func innerDataLine(yValues []float32, yRange [2]float32, yPercentFunc YPercentFunc, color view.Color) *gfx.VAO {
-	if len(yValues) < 2 {
+func DataLine(yPercentValues []float32, color view.Color) *gfx.VAO {
+	if len(yPercentValues) < 2 {
 		return gfx.EmptyVAO()
 	}
 
-	dx := 2.0 / float32(len(yValues)) // (-1 to 1) on X-axis
+	dx := 2.0 / float32(len(yPercentValues)) // (-1 to 1) on X-axis
 	xc := func(i int) float32 {
 		return -1.0 + dx*float32(i) + dx*0.5
 	}
-
-	minY, maxY := yRange[0], yRange[1]
 	yc := func(v float32) float32 {
-		return 2.0*yPercentFunc(v) - 1.0
+		return 2.0*v - 1.0
 	}
 
 	data := &gfx.VAOVertexData{Mode: gfx.Lines}
 
 	first := true
 	var v uint16 // vertex index
-	for i, val := range yValues {
-		if val < minY || val > maxY {
+	for i, val := range yPercentValues {
+		if val <= 0 || val >= 1 {
 			first = true
 			continue
 		}

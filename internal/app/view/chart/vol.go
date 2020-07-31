@@ -20,9 +20,6 @@ type volume struct {
 	// renderable is whether the ChartVolume can be rendered.
 	renderable bool
 
-	// volumeRange represents the inclusive range from min to max volume.
-	volumeRange [2]int
-
 	// MaxLabelSize is the maximum label size useful for rendering measurements.
 	MaxLabelSize image.Point
 
@@ -90,26 +87,14 @@ func (v *volume) SetData(data volumeData) {
 		return
 	}
 
-	v.volumeRange = volumeRange(ts.TradingSessions)
+	yRange := volumeRange(ts.TradingSessions)
 
 	// Measure the max label size by creating a label with the max value.
-	v.MaxLabelSize = makeVolumeLabel(v.volumeRange[1], 1).size
+	v.MaxLabelSize = makeVolumeLabel(yRange[1], 1).size
 
-	v.barLines = volumeLineVAO(ts.TradingSessions, v.volumeRange)
-
-	v.stickRects = volumeBarVAO(ts.TradingSessions, v.volumeRange)
-
-	var values []float32
-	for _, m := range vs.AverageVolumes {
-		values = append(values, m.Value)
-	}
-	v.avgLine = vao.DataLineWithYPercentFunc(
-		values,
-		[2]float32{float32(v.volumeRange[0]), float32(v.volumeRange[1])},
-		func(value float32) (percent float32) {
-			return volumePercent(v.volumeRange, int(value))
-		},
-		view.Red)
+	v.barLines = volumeLineVAO(ts.TradingSessions, yRange)
+	v.stickRects = volumeBarVAO(ts.TradingSessions, yRange)
+	v.avgLine = volumeDataLine(vs.AverageVolumes, yRange)
 
 	v.renderable = true
 }
@@ -178,10 +163,10 @@ func volumeRange(ts []*model.TradingSession) [2]int {
 
 	low, high := math.MaxInt64, 0
 	for _, s := range ts {
-		if s.Volume < low {
+		if s.Volume != 0 && s.Volume < low {
 			low = s.Volume
 		}
-		if s.Volume > high {
+		if s.Volume != 0 && s.Volume > high {
 			high = s.Volume
 		}
 	}
@@ -200,7 +185,11 @@ func volumePercent(volumeRange [2]int, value int) (percent float32) {
 		}
 		return math.Log(float64(value))
 	}
-	return float32((log(value) - log(volumeRange[0])) / (log(volumeRange[1]) - log(volumeRange[0])))
+	percent = float32((log(value) - log(volumeRange[0])) / (log(volumeRange[1]) - log(volumeRange[0])))
+	if percent >= 0 {
+		return percent
+	}
+	return 0
 }
 
 func volumeValue(volumeRange [2]int, percent float32) (value int) {
@@ -371,4 +360,12 @@ func volumeBarVAO(ts []*model.TradingSession, volumeRange [2]int) *gfx.VAO {
 	}
 
 	return gfx.NewVAO(data)
+}
+
+func volumeDataLine(vs []*model.AverageVolume, yRange [2]int) *gfx.VAO {
+	var yPercentValues []float32
+	for _, v := range vs {
+		yPercentValues = append(yPercentValues, volumePercent(yRange, int(v.Value)))
+	}
+	return vao.DataLine(yPercentValues, view.Red)
 }

@@ -71,25 +71,25 @@ func (p *priceCursor) Render(fudge float32) {
 
 	renderCursorLines(p.priceRect, p.mousePos)
 
+	p.renderLabel(fudge)
+}
+
+func (p *priceCursor) renderLabel(fudge float32) {
 	if !p.mousePos.In(p.priceRect) {
 		return
 	}
 
 	yPercent := float32(p.mousePos.Y-p.priceRect.Min.Y) / float32(p.priceRect.Dy())
-	p.renderLabel(fudge, yPercent)
-}
-
-func (p *priceCursor) renderLabel(fudge float32, yPercent float32) {
-	v := p.priceRange[0] + (p.priceRange[1]-p.priceRange[0])*yPercent
-	l := makePriceLabel(v)
+	value := priceValue(p.priceRange, yPercent)
+	label := makePriceLabel(value)
 
 	textPt := image.Point{
-		X: p.labelRect.Max.X - l.size.X,
-		Y: p.labelRect.Min.Y + int(float32(p.labelRect.Dy())*yPercent) - l.size.Y/2,
+		X: p.labelRect.Max.X - label.size.X,
+		Y: p.labelRect.Min.Y + int(float32(p.labelRect.Dy())*yPercent) - label.size.Y/2,
 	}
 	bubbleRect := image.Rectangle{
 		Min: textPt,
-		Max: textPt.Add(l.size),
+		Max: textPt.Add(label.size),
 	}.Inset(-axisLabelPadding)
 
 	// Move the label to the left if the mouse is overlapping.
@@ -97,13 +97,13 @@ func (p *priceCursor) renderLabel(fudge float32, yPercent float32) {
 		textPt.X = p.labelRect.Min.X
 		bubbleRect = image.Rectangle{
 			Min: textPt,
-			Max: textPt.Add(l.size),
+			Max: textPt.Add(label.size),
 		}.Inset(-axisLabelPadding)
 	}
 
 	axisLabelBubble.SetBounds(bubbleRect)
 	axisLabelBubble.Render(fudge)
-	axisLabelTextRenderer.Render(l.text, textPt, gfx.TextColor(view.White))
+	axisLabelTextRenderer.Render(label.text, textPt, gfx.TextColor(view.White))
 }
 
 func (p *priceCursor) Close() {
