@@ -306,13 +306,12 @@ func (t *Thumb) Render(fudge float32) {
 	t.volumeTimeline.Render(fudge)
 
 	t.prices.Render(fudge)
-	t.priceCursor.Render(fudge)
-
 	t.movingAverage21.Render(fudge)
 	t.movingAverage50.Render(fudge)
 	t.movingAverage200.Render(fudge)
-
 	t.volume.Render(fudge)
+
+	t.priceCursor.Render(fudge)
 	t.volumeCursor.Render(fudge)
 }
 
