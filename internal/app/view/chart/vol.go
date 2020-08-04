@@ -32,8 +32,8 @@ type volume struct {
 	// barLines are the volume bars colored to go with price bars.
 	barLines *gfx.VAO
 
-	// stickRects are the volume bars colored to go with candlesticks.
-	stickRects *gfx.VAO
+	// stickLines are the volume bars colored to go with candlesticks.
+	stickLines *gfx.VAO
 
 	// avgLine is the VAO with the average volume line.
 	avgLine *gfx.VAO
@@ -92,8 +92,8 @@ func (v *volume) SetData(data volumeData) {
 	// Measure the max label size by creating a label with the max value.
 	v.MaxLabelSize = makeVolumeLabel(yRange[1], 1).size
 
-	v.barLines = volumeLineVAO(ts.TradingSessions, yRange)
-	v.stickRects = volumeBarVAO(ts.TradingSessions, yRange)
+	v.barLines = volumeLineVAO(ts.TradingSessions, yRange, Bar)
+	v.stickLines = volumeLineVAO(ts.TradingSessions, yRange, Candlestick)
 	v.avgLine = volumeDataLine(vs.AverageVolumes, yRange)
 
 	v.renderable = true
@@ -135,7 +135,7 @@ func (v *volume) Render(fudge float32) {
 				v.barLines.Render()
 
 			case Candlestick:
-				v.stickRects.Render()
+				v.stickLines.Render()
 			}
 		})
 	}
@@ -148,8 +148,8 @@ func (v *volume) Close() {
 	if v.barLines != nil {
 		v.barLines.Delete()
 	}
-	if v.stickRects != nil {
-		v.stickRects.Delete()
+	if v.stickLines != nil {
+		v.stickLines.Delete()
 	}
 	if v.avgLine != nil {
 		v.avgLine.Delete()
@@ -238,7 +238,7 @@ func volumeText(v int) string {
 	return t
 }
 
-func volumeLineVAO(ts []*model.TradingSession, volumeRange [2]int) *gfx.VAO {
+func volumeLineVAO(ts []*model.TradingSession, volumeRange [2]int, priceStyle PriceStyle) *gfx.VAO {
 	var vertices []float32
 	var colors []float32
 	var lineIndices []uint16
@@ -264,16 +264,27 @@ func volumeLineVAO(ts []*model.TradingSession, volumeRange [2]int) *gfx.VAO {
 		)
 
 		// Add the colors corresponding to the vertices.
-		var c view.Color
-		switch {
-		case s.Source == model.RealTimePrice:
-			c = view.Yellow
-		case s.Change > 0:
-			c = view.Blue
-		case s.Change < 0:
-			c = view.Red
-		default:
-			c = view.White
+		c := view.White
+		switch priceStyle {
+		case Bar:
+			switch {
+			case s.Source == model.RealTimePrice:
+				c = view.Yellow
+			case s.Change > 0:
+				c = view.Blue
+			case s.Change < 0:
+				c = view.Red
+			}
+
+		case Candlestick:
+			switch {
+			case s.Source == model.RealTimePrice:
+				c = view.Yellow
+			case s.Close > s.Open:
+				c = view.Blue
+			case s.Close < s.Open:
+				c = view.Red
+			}
 		}
 
 		colors = append(colors,
@@ -300,66 +311,6 @@ func volumeLineVAO(ts []*model.TradingSession, volumeRange [2]int) *gfx.VAO {
 			Indices:  lineIndices,
 		},
 	)
-}
-
-func volumeBarVAO(ts []*model.TradingSession, volumeRange [2]int) *gfx.VAO {
-	data := &gfx.VAOVertexData{Mode: gfx.Triangles}
-
-	dx := 2.0 / float32(len(ts)) // (-1 to 1) on X-axis
-	calcX := func(i int) (leftX, rightX float32) {
-		x := -1.0 + dx*float32(i)
-		return x + dx*0.2, x + dx*0.8
-	}
-	calcY := func(value int) (topY, botY float32) {
-		return 2*volumePercent(volumeRange, value) - 1, -1
-	}
-
-	for i, s := range ts {
-		leftX, rightX := calcX(i)
-		topY, botY := calcY(s.Volume)
-
-		// Add the vertices needed to create the volume bar.
-		data.Vertices = append(data.Vertices,
-			leftX, topY, 0, // UL
-			rightX, topY, 0, // UR
-			leftX, botY, 0, // BL
-			rightX, botY, 0, // BR
-		)
-
-		// Add the colors corresponding to the volume bar.
-		add := func(c view.Color) {
-			data.Colors = append(data.Colors,
-				c[0], c[1], c[2], c[3],
-				c[0], c[1], c[2], c[3],
-				c[0], c[1], c[2], c[3],
-				c[0], c[1], c[2], c[3],
-			)
-		}
-
-		switch {
-		case s.Close > s.Open:
-			add(view.Blue)
-
-		case s.Close < s.Open:
-			add(view.Red)
-
-		default:
-			add(view.White)
-		}
-
-		// idx is function to refer to the vertices above.
-		idx := func(j uint16) uint16 {
-			return uint16(i)*4 + j
-		}
-
-		// Use triangles for filled candlestick on lower closes.
-		data.Indices = append(data.Indices,
-			idx(0), idx(2), idx(1),
-			idx(1), idx(2), idx(3),
-		)
-	}
-
-	return gfx.NewVAO(data)
 }
 
 func volumeDataLine(vs []*model.AverageVolume, yRange [2]int) *gfx.VAO {
