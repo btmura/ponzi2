@@ -262,7 +262,7 @@ func (l *legend) Update() (dirty bool) {
 	if len(m50) != 0 {
 		rows = append(rows, [3]legendCell{
 			symbol("◼", view.Red),
-			text("EMA 50"),
+			text("SMA 50"),
 			text(formatFloat(m50[i].Value)),
 		})
 	}
@@ -270,7 +270,7 @@ func (l *legend) Update() (dirty bool) {
 	if len(m200) != 0 {
 		rows = append(rows, [3]legendCell{
 			symbol("◼", view.White),
-			text("EMA 200"),
+			text("SMA 200"),
 			text(formatFloat(m200[i].Value)),
 		})
 	}

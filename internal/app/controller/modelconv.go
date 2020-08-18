@@ -43,8 +43,8 @@ func modelDailyChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
 	ds := modelTradingSessions(quote, chart)
 	ws := weeklyModelTradingSessions(ds)
 	m20 := modelExponentialMovingAverages(ds, 21)
-	m50 := modelExponentialMovingAverages(ds, 50)
-	m200 := modelExponentialMovingAverages(ds, 200)
+	m50 := modelSimpleMovingAverages(ds, 50)
+	m200 := modelSimpleMovingAverages(ds, 200)
 	v50 := modelAverageVolumes(ds, 50)
 
 	if len(ws) > maxDataWeeks {
@@ -71,8 +71,8 @@ func modelWeeklyChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) 
 	ws := weeklyModelTradingSessions(ds)
 
 	m21 := modelExponentialMovingAverages(ws, 21)
-	m50 := modelExponentialMovingAverages(ws, 50)
-	m200 := modelExponentialMovingAverages(ws, 200)
+	m50 := modelSimpleMovingAverages(ws, 50)
+	m200 := modelSimpleMovingAverages(ws, 200)
 
 	v50 := modelAverageVolumes(ws, 50)
 
@@ -277,6 +277,28 @@ func modelExponentialMovingAverages(ts []*model.TradingSession, n int) []*model.
 		})
 	}
 	return values
+}
+
+func modelSimpleMovingAverages(ts []*model.TradingSession, n int) []*model.MovingAverage {
+	average := func(i, n int) (avg float32) {
+		if i+1-n < 0 {
+			return 0 // Not enough data
+		}
+		var sum float32
+		for j := 0; j < n; j++ {
+			sum += ts[i-j].Close
+		}
+		return sum / float32(n)
+	}
+
+	var ms []*model.MovingAverage
+	for i := range ts {
+		ms = append(ms, &model.MovingAverage{
+			Date:  ts[i].Date,
+			Value: average(i, n),
+		})
+	}
+	return ms
 }
 
 func modelAverageVolumes(ts []*model.TradingSession, n int) []*model.AverageVolume {
