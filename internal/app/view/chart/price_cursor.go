@@ -3,7 +3,6 @@ package chart
 import (
 	"image"
 
-	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
 )
@@ -71,39 +70,9 @@ func (p *priceCursor) Render(fudge float32) {
 
 	renderCursorLines(p.priceRect, p.mousePos)
 
-	p.renderLabel(fudge)
-}
-
-func (p *priceCursor) renderLabel(fudge float32) {
-	if !p.mousePos.In(p.priceRect) {
-		return
+	if p.mousePos.In(p.priceRect) {
+		renderLabel(fudge, p.priceRange, p.labelRect, p.mousePos.Point, true)
 	}
-
-	yPercent := float32(p.mousePos.Y-p.priceRect.Min.Y) / float32(p.priceRect.Dy())
-	value := priceValue(p.priceRange, yPercent)
-	label := makePriceLabel(value)
-
-	textPt := image.Point{
-		X: p.labelRect.Max.X - label.size.X,
-		Y: p.labelRect.Min.Y + int(float32(p.labelRect.Dy())*yPercent) - label.size.Y/2,
-	}
-	bubbleRect := image.Rectangle{
-		Min: textPt,
-		Max: textPt.Add(label.size),
-	}.Inset(-axisLabelPadding)
-
-	// Move the label to the left if the mouse is overlapping.
-	if p.mousePos.In(bubbleRect) {
-		textPt.X = p.labelRect.Min.X
-		bubbleRect = image.Rectangle{
-			Min: textPt,
-			Max: textPt.Add(label.size),
-		}.Inset(-axisLabelPadding)
-	}
-
-	axisLabelBubble.SetBounds(bubbleRect)
-	axisLabelBubble.Render(fudge)
-	axisLabelTextRenderer.Render(label.text, textPt, gfx.TextColor(view.White))
 }
 
 func (p *priceCursor) Close() {

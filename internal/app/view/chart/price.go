@@ -3,17 +3,12 @@ package chart
 import (
 	"image"
 	"math"
-	"strconv"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
-	"github.com/btmura/ponzi2/internal/app/view/vao"
 	"github.com/btmura/ponzi2/internal/logger"
 )
-
-// priceHorizLine is the horizontal lines rendered behind the candlesticks.
-var priceHorizLine = vao.HorizLine(view.TransparentGray, view.Gray)
 
 // price shows the candlesticks and price labels for a single stock.
 type price struct {
@@ -22,9 +17,6 @@ type price struct {
 
 	// priceRange represents the inclusive range from min to max price.
 	priceRange [2]float32
-
-	// MaxLabelSize is the maximum label size useful for rendering measurements.
-	MaxLabelSize image.Point
 
 	// priceStyle is the price style whether bars or candlesticks.
 	priceStyle PriceStyle
@@ -90,9 +82,6 @@ func (p *price) SetData(data priceData) {
 
 	p.priceRange = priceRange(ts.TradingSessions)
 
-	// Measure the max label size by creating a label with the max value.
-	p.MaxLabelSize = makePriceLabel(p.priceRange[1]).size
-
 	p.barLines = priceBarVAO(ts.TradingSessions, p.priceRange)
 
 	p.stickLines, p.stickRects = priceCandlestickVAOs(ts.TradingSessions, p.priceRange)
@@ -126,18 +115,7 @@ func (p *price) Render(fudge float32) {
 		return
 	}
 
-	r := p.bounds
-
-	labelPaddingY := p.MaxLabelSize.Y / 2
-	firstY := r.Max.Y - labelPaddingY - p.MaxLabelSize.Y/2
-	dy := p.MaxLabelSize.Y * 2
-
-	for y := firstY; y >= r.Min.Y; y -= dy {
-		gfx.SetModelMatrixRect(image.Rect(r.Min.X, y, r.Max.X, y))
-		priceHorizLine.Render()
-	}
-
-	gfx.SetModelMatrixRect(r)
+	gfx.SetModelMatrixRect(p.bounds)
 
 	for style, fader := range p.faders {
 		fader.Render(fudge, func() {
@@ -221,19 +199,6 @@ func priceValue(priceRange [2]float32, percent float32) (value float32) {
 			float64(percent)*(log(priceRange[1])-log(priceRange[0]))+log(priceRange[0]),
 		),
 	)
-}
-
-type priceLabel struct {
-	text string
-	size image.Point
-}
-
-func makePriceLabel(v float32) priceLabel {
-	t := strconv.FormatFloat(float64(v), 'f', 2, 32)
-	return priceLabel{
-		text: t,
-		size: axisLabelTextRenderer.Measure(t),
-	}
 }
 
 func priceBarVAO(ts []*model.TradingSession, priceRange [2]float32) *gfx.VAO {

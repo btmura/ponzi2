@@ -76,7 +76,7 @@ type Chart struct {
 	header *header
 
 	prices        *price
-	priceAxis     *priceAxis
+	priceLevel    *priceLevel
 	priceCursor   *priceCursor
 	priceTimeline *timeline
 
@@ -149,7 +149,7 @@ func NewChart(priceStyle PriceStyle) *Chart {
 		}),
 
 		prices:        newPrice(priceStyle),
-		priceAxis:     new(priceAxis),
+		priceLevel:    newPriceLevel(),
 		priceCursor:   new(priceCursor),
 		priceTimeline: newTimeline(view.TransparentLightGray, view.LightGray, view.TransparentGray, view.Gray),
 
@@ -238,7 +238,7 @@ func (ch *Chart) SetData(data Data) {
 	ts := dc.TradingSessionSeries
 
 	ch.prices.SetData(priceData{ts})
-	ch.priceAxis.SetData(priceAxisData{ts})
+	ch.priceLevel.SetData(priceLevelData{ts})
 	ch.priceCursor.SetData(priceCursorData{ts})
 	ch.priceTimeline.SetData(timelineData{dc.Interval, ts})
 
@@ -297,7 +297,7 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	plr, vlr := pr, vr
 
 	// Figure out width to trim off on the right of each rect for the labels.
-	maxWidth := ch.prices.MaxLabelSize.X
+	maxWidth := ch.priceLevel.MaxLabelSize.X
 	if w := ch.volume.MaxLabelSize.X; w > maxWidth {
 		maxWidth = w
 	}
@@ -331,7 +331,7 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	ch.timelineCursor.SetBounds(tr, tlr)
 	ch.timelineCursor.ProcessInput(input)
 
-	ch.priceAxis.SetBounds(plr)
+	ch.priceLevel.SetBounds(pr, plr)
 	ch.volumeAxis.SetBounds(vlr)
 
 	ch.legend.SetBounds(pr)
@@ -415,7 +415,7 @@ func (ch *Chart) Render(fudge float32) {
 	ch.volumeTimeline.Render(fudge)
 
 	ch.prices.Render(fudge)
-	ch.priceAxis.Render(fudge)
+	ch.priceLevel.Render(fudge)
 	ch.priceCursor.Render(fudge)
 
 	if ch.showMovingAverages {
@@ -463,7 +463,7 @@ func (ch *Chart) SetZoomChangeCallback(cb func(zoomChange ZoomChange)) {
 func (ch *Chart) Close() {
 	ch.header.Close()
 	ch.prices.Close()
-	ch.priceAxis.Close()
+	ch.priceLevel.Close()
 	ch.priceCursor.Close()
 	ch.priceTimeline.Close()
 	ch.movingAverage21.Close()
