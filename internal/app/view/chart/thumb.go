@@ -239,7 +239,6 @@ func (t *Thumb) ProcessInput(input *view.Input) {
 
 	t.prices.SetBounds(pr)
 	t.priceCursor.SetBounds(pr, pr)
-	t.priceCursor.ProcessInput(input)
 	t.priceTimeline.SetBounds(pr)
 	t.movingAverage21.SetBounds(pr)
 	t.movingAverage50.SetBounds(pr)
@@ -247,8 +246,10 @@ func (t *Thumb) ProcessInput(input *view.Input) {
 
 	t.volume.SetBounds(vr)
 	t.volumeCursor.SetBounds(vr, vr)
-	t.volumeCursor.ProcessInput(input)
 	t.volumeTimeline.SetBounds(vr)
+
+	t.priceCursor.ProcessInput(input)
+	t.volumeCursor.ProcessInput(input)
 }
 
 // Update updates the Thumb.
@@ -303,15 +304,14 @@ func (t *Thumb) Render(fudge float32) {
 	}
 
 	t.priceTimeline.Render(fudge)
-	t.volumeTimeline.Render(fudge)
-
 	t.prices.Render(fudge)
 	t.movingAverage21.Render(fudge)
 	t.movingAverage50.Render(fudge)
 	t.movingAverage200.Render(fudge)
-	t.volume.Render(fudge)
-
 	t.priceCursor.Render(fudge)
+
+	t.volumeTimeline.Render(fudge)
+	t.volume.Render(fudge)
 	t.volumeCursor.Render(fudge)
 }
 
