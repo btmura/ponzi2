@@ -1,10 +1,8 @@
 package chart
 
 import (
-	"fmt"
 	"image"
 	"math"
-	"strconv"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
@@ -13,15 +11,10 @@ import (
 	"github.com/btmura/ponzi2/internal/logger"
 )
 
-var volumeHorizRuleSet = vao.HorizRuleSet([]float32{0.2, 0.8}, [2]float32{0, 1}, view.TransparentGray, view.Gray)
-
 // volume renders the volume bars and labels for a single stock.
 type volume struct {
 	// renderable is whether the ChartVolume can be rendered.
 	renderable bool
-
-	// MaxLabelSize is the maximum label size useful for rendering measurements.
-	MaxLabelSize image.Point
 
 	// priceStyle is the price style whether bars or candlesticks.
 	priceStyle PriceStyle
@@ -89,9 +82,6 @@ func (v *volume) SetData(data volumeData) {
 
 	yRange := volumeRange(ts.TradingSessions)
 
-	// Measure the max label size by creating a label with the max value.
-	v.MaxLabelSize = makeVolumeLabel(yRange[1], 1).size
-
 	v.barLines = volumeLineVAO(ts.TradingSessions, yRange, Bar)
 	v.stickLines = volumeLineVAO(ts.TradingSessions, yRange, Candlestick)
 	v.avgLine = volumeDataLine(vs.AverageVolumes, yRange)
@@ -126,7 +116,6 @@ func (v *volume) Render(fudge float32) {
 	}
 
 	gfx.SetModelMatrixRect(v.bounds)
-	volumeHorizRuleSet.Render()
 
 	for style, fader := range v.faders {
 		fader.Render(fudge, func() {
@@ -205,37 +194,6 @@ func volumeValue(volumeRange [2]int, percent float32) (value int) {
 			float64(percent)*(log(volumeRange[1])-log(volumeRange[0]))+log(volumeRange[0]),
 		),
 	)
-}
-
-// volumeLabel is a right-justified Y-axis label with the volume.
-type volumeLabel struct {
-	percent float32
-	text    string
-	size    image.Point
-}
-
-func makeVolumeLabel(value int, percent float32) volumeLabel {
-	t := volumeText(value)
-	return volumeLabel{
-		percent: percent,
-		text:    t,
-		size:    axisLabelTextRenderer.Measure(t),
-	}
-}
-
-func volumeText(v int) string {
-	var t string
-	switch {
-	case v > 1000000000:
-		t = fmt.Sprintf("%dB", v/1000000000)
-	case v > 1000000:
-		t = fmt.Sprintf("%dM", v/1000000)
-	case v > 1000:
-		t = fmt.Sprintf("%dK", v/1000)
-	default:
-		t = strconv.Itoa(v)
-	}
-	return t
 }
 
 func volumeLineVAO(ts []*model.TradingSession, volumeRange [2]int, priceStyle PriceStyle) *gfx.VAO {

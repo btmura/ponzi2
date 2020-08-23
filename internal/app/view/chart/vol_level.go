@@ -1,6 +1,7 @@
 package chart
 
 import (
+	"fmt"
 	"image"
 	"strconv"
 
@@ -10,16 +11,15 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/vao"
 )
 
-// priceHorizLine is the horizontal lines rendered behind the candlesticks.
-var priceHorizLine = vao.HorizLine(view.TransparentGray, view.Gray)
+// volumeHorizLine is the horizontal lines rendered behind the volume bars.
+var volumeHorizLine = vao.HorizLine(view.TransparentGray, view.Gray)
 
-// priceLevel renders the horizontal price lines and their labels.
-type priceLevel struct {
+type volumeLevel struct {
 	// renderable is true if this should be rendered.
 	renderable bool
 
-	// priceRange represents the inclusive range from min to max price.
-	priceRange [2]float32
+	// volumeRange represents the inclusive range from min to max volume.
+	volumeRange [2]int
 
 	// MaxLabelSize is the maximum label size useful for rendering measurements.
 	MaxLabelSize image.Point
@@ -31,17 +31,17 @@ type priceLevel struct {
 	labelBounds image.Rectangle
 }
 
-func newPriceLevel() *priceLevel {
-	return new(priceLevel)
+func newVolumeLevel() *volumeLevel {
+	return new(volumeLevel)
 }
 
-type priceLevelData struct {
+type volumeLevelData struct {
 	TradingSessionSeries *model.TradingSessionSeries
 }
 
-func (p *priceLevel) SetData(data priceLevelData) {
+func (v *volumeLevel) SetData(data volumeLevelData) {
 	// Reset everything.
-	p.Close()
+	v.Close()
 
 	// Bail out if there is no data yet.
 	ts := data.TradingSessionSeries
@@ -49,40 +49,40 @@ func (p *priceLevel) SetData(data priceLevelData) {
 		return
 	}
 
-	p.priceRange = priceRange(ts.TradingSessions)
+	v.volumeRange = volumeRange(ts.TradingSessions)
 
 	// Measure the max label size by creating a label with the max value.
-	p.MaxLabelSize = makePriceLabel(p.priceRange[1]).size
+	v.MaxLabelSize = makeVolumeLabel(v.volumeRange[1]).size
 
-	p.renderable = true
+	v.renderable = true
 }
 
-func (p *priceLevel) SetBounds(lineBounds, labelBounds image.Rectangle) {
-	p.lineBounds = lineBounds
-	p.labelBounds = labelBounds
+func (v *volumeLevel) SetBounds(lineBounds, labelBounds image.Rectangle) {
+	v.lineBounds = lineBounds
+	v.labelBounds = labelBounds
 }
 
-func (p *priceLevel) Render(fudge float32) {
-	if !p.renderable {
+func (v *volumeLevel) Render(fudge float32) {
+	if !v.renderable {
 		return
 	}
 
-	r := p.lineBounds
-	for _, y := range p.labelYPositions(r) {
+	r := v.lineBounds
+	for _, y := range v.labelYPositions(r) {
 		gfx.SetModelMatrixRect(image.Rect(r.Min.X, y, r.Max.X, y))
-		priceHorizLine.Render()
+		volumeHorizLine.Render()
 	}
 
-	r = p.labelBounds
-	for _, y := range p.labelYPositions(r) {
-		renderPriceLabel(fudge, p.priceRange, r, image.Pt(0, y), false)
+	r = v.labelBounds
+	for _, y := range v.labelYPositions(r) {
+		renderVolumeLabel(fudge, v.volumeRange, r, image.Pt(0, y), false)
 	}
 }
 
-func (p *priceLevel) labelYPositions(r image.Rectangle) []int {
-	labelPaddingY := p.MaxLabelSize.Y / 2
-	firstY := r.Max.Y - labelPaddingY - p.MaxLabelSize.Y/2
-	dy := p.MaxLabelSize.Y * 2
+func (v *volumeLevel) labelYPositions(r image.Rectangle) []int {
+	labelPaddingY := v.MaxLabelSize.Y / 2
+	firstY := r.Max.Y - labelPaddingY - v.MaxLabelSize.Y/2
+	dy := v.MaxLabelSize.Y * 2
 
 	var yPositions []int
 	for y := firstY; y >= r.Min.Y; y -= dy {
@@ -91,27 +91,43 @@ func (p *priceLevel) labelYPositions(r image.Rectangle) []int {
 	return yPositions
 }
 
-func (p *priceLevel) Close() {
-	p.renderable = false
+func (v *volumeLevel) Close() {
+	v.renderable = false
 }
 
-type priceLabel struct {
+// volumeLabel is a right-justified Y-axis label with the volume.
+type volumeLabel struct {
 	text string
 	size image.Point
 }
 
-func makePriceLabel(v float32) priceLabel {
-	t := strconv.FormatFloat(float64(v), 'f', 2, 32)
-	return priceLabel{
+func makeVolumeLabel(value int) volumeLabel {
+	t := volumeText(value)
+	return volumeLabel{
 		text: t,
 		size: axisLabelTextRenderer.Measure(t),
 	}
 }
 
-func renderPriceLabel(fudge float32, priceRange [2]float32, r image.Rectangle, pt image.Point, includeBubble bool) {
+func volumeText(v int) string {
+	var t string
+	switch {
+	case v > 1000000000:
+		t = fmt.Sprintf("%dB", v/1000000000)
+	case v > 1000000:
+		t = fmt.Sprintf("%dM", v/1000000)
+	case v > 1000:
+		t = fmt.Sprintf("%dK", v/1000)
+	default:
+		t = strconv.Itoa(v)
+	}
+	return t
+}
+
+func renderVolumeLabel(fudge float32, volRange [2]int, r image.Rectangle, pt image.Point, includeBubble bool) {
 	yPercent := float32(pt.Y-r.Min.Y) / float32(r.Dy())
-	value := priceValue(priceRange, yPercent)
-	label := makePriceLabel(value)
+	value := volumeValue(volRange, yPercent)
+	label := makeVolumeLabel(value)
 
 	textPt := image.Point{
 		X: r.Max.X - label.size.X,

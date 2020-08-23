@@ -3,7 +3,6 @@ package chart
 import (
 	"image"
 
-	"github.com/btmura/ponzi2/internal/app/gfx"
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
 )
@@ -71,39 +70,9 @@ func (v *volumeCursor) Render(fudge float32) {
 
 	renderCursorLines(v.volRect, v.mousePos)
 
-	v.renderLabel(fudge)
-}
-
-func (v *volumeCursor) renderLabel(fudge float32) {
-	if !v.mousePos.In(v.volRect) {
-		return
+	if v.mousePos.In(v.volRect) {
+		renderVolumeLabel(fudge, v.volumeRange, v.labelRect, v.mousePos.Point, true)
 	}
-
-	yPercent := float32(v.mousePos.Y-v.volRect.Min.Y) / float32(v.volRect.Dy())
-	value := volumeValue(v.volumeRange, yPercent)
-	label := makeVolumeLabel(value, yPercent)
-
-	textPt := image.Point{
-		X: v.labelRect.Max.X - label.size.X,
-		Y: v.labelRect.Min.Y + int(float32(v.labelRect.Dy())*label.percent) - label.size.Y/2,
-	}
-	bubbleRect := image.Rectangle{
-		Min: textPt,
-		Max: textPt.Add(label.size),
-	}.Inset(-axisLabelPadding)
-
-	// Move the label to the left if the mouse is overlapping.
-	if v.mousePos.In(bubbleRect) {
-		textPt.X = v.labelRect.Min.X
-		bubbleRect = image.Rectangle{
-			Min: textPt,
-			Max: textPt.Add(label.size),
-		}.Inset(-axisLabelPadding)
-	}
-
-	axisLabelBubble.SetBounds(bubbleRect)
-	axisLabelBubble.Render(fudge)
-	axisLabelTextRenderer.Render(label.text, textPt, gfx.TextColor(view.White))
 }
 
 func (v *volumeCursor) Close() {

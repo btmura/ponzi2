@@ -71,7 +71,7 @@ func (p *priceCursor) Render(fudge float32) {
 	renderCursorLines(p.priceRect, p.mousePos)
 
 	if p.mousePos.In(p.priceRect) {
-		renderLabel(fudge, p.priceRange, p.labelRect, p.mousePos.Point, true)
+		renderPriceLabel(fudge, p.priceRange, p.labelRect, p.mousePos.Point, true)
 	}
 }
 

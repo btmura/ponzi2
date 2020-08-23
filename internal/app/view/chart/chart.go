@@ -85,7 +85,7 @@ type Chart struct {
 	movingAverage200 *movingAverage
 
 	volume         *volume
-	volumeAxis     *volumeAxis
+	volumeLevel    *volumeLevel
 	volumeCursor   *volumeCursor
 	volumeTimeline *timeline
 
@@ -158,7 +158,7 @@ func NewChart(priceStyle PriceStyle) *Chart {
 		movingAverage200: newMovingAverage(view.White),
 
 		volume:         newVolume(priceStyle),
-		volumeAxis:     new(volumeAxis),
+		volumeLevel:    newVolumeLevel(),
 		volumeCursor:   new(volumeCursor),
 		volumeTimeline: newTimeline(view.LightGray, view.TransparentLightGray, view.Gray, view.TransparentGray),
 
@@ -249,7 +249,7 @@ func (ch *Chart) SetData(data Data) {
 	}
 
 	ch.volume.SetData(volumeData{ts, dc.AverageVolumeSeries})
-	ch.volumeAxis.SetData(volumeAxisData{ts})
+	ch.volumeLevel.SetData(volumeLevelData{ts})
 	ch.volumeCursor.SetData(volumeCursorData{ts})
 	ch.volumeTimeline.SetData(timelineData{dc.Interval, ts})
 
@@ -298,7 +298,7 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 
 	// Figure out width to trim off on the right of each rect for the labels.
 	maxWidth := ch.priceLevel.MaxLabelSize.X
-	if w := ch.volume.MaxLabelSize.X; w > maxWidth {
+	if w := ch.volumeLevel.MaxLabelSize.X; w > maxWidth {
 		maxWidth = w
 	}
 
@@ -332,7 +332,7 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	ch.timelineCursor.ProcessInput(input)
 
 	ch.priceLevel.SetBounds(pr, plr)
-	ch.volumeAxis.SetBounds(vlr)
+	ch.volumeLevel.SetBounds(vr, vlr)
 
 	ch.legend.SetBounds(pr)
 	ch.legend.ProcessInput(input)
@@ -425,7 +425,7 @@ func (ch *Chart) Render(fudge float32) {
 	}
 
 	ch.volume.Render(fudge)
-	ch.volumeAxis.Render(fudge)
+	ch.volumeLevel.Render(fudge)
 	ch.volumeCursor.Render(fudge)
 
 	ch.timelineAxis.Render(fudge)
@@ -470,7 +470,7 @@ func (ch *Chart) Close() {
 	ch.movingAverage50.Close()
 	ch.movingAverage200.Close()
 	ch.volume.Close()
-	ch.volumeAxis.Close()
+	ch.volumeLevel.Close()
 	ch.volumeCursor.Close()
 	ch.volumeTimeline.Close()
 	ch.timelineAxis.Close()
