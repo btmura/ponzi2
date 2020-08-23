@@ -113,11 +113,11 @@ func volumeText(v int) string {
 	var t string
 	switch {
 	case v > 1000000000:
-		t = fmt.Sprintf("%dB", v/1000000000)
+		t = fmt.Sprintf("%.1fB", float32(v)/1e9)
 	case v > 1000000:
-		t = fmt.Sprintf("%dM", v/1000000)
+		t = fmt.Sprintf("%.1fM", float32(v)/1e6)
 	case v > 1000:
-		t = fmt.Sprintf("%dK", v/1000)
+		t = fmt.Sprintf("%.1fK", float32(v)/1e3)
 	default:
 		t = strconv.Itoa(v)
 	}
