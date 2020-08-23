@@ -315,26 +315,26 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	tlr := tr
 
 	ch.prices.SetBounds(pr)
+	ch.priceLevel.SetBounds(pr, plr)
 	ch.priceCursor.SetBounds(pr, plr)
-	ch.priceCursor.ProcessInput(input)
 	ch.priceTimeline.SetBounds(pr)
 	ch.movingAverage21.SetBounds(pr)
 	ch.movingAverage50.SetBounds(pr)
 	ch.movingAverage200.SetBounds(pr)
 
 	ch.volume.SetBounds(vr)
+	ch.volumeLevel.SetBounds(vr, vlr)
 	ch.volumeCursor.SetBounds(vr, vlr)
-	ch.volumeCursor.ProcessInput(input)
 	ch.volumeTimeline.SetBounds(vr)
 
 	ch.timelineAxis.SetBounds(tr)
 	ch.timelineCursor.SetBounds(tr, tlr)
-	ch.timelineCursor.ProcessInput(input)
-
-	ch.priceLevel.SetBounds(pr, plr)
-	ch.volumeLevel.SetBounds(vr, vlr)
 
 	ch.legend.SetBounds(pr)
+
+	ch.priceCursor.ProcessInput(input)
+	ch.volumeCursor.ProcessInput(input)
+	ch.timelineCursor.ProcessInput(input)
 	ch.legend.ProcessInput(input)
 
 	if input.MouseScrolled.In(ch.bounds) && ch.zoomChangeCallback != nil {
@@ -412,20 +412,18 @@ func (ch *Chart) Render(fudge float32) {
 	}
 
 	ch.priceTimeline.Render(fudge)
-	ch.volumeTimeline.Render(fudge)
-
-	ch.prices.Render(fudge)
 	ch.priceLevel.Render(fudge)
-	ch.priceCursor.Render(fudge)
-
+	ch.prices.Render(fudge)
 	if ch.showMovingAverages {
 		ch.movingAverage21.Render(fudge)
 		ch.movingAverage50.Render(fudge)
 		ch.movingAverage200.Render(fudge)
 	}
+	ch.priceCursor.Render(fudge)
 
-	ch.volume.Render(fudge)
+	ch.volumeTimeline.Render(fudge)
 	ch.volumeLevel.Render(fudge)
+	ch.volume.Render(fudge)
 	ch.volumeCursor.Render(fudge)
 
 	ch.timelineAxis.Render(fudge)
