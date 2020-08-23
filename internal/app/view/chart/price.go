@@ -129,19 +129,12 @@ func (p *price) Render(fudge float32) {
 	r := p.bounds
 
 	labelPaddingY := p.MaxLabelSize.Y / 2
-	y := r.Max.Y - labelPaddingY - p.MaxLabelSize.Y/2
-	dy := p.MaxLabelSize.Y + labelPaddingY*2
+	firstY := r.Max.Y - labelPaddingY - p.MaxLabelSize.Y/2
+	dy := p.MaxLabelSize.Y * 2
 
-	for {
-		{
-			if y < r.Min.Y {
-				break
-			}
-
-			gfx.SetModelMatrixRect(image.Rect(r.Min.X, y, r.Max.X, y))
-			priceHorizLine.Render()
-		}
-		y -= dy
+	for y := firstY; y >= r.Min.Y; y -= dy {
+		gfx.SetModelMatrixRect(image.Rect(r.Min.X, y, r.Max.X, y))
+		priceHorizLine.Render()
 	}
 
 	gfx.SetModelMatrixRect(r)

@@ -288,6 +288,11 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 
 	ch.sectionDividers = []image.Rectangle{vr, tr}
 
+	// Pad all the rects.
+	pr = pr.Inset(chartSectionPadding)
+	vr = vr.Inset(chartSectionPadding)
+	tr = tr.Inset(chartSectionPadding)
+
 	// Create separate rects for each section's labels shown on the right.
 	plr, vlr := pr, vr
 
@@ -296,28 +301,18 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	if w := ch.volume.MaxLabelSize.X; w > maxWidth {
 		maxWidth = w
 	}
-	maxWidth += chartSectionPadding
 
 	// Set left side of label rects.
 	plr.Min.X = pr.Max.X - maxWidth
 	vlr.Min.X = vr.Max.X - maxWidth
 
 	// Trim off the label rects from the main rects.
-	pr.Max.X = plr.Min.X
-	vr.Max.X = vlr.Min.X
+	pr.Max.X = plr.Min.X - chartSectionPadding
+	vr.Max.X = vlr.Min.X - chartSectionPadding
 
 	// Time labels and its cursors labels overlap and use the same rect.
 	tr.Max.X = plr.Min.X
 	tlr := tr
-
-	// Pad all the rects.
-	pr = pr.Inset(chartSectionPadding)
-	vr = vr.Inset(chartSectionPadding)
-	tr = tr.Inset(chartSectionPadding)
-
-	plr = plr.Inset(chartSectionPadding)
-	vlr = vlr.Inset(chartSectionPadding)
-	tlr = tlr.Inset(chartSectionPadding)
 
 	ch.prices.SetBounds(pr)
 	ch.priceCursor.SetBounds(pr, plr)

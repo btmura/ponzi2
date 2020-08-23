@@ -54,36 +54,20 @@ func (p *priceAxis) Render(float32) {
 	}
 
 	r := p.labelRect
-
 	labelPaddingY := p.MaxLabelSize.Y / 2
-	pricePerPixel := (p.priceRange[1] - p.priceRange[0]) / float32(r.Dy())
+	firstY := r.Max.Y - labelPaddingY - p.MaxLabelSize.Y/2
+	dy := p.MaxLabelSize.Y * 2
 
-	// Start at top and decrement one label with top and bottom padding.
-	pt := r.Max
-	dp := image.Pt(0, labelPaddingY+p.MaxLabelSize.Y+labelPaddingY)
+	for y := firstY; y >= r.Min.Y; y -= dy {
+		yPercent := float32(y-r.Min.Y) / float32(r.Dy())
+		value := priceValue(p.priceRange, yPercent)
+		label := makePriceLabel(value)
 
-	// Start at top with max price and decrement change in price of a label with padding.
-	v := p.priceRange[1]
-	dv := pricePerPixel * float32(dp.Y)
-
-	// Offets to the cursor and price value when drawing.
-	dpy := labelPaddingY + p.MaxLabelSize.Y   // Puts point at the baseline of the text.
-	dvy := labelPaddingY + p.MaxLabelSize.Y/2 // Uses value in the middle of the label.
-
-	for {
-		{
-			l := makePriceLabel(v - pricePerPixel*float32(dvy))
-
-			pt := image.Pt(pt.X-l.size.X, pt.Y-dpy)
-			if pt.Y < r.Min.Y {
-				break
-			}
-
-			axisLabelTextRenderer.Render(l.text, pt, gfx.TextColor(view.White))
+		textPt := image.Point{
+			X: r.Max.X - label.size.X,
+			Y: y - p.MaxLabelSize.Y/2,
 		}
-
-		pt = pt.Sub(dp)
-		v -= dv
+		axisLabelTextRenderer.Render(label.text, textPt, gfx.TextColor(view.White))
 	}
 }
 
