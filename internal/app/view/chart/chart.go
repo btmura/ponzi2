@@ -75,7 +75,7 @@ type Chart struct {
 	// header renders the header with the symbol, quote, and buttons.
 	header *header
 
-	prices        *price
+	price         *price
 	priceLevel    *priceLevel
 	priceCursor   *priceCursor
 	priceTimeline *timeline
@@ -148,7 +148,7 @@ func NewChart(priceStyle PriceStyle) *Chart {
 			Padding:                 chartSectionPadding,
 		}),
 
-		prices:        newPrice(priceStyle),
+		price:         newPrice(priceStyle),
 		priceLevel:    newPriceLevel(),
 		priceCursor:   new(priceCursor),
 		priceTimeline: newTimeline(view.TransparentLightGray, view.LightGray, view.TransparentGray, view.Gray),
@@ -180,7 +180,7 @@ func (ch *Chart) SetPriceStyle(newPriceStyle PriceStyle) {
 		logger.Error("unspecified price style")
 		return
 	}
-	ch.prices.SetStyle(newPriceStyle)
+	ch.price.SetStyle(newPriceStyle)
 	ch.volume.SetStyle(newPriceStyle)
 }
 
@@ -237,7 +237,7 @@ func (ch *Chart) SetData(data Data) {
 
 	ts := dc.TradingSessionSeries
 
-	ch.prices.SetData(priceData{ts})
+	ch.price.SetData(priceData{ts})
 	ch.priceLevel.SetData(priceLevelData{ts})
 	ch.priceCursor.SetData(priceCursorData{ts})
 	ch.priceTimeline.SetData(timelineData{dc.Interval, ts})
@@ -314,7 +314,7 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	tr.Max.X = plr.Min.X
 	tlr := tr
 
-	ch.prices.SetBounds(pr)
+	ch.price.SetBounds(pr)
 	ch.priceLevel.SetBounds(pr, plr)
 	ch.priceCursor.SetBounds(pr, plr)
 	ch.priceTimeline.SetBounds(pr)
@@ -362,7 +362,7 @@ func (ch *Chart) Update() (dirty bool) {
 	if ch.header.Update() {
 		dirty = true
 	}
-	if ch.prices.Update() {
+	if ch.price.Update() {
 		dirty = true
 	}
 	if ch.volume.Update() {
@@ -413,7 +413,7 @@ func (ch *Chart) Render(fudge float32) {
 
 	ch.priceTimeline.Render(fudge)
 	ch.priceLevel.Render(fudge)
-	ch.prices.Render(fudge)
+	ch.price.Render(fudge)
 	if ch.showMovingAverages {
 		ch.movingAverage21.Render(fudge)
 		ch.movingAverage50.Render(fudge)
@@ -460,7 +460,7 @@ func (ch *Chart) SetZoomChangeCallback(cb func(zoomChange ZoomChange)) {
 // Close frees the resources backing the chart.
 func (ch *Chart) Close() {
 	ch.header.Close()
-	ch.prices.Close()
+	ch.price.Close()
 	ch.priceLevel.Close()
 	ch.priceCursor.Close()
 	ch.priceTimeline.Close()

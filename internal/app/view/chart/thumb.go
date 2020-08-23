@@ -36,7 +36,7 @@ type Thumb struct {
 	// header renders the header with the symbol, quote, and buttons.
 	header *header
 
-	prices        *price
+	price         *price
 	priceCursor   *priceCursor
 	priceTimeline *timeline
 
@@ -97,7 +97,7 @@ func NewThumb(priceStyle PriceStyle) *Thumb {
 			Padding:                 thumbSectionPadding,
 		}),
 
-		prices:        newPrice(priceStyle),
+		price:         newPrice(priceStyle),
 		priceCursor:   new(priceCursor),
 		priceTimeline: newTimeline(view.TransparentLightGray, view.LightGray, view.TransparentGray, view.Gray),
 
@@ -123,7 +123,7 @@ func (t *Thumb) SetPriceStyle(newPriceStyle PriceStyle) {
 		return
 	}
 
-	t.prices.SetStyle(newPriceStyle)
+	t.price.SetStyle(newPriceStyle)
 	t.volume.SetStyle(newPriceStyle)
 }
 
@@ -193,7 +193,7 @@ func (t *Thumb) SetData(data Data) {
 		vs.AverageVolumes = vs.AverageVolumes[l-days:]
 	}
 
-	t.prices.SetData(priceData{ts})
+	t.price.SetData(priceData{ts})
 	t.priceCursor.SetData(priceCursorData{ts})
 	t.priceTimeline.SetData(timelineData{dc.Interval, ts})
 
@@ -237,7 +237,7 @@ func (t *Thumb) ProcessInput(input *view.Input) {
 	pr = pr.Inset(thumbSectionPadding)
 	vr = vr.Inset(thumbSectionPadding)
 
-	t.prices.SetBounds(pr)
+	t.price.SetBounds(pr)
 	t.priceCursor.SetBounds(pr, pr)
 	t.priceTimeline.SetBounds(pr)
 	t.movingAverage21.SetBounds(pr)
@@ -257,7 +257,7 @@ func (t *Thumb) Update() (dirty bool) {
 	if t.header.Update() {
 		dirty = true
 	}
-	if t.prices.Update() {
+	if t.price.Update() {
 		dirty = true
 	}
 	if t.volume.Update() {
@@ -304,7 +304,7 @@ func (t *Thumb) Render(fudge float32) {
 	}
 
 	t.priceTimeline.Render(fudge)
-	t.prices.Render(fudge)
+	t.price.Render(fudge)
 	t.movingAverage21.Render(fudge)
 	t.movingAverage50.Render(fudge)
 	t.movingAverage200.Render(fudge)
@@ -328,7 +328,7 @@ func (t *Thumb) SetThumbClickCallback(cb func()) {
 // Close frees the resources backing the chart thumbnail.
 func (t *Thumb) Close() {
 	t.header.Close()
-	t.prices.Close()
+	t.price.Close()
 	t.priceCursor.Close()
 	t.priceTimeline.Close()
 	t.movingAverage21.Close()
