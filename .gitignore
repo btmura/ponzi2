@@ -24,7 +24,7 @@ _testmain.go
 *.prof
 
 # Linux executable produced by "go build"
-./ponzi2
+ponzi2
 
 # Blender backup files
 *.blend1
