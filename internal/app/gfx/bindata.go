@@ -6,6 +6,8 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/base64"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -100,7 +102,24 @@ func (f *_escFile) Close() error {
 }
 
 func (f *_escFile) Readdir(count int) ([]os.FileInfo, error) {
-	return nil, nil
+	if !f.isDir {
+		return nil, fmt.Errorf(" escFile.Readdir: '%s' is not directory", f.name)
+	}
+
+	fis, ok := _escDirs[f.local]
+	if !ok {
+		return nil, fmt.Errorf(" escFile.Readdir: '%s' is directory, but we have no info about content of this dir, local=%s", f.name, f.local)
+	}
+	limit := count
+	if count <= 0 || limit > len(fis) {
+		limit = len(fis)
+	}
+
+	if len(fis) == 0 && count > 0 {
+		return nil, io.EOF
+	}
+
+	return fis[0:limit], nil
 }
 
 func (f *_escFile) Stat() (os.FileInfo, error) {
@@ -191,6 +210,7 @@ func _escFSMustString(useLocal bool, name string) string {
 var _escData = map[string]*_escFile{
 
 	"/data/shader.frag": {
+		name:    "shader.frag",
 		local:   "data/shader.frag",
 		size:    675,
 		modtime: 1337,
@@ -205,6 +225,7 @@ CQD5EqMCAAA=
 	},
 
 	"/data/shader.vert": {
+		name:    "shader.vert",
 		local:   "data/shader.vert",
 		size:    401,
 		modtime: 1337,
@@ -217,6 +238,7 @@ jwvifNihWmahzXmrfdpSzPF+/wIAAP//bRPYZJEBAAA=
 	},
 
 	"/data/textplane.ply": {
+		name:    "textplane.ply",
 		local:   "data/textplane.ply",
 		size:    641,
 		modtime: 1337,
@@ -229,13 +251,18 @@ oSTIN8cT6YaikIVcHnKxz5H6QtSVEOr7nd+DqqqqroTYy/8mrZUuSern2/7W6HLaARIK5fIfoMRHAAAA
 `,
 	},
 
-	"/": {
-		isDir: true,
-		local: "",
-	},
-
 	"/data": {
+		name:  "data",
+		local: `data`,
 		isDir: true,
-		local: "data",
+	},
+}
+
+var _escDirs = map[string][]os.FileInfo{
+
+	"data": {
+		_escData["/data/shader.frag"],
+		_escData["/data/shader.vert"],
+		_escData["/data/textplane.ply"],
 	},
 }
