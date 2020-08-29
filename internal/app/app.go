@@ -32,9 +32,5 @@ func (a *App) Run() error {
 		return errors.Errorf("nil client")
 	}
 
-	if a.token == "" {
-		return errors.Errorf("missing token")
-	}
-
 	return controller.New(a.client, a.token).RunLoop()
 }

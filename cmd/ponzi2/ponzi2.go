@@ -19,10 +19,6 @@ var (
 func main() {
 	flag.Parse()
 
-	if *token == "" {
-		logger.Fatal("token cannot be empty")
-	}
-
 	switch {
 	case *remoteAddr != "":
 		c := server.NewClient(*remoteAddr)
