@@ -4,6 +4,7 @@ package iex
 import (
 	"bytes"
 	"context"
+	"errors"
 	"expvar"
 	"fmt"
 	"io"
@@ -32,6 +33,9 @@ var (
 )
 
 var cacheClientVar = expvar.NewMap("iex-client-stats")
+
+// ErrMissingAPIToken is the error returned when a request does not have an API token.
+var ErrMissingAPIToken = errors.New("missing API token")
 
 // Client is used to make IEX API requests.
 type Client struct {

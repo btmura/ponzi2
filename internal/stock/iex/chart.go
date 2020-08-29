@@ -86,7 +86,7 @@ func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart
 	cacheClientVar.Add("get-charts-requests", 1)
 
 	if req.Token == "" {
-		return nil, errors.Errorf("missing token")
+		return nil, ErrMissingAPIToken
 	}
 
 	if len(req.Symbols) == 0 {

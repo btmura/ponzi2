@@ -67,7 +67,7 @@ type GetQuotesRequest struct {
 // GetQuotes gets quotes for stock symbols.
 func (c *Client) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]*Quote, error) {
 	if req.Token == "" {
-		return nil, errors.Errorf("missing token")
+		return nil, ErrMissingAPIToken
 	}
 
 	if len(req.Symbols) == 0 {
