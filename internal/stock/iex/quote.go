@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/errs"
 	"github.com/btmura/ponzi2/internal/logger"
 )
 
@@ -122,14 +122,14 @@ func (c *Client) GetQuotes(ctx context.Context, req *GetQuotesRequest) ([]*Quote
 
 		rr, err := dumpResponse(fmt.Sprintf("iex-quote-%s.txt", strings.Join(ss, "-")), r)
 		if err != nil {
-			return nil, errors.Errorf("iex: failed to dump quote resp: %v", err)
+			return nil, errs.Errorf("iex: failed to dump quote resp: %v", err)
 		}
 		r = rr
 	}
 
 	quotes, err := decodeQuotes(r)
 	if err != nil {
-		return nil, errors.Errorf("iex: failed to decode quote resp: %v", err)
+		return nil, errs.Errorf("iex: failed to decode quote resp: %v", err)
 	}
 	return quotes, nil
 }
@@ -156,13 +156,13 @@ func decodeQuotes(r io.Reader) ([]*Quote, error) {
 
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
-		return nil, errors.Errorf("reading chart json failed: %v", err)
+		return nil, errs.Errorf("reading chart json failed: %v", err)
 	}
 
 	var m map[string]stock
 	dec := json.NewDecoder(bytes.NewReader(b))
 	if err := dec.Decode(&m); err != nil {
-		return nil, errors.Errorf("quote json decode failed: %v, got: %s", err, string(b))
+		return nil, errs.Errorf("quote json decode failed: %v, got: %s", err, string(b))
 	}
 
 	var quotes []*Quote
@@ -220,7 +220,7 @@ func quoteSource(latestSource string) (Source, error) {
 	case "IEX Last Trade":
 		return LastTrade, nil
 	default:
-		return SourceUnspecified, errors.Errorf("unrecognized source: %q", latestSource)
+		return SourceUnspecified, errs.Errorf("unrecognized source: %q", latestSource)
 	}
 }
 
@@ -245,7 +245,7 @@ func quoteDate(latestSource Source, latestTime string) (time.Time, error) {
 		return time.ParseInLocation("January 2, 2006", latestTime, loc)
 
 	default:
-		return time.Time{}, errors.Errorf("couldn't parse quote date with source(%v) and time(%q)", latestSource, latestTime)
+		return time.Time{}, errs.Errorf("couldn't parse quote date with source(%v) and time(%q)", latestSource, latestTime)
 	}
 }
 

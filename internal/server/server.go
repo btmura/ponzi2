@@ -7,7 +7,7 @@ import (
 
 	"gocloud.dev/server"
 
-	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/errs"
 	"github.com/btmura/ponzi2/internal/logger"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
@@ -39,19 +39,19 @@ func (s *Server) quoteHandler(w http.ResponseWriter, r *http.Request) {
 	iexReq := &iex.GetQuotesRequest{}
 	dec := gob.NewDecoder(r.Body)
 	if err := dec.Decode(iexReq); err != nil {
-		logAndWriteError(w, http.StatusBadRequest, errors.Errorf("decoding quote request failed: %v", err))
+		logAndWriteError(w, http.StatusBadRequest, errs.Errorf("decoding quote request failed: %v", err))
 		return
 	}
 
 	iexResp, err := s.client.GetQuotes(ctx, iexReq)
 	if err != nil {
-		logAndWriteError(w, http.StatusBadRequest, errors.Errorf("getting quotes failed: %v", err))
+		logAndWriteError(w, http.StatusBadRequest, errs.Errorf("getting quotes failed: %v", err))
 		return
 	}
 
 	enc := gob.NewEncoder(w)
 	if err := enc.Encode(iexResp); err != nil {
-		logAndWriteError(w, http.StatusInternalServerError, errors.Errorf("encoding quote response failed: %v", err))
+		logAndWriteError(w, http.StatusInternalServerError, errs.Errorf("encoding quote response failed: %v", err))
 		return
 	}
 }
@@ -62,19 +62,19 @@ func (s *Server) chartHandler(w http.ResponseWriter, r *http.Request) {
 	iexReq := &iex.GetChartsRequest{}
 	dec := gob.NewDecoder(r.Body)
 	if err := dec.Decode(iexReq); err != nil {
-		logAndWriteError(w, http.StatusBadRequest, errors.Errorf("decoding chart request failed: %v", err))
+		logAndWriteError(w, http.StatusBadRequest, errs.Errorf("decoding chart request failed: %v", err))
 		return
 	}
 
 	iexResp, err := s.client.GetCharts(ctx, iexReq)
 	if err != nil {
-		logAndWriteError(w, http.StatusBadRequest, errors.Errorf("getting charts failed: %v", err))
+		logAndWriteError(w, http.StatusBadRequest, errs.Errorf("getting charts failed: %v", err))
 		return
 	}
 
 	enc := gob.NewEncoder(w)
 	if err := enc.Encode(iexResp); err != nil {
-		logAndWriteError(w, http.StatusInternalServerError, errors.Errorf("encoding chart response failed: %v", err))
+		logAndWriteError(w, http.StatusInternalServerError, errs.Errorf("encoding chart response failed: %v", err))
 		return
 	}
 }

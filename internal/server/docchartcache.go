@@ -7,7 +7,7 @@ import (
 	"gocloud.dev/docstore"
 	"gocloud.dev/gcerrors"
 
-	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/errs"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
@@ -36,7 +36,7 @@ func NewDocChartCache(coll *docstore.Collection) *DocChartCache {
 func (d *DocChartCache) Get(ctx context.Context, key iex.ChartCacheKey) (*iex.ChartCacheValue, error) {
 	docKey, err := chartCacheDocKey(key)
 	if err != nil {
-		return nil, errors.Errorf("making get doc key failed: %v", err)
+		return nil, errs.Errorf("making get doc key failed: %v", err)
 	}
 
 	doc := &chartCacheDoc{
@@ -47,7 +47,7 @@ func (d *DocChartCache) Get(ctx context.Context, key iex.ChartCacheKey) (*iex.Ch
 		return nil, nil
 	}
 	if err != nil {
-		return nil, errors.Errorf("getting doc for %s failed: %v", doc.Key, err)
+		return nil, errs.Errorf("getting doc for %s failed: %v", doc.Key, err)
 	}
 	return doc.CacheValue, nil
 }
@@ -56,7 +56,7 @@ func (d *DocChartCache) Get(ctx context.Context, key iex.ChartCacheKey) (*iex.Ch
 func (d *DocChartCache) Put(ctx context.Context, key iex.ChartCacheKey, val *iex.ChartCacheValue) error {
 	docKey, err := chartCacheDocKey(key)
 	if err != nil {
-		return errors.Errorf("making put doc key failed: %v", err)
+		return errs.Errorf("making put doc key failed: %v", err)
 	}
 
 	doc := &chartCacheDoc{
@@ -65,7 +65,7 @@ func (d *DocChartCache) Put(ctx context.Context, key iex.ChartCacheKey, val *iex
 		CacheValue: val,
 	}
 	if err := d.coll.Put(ctx, doc); err != nil {
-		return errors.Errorf("putting doc for %s failed: %v", doc.Key, err)
+		return errs.Errorf("putting doc for %s failed: %v", doc.Key, err)
 	}
 	return nil
 }

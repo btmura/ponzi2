@@ -5,7 +5,7 @@ import (
 	"context"
 
 	"github.com/btmura/ponzi2/internal/app/controller"
-	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/errs"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
@@ -29,7 +29,7 @@ func New(client iexClientInterface, token string) *App {
 // Run runs the app. Should be called from main.
 func (a *App) Run() error {
 	if a.client == nil {
-		return errors.Errorf("nil client")
+		return errs.Errorf("nil client")
 	}
 
 	return controller.New(a.client, a.token).RunLoop()

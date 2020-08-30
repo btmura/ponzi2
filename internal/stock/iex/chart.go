@@ -16,7 +16,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/errs"
 	"github.com/btmura/ponzi2/internal/logger"
 )
 
@@ -94,7 +94,7 @@ func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart
 	}
 
 	if req.Range != TwoYears {
-		return nil, errors.Errorf("only the two years range is supported")
+		return nil, errs.Errorf("only the two years range is supported")
 	}
 
 	fixedNow := now()
@@ -272,7 +272,7 @@ func (c *Client) GetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart
 
 func (c *Client) noCacheGetCharts(ctx context.Context, req *GetChartsRequest) ([]*Chart, error) {
 	if req.Token == "" {
-		return nil, errors.Errorf("missing token")
+		return nil, ErrMissingAPIToken
 	}
 
 	if len(req.Symbols) == 0 {
@@ -280,7 +280,7 @@ func (c *Client) noCacheGetCharts(ctx context.Context, req *GetChartsRequest) ([
 	}
 
 	if req.Range == RangeUnspecified {
-		return nil, errors.Errorf("iex: missing range for chart req")
+		return nil, errs.Errorf("iex: missing range for chart req")
 	}
 
 	var rangeStr string
@@ -290,11 +290,11 @@ func (c *Client) noCacheGetCharts(ctx context.Context, req *GetChartsRequest) ([
 	case TwoYears:
 		rangeStr = "2y"
 	default:
-		return nil, errors.Errorf("iex: unsupported range for chart req: %s", req.Range)
+		return nil, errs.Errorf("iex: unsupported range for chart req: %s", req.Range)
 	}
 
 	if req.ChartLast < 0 {
-		return nil, errors.Errorf("iex: chart last must be greater than or equal to zero")
+		return nil, errs.Errorf("iex: chart last must be greater than or equal to zero")
 	}
 
 	u, err := url.Parse("https://cloud.iexapis.com/stable/stock/market/batch")
@@ -346,14 +346,14 @@ func (c *Client) noCacheGetCharts(ctx context.Context, req *GetChartsRequest) ([
 
 		rr, err := dumpResponse(fmt.Sprintf("iex-chart-%s-%v.txt", strings.Join(ss, "-"), rangeStr), r)
 		if err != nil {
-			return nil, errors.Errorf("iex: failed to dump chart resp: %v", err)
+			return nil, errs.Errorf("iex: failed to dump chart resp: %v", err)
 		}
 		r = rr
 	}
 
 	charts, err := decodeCharts(r)
 	if err != nil {
-		return nil, errors.Errorf("iex: failed to decode chart resp: %v", err)
+		return nil, errs.Errorf("iex: failed to decode chart resp: %v", err)
 	}
 	return charts, nil
 }
@@ -377,13 +377,13 @@ func decodeCharts(r io.Reader) ([]*Chart, error) {
 
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
-		return nil, errors.Errorf("reading chart json failed: %v", err)
+		return nil, errs.Errorf("reading chart json failed: %v", err)
 	}
 
 	var m map[string]stock
 	dec := json.NewDecoder(bytes.NewReader(b))
 	if err := dec.Decode(&m); err != nil {
-		return nil, errors.Errorf("chart json decode failed: %v, got: %s", err, string(b))
+		return nil, errs.Errorf("chart json decode failed: %v, got: %s", err, string(b))
 	}
 
 	var charts []*Chart
@@ -395,7 +395,7 @@ func decodeCharts(r io.Reader) ([]*Chart, error) {
 		for _, pt := range st.Chart {
 			date, err := chartDate(pt.Date, pt.Minute)
 			if err != nil {
-				return nil, errors.Errorf("parsing date (%s) failed: %v", pt.Date, err)
+				return nil, errs.Errorf("parsing date (%s) failed: %v", pt.Date, err)
 			}
 
 			ch.ChartPoints = append(ch.ChartPoints, &ChartPoint{

@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/errs"
 )
 
 // now is a function to get the current time. Mocked out in tests to return a fixed time.
@@ -415,7 +415,7 @@ func (m *Model) containsSymbol(symbol string) bool {
 // ValidateSymbol validates a symbol and returns an error if it's invalid.
 func ValidateSymbol(symbol string) error {
 	if !validSymbolRegexp.MatchString(symbol) {
-		return errors.Errorf("bad symbol: got %s, want: %v", symbol, validSymbolRegexp)
+		return errs.Errorf("bad symbol: got %s, want: %v", symbol, validSymbolRegexp)
 	}
 	return nil
 }
@@ -423,7 +423,7 @@ func ValidateSymbol(symbol string) error {
 // ValidateQuote validates a Quote and returns an error if it's invalid.
 func ValidateQuote(q *Quote) error {
 	if q == nil {
-		return errors.Errorf("missing quote")
+		return errs.Errorf("missing quote")
 	}
 
 	return nil
@@ -432,11 +432,11 @@ func ValidateQuote(q *Quote) error {
 // ValidateChart validates a Chart and returns an error if it's invalid.
 func ValidateChart(ch *Chart) error {
 	if ch == nil {
-		return errors.Errorf("missing chart")
+		return errs.Errorf("missing chart")
 	}
 
 	if ch.Interval == IntervalUnspecified {
-		return errors.Errorf("missing interval")
+		return errs.Errorf("missing interval")
 	}
 
 	return nil

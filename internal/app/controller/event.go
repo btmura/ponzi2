@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/btmura/ponzi2/internal/app/model"
-	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/errs"
 )
 
 // event is a single event that the Controller should process on the main thread.
@@ -101,7 +101,7 @@ func (c *eventController) process(ctx context.Context) error {
 			}
 
 		default:
-			return errors.Errorf("bad event: %v", e)
+			return errs.Errorf("bad event: %v", e)
 		}
 	}
 

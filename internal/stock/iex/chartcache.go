@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/errs"
 )
 
 // ChartCacheKey is the key to look up chart cache entries.
@@ -115,11 +115,11 @@ func (g *GOBChartCache) Put(ctx context.Context, key ChartCacheKey, val *ChartCa
 	cacheClientVar.Add("chart-cache-puts", 1)
 
 	if !validTokenRegexp.MatchString(key.Token) {
-		return errors.Errorf("bad token: got %s, want: %v", key.Token, validTokenRegexp)
+		return errs.Errorf("bad token: got %s, want: %v", key.Token, validTokenRegexp)
 	}
 
 	if !validSymbolRegexp.MatchString(key.Symbol) {
-		return errors.Errorf("bad symbol: got %s, want: %v", key.Symbol, validSymbolRegexp)
+		return errs.Errorf("bad symbol: got %s, want: %v", key.Symbol, validSymbolRegexp)
 	}
 
 	if g.Data == nil {

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/errs"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
 
@@ -51,7 +51,7 @@ func (c *Client) GetQuotes(ctx context.Context, req *iex.GetQuotesRequest) ([]*i
 	if httpResp.StatusCode != http.StatusOK {
 		var b bytes.Buffer
 		b.ReadFrom(httpResp.Body)
-		return nil, errors.Errorf("getting quotes failed: %s", b.String())
+		return nil, errs.Errorf("getting quotes failed: %s", b.String())
 	}
 
 	var resp []*iex.Quote
@@ -92,7 +92,7 @@ func (c *Client) GetCharts(ctx context.Context, req *iex.GetChartsRequest) ([]*i
 	if httpResp.StatusCode != http.StatusOK {
 		var b bytes.Buffer
 		b.ReadFrom(httpResp.Body)
-		return nil, errors.Errorf("getting charts failed: %s", b.String())
+		return nil, errs.Errorf("getting charts failed: %s", b.String())
 	}
 
 	var resp []*iex.Chart

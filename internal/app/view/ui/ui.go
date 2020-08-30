@@ -19,7 +19,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/chart"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/text"
-	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/errs"
 	"github.com/btmura/ponzi2/internal/logger"
 	"github.com/btmura/ponzi2/internal/matrix"
 )
@@ -835,7 +835,7 @@ func (u *UI) SetLoading(symbol string, interval model.Interval) error {
 	}
 
 	if interval == model.IntervalUnspecified {
-		return errors.Errorf("unspecified interval")
+		return errs.Errorf("unspecified interval")
 	}
 
 	for s, ch := range u.symbolToChartMap {

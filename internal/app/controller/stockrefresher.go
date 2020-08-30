@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/btmura/ponzi2/internal/app/model"
-	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/errs"
 	"github.com/btmura/ponzi2/internal/logger"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
@@ -70,7 +70,7 @@ func (s *stockRefresher) refreshOne(ctx context.Context, symbol string, interval
 	}
 
 	if interval == model.IntervalUnspecified {
-		return errors.Errorf("unspecified interval")
+		return errs.Errorf("unspecified interval")
 	}
 
 	d := new(dataRequestBuilder)
@@ -201,7 +201,7 @@ func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) err
 				}
 				es = append(es, event{
 					symbol:    sym,
-					updateErr: errors.Errorf("no stock data for %q", sym),
+					updateErr: errs.Errorf("no stock data for %q", sym),
 				})
 			}
 
@@ -254,7 +254,7 @@ func (d *dataRequestBuilder) add(symbols []string, interval model.Interval) erro
 	}
 
 	if interval == model.IntervalUnspecified {
-		return errors.Errorf("unspecified interval")
+		return errs.Errorf("unspecified interval")
 	}
 
 	group := interval2DataRequestGroup[interval]
@@ -296,7 +296,7 @@ func (d *dataRequestBuilder) dataRequests(token string) ([]*dataRequest, error) 
 		case dailyWeekly:
 			iexRange = iex.TwoYears
 		default:
-			return nil, errors.Errorf("bad group: %v", group)
+			return nil, errs.Errorf("bad group: %v", group)
 		}
 
 		reqs = append(reqs, &dataRequest{

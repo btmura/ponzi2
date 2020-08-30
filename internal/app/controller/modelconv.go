@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/btmura/ponzi2/internal/app/model"
-	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/errs"
 	"github.com/btmura/ponzi2/internal/logger"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
@@ -88,7 +88,7 @@ func modelWeeklyChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) 
 
 func modelQuote(q *iex.Quote) (*model.Quote, error) {
 	if q == nil {
-		return nil, errors.Errorf("missing quote")
+		return nil, errs.Errorf("missing quote")
 	}
 
 	return &model.Quote{

@@ -8,7 +8,7 @@ import (
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view/chart"
 	"github.com/btmura/ponzi2/internal/app/view/ui"
-	"github.com/btmura/ponzi2/internal/errors"
+	"github.com/btmura/ponzi2/internal/errs"
 	"github.com/btmura/ponzi2/internal/logger"
 	"github.com/btmura/ponzi2/internal/stock/iex"
 )
@@ -177,7 +177,7 @@ func (c *Controller) RunLoop() error {
 
 func (c *Controller) setChart(ctx context.Context, symbol string) error {
 	if symbol == "" {
-		return errors.Errorf("missing symbol")
+		return errs.Errorf("missing symbol")
 	}
 
 	changed, err := c.model.SetCurrentSymbol(symbol)
@@ -207,7 +207,7 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 
 func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 	if symbol == "" {
-		return errors.Errorf("missing symbol")
+		return errs.Errorf("missing symbol")
 	}
 
 	added, err := c.model.AddSidebarSymbol(symbol)
