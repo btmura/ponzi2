@@ -79,6 +79,7 @@ type UI struct {
 	symbolToChartMap map[string]*chart.Chart
 
 	// symbolToChartThumbMap maps symbol to thumbnail.
+	// TODO(btmura): move this map to sidebar
 	symbolToChartThumbMap map[string]*chart.Thumb
 
 	// titleBar renders the window titleBar.
@@ -157,9 +158,9 @@ type uiChart struct {
 	*view.Fader
 }
 
-func newUIChart(ch *chart.Chart) *uiChart {
+func newUIChart(c *chart.Chart) *uiChart {
 	return &uiChart{
-		Chart: ch,
+		Chart: c,
 		Fader: view.NewStartedFader(1 * view.FPS),
 	}
 }
@@ -532,9 +533,9 @@ func (u *UI) processInput(input *view.Input) (dirty bool) {
 	u.sidebar.ProcessInput(input)
 
 	for i := 0; i < len(u.charts); i++ {
-		ch := u.charts[i]
-		ch.SetBounds(m.chartBounds)
-		ch.ProcessInput(input)
+		c := u.charts[i]
+		c.SetBounds(m.chartBounds)
+		c.ProcessInput(input)
 	}
 
 	for _, cb := range input.FiredCallbacks() {
@@ -582,13 +583,13 @@ func (u *UI) updateInputSymbolTextBox(input *view.Input) {
 
 func (u *UI) update() (dirty bool) {
 	for i := 0; i < len(u.charts); i++ {
-		ch := u.charts[i]
-		if ch.Update() {
+		c := u.charts[i]
+		if c.Update() {
 			dirty = true
 		}
-		if ch.DoneFadingOut() {
+		if c.DoneFadingOut() {
 			u.charts = append(u.charts[:i], u.charts[i+1:]...)
-			ch.Close()
+			c.Close()
 			i--
 		}
 	}
@@ -614,8 +615,8 @@ func (u *UI) render(fudge float32) {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 	// Render the main chart.
-	for _, ch := range u.charts {
-		ch.Render(fudge)
+	for _, c := range u.charts {
+		c.Render(fudge)
 	}
 
 	// Render instructions if there are no charts to show.
@@ -735,50 +736,50 @@ func (u *UI) SetChart(symbol string, data chart.Data, priceStyle chart.PriceStyl
 		return err
 	}
 
-	for symbol, ch := range u.symbolToChartMap {
+	for symbol, c := range u.symbolToChartMap {
 		delete(u.symbolToChartMap, symbol)
-		ch.Close()
+		c.Close()
 	}
 
-	ch := chart.NewChart(priceStyle)
-	u.symbolToChartMap[symbol] = ch
+	c := chart.NewChart(priceStyle)
+	u.symbolToChartMap[symbol] = c
 
 	u.titleBar.SetData(data)
-	ch.SetData(data)
+	c.SetData(data)
 
-	ch.SetBarButtonClickCallback(func() {
+	c.SetBarButtonClickCallback(func() {
 		if u.chartPriceStyleButtonClickCallback != nil {
 			u.chartPriceStyleButtonClickCallback(chart.Bar)
 		}
 	})
 
-	ch.SetCandlestickButtonClickCallback(func() {
+	c.SetCandlestickButtonClickCallback(func() {
 		if u.chartPriceStyleButtonClickCallback != nil {
 			u.chartPriceStyleButtonClickCallback(chart.Candlestick)
 		}
 	})
 
-	ch.SetRefreshButtonClickCallback(func() {
+	c.SetRefreshButtonClickCallback(func() {
 		if u.chartRefreshButtonClickCallback != nil {
 			u.chartRefreshButtonClickCallback(symbol)
 		}
 	})
 
-	ch.SetAddButtonClickCallback(func() {
+	c.SetAddButtonClickCallback(func() {
 		if u.chartAddButtonClickCallback != nil {
 			u.chartAddButtonClickCallback(symbol)
 		}
 	})
 
-	ch.SetZoomChangeCallback(func(zoomChange chart.ZoomChange) {
+	c.SetZoomChangeCallback(func(zoomChange chart.ZoomChange) {
 		u.handleChartZoomChangeEvent(zoomChange)
 	})
 
 	defer u.WakeLoop()
-	for _, ch := range u.charts {
-		ch.FadeOut()
+	for _, c := range u.charts {
+		c.FadeOut()
 	}
-	u.charts = append([]*uiChart{newUIChart(ch)}, u.charts...)
+	u.charts = append([]*uiChart{newUIChart(c)}, u.charts...)
 
 	return nil
 }
@@ -789,25 +790,25 @@ func (u *UI) AddChartThumb(symbol string, data chart.Data, priceStyle chart.Pric
 		return err
 	}
 
-	th := chart.NewThumb(priceStyle)
-	u.symbolToChartThumbMap[symbol] = th
+	t := chart.NewThumb(priceStyle)
+	u.symbolToChartThumbMap[symbol] = t
 
-	th.SetData(data)
+	t.SetData(data)
 
-	th.SetRemoveButtonClickCallback(func() {
+	t.SetRemoveButtonClickCallback(func() {
 		if u.thumbRemoveButtonClickCallback != nil {
 			u.thumbRemoveButtonClickCallback(symbol)
 		}
 	})
 
-	th.SetThumbClickCallback(func() {
+	t.SetThumbClickCallback(func() {
 		if u.thumbClickCallback != nil {
 			u.thumbClickCallback(symbol)
 		}
 	})
 
 	defer u.WakeLoop()
-	u.sidebar.AddChartThumb(th)
+	u.sidebar.AddChartThumb(t)
 
 	return nil
 }
@@ -818,12 +819,12 @@ func (u *UI) RemoveChartThumb(symbol string) error {
 		return err
 	}
 
-	th := u.symbolToChartThumbMap[symbol]
+	t := u.symbolToChartThumbMap[symbol]
 	delete(u.symbolToChartThumbMap, symbol)
-	th.Close()
+	t.Close()
 
 	defer u.WakeLoop()
-	u.sidebar.RemoveChartThumb(th)
+	u.sidebar.RemoveChartThumb(t)
 
 	return nil
 }
@@ -838,17 +839,17 @@ func (u *UI) SetLoading(symbol string, interval model.Interval) error {
 		return errs.Errorf("unspecified interval")
 	}
 
-	for s, ch := range u.symbolToChartMap {
+	for s, c := range u.symbolToChartMap {
 		if s == symbol {
-			ch.SetLoading(true)
-			ch.SetErrorMessage("")
+			c.SetLoading(true)
+			c.SetErrorMessage("")
 		}
 	}
 
-	for s, th := range u.symbolToChartThumbMap {
+	for s, t := range u.symbolToChartThumbMap {
 		if s == symbol {
-			th.SetLoading(true)
-			th.SetErrorMessage("")
+			t.SetLoading(true)
+			t.SetErrorMessage("")
 		}
 	}
 
@@ -862,15 +863,15 @@ func (u *UI) SetData(symbol string, data chart.Data) {
 		return
 	}
 
-	if ch, ok := u.symbolToChartMap[symbol]; ok {
-		ch.SetLoading(false)
+	if c, ok := u.symbolToChartMap[symbol]; ok {
+		c.SetLoading(false)
 		u.titleBar.SetData(data)
-		ch.SetData(data)
+		c.SetData(data)
 	}
 
-	if th, ok := u.symbolToChartThumbMap[symbol]; ok {
-		th.SetLoading(false)
-		th.SetData(data)
+	if t, ok := u.symbolToChartThumbMap[symbol]; ok {
+		t.SetLoading(false)
+		t.SetData(data)
 	}
 }
 
@@ -882,14 +883,14 @@ func (u *UI) SetErrorMessage(symbol string, errorMessage string) {
 		return
 	}
 
-	if ch, ok := u.symbolToChartMap[symbol]; ok {
-		ch.SetLoading(false)
-		ch.SetErrorMessage(errorMessage)
+	if c, ok := u.symbolToChartMap[symbol]; ok {
+		c.SetLoading(false)
+		c.SetErrorMessage(errorMessage)
 	}
 
-	if th, ok := u.symbolToChartThumbMap[symbol]; ok {
-		th.SetLoading(false)
-		th.SetErrorMessage(errorMessage)
+	if t, ok := u.symbolToChartThumbMap[symbol]; ok {
+		t.SetLoading(false)
+		t.SetErrorMessage(errorMessage)
 	}
 }
 
@@ -901,8 +902,8 @@ func (u *UI) SetChartPriceStyle(newPriceStyle chart.PriceStyle) {
 
 	defer u.WakeLoop()
 
-	for _, ch := range u.symbolToChartMap {
-		ch.SetPriceStyle(newPriceStyle)
+	for _, c := range u.symbolToChartMap {
+		c.SetPriceStyle(newPriceStyle)
 	}
 
 	u.sidebar.SetPriceStyle(newPriceStyle)
