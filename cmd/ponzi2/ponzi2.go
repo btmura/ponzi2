@@ -9,27 +9,27 @@ import (
 )
 
 var (
-	token            = flag.String("token", "", "IEX API token required on requests.")
-	enableChartCache = flag.Bool("enable_chart_cache", true, "Whether to enable the chart cache.")
-	dumpAPIResponses = flag.Bool("dump_api_responses", false, "Dump API responses to txt files.")
+	iexAPIToken         = flag.String("iex_api_token", "", "IEX API Token required on requests.")
+	enableIEXChartCache = flag.Bool("enable_iex_chart_cache", true, "Whether to enable the IEX chart cache.")
+	dumpIEXAPIResponses = flag.Bool("dump_iex_api_responses", false, "Dump API responses to txt files.")
 )
 
 func main() {
 	flag.Parse()
 
 	switch {
-	case *enableChartCache:
+	case *enableIEXChartCache:
 		cache, err := iex.OpenGOBChartCache()
 		if err != nil {
 			logger.Fatal(err)
 		}
-		c := iex.NewClient(cache, *dumpAPIResponses)
-		a := app.New(c, *token)
+		c := iex.NewClient(cache, *dumpIEXAPIResponses)
+		a := app.New(c, *iexAPIToken)
 		logger.Fatal(a.Run())
 
 	default:
-		c := iex.NewClient(new(iex.NoOpChartCache), *dumpAPIResponses)
-		a := app.New(c, *token)
+		c := iex.NewClient(new(iex.NoOpChartCache), *dumpIEXAPIResponses)
+		a := app.New(c, *iexAPIToken)
 		logger.Fatal(a.Run())
 	}
 }
