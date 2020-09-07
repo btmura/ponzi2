@@ -165,19 +165,19 @@ func newUIChart(c *chart.Chart) *uiChart {
 	}
 }
 
-func (c *uiChart) Update() (dirty bool) {
-	if c.Chart.Update() {
+func (u *uiChart) Update() (dirty bool) {
+	if u.Chart.Update() {
 		dirty = true
 	}
-	if c.Fader.Update() {
+	if u.Fader.Update() {
 		dirty = true
 	}
 	return dirty
 }
 
-func (c *uiChart) Render(fudge float32) {
-	c.Fader.Render(fudge, func() {
-		c.Chart.Render(fudge)
+func (u *uiChart) Render(fudge float32) {
+	u.Fader.Render(fudge, func() {
+		u.Chart.Render(fudge)
 	})
 }
 
