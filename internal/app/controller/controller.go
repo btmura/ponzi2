@@ -372,7 +372,8 @@ func (c *Controller) refreshAllStocks(ctx context.Context) error {
 
 // onStockRefreshStarted implements the eventHandler interface.
 func (c *Controller) onStockRefreshStarted(symbol string, interval model.Interval) error {
-	return c.ui.SetLoading(symbol, interval)
+	c.ui.SetLoading(symbol, interval)
+	return nil
 }
 
 // onStockUpdate implements the eventHandler interface.

@@ -19,7 +19,6 @@ import (
 	"github.com/btmura/ponzi2/internal/app/view/chart"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 	"github.com/btmura/ponzi2/internal/app/view/text"
-	"github.com/btmura/ponzi2/internal/errs"
 	"github.com/btmura/ponzi2/internal/logger"
 	"github.com/btmura/ponzi2/internal/matrix"
 )
@@ -830,13 +829,15 @@ func (u *UI) RemoveChartThumb(symbol string) error {
 }
 
 // SetLoading sets the charts and slots matching the symbol and interval to loading.
-func (u *UI) SetLoading(symbol string, interval model.Interval) error {
+func (u *UI) SetLoading(symbol string, interval model.Interval) {
 	if err := model.ValidateSymbol(symbol); err != nil {
-		return err
+		logger.Errorf("invalid symbol: %v", err)
+		return
 	}
 
 	if interval == model.IntervalUnspecified {
-		return errs.Errorf("unspecified interval")
+		logger.Error("unspecified interval")
+		return
 	}
 
 	for s, c := range u.symbolToChartMap {
@@ -852,8 +853,6 @@ func (u *UI) SetLoading(symbol string, interval model.Interval) error {
 			t.SetErrorMessage("")
 		}
 	}
-
-	return nil
 }
 
 // SetData loads the data to charts and thumbnails matching the symbol and interval.
