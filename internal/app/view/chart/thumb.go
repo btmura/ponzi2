@@ -1,7 +1,6 @@
 package chart
 
 import (
-	"fmt"
 	"image"
 
 	"golang.org/x/image/font/gofont/goregular"
@@ -133,13 +132,14 @@ func (t *Thumb) SetLoading(loading bool) {
 	t.header.SetLoading(loading)
 }
 
-// SetError toggles the Chart's error indicator.
-func (t *Thumb) SetError(err error) {
-	t.hasError = err != nil
-	if err != nil {
-		t.errorTextBox.SetText(fmt.Sprintf("ERROR: %v", err))
+// SetErrorMessage sets or resets an error message on charts and thumbnails that match the symbol.
+// An empty error message clears any previously set error messages.
+func (t *Thumb) SetErrorMessage(errorMessage string) {
+	t.hasError = errorMessage != ""
+	if errorMessage != "" {
+		t.errorTextBox.SetText(errorMessage)
 	}
-	t.header.SetError(err)
+	t.header.SetErrorMessage(errorMessage)
 }
 
 // SetData sets the data to be shown on the chart.

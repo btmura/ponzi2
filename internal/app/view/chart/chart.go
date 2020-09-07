@@ -1,7 +1,6 @@
 package chart
 
 import (
-	"fmt"
 	"image"
 	"math"
 
@@ -190,13 +189,14 @@ func (ch *Chart) SetLoading(loading bool) {
 	ch.header.SetLoading(loading)
 }
 
-// SetError toggles the Chart's error indicator.
-func (ch *Chart) SetError(err error) {
-	ch.hasError = err != nil
-	if err != nil {
-		ch.errorTextBox.SetText(fmt.Sprintf("ERROR: %v", err))
+// SetErrorMessage sets or resets an error message on the chart.
+// An empty error message clears any previously set error messages.
+func (ch *Chart) SetErrorMessage(errorMessage string) {
+	ch.hasError = errorMessage != ""
+	if errorMessage != "" {
+		ch.errorTextBox.SetText(errorMessage)
 	}
-	ch.header.SetError(err)
+	ch.header.SetErrorMessage(errorMessage)
 }
 
 // Data is argument to SetData.

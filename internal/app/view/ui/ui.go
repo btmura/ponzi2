@@ -841,14 +841,14 @@ func (u *UI) SetLoading(symbol string, interval model.Interval) error {
 	for s, ch := range u.symbolToChartMap {
 		if s == symbol {
 			ch.SetLoading(true)
-			ch.SetError(nil)
+			ch.SetErrorMessage("")
 		}
 	}
 
 	for s, th := range u.symbolToChartThumbMap {
 		if s == symbol {
 			th.SetLoading(true)
-			th.SetError(nil)
+			th.SetErrorMessage("")
 		}
 	}
 
@@ -874,8 +874,9 @@ func (u *UI) SetData(symbol string, data chart.Data) {
 	}
 }
 
-// SetError sets an error on the charts and slots matching the symbol.
-func (u *UI) SetError(symbol string, updateErr error) {
+// SetErrorMessage sets or resets an error message on charts and thumbnails that match the symbol.
+// An empty error message clears any previously set error messages.
+func (u *UI) SetErrorMessage(symbol string, errorMessage string) {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		logger.Errorf("invalid symbol: %v", err)
 		return
@@ -883,12 +884,12 @@ func (u *UI) SetError(symbol string, updateErr error) {
 
 	if ch, ok := u.symbolToChartMap[symbol]; ok {
 		ch.SetLoading(false)
-		ch.SetError(updateErr)
+		ch.SetErrorMessage(errorMessage)
 	}
 
 	if th, ok := u.symbolToChartThumbMap[symbol]; ok {
 		th.SetLoading(false)
-		th.SetError(updateErr)
+		th.SetErrorMessage(errorMessage)
 	}
 }
 

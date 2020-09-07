@@ -3,6 +3,8 @@ package controller
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/btmura/ponzi2/internal/app/config"
 	"github.com/btmura/ponzi2/internal/app/model"
@@ -409,8 +411,18 @@ func (c *Controller) onStockUpdate(symbol string, q *model.Quote, ch *model.Char
 
 // onStockUpdateError implements the eventHandler interface.
 func (c *Controller) onStockUpdateError(symbol string, updateErr error) error {
-	logger.Errorf("stock update for %s failed: %v\n", symbol, updateErr)
-	c.ui.SetError(symbol, updateErr)
+	logger.Errorf("stock update for %s failed: %v", symbol, updateErr)
+
+	var errorMessage string
+	switch {
+	case errors.Is(updateErr, iex.ErrMissingAPIToken):
+		errorMessage = "Missing API token. Visit ponzi2.io/install."
+
+	default:
+		errorMessage = fmt.Sprintf("ERROR: %v", updateErr)
+	}
+
+	c.ui.SetErrorMessage(symbol, errorMessage)
 	return nil
 }
 
