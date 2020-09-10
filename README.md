@@ -19,6 +19,7 @@ Run this command to install "ponzi2".
 ### Development Environment Setup
 
 [![Build Status](https://travis-ci.org/btmura/ponzi2.svg?branch=master)](https://travis-ci.org/btmura/ponzi2)
+[![Go Report Card](https://goreportcard.com/badge/github.com/btmura/ponzi2)](https://goreportcard.com/report/github.com/btmura/ponzi2)
 
 1. `go get -u github.com/mjibson/esc`
 2. `go get -u github.com/akavel/rsrc`
