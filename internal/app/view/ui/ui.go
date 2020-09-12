@@ -28,7 +28,7 @@ import (
 
 // Add a Windows icon by generating a SYSO file in the root that will be picked
 // up by the Go build tools. Get rsrc from github.com/akavel/rsrc.
-//go:generate rsrc -ico data/icon.ico -arch amd64 -o ../../../ponzi2_windows.syso
+//go:generate rsrc -ico data/icon.ico -arch amd64 -o ../../../../cmd/ponzi2/ponzi2_windows.syso
 
 // Application name for the window title.
 const appName = "ponzi2"
