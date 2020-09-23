@@ -235,14 +235,13 @@ func (h *header) ProcessInput(input *view.Input) (body image.Rectangle, clicks h
 
 	if h.candlestickButton.enabled {
 		h.candlestickButton.SetBounds(bounds)
-		clicks.RemoveButtonClicked = h.candlestickButton.ProcessInput(input)
+		clicks.CandlestickButtonClicked = h.candlestickButton.ProcessInput(input)
 		bounds = rect.Translate(bounds, -buttonSize.X, 0)
 	}
 
 	if h.barButton.enabled {
 		h.barButton.SetBounds(bounds)
-		clicks.RemoveButtonClicked = h.barButton.ProcessInput(input)
-		bounds = rect.Translate(bounds, -buttonSize.X, 0)
+		clicks.BarButtonClicked = h.barButton.ProcessInput(input)
 	}
 
 	// Don't report clicks when the refresh button is just an indicator.

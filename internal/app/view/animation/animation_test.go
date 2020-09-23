@@ -254,6 +254,7 @@ func TestAnimation_Reverse(t *testing.T) {
 		numFrames: 3,
 		state:     Running,
 	}
+	checkFields(t, want, b)
 	checkValue(t, 1.0, b, 0)
 }
 

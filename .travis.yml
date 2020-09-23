@@ -2,3 +2,6 @@ before_install:
   # Install GLFW Dependencies: https://github.com/go-gl/glfw/blob/master/README.md
   - sudo apt-get install -y libgl1-mesa-dev xorg-dev
 language: go
+
+go:
+  - 1.13.x

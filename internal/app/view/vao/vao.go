@@ -11,9 +11,7 @@ import (
 // Embed resources into the application. Get esc from github.com/mjibson/esc.
 //go:generate esc -o bindata.go -pkg vao -include ".*(ply|png)" -modtime 1337 -private data
 
-// YPercentFunc returns the percent within the Y-axis range that the value is.
-type YPercentFunc func(value float32) (percent float32)
-
+// DataLine returns a VAO of line segments that plot the percentage values on the Y-axis from -1 to 1 on the X-axis.
 func DataLine(yPercentValues []float32, color view.Color) *gfx.VAO {
 	if len(yPercentValues) < 2 {
 		return gfx.EmptyVAO()
@@ -81,7 +79,7 @@ func VertRuleSet(xValues []float32, xRange [2]float32, color1, color2 view.Color
 	return gfx.NewVAO(data)
 }
 
-// HorizLine returns a horizontal line from (-1, 0) to (1, 0).
+// HorizLine returns a VAO of a horizontal line from (-1, 0) to (1, 0).
 func HorizLine(color1, color2 view.Color) *gfx.VAO {
 	return gfx.NewVAO(
 		&gfx.VAOVertexData{
@@ -101,7 +99,7 @@ func HorizLine(color1, color2 view.Color) *gfx.VAO {
 	)
 }
 
-// VertLine returns a vertical line from (0, -1) to (0, 1).
+// VertLine returns a VAO of a vertical line from (0, -1) to (0, 1).
 func VertLine(color1, color2 view.Color) *gfx.VAO {
 	return gfx.NewVAO(
 		&gfx.VAOVertexData{
