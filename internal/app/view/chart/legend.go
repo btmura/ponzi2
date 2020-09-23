@@ -282,7 +282,9 @@ func (l *legend) Update() (dirty bool) {
 				whiteArrow(float32(curr.Volume) - float32(prev.Volume)),
 				text("Volume"),
 				text(volumeText(curr.Volume)),
-			})
+			},
+			[3]legendCell{empty, empty, text(formatPercentChange(curr.VolumePercentChange))},
+		)
 	}
 
 	columns := [3]legendColumn{}

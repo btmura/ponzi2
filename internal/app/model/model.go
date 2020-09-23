@@ -115,15 +115,16 @@ func (t *TradingSessionSeries) DeepCopy() *TradingSessionSeries {
 
 // TradingSession models a single trading session.
 type TradingSession struct {
-	Date          time.Time
-	Source        Source
-	Open          float32
-	High          float32
-	Low           float32
-	Close         float32
-	Volume        int
-	Change        float32
-	PercentChange float32
+	Date                time.Time
+	Source              Source
+	Open                float32
+	High                float32
+	Low                 float32
+	Close               float32
+	Volume              int
+	Change              float32
+	PercentChange       float32
+	VolumePercentChange float32
 }
 
 // DeepCopy returns a deep copy of the session.

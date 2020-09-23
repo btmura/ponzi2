@@ -137,6 +137,7 @@ func modelTradingSessions(quote *iex.Quote, chart *iex.Chart) []*model.TradingSe
 			logger.Errorf("skipping bad data for %s: %v", chart.Symbol, p)
 			continue
 		}
+
 		ts = append(ts, &model.TradingSession{
 			Date:          p.Date,
 			Source:        model.Close,
@@ -197,15 +198,25 @@ func modelTradingSessions(quote *iex.Quote, chart *iex.Chart) []*model.TradingSe
 		return []*model.TradingSession{t}
 	}
 
-	clean := func(t time.Time) time.Time {
-		return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+	sameDate := func(t1, t2 time.Time) bool {
+		return t1.Year() == t2.Year() && t1.Month() == t2.Month() && t1.Day() == t2.Day()
 	}
 
-	if clean(t.Date).Equal(clean(ts[len(ts)-1].Date)) {
-		return ts
+	if !sameDate(t.Date, ts[len(ts)-1].Date) {
+		ts = append(ts, t)
 	}
 
-	return append(ts, t)
+	// Calculate volume percent change with the final trading sessions.
+	for i, t := range ts {
+		if i == 0 {
+			continue
+		}
+
+		prev := ts[i-1].Volume
+		t.VolumePercentChange = float32(t.Volume-prev) / float32(prev) * 100.0
+	}
+
+	return ts
 }
 
 func weeklyModelTradingSessions(ds []*model.TradingSession) (ws []*model.TradingSession) {
