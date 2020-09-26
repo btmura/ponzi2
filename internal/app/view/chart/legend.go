@@ -276,14 +276,24 @@ func (l *legend) Update() (dirty bool) {
 	}
 
 	if curr.Volume != 0 {
+		dv := curr.Volume - prev.Volume
 		rows = append(rows,
 			[3]legendCell{empty, empty, empty},
 			[3]legendCell{
-				whiteArrow(float32(curr.Volume) - float32(prev.Volume)),
+				whiteArrow(float32(dv)),
 				text("Volume"),
 				text(volumeText(curr.Volume)),
 			},
-			[3]legendCell{empty, empty, text(formatPercentChange(curr.VolumePercentChange))},
+			[3]legendCell{
+				empty,
+				empty,
+				text(volumeChangeText(dv)),
+			},
+			[3]legendCell{
+				empty,
+				empty,
+				text(formatPercentChange(curr.VolumePercentChange)),
+			},
 		)
 	}
 

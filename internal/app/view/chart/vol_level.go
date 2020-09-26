@@ -3,6 +3,7 @@ package chart
 import (
 	"fmt"
 	"image"
+	"math"
 	"strconv"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
@@ -120,6 +121,22 @@ func volumeText(v int) string {
 		t = fmt.Sprintf("%.1fK", float32(v)/1e3)
 	default:
 		t = strconv.Itoa(v)
+	}
+	return t
+}
+
+func volumeChangeText(dv int) string {
+	adv := int(math.Abs(float64(dv)))
+	var t string
+	switch {
+	case adv > 1000000000:
+		t = fmt.Sprintf("%+.1fB", float32(dv)/1e9)
+	case adv > 1000000:
+		t = fmt.Sprintf("%+.1fM", float32(dv)/1e6)
+	case adv > 1000:
+		t = fmt.Sprintf("%+.1fK", float32(dv)/1e3)
+	default:
+		t = fmt.Sprintf("%+d", dv)
 	}
 	return t
 }
