@@ -96,10 +96,9 @@ func newLegend() *legend {
 }
 
 type legendData struct {
+	Interval               model.Interval
 	TradingSessionSeries   *model.TradingSessionSeries
-	MovingAverageSeries21  *model.MovingAverageSeries
-	MovingAverageSeries50  *model.MovingAverageSeries
-	MovingAverageSeries200 *model.MovingAverageSeries
+	MovingAverageSeriesSet []*model.MovingAverageSeries
 }
 
 func (l *legend) SetData(data legendData) {
@@ -235,43 +234,23 @@ func (l *legend) Update() (dirty bool) {
 		{empty, empty, text(formatPercentChange(curr.PercentChange))},
 	}
 
-	var m21, m50, m200 []*model.MovingAverage
-
-	if s := l.data.MovingAverageSeries21; s != nil {
-		m21 = s.MovingAverages
-	}
-	if s := l.data.MovingAverageSeries50; s != nil {
-		m50 = s.MovingAverages
-	}
-	if s := l.data.MovingAverageSeries200; s != nil {
-		m200 = s.MovingAverages
-	}
-
-	if len(m21) != 0 || len(m50) != 0 || len(m200) != 0 {
+	if len(l.data.MovingAverageSeriesSet) != 0 {
 		rows = append(rows, [3]legendCell{empty, empty, empty})
 	}
 
-	if len(m21) != 0 {
-		rows = append(rows, [3]legendCell{
-			symbol("◼", view.Green),
-			text("EMA 21"),
-			text(formatFloat(m21[i].Value)),
-		})
-	}
+	for _, ma := range l.data.MovingAverageSeriesSet {
+		typeLabel := "?"
+		switch ma.Type {
+		case model.Simple:
+			typeLabel = "SMA"
+		case model.Exponential:
+			typeLabel = "EMA"
+		}
 
-	if len(m50) != 0 {
 		rows = append(rows, [3]legendCell{
-			symbol("◼", view.Red),
-			text("SMA 50"),
-			text(formatFloat(m50[i].Value)),
-		})
-	}
-
-	if len(m200) != 0 {
-		rows = append(rows, [3]legendCell{
-			symbol("◼", view.White),
-			text("SMA 200"),
-			text(formatFloat(m200[i].Value)),
+			symbol("◼", movingAverageColors[l.data.Interval][ma.Intervals]),
+			text(fmt.Sprintf("%s %d", typeLabel, ma.Intervals)),
+			text(formatFloat(ma.MovingAverages[i].Value)),
 		})
 	}
 

@@ -39,9 +39,7 @@ type Thumb struct {
 	priceCursor   *priceCursor
 	priceTimeline *timeline
 
-	movingAverage21  *movingAverage
-	movingAverage50  *movingAverage
-	movingAverage200 *movingAverage
+	movingAverages []*movingAverage
 
 	volume         *volume
 	volumeCursor   *volumeCursor
@@ -100,10 +98,6 @@ func NewThumb(priceStyle PriceStyle) *Thumb {
 		priceCursor:   new(priceCursor),
 		priceTimeline: newTimeline(view.TransparentLightGray, view.LightGray, view.TransparentGray, view.Gray),
 
-		movingAverage21:  newMovingAverage(view.Green),
-		movingAverage50:  newMovingAverage(view.Red),
-		movingAverage200: newMovingAverage(view.White),
-
 		volume:         newVolume(priceStyle),
 		volumeCursor:   new(volumeCursor),
 		volumeTimeline: newTimeline(view.LightGray, view.TransparentLightGray, view.Gray, view.TransparentGray),
@@ -157,18 +151,29 @@ func (t *Thumb) SetData(data Data) {
 	}
 
 	ts := dc.TradingSessionSeries
-	m21 := dc.MovingAverageSeries21
-	m50 := dc.MovingAverageSeries50
-	m200 := dc.MovingAverageSeries200
+
+	var mas []*model.MovingAverageSeries
+	for _, ma := range dc.MovingAverageSeriesSet {
+		mas = append(mas, ma)
+	}
+
 	vs := dc.AverageVolumeSeries
 
-	if ts == nil || m21 == nil || m50 == nil || m200 == nil || vs == nil {
+	if ts == nil || vs == nil {
 		return
 	}
 
-	if l1, l2, l3, l4, l5 := len(ts.TradingSessions), len(m21.MovingAverages), len(m50.MovingAverages), len(m200.MovingAverages), len(vs.AverageVolumes); l1 != l2 || l2 != l3 || l3 != l4 || l4 != l5 {
-		logger.Errorf("bad data has different lengths: %d %d %d %d %d", l1, l2, l3, l4, l5)
+	tl := len(ts.TradingSessions)
+	if vl := len(vs.AverageVolumes); tl != vl {
+		logger.Errorf("volume has different lengths: %d vs %d", tl, vl)
 		return
+	}
+
+	for _, ma := range mas {
+		if ml := len(ma.MovingAverages); ml != tl {
+			logger.Errorf("moving average has different length: %d vs %d", tl, ml)
+			return
+		}
 	}
 
 	const days = 20
@@ -176,17 +181,12 @@ func (t *Thumb) SetData(data Data) {
 		ts = ts.DeepCopy()
 		ts.TradingSessions = ts.TradingSessions[l-days:]
 	}
-	if l := len(m21.MovingAverages); l > days {
-		m21 = m21.DeepCopy()
-		m21.MovingAverages = m21.MovingAverages[l-days:]
-	}
-	if l := len(m50.MovingAverages); l > days {
-		m50 = m50.DeepCopy()
-		m50.MovingAverages = m50.MovingAverages[l-days:]
-	}
-	if l := len(m200.MovingAverages); l > days {
-		m200 = m200.DeepCopy()
-		m200.MovingAverages = m200.MovingAverages[l-days:]
+	for i, m := range mas {
+		if l := len(m.MovingAverages); l > days {
+			m = m.DeepCopy()
+			m.MovingAverages = m.MovingAverages[l-days:]
+			mas[i] = m
+		}
 	}
 	if l := len(vs.AverageVolumes); l > days {
 		vs = vs.DeepCopy()
@@ -197,9 +197,16 @@ func (t *Thumb) SetData(data Data) {
 	t.priceCursor.SetData(priceCursorData{ts})
 	t.priceTimeline.SetData(timelineData{dc.Interval, ts})
 
-	t.movingAverage21.SetData(movingAverageData{ts, m21})
-	t.movingAverage50.SetData(movingAverageData{ts, m50})
-	t.movingAverage200.SetData(movingAverageData{ts, m200})
+	for _, ma := range t.movingAverages {
+		ma.Close()
+	}
+
+	t.movingAverages = nil
+	for _, ma := range mas {
+		m := newMovingAverage(movingAverageColors[dc.Interval][ma.Intervals])
+		m.SetData(movingAverageData{ts, ma})
+		t.movingAverages = append(t.movingAverages, m)
+	}
 
 	t.volume.SetData(volumeData{ts, vs})
 	t.volumeCursor.SetData(volumeCursorData{ts})
@@ -240,9 +247,10 @@ func (t *Thumb) ProcessInput(input *view.Input) {
 	t.price.SetBounds(pr)
 	t.priceCursor.SetBounds(pr, pr)
 	t.priceTimeline.SetBounds(pr)
-	t.movingAverage21.SetBounds(pr)
-	t.movingAverage50.SetBounds(pr)
-	t.movingAverage200.SetBounds(pr)
+
+	for _, ma := range t.movingAverages {
+		ma.SetBounds(pr)
+	}
 
 	t.volume.SetBounds(vr)
 	t.volumeCursor.SetBounds(vr, vr)
@@ -305,9 +313,9 @@ func (t *Thumb) Render(fudge float32) {
 
 	t.priceTimeline.Render(fudge)
 	t.price.Render(fudge)
-	t.movingAverage21.Render(fudge)
-	t.movingAverage50.Render(fudge)
-	t.movingAverage200.Render(fudge)
+	for _, ma := range t.movingAverages {
+		ma.Render(fudge)
+	}
 	t.priceCursor.Render(fudge)
 
 	t.volumeTimeline.Render(fudge)
@@ -331,9 +339,9 @@ func (t *Thumb) Close() {
 	t.price.Close()
 	t.priceCursor.Close()
 	t.priceTimeline.Close()
-	t.movingAverage21.Close()
-	t.movingAverage50.Close()
-	t.movingAverage200.Close()
+	for _, ma := range t.movingAverages {
+		ma.Close()
+	}
 	t.volume.Close()
 	t.volumeCursor.Close()
 	t.volumeTimeline.Close()

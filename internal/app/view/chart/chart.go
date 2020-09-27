@@ -44,6 +44,19 @@ var (
 	cursorVertLine  = vao.VertLine(view.LightGray, view.LightGray)
 )
 
+var movingAverageColors = map[model.Interval]map[int]view.Color{
+	model.Daily: {
+		8:   view.Purple,
+		21:  view.Green,
+		50:  view.Red,
+		200: view.White,
+	},
+	model.Weekly: {
+		10: view.Red,
+		40: view.White,
+	},
+}
+
 // PriceStyle is visual style of the chart's prices.
 type PriceStyle int
 
@@ -79,9 +92,7 @@ type Chart struct {
 	priceCursor   *priceCursor
 	priceTimeline *timeline
 
-	movingAverage21  *movingAverage
-	movingAverage50  *movingAverage
-	movingAverage200 *movingAverage
+	movingAverages []*movingAverage
 
 	volume         *volume
 	volumeLevel    *volumeLevel
@@ -151,10 +162,6 @@ func NewChart(priceStyle PriceStyle) *Chart {
 		priceLevel:    newPriceLevel(),
 		priceCursor:   new(priceCursor),
 		priceTimeline: newTimeline(view.TransparentLightGray, view.LightGray, view.TransparentGray, view.Gray),
-
-		movingAverage21:  newMovingAverage(view.Green),
-		movingAverage50:  newMovingAverage(view.Red),
-		movingAverage200: newMovingAverage(view.White),
 
 		volume:         newVolume(priceStyle),
 		volumeLevel:    newVolumeLevel(),
@@ -243,9 +250,16 @@ func (ch *Chart) SetData(data Data) {
 	ch.priceTimeline.SetData(timelineData{dc.Interval, ts})
 
 	if ch.showMovingAverages {
-		ch.movingAverage21.SetData(movingAverageData{ts, dc.MovingAverageSeries21})
-		ch.movingAverage50.SetData(movingAverageData{ts, dc.MovingAverageSeries50})
-		ch.movingAverage200.SetData(movingAverageData{ts, dc.MovingAverageSeries200})
+		for _, ma := range ch.movingAverages {
+			ma.Close()
+		}
+
+		ch.movingAverages = nil
+		for _, ma := range dc.MovingAverageSeriesSet {
+			m := newMovingAverage(movingAverageColors[dc.Interval][ma.Intervals])
+			m.SetData(movingAverageData{ts, ma})
+			ch.movingAverages = append(ch.movingAverages, m)
+		}
 	}
 
 	ch.volume.SetData(volumeData{ts, dc.AverageVolumeSeries})
@@ -256,12 +270,7 @@ func (ch *Chart) SetData(data Data) {
 	ch.timelineAxis.SetData(timelineAxisData{dc.Interval, ts})
 	ch.timelineCursor.SetData(timelineCursorData{dc.Interval, ts})
 
-	ch.legend.SetData(legendData{
-		ts,
-		dc.MovingAverageSeries21,
-		dc.MovingAverageSeries50,
-		dc.MovingAverageSeries200,
-	})
+	ch.legend.SetData(legendData{dc.Interval, ts, dc.MovingAverageSeriesSet})
 }
 
 func (ch *Chart) SetBounds(bounds image.Rectangle) {
@@ -318,9 +327,10 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	ch.priceLevel.SetBounds(pr, plr)
 	ch.priceCursor.SetBounds(pr, plr)
 	ch.priceTimeline.SetBounds(pr)
-	ch.movingAverage21.SetBounds(pr)
-	ch.movingAverage50.SetBounds(pr)
-	ch.movingAverage200.SetBounds(pr)
+
+	for _, ma := range ch.movingAverages {
+		ma.SetBounds(pr)
+	}
 
 	ch.volume.SetBounds(vr)
 	ch.volumeLevel.SetBounds(vr, vlr)
@@ -415,9 +425,9 @@ func (ch *Chart) Render(fudge float32) {
 	ch.priceLevel.Render(fudge)
 	ch.price.Render(fudge)
 	if ch.showMovingAverages {
-		ch.movingAverage21.Render(fudge)
-		ch.movingAverage50.Render(fudge)
-		ch.movingAverage200.Render(fudge)
+		for _, ma := range ch.movingAverages {
+			ma.Render(fudge)
+		}
 	}
 	ch.priceCursor.Render(fudge)
 
@@ -464,9 +474,10 @@ func (ch *Chart) Close() {
 	ch.priceLevel.Close()
 	ch.priceCursor.Close()
 	ch.priceTimeline.Close()
-	ch.movingAverage21.Close()
-	ch.movingAverage50.Close()
-	ch.movingAverage200.Close()
+	for _, ma := range ch.movingAverages {
+		ma.Close()
+	}
+	ch.movingAverages = nil
 	ch.volume.Close()
 	ch.volumeLevel.Close()
 	ch.volumeCursor.Close()

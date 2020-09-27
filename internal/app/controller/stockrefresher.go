@@ -175,21 +175,19 @@ func (s *stockRefresher) refresh(ctx context.Context, d *dataRequestBuilder) err
 						})
 
 					case model.Daily:
-						ch, err := modelDailyChart(stockData.quote, stockData.chart)
+						ch := modelDailyChart(stockData.quote, stockData.chart)
 						es = append(es, event{
-							symbol:    sym,
-							quote:     q,
-							chart:     ch,
-							updateErr: err,
+							symbol: sym,
+							quote:  q,
+							chart:  ch,
 						})
 
 					case model.Weekly:
-						ch, err := modelWeeklyChart(stockData.quote, stockData.chart)
+						ch := modelWeeklyChart(stockData.quote, stockData.chart)
 						es = append(es, event{
-							symbol:    sym,
-							quote:     q,
-							chart:     ch,
-							updateErr: err,
+							symbol: sym,
+							quote:  q,
+							chart:  ch,
 						})
 					}
 				}

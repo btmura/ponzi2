@@ -42,9 +42,7 @@ type Stock struct {
 type Chart struct {
 	Interval               Interval
 	TradingSessionSeries   *TradingSessionSeries
-	MovingAverageSeries21  *MovingAverageSeries
-	MovingAverageSeries50  *MovingAverageSeries
-	MovingAverageSeries200 *MovingAverageSeries
+	MovingAverageSeriesSet []*MovingAverageSeries
 	AverageVolumeSeries    *AverageVolumeSeries
 	LastUpdateTime         time.Time
 }
@@ -138,6 +136,12 @@ func (s *TradingSession) DeepCopy() *TradingSession {
 
 // MovingAverageSeries is a time series of moving average values.
 type MovingAverageSeries struct {
+	// Type is the moving average type like simple or exponential.
+	Type MovingAverageType
+
+	// Intervals is how many days or weeks a moving average value spans.
+	Intervals int
+
 	// MovingAverages are sorted by date in ascending order.
 	MovingAverages []*MovingAverage
 }
@@ -156,6 +160,17 @@ func (m *MovingAverageSeries) DeepCopy() *MovingAverageSeries {
 	}
 	return &deep
 }
+
+// MovingAverageType is the type of moving average.
+type MovingAverageType int
+
+// MovingAverageType values.
+//go:generate stringer -type=MovingAverageType
+const (
+	MovingAverageTypeUnspecified MovingAverageType = iota
+	Simple
+	Exponential
+)
 
 // MovingAverage is a single data point in a MovingAverageSeries.
 type MovingAverage struct {

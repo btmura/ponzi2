@@ -39,10 +39,11 @@ func modelIntradayChart(chart *iex.Chart) *model.Chart {
 	}
 }
 
-func modelDailyChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
+func modelDailyChart(quote *iex.Quote, chart *iex.Chart) *model.Chart {
 	ds := modelTradingSessions(quote, chart)
 	ws := weeklyModelTradingSessions(ds)
-	m20 := modelExponentialMovingAverages(ds, 21)
+	m8 := modelExponentialMovingAverages(ds, 8)
+	m21 := modelExponentialMovingAverages(ds, 21)
 	m50 := modelSimpleMovingAverages(ds, 50)
 	m200 := modelSimpleMovingAverages(ds, 200)
 	v50 := modelAverageVolumes(ds, 50)
@@ -50,40 +51,44 @@ func modelDailyChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
 	if len(ws) > maxDataWeeks {
 		start := ws[len(ws)-maxDataWeeks:][0].Date
 		ds = trimmedTradingSessions(ds, start)
-		m20 = trimmedMovingAverages(m20, start)
+		m8 = trimmedMovingAverages(m8, start)
+		m21 = trimmedMovingAverages(m21, start)
 		m50 = trimmedMovingAverages(m50, start)
 		m200 = trimmedMovingAverages(m200, start)
 		v50 = trimmedAverageVolumes(v50, start)
 	}
 
 	return &model.Chart{
-		Interval:               model.Daily,
-		TradingSessionSeries:   &model.TradingSessionSeries{TradingSessions: ds},
-		MovingAverageSeries21:  &model.MovingAverageSeries{MovingAverages: m20},
-		MovingAverageSeries50:  &model.MovingAverageSeries{MovingAverages: m50},
-		MovingAverageSeries200: &model.MovingAverageSeries{MovingAverages: m200},
-		AverageVolumeSeries:    &model.AverageVolumeSeries{AverageVolumes: v50},
-	}, nil
+		Interval:             model.Daily,
+		TradingSessionSeries: &model.TradingSessionSeries{TradingSessions: ds},
+		MovingAverageSeriesSet: []*model.MovingAverageSeries{
+			{Type: model.Exponential, Intervals: 8, MovingAverages: m8},
+			{Type: model.Exponential, Intervals: 21, MovingAverages: m21},
+			{Type: model.Simple, Intervals: 50, MovingAverages: m50},
+			{Type: model.Simple, Intervals: 200, MovingAverages: m200},
+		},
+		AverageVolumeSeries: &model.AverageVolumeSeries{AverageVolumes: v50},
+	}
 }
 
-func modelWeeklyChart(quote *iex.Quote, chart *iex.Chart) (*model.Chart, error) {
+func modelWeeklyChart(quote *iex.Quote, chart *iex.Chart) *model.Chart {
 	ds := modelTradingSessions(quote, chart)
 	ws := weeklyModelTradingSessions(ds)
 
-	m21 := modelExponentialMovingAverages(ws, 21)
-	m50 := modelSimpleMovingAverages(ws, 50)
-	m200 := modelSimpleMovingAverages(ws, 200)
+	m10 := modelSimpleMovingAverages(ws, 10)
+	m40 := modelSimpleMovingAverages(ws, 40)
 
 	v50 := modelAverageVolumes(ws, 50)
 
 	return &model.Chart{
-		Interval:               model.Weekly,
-		TradingSessionSeries:   &model.TradingSessionSeries{TradingSessions: ws},
-		MovingAverageSeries21:  &model.MovingAverageSeries{MovingAverages: m21},
-		MovingAverageSeries50:  &model.MovingAverageSeries{MovingAverages: m50},
-		MovingAverageSeries200: &model.MovingAverageSeries{MovingAverages: m200},
-		AverageVolumeSeries:    &model.AverageVolumeSeries{AverageVolumes: v50},
-	}, nil
+		Interval:             model.Weekly,
+		TradingSessionSeries: &model.TradingSessionSeries{TradingSessions: ws},
+		MovingAverageSeriesSet: []*model.MovingAverageSeries{
+			{Type: model.Simple, Intervals: 10, MovingAverages: m10},
+			{Type: model.Simple, Intervals: 40, MovingAverages: m40},
+		},
+		AverageVolumeSeries: &model.AverageVolumeSeries{AverageVolumes: v50},
+	}
 }
 
 func modelQuote(q *iex.Quote) (*model.Quote, error) {
