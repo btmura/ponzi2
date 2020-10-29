@@ -226,34 +226,39 @@ func modelTradingSessions(quote *iex.Quote, chart *iex.Chart) []*model.TradingSe
 
 func weeklyModelTradingSessions(ds []*model.TradingSession) (ws []*model.TradingSession) {
 	for _, p := range ds {
-		diffWeek := ws == nil
-		if !diffWeek {
-			_, week := p.Date.ISOWeek()
-			_, prevWeek := ws[len(ws)-1].Date.ISOWeek()
-			diffWeek = week != prevWeek
+		// Append if empty series.
+		if len(ws) == 0 {
+			pCopy := *p
+			ws = append(ws, &pCopy)
+			continue
 		}
 
-		if diffWeek {
-			pcopy := *p
-			ws = append(ws, &pcopy)
+		// Append if different week as previous.
+		_, week := p.Date.ISOWeek()
+		_, prevWeek := ws[len(ws)-1].Date.ISOWeek()
+		if week != prevWeek {
+			pCopy := *p
+			ws = append(ws, &pCopy)
+			continue
+		}
+
+		// Combine if same week as previous.
+		ls := ws[len(ws)-1]
+		if ls.High < p.High {
+			ls.High = p.High
+		}
+		if ls.Low > p.Low {
+			ls.Low = p.Low
+		}
+		ls.Source = p.Source
+		ls.Close = p.Close
+		ls.Volume += p.Volume
+		ls.Change = ls.Close - ls.Open
+		if len(ws)-2 >= 0 {
+			prev := ws[len(ws)-2]
+			ls.PercentChange = (ls.Close - prev.Close) / prev.Close
 		} else {
-			ls := ws[len(ws)-1]
-			if ls.High < p.High {
-				ls.High = p.High
-			}
-			if ls.Low > p.Low {
-				ls.Low = p.Low
-			}
-			ls.Source = p.Source
-			ls.Close = p.Close
-			ls.Volume += p.Volume
-			ls.Change = ls.Close - ls.Open
-			if len(ws)-2 >= 0 {
-				prev := ws[len(ws)-2]
-				ls.PercentChange = (ls.Close - prev.Close) / prev.Close
-			} else {
-				ls.PercentChange = 0
-			}
+			ls.PercentChange = 0
 		}
 	}
 	return ws
