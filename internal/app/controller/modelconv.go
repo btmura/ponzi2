@@ -62,12 +62,12 @@ func modelDailyChart(quote *iex.Quote, chart *iex.Chart) *model.Chart {
 		Interval:             model.Daily,
 		TradingSessionSeries: &model.TradingSessionSeries{TradingSessions: ds},
 		MovingAverageSeriesSet: []*model.MovingAverageSeries{
-			{Type: model.Exponential, Intervals: 8, MovingAverages: m8},
-			{Type: model.Exponential, Intervals: 21, MovingAverages: m21},
-			{Type: model.Simple, Intervals: 50, MovingAverages: m50},
-			{Type: model.Simple, Intervals: 200, MovingAverages: m200},
+			{Type: model.Exponential, Intervals: 8, Values: m8},
+			{Type: model.Exponential, Intervals: 21, Values: m21},
+			{Type: model.Simple, Intervals: 50, Values: m50},
+			{Type: model.Simple, Intervals: 200, Values: m200},
 		},
-		AverageVolumeSeries: &model.AverageVolumeSeries{AverageVolumes: v50},
+		AverageVolumeSeries: &model.AverageVolumeSeries{Values: v50},
 	}
 }
 
@@ -84,10 +84,10 @@ func modelWeeklyChart(quote *iex.Quote, chart *iex.Chart) *model.Chart {
 		Interval:             model.Weekly,
 		TradingSessionSeries: &model.TradingSessionSeries{TradingSessions: ws},
 		MovingAverageSeriesSet: []*model.MovingAverageSeries{
-			{Type: model.Simple, Intervals: 10, MovingAverages: m10},
-			{Type: model.Simple, Intervals: 40, MovingAverages: m40},
+			{Type: model.Simple, Intervals: 10, Values: m10},
+			{Type: model.Simple, Intervals: 40, Values: m40},
 		},
-		AverageVolumeSeries: &model.AverageVolumeSeries{AverageVolumes: v10},
+		AverageVolumeSeries: &model.AverageVolumeSeries{Values: v10},
 	}
 }
 
@@ -259,8 +259,8 @@ func weeklyModelTradingSessions(ds []*model.TradingSession) (ws []*model.Trading
 	return ws
 }
 
-func modelExponentialMovingAverages(ts []*model.TradingSession, n int) []*model.MovingAverage {
-	var values []*model.MovingAverage
+func modelExponentialMovingAverages(ts []*model.TradingSession, n int) []*model.MovingAverageValue {
+	var values []*model.MovingAverageValue
 
 	smoothing := 2.0 / (float32(n) + 1.0)
 
@@ -287,7 +287,7 @@ func modelExponentialMovingAverages(ts []*model.TradingSession, n int) []*model.
 	}
 
 	for i := range ts {
-		values = append(values, &model.MovingAverage{
+		values = append(values, &model.MovingAverageValue{
 			Date:  ts[i].Date,
 			Value: value(i),
 		})
@@ -295,7 +295,7 @@ func modelExponentialMovingAverages(ts []*model.TradingSession, n int) []*model.
 	return values
 }
 
-func modelSimpleMovingAverages(ts []*model.TradingSession, n int) []*model.MovingAverage {
+func modelSimpleMovingAverages(ts []*model.TradingSession, n int) []*model.MovingAverageValue {
 	average := func(i, n int) (avg float32) {
 		if i+1-n < 0 {
 			return 0 // Not enough data
@@ -307,9 +307,9 @@ func modelSimpleMovingAverages(ts []*model.TradingSession, n int) []*model.Movin
 		return sum / float32(n)
 	}
 
-	var ms []*model.MovingAverage
+	var ms []*model.MovingAverageValue
 	for i := range ts {
-		ms = append(ms, &model.MovingAverage{
+		ms = append(ms, &model.MovingAverageValue{
 			Date:  ts[i].Date,
 			Value: average(i, n),
 		})
@@ -317,7 +317,7 @@ func modelSimpleMovingAverages(ts []*model.TradingSession, n int) []*model.Movin
 	return ms
 }
 
-func modelAverageVolumes(ts []*model.TradingSession, n int) []*model.AverageVolume {
+func modelAverageVolumes(ts []*model.TradingSession, n int) []*model.AverageVolumeValue {
 	average := func(i, n int) (avg float32) {
 		if i+1-n < 0 {
 			return 0 // Not enough data
@@ -329,9 +329,9 @@ func modelAverageVolumes(ts []*model.TradingSession, n int) []*model.AverageVolu
 		return sum / float32(n)
 	}
 
-	var vs []*model.AverageVolume
+	var vs []*model.AverageVolumeValue
 	for i := range ts {
-		vs = append(vs, &model.AverageVolume{
+		vs = append(vs, &model.AverageVolumeValue{
 			Date:  ts[i].Date,
 			Value: average(i, n),
 		})
@@ -348,7 +348,7 @@ func trimmedTradingSessions(vs []*model.TradingSession, start time.Time) []*mode
 	return vs
 }
 
-func trimmedMovingAverages(vs []*model.MovingAverage, start time.Time) []*model.MovingAverage {
+func trimmedMovingAverages(vs []*model.MovingAverageValue, start time.Time) []*model.MovingAverageValue {
 	for i, v := range vs {
 		if v.Date == start {
 			return vs[i:]
@@ -357,7 +357,7 @@ func trimmedMovingAverages(vs []*model.MovingAverage, start time.Time) []*model.
 	return vs
 }
 
-func trimmedAverageVolumes(vs []*model.AverageVolume, start time.Time) []*model.AverageVolume {
+func trimmedAverageVolumes(vs []*model.AverageVolumeValue, start time.Time) []*model.AverageVolumeValue {
 	for i, v := range vs {
 		if v.Date == start {
 			return vs[i:]

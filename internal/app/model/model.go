@@ -142,8 +142,8 @@ type MovingAverageSeries struct {
 	// Intervals is how many days or weeks a moving average value spans.
 	Intervals int
 
-	// MovingAverages are sorted by date in ascending order.
-	MovingAverages []*MovingAverage
+	// Values are sorted by date in ascending order.
+	Values []*MovingAverageValue
 }
 
 // DeepCopy returns a deep copy of the series.
@@ -152,10 +152,10 @@ func (m *MovingAverageSeries) DeepCopy() *MovingAverageSeries {
 		return nil
 	}
 	deep := *m
-	if len(deep.MovingAverages) != 0 {
-		deep.MovingAverages = make([]*MovingAverage, len(m.MovingAverages))
-		for i, ma := range m.MovingAverages {
-			deep.MovingAverages[i] = ma.DeepCopy()
+	if len(deep.Values) != 0 {
+		deep.Values = make([]*MovingAverageValue, len(m.Values))
+		for i, ma := range m.Values {
+			deep.Values[i] = ma.DeepCopy()
 		}
 	}
 	return &deep
@@ -172,8 +172,8 @@ const (
 	Exponential
 )
 
-// MovingAverage is a single data point in a MovingAverageSeries.
-type MovingAverage struct {
+// MovingAverageValue is a single data point in a MovingAverageSeries.
+type MovingAverageValue struct {
 	// Date is the start date of the data point.
 	Date time.Time
 
@@ -181,8 +181,8 @@ type MovingAverage struct {
 	Value float32
 }
 
-// DeepCopy returns a deep copy of the moving average.
-func (m *MovingAverage) DeepCopy() *MovingAverage {
+// DeepCopy returns a deep copy of the value.
+func (m *MovingAverageValue) DeepCopy() *MovingAverageValue {
 	if m == nil {
 		return nil
 	}
@@ -192,8 +192,8 @@ func (m *MovingAverage) DeepCopy() *MovingAverage {
 
 // AverageVolumeSeries is a time series of average volume values.
 type AverageVolumeSeries struct {
-	// AverageVolumes are sorted by date in ascending order.
-	AverageVolumes []*AverageVolume
+	// Values are sorted by date in ascending order.
+	Values []*AverageVolumeValue
 }
 
 // DeepCopy returns a deep copy of the series.
@@ -202,17 +202,17 @@ func (a *AverageVolumeSeries) DeepCopy() *AverageVolumeSeries {
 		return nil
 	}
 	deep := *a
-	if len(deep.AverageVolumes) != 0 {
-		deep.AverageVolumes = make([]*AverageVolume, len(a.AverageVolumes))
-		for i, av := range a.AverageVolumes {
-			deep.AverageVolumes[i] = av.DeepCopy()
+	if len(deep.Values) != 0 {
+		deep.Values = make([]*AverageVolumeValue, len(a.Values))
+		for i, av := range a.Values {
+			deep.Values[i] = av.DeepCopy()
 		}
 	}
 	return &deep
 }
 
-// AverageVolume is a single data point in a AverageVolumeSeries.
-type AverageVolume struct {
+// AverageVolumeValue is a single data point in a AverageVolumeSeries.
+type AverageVolumeValue struct {
 	// Date is the start date of the data point.
 	Date time.Time
 
@@ -220,8 +220,8 @@ type AverageVolume struct {
 	Value float32
 }
 
-// DeepCopy returns a deep copy of the volume.
-func (a *AverageVolume) DeepCopy() *AverageVolume {
+// DeepCopy returns a deep copy of the value.
+func (a *AverageVolumeValue) DeepCopy() *AverageVolumeValue {
 	if a == nil {
 		return nil
 	}

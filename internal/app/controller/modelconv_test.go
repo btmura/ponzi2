@@ -60,7 +60,7 @@ func TestExponentialMovingAverages(t *testing.T) {
 		desc                 string
 		inputTradingSessions []*model.TradingSession
 		inputNumDays         int
-		want                 []*model.MovingAverage
+		want                 []*model.MovingAverageValue
 	}{
 		{
 			inputTradingSessions: []*model.TradingSession{
@@ -78,7 +78,7 @@ func TestExponentialMovingAverages(t *testing.T) {
 				},
 			},
 			inputNumDays: 2,
-			want: []*model.MovingAverage{
+			want: []*model.MovingAverageValue{
 				{
 					Date:  time.Date(2018, time.September, 1, 0, 0, 0, 0, time.UTC),
 					Value: 0,

@@ -84,7 +84,7 @@ func (v *volume) SetData(data volumeData) {
 
 	v.barLines = volumeLineVAO(ts.TradingSessions, yRange, Bar)
 	v.stickLines = volumeLineVAO(ts.TradingSessions, yRange, Candlestick)
-	v.avgLine = volumeDataLine(vs.AverageVolumes, yRange)
+	v.avgLine = volumeDataLine(vs.Values, yRange)
 
 	v.renderable = true
 }
@@ -271,7 +271,7 @@ func volumeLineVAO(ts []*model.TradingSession, volumeRange [2]int, priceStyle Pr
 	)
 }
 
-func volumeDataLine(vs []*model.AverageVolume, yRange [2]int) *gfx.VAO {
+func volumeDataLine(vs []*model.AverageVolumeValue, yRange [2]int) *gfx.VAO {
 	var yPercentValues []float32
 	for _, v := range vs {
 		yPercentValues = append(yPercentValues, volumePercent(yRange, int(v.Value)))

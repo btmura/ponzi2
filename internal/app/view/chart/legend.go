@@ -250,7 +250,7 @@ func (l *legend) Update() (dirty bool) {
 		rows = append(rows, [3]legendCell{
 			symbol("◼", movingAverageColors[l.data.Interval][ma.Intervals]),
 			text(fmt.Sprintf("%s %d", typeLabel, ma.Intervals)),
-			text(formatFloat(ma.MovingAverages[i].Value)),
+			text(formatFloat(ma.Values[i].Value)),
 		})
 	}
 

@@ -42,7 +42,7 @@ func (m *movingAverage) SetData(data movingAverageData) {
 
 	yRange := priceRange(ts.TradingSessions)
 
-	m.line = movingAverageDataLine(ms.MovingAverages, yRange, m.color)
+	m.line = movingAverageDataLine(ms.Values, yRange, m.color)
 
 	m.renderable = true
 }
@@ -66,7 +66,7 @@ func (m *movingAverage) Close() {
 	}
 }
 
-func movingAverageDataLine(ms []*model.MovingAverage, yRange [2]float32, color view.Color) *gfx.VAO {
+func movingAverageDataLine(ms []*model.MovingAverageValue, yRange [2]float32, color view.Color) *gfx.VAO {
 	var yPercentValues []float32
 	for _, m := range ms {
 		yPercentValues = append(yPercentValues, pricePercent(yRange, m.Value))

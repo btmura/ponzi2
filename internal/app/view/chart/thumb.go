@@ -164,13 +164,13 @@ func (t *Thumb) SetData(data Data) {
 	}
 
 	tl := len(ts.TradingSessions)
-	if vl := len(vs.AverageVolumes); tl != vl {
+	if vl := len(vs.Values); tl != vl {
 		logger.Errorf("volume has different lengths: %d vs %d", tl, vl)
 		return
 	}
 
 	for _, ma := range mas {
-		if ml := len(ma.MovingAverages); ml != tl {
+		if ml := len(ma.Values); ml != tl {
 			logger.Errorf("moving average has different length: %d vs %d", tl, ml)
 			return
 		}
@@ -182,15 +182,15 @@ func (t *Thumb) SetData(data Data) {
 		ts.TradingSessions = ts.TradingSessions[l-days:]
 	}
 	for i, m := range mas {
-		if l := len(m.MovingAverages); l > days {
+		if l := len(m.Values); l > days {
 			m = m.DeepCopy()
-			m.MovingAverages = m.MovingAverages[l-days:]
+			m.Values = m.Values[l-days:]
 			mas[i] = m
 		}
 	}
-	if l := len(vs.AverageVolumes); l > days {
+	if l := len(vs.Values); l > days {
 		vs = vs.DeepCopy()
-		vs.AverageVolumes = vs.AverageVolumes[l-days:]
+		vs.Values = vs.Values[l-days:]
 	}
 
 	t.price.SetData(priceData{ts})
