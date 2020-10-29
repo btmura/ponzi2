@@ -78,7 +78,7 @@ func modelWeeklyChart(quote *iex.Quote, chart *iex.Chart) *model.Chart {
 	m10 := modelSimpleMovingAverages(ws, 10)
 	m40 := modelSimpleMovingAverages(ws, 40)
 
-	v50 := modelAverageVolumes(ws, 50)
+	v10 := modelAverageVolumes(ws, 10)
 
 	return &model.Chart{
 		Interval:             model.Weekly,
@@ -87,7 +87,7 @@ func modelWeeklyChart(quote *iex.Quote, chart *iex.Chart) *model.Chart {
 			{Type: model.Simple, Intervals: 10, MovingAverages: m10},
 			{Type: model.Simple, Intervals: 40, MovingAverages: m40},
 		},
-		AverageVolumeSeries: &model.AverageVolumeSeries{AverageVolumes: v50},
+		AverageVolumeSeries: &model.AverageVolumeSeries{AverageVolumes: v10},
 	}
 }
 
