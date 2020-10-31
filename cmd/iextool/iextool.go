@@ -178,7 +178,7 @@ func getAPIData(ctx context.Context, client *iex.Client, symbols []string) {
 }
 
 func clearCacheData(ctx context.Context, cache chartCache, symbols []string, token string) {
-	numPoints := pick("Pick how many points to clear", 10, 25, 50).(int)
+	numPoints := pick("Pick how many points to clear", "10", "25", "50", "All").(string)
 
 	for i := range symbols {
 		key := iex.ChartCacheKey{
@@ -195,11 +195,22 @@ func clearCacheData(ctx context.Context, cache chartCache, symbols []string, tok
 
 		chartPoints := val.Chart.ChartPoints
 		if len(chartPoints) != 0 {
-			trimIndex := len(chartPoints) - numPoints
-			if trimIndex < 0 {
-				trimIndex = 0
+			switch {
+			case numPoints == "All":
+				chartPoints = nil
+
+			default:
+				n, err := strconv.Atoi(numPoints)
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
+				trimIndex := len(chartPoints) - n
+				if trimIndex < 0 {
+					trimIndex = 0
+				}
+				chartPoints = chartPoints[:trimIndex]
 			}
-			chartPoints = chartPoints[:trimIndex]
 		}
 
 		val = &iex.ChartCacheValue{
