@@ -129,18 +129,21 @@ func (l *legend) Update() (dirty bool) {
 
 	defer func() { l.needUpdate = false }()
 
-	if l.mousePos == nil || !l.mousePos.WithinX(l.bounds) {
-		l.renderable = false
-		return true
-	}
-
 	if l.data.TradingSessionSeries == nil {
 		l.renderable = false
 		return true
 	}
 
 	tss := l.data.TradingSessionSeries.TradingSessions
-	i, ts := tradingSessionAtX(tss, l.bounds, l.mousePos.X)
+	if len(tss) == 0 {
+		l.renderable = false
+		return true
+	}
+
+	i, ts := len(tss)-1, tss[len(tss)-1]
+	if l.mousePos.WithinX(l.bounds) {
+		i, ts = tradingSessionAtX(tss, l.bounds, l.mousePos.X)
+	}
 
 	curr := ts
 	prev := curr
