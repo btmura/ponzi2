@@ -29,13 +29,16 @@ type Sidebar struct {
 
 // SidebarSlot is a slot in the sidebar that has a thumbnail.
 type SidebarSlot struct {
-	// Thumb is the thumbnail shown in the sidebar slot.
-	Thumb *chart.Thumb
+	// Symbol is the symbol of the slot's stock.
+	Symbol string
 }
 
 // sidebar manages the sidebar to display and edit stock thumbnails.
 type sidebar struct {
-	// slots are slots which can have a Thumb or be a drop site.
+	// priceStyle is the style to create thumbnails with.
+	priceStyle chart.PriceStyle
+
+	// slots are slots which can have a thumbnail or be a drop site.
 	slots []*sidebarSlot
 
 	// draggedSlot if not nil is the slot with the Thumb being dragged.
@@ -49,12 +52,21 @@ type sidebar struct {
 
 	// changeCallback is a callback fired when the sidebar changes.
 	changeCallback func(sidebar *Sidebar)
+
+	// thumbRemoveButtonClickCallback is called when a thumb's remove button is clicked.
+	thumbRemoveButtonClickCallback func(symbol string)
+
+	// thumbClickCallback is called when a thumb is clicked.
+	thumbClickCallback func(symbol string)
 }
 
 // sidebarSlot is a drag and drop container for single thumbnail.
 type sidebarSlot struct {
 	// bounds is the rectangle to draw the slot within.
 	bounds image.Rectangle
+
+	// symbol is the symbol of the thumbnail.
+	symbol string
 
 	// thumbBounds is the bounds of the thumbnail.
 	thumbBounds image.Rectangle
@@ -84,28 +96,74 @@ func (s *sidebar) SetPriceStyle(newPriceStyle chart.PriceStyle) {
 		logger.Error("unspecified price style")
 		return
 	}
+	s.priceStyle = newPriceStyle
 	for _, slot := range s.slots {
 		slot.thumb.SetPriceStyle(newPriceStyle)
 	}
 }
 
-func (s *sidebar) AddChartThumb(thumb *chart.Thumb) {
-	if thumb == nil {
-		logger.Error("thumb should not be nil")
-		return
+func (s *sidebar) AddChartThumb(symbol string) bool {
+	for _, slot := range s.slots {
+		if symbol == slot.symbol {
+			return false
+		}
 	}
-	s.slots = append(s.slots, newSidebarSlot(thumb))
+
+	t := chart.NewThumb(s.priceStyle)
+	t.SetRemoveButtonClickCallback(func() {
+		if s.thumbRemoveButtonClickCallback != nil {
+			s.thumbRemoveButtonClickCallback(symbol)
+		}
+	})
+	t.SetThumbClickCallback(func() {
+		if s.thumbClickCallback != nil {
+			s.thumbClickCallback(symbol)
+		}
+	})
+
+	s.slots = append(s.slots, newSidebarSlot(symbol, t))
+	return true
 }
 
-func (s *sidebar) RemoveChartThumb(thumb *chart.Thumb) {
-	if thumb == nil {
-		logger.Error("thumb should not be nil")
-		return
-	}
+func (s *sidebar) RemoveChartThumb(symbol string) bool {
 	for _, slot := range s.slots {
-		if slot.thumb == thumb {
+		if symbol == slot.symbol {
 			slot.FadeOut()
-			break
+			return true
+		}
+	}
+	return false
+}
+
+func (s *sidebar) SetLoading(symbol string) {
+	for _, slot := range s.slots {
+		if symbol == slot.symbol {
+			if t := slot.thumb; t != nil {
+				t.SetLoading(true)
+				t.SetErrorMessage("")
+			}
+		}
+	}
+}
+
+func (s *sidebar) SetData(symbol string, data chart.Data) {
+	for _, slot := range s.slots {
+		if symbol == slot.symbol {
+			if t := slot.thumb; t != nil {
+				t.SetLoading(false)
+				t.SetData(data)
+			}
+		}
+	}
+}
+
+func (s *sidebar) SetErrorMessage(symbol string, errorMessage string) {
+	for _, slot := range s.slots {
+		if symbol == slot.symbol {
+			if t := slot.thumb; t != nil {
+				t.SetLoading(false)
+				t.SetErrorMessage(errorMessage)
+			}
 		}
 	}
 }
@@ -362,7 +420,7 @@ func (s *sidebar) fireSidebarChangeCallback(input *view.Input) {
 	sidebar := new(Sidebar)
 	for _, slot := range s.slots {
 		if slot.thumb != nil {
-			sidebar.Slots = append(sidebar.Slots, &SidebarSlot{Thumb: slot.thumb})
+			sidebar.Slots = append(sidebar.Slots, &SidebarSlot{Symbol: slot.symbol})
 		}
 	}
 
@@ -406,14 +464,25 @@ func (s *sidebar) SetChangeCallback(cb func(sidebar *Sidebar)) {
 	s.changeCallback = cb
 }
 
-func (s *sidebar) Close() {
-	s.changeCallback = nil
+func (s *sidebar) SetThumbRemoveButtonClickCallback(cb func(symbol string)) {
+	s.thumbRemoveButtonClickCallback = cb
 }
 
-func newSidebarSlot(thumb *chart.Thumb) *sidebarSlot {
+func (s *sidebar) SetThumbClickCallback(cb func(symbol string)) {
+	s.thumbClickCallback = cb
+}
+
+func (s *sidebar) Close() {
+	s.changeCallback = nil
+	s.thumbRemoveButtonClickCallback = nil
+	s.thumbClickCallback = nil
+}
+
+func newSidebarSlot(symbol string, thumb *chart.Thumb) *sidebarSlot {
 	return &sidebarSlot{
-		thumb: thumb,
-		fader: view.NewStartedFader(1 * view.FPS),
+		symbol: symbol,
+		thumb:  thumb,
+		fader:  view.NewStartedFader(1 * view.FPS),
 	}
 }
 

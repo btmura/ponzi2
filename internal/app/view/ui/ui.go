@@ -77,10 +77,6 @@ type UI struct {
 	// symbolToChartMap maps symbol to chart. Only one entry right now.
 	symbolToChartMap map[string]*chart.Chart
 
-	// symbolToChartThumbMap maps symbol to thumbnail.
-	// TODO(btmura): move this map to sidebar
-	symbolToChartThumbMap map[string]*chart.Thumb
-
 	// titleBar renders the window titleBar.
 	titleBar *titleBar
 
@@ -180,13 +176,12 @@ func (u *uiChart) Render(fudge float32) {
 	})
 }
 
-// New creates a new View.
+// New creates a new UI.
 func New() *UI {
 	return &UI{
-		symbolToChartMap:      map[string]*chart.Chart{},
-		symbolToChartThumbMap: map[string]*chart.Thumb{},
-		sidebar:               newSidebar(),
-		instructionsTextBox:   text.NewBox(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER..."),
+		symbolToChartMap:    map[string]*chart.Chart{},
+		sidebar:             newSidebar(),
+		instructionsTextBox: text.NewBox(gfx.NewTextRenderer(goregular.TTF, 24), "Type in symbol and press ENTER..."),
 		inputSymbolTextBox: text.NewBox(inputSymbolTextRenderer, "",
 			text.Bubble(rect.NewBubble(inputSymbolBubbleRounding)),
 			text.Padding(viewPadding)),
@@ -265,6 +260,18 @@ func (u *UI) Init(_ context.Context) (cleanup func(), err error) {
 
 	u.sidebar.SetChangeCallback(func(sidebar *Sidebar) {
 		u.handleSidebarChangeEvent(sidebar)
+	})
+
+	u.sidebar.SetThumbRemoveButtonClickCallback(func(symbol string) {
+		if u.thumbRemoveButtonClickCallback != nil {
+			u.thumbRemoveButtonClickCallback(symbol)
+		}
+	})
+
+	u.sidebar.SetThumbClickCallback(func(symbol string) {
+		if u.thumbClickCallback != nil {
+			u.thumbClickCallback(symbol)
+		}
 	})
 
 	return func() { glfw.Terminate() }, nil
@@ -373,15 +380,8 @@ func (u *UI) handleSidebarChangeEvent(sidebar *Sidebar) {
 	var symbols []string
 
 	for _, slot := range sidebar.Slots {
-		if slot.Thumb == nil {
-			logger.Error("sidebar reporting slot with nil thumbnail")
-			continue
-		}
-
-		for s, th := range u.symbolToChartThumbMap {
-			if th == slot.Thumb {
-				symbols = append(symbols, s)
-			}
+		if slot.Symbol != "" {
+			symbols = append(symbols, slot.Symbol)
 		}
 	}
 
@@ -784,59 +784,41 @@ func (u *UI) SetChart(symbol string, data chart.Data, priceStyle chart.PriceStyl
 }
 
 // AddChartThumb adds a thumbnail with the given symbol and data.
-func (u *UI) AddChartThumb(symbol string, data chart.Data, priceStyle chart.PriceStyle) error {
+func (u *UI) AddChartThumb(symbol string, data chart.Data) error {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		return err
 	}
 
-	t := chart.NewThumb(priceStyle)
-	u.symbolToChartThumbMap[symbol] = t
-
-	t.SetData(data)
-
-	t.SetRemoveButtonClickCallback(func() {
-		if u.thumbRemoveButtonClickCallback != nil {
-			u.thumbRemoveButtonClickCallback(symbol)
-		}
-	})
-
-	t.SetThumbClickCallback(func() {
-		if u.thumbClickCallback != nil {
-			u.thumbClickCallback(symbol)
-		}
-	})
+	if !u.sidebar.AddChartThumb(symbol) {
+		return nil
+	}
 
 	defer u.WakeLoop()
-	u.sidebar.AddChartThumb(t)
+
+	u.sidebar.SetData(symbol, data)
 
 	return nil
 }
 
-// RemoveChartThumb removes the ChartThumbnail from the side bar.
+// RemoveChartThumb removes the thumbnail with given symbol.
 func (u *UI) RemoveChartThumb(symbol string) error {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		return err
 	}
 
-	t := u.symbolToChartThumbMap[symbol]
-	delete(u.symbolToChartThumbMap, symbol)
-	t.Close()
+	if !u.sidebar.RemoveChartThumb(symbol) {
+		return nil
+	}
 
 	defer u.WakeLoop()
-	u.sidebar.RemoveChartThumb(t)
 
 	return nil
 }
 
 // SetLoading sets the charts and slots matching the symbol and interval to loading.
-func (u *UI) SetLoading(symbol string, interval model.Interval) {
+func (u *UI) SetLoading(symbol string) {
 	if err := model.ValidateSymbol(symbol); err != nil {
 		logger.Errorf("invalid symbol: %v", err)
-		return
-	}
-
-	if interval == model.IntervalUnspecified {
-		logger.Error("unspecified interval")
 		return
 	}
 
@@ -847,12 +829,7 @@ func (u *UI) SetLoading(symbol string, interval model.Interval) {
 		}
 	}
 
-	for s, t := range u.symbolToChartThumbMap {
-		if s == symbol {
-			t.SetLoading(true)
-			t.SetErrorMessage("")
-		}
-	}
+	u.sidebar.SetLoading(symbol)
 }
 
 // SetData loads the data to charts and thumbnails matching the symbol and interval.
@@ -868,10 +845,7 @@ func (u *UI) SetData(symbol string, data chart.Data) {
 		c.SetData(data)
 	}
 
-	if t, ok := u.symbolToChartThumbMap[symbol]; ok {
-		t.SetLoading(false)
-		t.SetData(data)
-	}
+	u.sidebar.SetData(symbol, data)
 }
 
 // SetErrorMessage sets or resets an error message on charts and thumbnails that match the symbol.
@@ -887,10 +861,7 @@ func (u *UI) SetErrorMessage(symbol string, errorMessage string) {
 		c.SetErrorMessage(errorMessage)
 	}
 
-	if t, ok := u.symbolToChartThumbMap[symbol]; ok {
-		t.SetLoading(false)
-		t.SetErrorMessage(errorMessage)
-	}
+	u.SetErrorMessage(symbol, errorMessage)
 }
 
 func (u *UI) SetChartPriceStyle(newPriceStyle chart.PriceStyle) {

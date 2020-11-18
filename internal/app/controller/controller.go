@@ -224,7 +224,7 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 
 	data := c.chartData(symbol, c.chartInterval)
 
-	if err := c.ui.AddChartThumb(symbol, data, c.chartPriceStyle); err != nil {
+	if err := c.ui.AddChartThumb(symbol, data); err != nil {
 		return err
 	}
 
@@ -371,8 +371,8 @@ func (c *Controller) refreshAllStocks(ctx context.Context) error {
 }
 
 // onStockRefreshStarted implements the eventHandler interface.
-func (c *Controller) onStockRefreshStarted(symbol string, interval model.Interval) error {
-	c.ui.SetLoading(symbol, interval)
+func (c *Controller) onStockRefreshStarted(symbol string) error {
+	c.ui.SetLoading(symbol)
 	return nil
 }
 

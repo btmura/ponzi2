@@ -33,7 +33,7 @@ type eventController struct {
 
 // eventHandler is an interface for handling all event types.
 type eventHandler interface {
-	onStockRefreshStarted(symbol string, interval model.Interval) error
+	onStockRefreshStarted(symbol string) error
 	onStockUpdate(symbol string, q *model.Quote, ch *model.Chart) error
 	onStockUpdateError(symbol string, updateErr error) error
 	onRefreshAllStocksRequest(ctx context.Context) error
@@ -96,7 +96,7 @@ func (c *eventController) process(ctx context.Context) error {
 			}
 
 		case e.refreshStarted:
-			if err := c.handler.onStockRefreshStarted(e.symbol, e.interval); err != nil {
+			if err := c.handler.onStockRefreshStarted(e.symbol); err != nil {
 				return err
 			}
 
