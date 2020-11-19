@@ -861,7 +861,7 @@ func (u *UI) SetErrorMessage(symbol string, errorMessage string) {
 		c.SetErrorMessage(errorMessage)
 	}
 
-	u.SetErrorMessage(symbol, errorMessage)
+	u.sidebar.SetErrorMessage(symbol, errorMessage)
 }
 
 func (u *UI) SetChartPriceStyle(newPriceStyle chart.PriceStyle) {
