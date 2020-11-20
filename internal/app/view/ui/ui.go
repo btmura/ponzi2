@@ -730,9 +730,10 @@ func (u *UI) SetThumbClickCallback(cb func(symbol string)) {
 }
 
 // SetChart sets the main chart to the given symbol and data.
-func (u *UI) SetChart(symbol string, data chart.Data, priceStyle chart.PriceStyle) error {
+func (u *UI) SetChart(symbol string, data chart.Data, priceStyle chart.PriceStyle) bool {
 	if err := model.ValidateSymbol(symbol); err != nil {
-		return err
+		logger.Errorf("invalid symbol: %v", err)
+		return false
 	}
 
 	for symbol, c := range u.symbolToChartMap {
@@ -780,88 +781,7 @@ func (u *UI) SetChart(symbol string, data chart.Data, priceStyle chart.PriceStyl
 	}
 	u.charts = append([]*uiChart{newUIChart(c)}, u.charts...)
 
-	return nil
-}
-
-// AddChartThumb adds a thumbnail with the given symbol and data.
-func (u *UI) AddChartThumb(symbol string, data chart.Data) error {
-	if err := model.ValidateSymbol(symbol); err != nil {
-		return err
-	}
-
-	if !u.sidebar.AddChartThumb(symbol) {
-		return nil
-	}
-
-	defer u.WakeLoop()
-
-	u.sidebar.SetData(symbol, data)
-
-	return nil
-}
-
-// RemoveChartThumb removes the thumbnail with given symbol.
-func (u *UI) RemoveChartThumb(symbol string) error {
-	if err := model.ValidateSymbol(symbol); err != nil {
-		return err
-	}
-
-	if !u.sidebar.RemoveChartThumb(symbol) {
-		return nil
-	}
-
-	defer u.WakeLoop()
-
-	return nil
-}
-
-// SetLoading sets the charts and slots matching the symbol and interval to loading.
-func (u *UI) SetLoading(symbol string) {
-	if err := model.ValidateSymbol(symbol); err != nil {
-		logger.Errorf("invalid symbol: %v", err)
-		return
-	}
-
-	for s, c := range u.symbolToChartMap {
-		if s == symbol {
-			c.SetLoading(true)
-			c.SetErrorMessage("")
-		}
-	}
-
-	u.sidebar.SetLoading(symbol)
-}
-
-// SetData loads the data to charts and thumbnails matching the symbol and interval.
-func (u *UI) SetData(symbol string, data chart.Data) {
-	if err := model.ValidateSymbol(symbol); err != nil {
-		logger.Errorf("invalid symbol: %v", err)
-		return
-	}
-
-	if c, ok := u.symbolToChartMap[symbol]; ok {
-		c.SetLoading(false)
-		u.titleBar.SetData(data)
-		c.SetData(data)
-	}
-
-	u.sidebar.SetData(symbol, data)
-}
-
-// SetErrorMessage sets or resets an error message on charts and thumbnails that match the symbol.
-// An empty error message clears any previously set error messages.
-func (u *UI) SetErrorMessage(symbol string, errorMessage string) {
-	if err := model.ValidateSymbol(symbol); err != nil {
-		logger.Errorf("invalid symbol: %v", err)
-		return
-	}
-
-	if c, ok := u.symbolToChartMap[symbol]; ok {
-		c.SetLoading(false)
-		c.SetErrorMessage(errorMessage)
-	}
-
-	u.sidebar.SetErrorMessage(symbol, errorMessage)
+	return true
 }
 
 func (u *UI) SetChartPriceStyle(newPriceStyle chart.PriceStyle) {
@@ -870,11 +790,118 @@ func (u *UI) SetChartPriceStyle(newPriceStyle chart.PriceStyle) {
 		return
 	}
 
-	defer u.WakeLoop()
-
 	for _, c := range u.symbolToChartMap {
 		c.SetPriceStyle(newPriceStyle)
 	}
 
 	u.sidebar.SetPriceStyle(newPriceStyle)
+	u.WakeLoop()
+}
+
+// AddChartThumb adds a thumbnail with the given symbol and data.
+func (u *UI) AddChartThumb(symbol string, data chart.Data) (changed bool) {
+	if err := model.ValidateSymbol(symbol); err != nil {
+		logger.Errorf("invalid symbol: %v", err)
+		return false
+	}
+
+	if u.sidebar.AddChartThumb(symbol) {
+		defer u.WakeLoop()
+		u.sidebar.SetData(symbol, data)
+		return true
+	}
+
+	return false
+}
+
+// RemoveChartThumb removes the thumbnail with given symbol.
+func (u *UI) RemoveChartThumb(symbol string) (changed bool) {
+	if err := model.ValidateSymbol(symbol); err != nil {
+		logger.Errorf("invalid symbol: %v", err)
+		return false
+	}
+
+	if u.sidebar.RemoveChartThumb(symbol) {
+		defer u.WakeLoop()
+		return true
+	}
+
+	return false
+}
+
+// SetLoading sets the charts and slots matching the symbol and interval to loading.
+func (u *UI) SetLoading(symbol string) (changed bool) {
+	if err := model.ValidateSymbol(symbol); err != nil {
+		logger.Errorf("invalid symbol: %v", err)
+		return false
+	}
+
+	if c, ok := u.symbolToChartMap[symbol]; ok {
+		changed = true
+		c.SetLoading(true)
+		c.SetErrorMessage("")
+	}
+
+	if u.sidebar.SetLoading(symbol) {
+		changed = true
+	}
+
+	if changed {
+		defer u.WakeLoop()
+		return true
+	}
+
+	return false
+}
+
+// SetData loads the data to charts and thumbnails matching the symbol and interval.
+func (u *UI) SetData(symbol string, data chart.Data) (changed bool) {
+	if err := model.ValidateSymbol(symbol); err != nil {
+		logger.Errorf("invalid symbol: %v", err)
+		return false
+	}
+
+	if c, ok := u.symbolToChartMap[symbol]; ok {
+		changed = true
+		c.SetLoading(false)
+		u.titleBar.SetData(data)
+		c.SetData(data)
+	}
+
+	if u.sidebar.SetData(symbol, data) {
+		changed = true
+	}
+
+	if changed {
+		defer u.WakeLoop()
+		return true
+	}
+
+	return false
+}
+
+// SetErrorMessage sets or resets an error message on charts and thumbnails that match the symbol.
+// An empty error message clears any previously set error messages.
+func (u *UI) SetErrorMessage(symbol string, errorMessage string) (changed bool) {
+	if err := model.ValidateSymbol(symbol); err != nil {
+		logger.Errorf("invalid symbol: %v", err)
+		return
+	}
+
+	if c, ok := u.symbolToChartMap[symbol]; ok {
+		changed = true
+		c.SetLoading(false)
+		c.SetErrorMessage(errorMessage)
+	}
+
+	if u.sidebar.SetErrorMessage(symbol, errorMessage) {
+		changed = true
+	}
+
+	if changed {
+		defer u.WakeLoop()
+		return true
+	}
+
+	return false
 }

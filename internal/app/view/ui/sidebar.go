@@ -102,7 +102,7 @@ func (s *sidebar) SetPriceStyle(newPriceStyle chart.PriceStyle) {
 	}
 }
 
-func (s *sidebar) AddChartThumb(symbol string) bool {
+func (s *sidebar) AddChartThumb(symbol string) (changed bool) {
 	for _, slot := range s.slots {
 		if symbol == slot.symbol {
 			return false
@@ -125,47 +125,53 @@ func (s *sidebar) AddChartThumb(symbol string) bool {
 	return true
 }
 
-func (s *sidebar) RemoveChartThumb(symbol string) bool {
+func (s *sidebar) RemoveChartThumb(symbol string) (changed bool) {
 	for _, slot := range s.slots {
 		if symbol == slot.symbol {
+			changed = true
 			slot.FadeOut()
-			return true
 		}
 	}
-	return false
+	return changed
 }
 
-func (s *sidebar) SetLoading(symbol string) {
+func (s *sidebar) SetLoading(symbol string) (changed bool) {
 	for _, slot := range s.slots {
 		if symbol == slot.symbol {
 			if t := slot.thumb; t != nil {
+				changed = true
 				t.SetLoading(true)
 				t.SetErrorMessage("")
 			}
 		}
 	}
+	return changed
 }
 
-func (s *sidebar) SetData(symbol string, data chart.Data) {
+func (s *sidebar) SetData(symbol string, data chart.Data) (changed bool) {
 	for _, slot := range s.slots {
 		if symbol == slot.symbol {
 			if t := slot.thumb; t != nil {
+				changed = true
 				t.SetLoading(false)
 				t.SetData(data)
 			}
 		}
 	}
+	return changed
 }
 
-func (s *sidebar) SetErrorMessage(symbol string, errorMessage string) {
+func (s *sidebar) SetErrorMessage(symbol string, errorMessage string) (changed bool) {
 	for _, slot := range s.slots {
 		if symbol == slot.symbol {
 			if t := slot.thumb; t != nil {
+				changed = true
 				t.SetLoading(false)
 				t.SetErrorMessage(errorMessage)
 			}
 		}
 	}
+	return changed
 }
 
 // ContentSize returns the size of the sidebar's contents like thumbnails

@@ -194,8 +194,8 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 
 	data := c.chartData(symbol, c.chartInterval)
 
-	if err := c.ui.SetChart(symbol, data, c.chartPriceStyle); err != nil {
-		return err
+	if !c.ui.SetChart(symbol, data, c.chartPriceStyle) {
+		return nil
 	}
 
 	if err := c.refreshCurrentStock(ctx); err != nil {
@@ -224,8 +224,8 @@ func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
 
 	data := c.chartData(symbol, c.chartInterval)
 
-	if err := c.ui.AddChartThumb(symbol, data); err != nil {
-		return err
+	if !c.ui.AddChartThumb(symbol, data) {
+		return nil
 	}
 
 	if err := c.stockRefresher.refreshOne(ctx, symbol, c.chartInterval); err != nil {
@@ -251,8 +251,8 @@ func (c *Controller) removeChartThumb(symbol string) error {
 		return nil
 	}
 
-	if err := c.ui.RemoveChartThumb(symbol); err != nil {
-		return err
+	if !c.ui.RemoveChartThumb(symbol) {
+		return nil
 	}
 
 	c.configSaver.save(c.makeConfig())
