@@ -380,8 +380,8 @@ func (u *UI) handleSidebarChangeEvent(sidebar *Sidebar) {
 	var symbols []string
 
 	for _, slot := range sidebar.Slots {
-		if slot.Symbol != "" {
-			symbols = append(symbols, slot.Symbol)
+		if len(slot.Symbols) != 0 {
+			symbols = append(symbols, slot.Symbols...)
 		}
 	}
 
