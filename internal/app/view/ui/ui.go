@@ -200,6 +200,9 @@ func (u *UI) Init(_ context.Context) (cleanup func(), err error) {
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
+	// Additional window hints.
+	glfw.WindowHint(glfw.Maximized, glfw.True)
+
 	win, err := glfw.CreateWindow(1024, 768, appName, nil, nil)
 	if err != nil {
 		return nil, err
