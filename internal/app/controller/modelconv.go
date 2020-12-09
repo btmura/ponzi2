@@ -211,14 +211,20 @@ func modelTradingSessions(quote *iex.Quote, chart *iex.Chart) []*model.TradingSe
 		ts = append(ts, t)
 	}
 
-	// Calculate volume percent change with the final trading sessions.
+	// Run through the final trading sessions and recalculate price and volume changes.
 	for i, t := range ts {
 		if i == 0 {
 			continue
 		}
 
-		prev := ts[i-1].Volume
-		t.VolumePercentChange = float32(t.Volume-prev) / float32(prev) * 100.0
+		// Calculate the change and percent change as IEX sometimes has incorrect data!
+		pc := ts[i-1].Close
+		t.Change = t.Close - pc
+		t.PercentChange = t.Change / pc * 100.0
+
+		// Calculate volume percent change, since IEX does not have this field.
+		pv := ts[i-1].Volume
+		t.VolumePercentChange = float32(t.Volume-pv) / float32(pv) * 100.0
 	}
 
 	return ts
