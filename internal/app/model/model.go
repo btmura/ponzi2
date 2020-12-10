@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/btmura/ponzi2/internal/errs"
+	"github.com/btmura/ponzi2/internal/logger"
 )
 
 // now is a function to get the current time. Mocked out in tests to return a fixed time.
@@ -318,36 +319,24 @@ func (m *Model) RemoveSidebarSymbol(symbol string) (removed bool, err error) {
 	return false, nil
 }
 
-// SetSidebarSymbol replaces the sidebar symbols with the given symbols.
-func (m *Model) SetSidebarSymbols(symbols []string) error {
-	for _, s := range symbols {
-		if err := ValidateSymbol(s); err != nil {
-			return err
-		}
+// SwapSidebarSlots swaps two sidebar slots.
+func (m *Model) SwapSidebarSlots(i, j int) (swapped bool) {
+	if i < 0 || i >= len(m.sidebarSymbols) {
+		logger.Errorf("slot index i (%d) is out of bounds (%d)", i, len(m.sidebarSymbols))
+		return false
 	}
 
-	leftOver := map[string]bool{}
-	for _, s := range m.sidebarSymbols {
-		leftOver[s] = true
+	if j < 0 || j >= len(m.sidebarSymbols) {
+		logger.Errorf("slot index j (%d) is out of bounds (%d)", j, len(m.sidebarSymbols))
+		return false
 	}
 
-	var newSidebarSymbols []string
-	for _, s := range symbols {
-		newSidebarSymbols = append(newSidebarSymbols, s)
-		if !m.containsSymbol(s) {
-			m.symbol2Stock[s] = &Stock{Symbol: s}
-		}
-		delete(leftOver, s)
-	}
-	m.sidebarSymbols = newSidebarSymbols
-
-	for s := range leftOver {
-		if !m.containsSymbol(s) {
-			delete(m.symbol2Stock, s)
-		}
+	if i == j {
+		return false
 	}
 
-	return nil
+	m.sidebarSymbols[i], m.sidebarSymbols[j] = m.sidebarSymbols[j], m.sidebarSymbols[i]
+	return true
 }
 
 // Stock returns the stock for the symbol if it is in the model. Nil otherwise.

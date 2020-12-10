@@ -111,10 +111,8 @@ func (c *Controller) RunLoop() error {
 		}
 	})
 
-	c.ui.SetSidebarChangeCallback(func(symbols []string) {
-		if err := c.setSidebarSymbols(symbols); err != nil {
-			logger.Errorf("setSidebarSymbols: %v", err)
-		}
+	c.ui.SetSidebarSlotSwapCallback(func(i, j int) {
+		c.swapSidebarSlots(i, j)
 	})
 
 	c.ui.SetChartPriceStyleButtonClickCallback(func(newPriceStyle chart.PriceStyle) {
@@ -260,20 +258,14 @@ func (c *Controller) removeChartThumb(symbol string) error {
 	return nil
 }
 
-func (c *Controller) setSidebarSymbols(symbols []string) error {
-	for _, s := range symbols {
-		if err := model.ValidateSymbol(s); err != nil {
-			return err
-		}
+func (c *Controller) swapSidebarSlots(i, j int) {
+	if !c.model.SwapSidebarSlots(i, j) {
+		return
 	}
 
-	if err := c.model.SetSidebarSymbols(symbols); err != nil {
-		return err
-	}
+	// No need to update the UI, since this function is triggered by a UI change.
 
 	c.configSaver.save(c.makeConfig())
-
-	return nil
 }
 
 func (c *Controller) setChartPriceStyle(newPriceStyle chart.PriceStyle) {

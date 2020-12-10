@@ -143,26 +143,47 @@ func TestRemoveSidebarSymbol(t *testing.T) {
 	}
 }
 
-func TestSetSidebarSymbols(t *testing.T) {
+func TestSwapSidebarSlots(t *testing.T) {
 	m := New()
-
 	m.AddSidebarSymbol("SPY")
 	m.AddSidebarSymbol("AAPL")
 	m.AddSidebarSymbol("CEF")
-
 	if diff := cmp.Diff([]string{"SPY", "AAPL", "CEF"}, m.SidebarSymbols()); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
-	m.SetSidebarSymbols([]string{"SPY", "CEF", "AAPL"})
-
-	if diff := cmp.Diff([]string{"SPY", "CEF", "AAPL"}, m.SidebarSymbols()); diff != "" {
+	if m.SwapSidebarSlots(0, 0) {
+		t.Errorf("SwapSidebarSlots should return false with the same indices.")
+	}
+	if diff := cmp.Diff([]string{"SPY", "AAPL", "CEF"}, m.SidebarSymbols()); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
-	m.SetSidebarSymbols([]string{"SPY"})
+	if m.SwapSidebarSlots(-3, 0) {
+		t.Errorf("SwapSidebarSlots should return false with out of bounds indices.")
+	}
+	if diff := cmp.Diff([]string{"SPY", "AAPL", "CEF"}, m.SidebarSymbols()); diff != "" {
+		t.Errorf("diff (-want, +got)\n%s", diff)
+	}
 
-	if diff := cmp.Diff([]string{"SPY"}, m.SidebarSymbols()); diff != "" {
+	if m.SwapSidebarSlots(0, 3) {
+		t.Errorf("SwapSidebarSlots should return false with out of bounds indices.")
+	}
+	if diff := cmp.Diff([]string{"SPY", "AAPL", "CEF"}, m.SidebarSymbols()); diff != "" {
+		t.Errorf("diff (-want, +got)\n%s", diff)
+	}
+
+	if !m.SwapSidebarSlots(0, 1) {
+		t.Errorf("SwapSidebarSlots should return true when swap succeeds.")
+	}
+	if diff := cmp.Diff([]string{"AAPL", "SPY", "CEF"}, m.SidebarSymbols()); diff != "" {
+		t.Errorf("diff (-want, +got)\n%s", diff)
+	}
+
+	if !m.SwapSidebarSlots(0, 2) {
+		t.Errorf("SwapSidebarSlots should return true when swap succeeds.")
+	}
+	if diff := cmp.Diff([]string{"CEF", "SPY", "AAPL"}, m.SidebarSymbols()); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 }

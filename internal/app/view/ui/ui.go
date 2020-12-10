@@ -95,8 +95,8 @@ type UI struct {
 	// inputSymbolSubmittedCallback is called when a new symbol is entered.
 	inputSymbolSubmittedCallback func(symbol string)
 
-	// sidebarChangeCallback is called when the sidebar changes.
-	sidebarChangeCallback func(symbols []string)
+	// sidebarSlotSwapCallback is called when the sidebar changes.
+	sidebarSlotSwapCallback func(i, j int)
 
 	// chartZoomChangeCallback is called when the chart is zoomed in or out.
 	chartZoomChangeCallback func(zoomChange chart.ZoomChange)
@@ -261,8 +261,10 @@ func (u *UI) Init(_ context.Context) (cleanup func(), err error) {
 		u.handleScrollEvent(yoff)
 	})
 
-	u.sidebar.SetChangeCallback(func(sidebar *Sidebar) {
-		u.handleSidebarChangeEvent(sidebar)
+	u.sidebar.SetSlotSwapCallback(func(i, j int) {
+		if u.sidebarSlotSwapCallback != nil {
+			u.sidebarSlotSwapCallback(i, j)
+		}
 	})
 
 	u.sidebar.SetThumbRemoveButtonClickCallback(func(symbol string) {
@@ -366,30 +368,6 @@ func (u *UI) handleScrollEvent(yoff float64) {
 		u.mouseScrollDirection = view.ScrollUp
 	default:
 		u.mouseScrollDirection = view.ScrollDirectionUnspecified
-	}
-}
-
-func (u *UI) handleSidebarChangeEvent(sidebar *Sidebar) {
-	if sidebar == nil {
-		logger.Error("sidebar is nil")
-		return
-	}
-
-	if u.sidebarChangeCallback == nil {
-		logger.Error("sidebar change callback is nil")
-		return
-	}
-
-	var symbols []string
-
-	for _, slot := range sidebar.Slots {
-		if len(slot.Symbols) != 0 {
-			symbols = append(symbols, slot.Symbols...)
-		}
-	}
-
-	if u.sidebarChangeCallback != nil {
-		u.sidebarChangeCallback(symbols)
 	}
 }
 
@@ -697,9 +675,9 @@ func (u *UI) SetInputSymbolSubmittedCallback(cb func(symbol string)) {
 	u.inputSymbolSubmittedCallback = cb
 }
 
-// SetSidebarChangeCallback sets the callback for when the sidebar changes.
-func (u *UI) SetSidebarChangeCallback(cb func(symbols []string)) {
-	u.sidebarChangeCallback = cb
+// SetSidebarSlotSwapCallback sets the callback for when sidebar slots are swapped.
+func (u *UI) SetSidebarSlotSwapCallback(cb func(i, j int)) {
+	u.sidebarSlotSwapCallback = cb
 }
 
 // SetChartZoomChangeCallback sets the callback for when the chart is zoomed in or out.

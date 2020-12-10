@@ -12,6 +12,9 @@ import (
 
 // Internal constants.
 var (
+	// noSwappedIndices is the sentinel value returned by swapSidebarSlots if no swap happened.
+	noSwappedIndices = [2]int{}
+
 	// thumbSize is the size of the thumbnails in the sidebar.
 	thumbSize = image.Pt(155, 105)
 
@@ -21,18 +24,6 @@ var (
 	// bumperScrollAmount is how much to scroll when dragging over the bumpers which are the edges of the sidebar.
 	bumperScrollAmount = image.Pt(0, (thumbSize.Y+viewPadding)/4)
 )
-
-// Sidebar is the sidebar that displays thumbnails of stocks.
-type Sidebar struct {
-	// Slots are the sidebar's slots that have thumbnails.
-	Slots []*SidebarSlot
-}
-
-// SidebarSlot is a slot in the sidebar that has thumbnails.
-type SidebarSlot struct {
-	// Symbols are the symbols in the slot.
-	Symbols []string
-}
 
 // sidebar manages the sidebar to display and edit stock thumbnails.
 type sidebar struct {
@@ -51,8 +42,8 @@ type sidebar struct {
 	// bounds is the rectangle to draw within.
 	bounds image.Rectangle
 
-	// changeCallback is a callback fired when the sidebar changes.
-	changeCallback func(sidebar *Sidebar)
+	// slotSwapCallback is a callback fired when the slots are swapped.
+	slotSwapCallback func(i, j int)
 
 	// thumbRemoveButtonClickCallback is called when a thumb's remove button is clicked.
 	thumbRemoveButtonClickCallback func(symbol string)
@@ -230,6 +221,7 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 	// Find the slot being dragged and update its position.
 	wasDragging := s.draggedSlot != nil
 	s.setDraggedSlot(input)
+	swappedIndices := s.swapDraggedSlot(input)
 	stillDragging := s.draggedSlot != nil
 
 	// Absorb mouse event if dragging was released or still dragging.
@@ -242,9 +234,9 @@ func (s *sidebar) ProcessInput(input *view.Input) {
 		slot.ProcessInput(input)
 	}
 
-	// Schedule a change event once the drag and drop is done.
-	if wasDragging && !stillDragging {
-		s.fireSidebarChangeCallback(input)
+	// Schedule a change event if slots were swapped.
+	if swappedIndices != noSwappedIndices {
+		s.fireSwapCallback(input, swappedIndices)
 	}
 }
 
@@ -356,37 +348,32 @@ func (s *sidebar) setDraggedSlot(input *view.Input) {
 			}
 		}
 	}
-
-	if s.draggedSlot != nil {
-		// Determine the center from where the user pressed and held.
-		center := input.MouseLeftButtonDragging.CurrentPos.Sub(s.draggedSlot.mousePressOffset)
-
-		// Float the dragged slot to be under the mouse cursor.
-		thumbBounds := rect.FromCenterPointAndSize(center, thumbSize)
-		s.draggedSlot.floatingBounds = thumbBounds
-		for _, thumb := range s.draggedSlot.thumbs {
-			thumb.SetBounds(thumbBounds)
-		}
-
-		s.moveDraggedSlot(input)
-	}
 }
 
-// moveDraggedSlot moves the dragged slot up or down depending on the mouse position.
-func (s *sidebar) moveDraggedSlot(input *view.Input) {
+// swapDraggedSlot swaps the dragged slot up or down depending on the mouse position.
+func (s *sidebar) swapDraggedSlot(input *view.Input) (swappedIndexes [2]int) {
 	if input == nil {
 		logger.Error("input should not be nil")
-		return
+		return noSwappedIndices
+	}
+
+	if s.draggedSlot != nil && input.MouseLeftButtonDragging == nil {
+		logger.Error("should be dragging if dragged slot exists")
+		return noSwappedIndices
 	}
 
 	if s.draggedSlot == nil {
-		logger.Error("draggedSlot should not be nil")
-		return
+		return noSwappedIndices
 	}
 
-	if input.MouseLeftButtonDragging == nil {
-		logger.Error("should be dragging if dragged slot exists")
-		return
+	// Determine the center from where the user pressed and held.
+	center := input.MouseLeftButtonDragging.CurrentPos.Sub(s.draggedSlot.mousePressOffset)
+
+	// Float the dragged slot to be under the mouse cursor.
+	thumbBounds := rect.FromCenterPointAndSize(center, thumbSize)
+	s.draggedSlot.floatingBounds = thumbBounds
+	for _, thumb := range s.draggedSlot.thumbs {
+		thumb.SetBounds(thumbBounds)
 	}
 
 	// Determine whether to move the dragged slot up or down
@@ -405,7 +392,7 @@ func (s *sidebar) moveDraggedSlot(input *view.Input) {
 
 	// If the mouse is not moving, then we don't need to do anything.
 	if dy == 0 {
-		return
+		return noSwappedIndices
 	}
 
 	// Find the index of the dragged slot.
@@ -419,7 +406,7 @@ func (s *sidebar) moveDraggedSlot(input *view.Input) {
 
 	if draggedSlotIndex < 0 {
 		logger.Error("should find dragged slot if draggedSlot exists")
-		return
+		return noSwappedIndices
 	}
 
 	// Find the slot to swap with and swap it.
@@ -430,35 +417,31 @@ func (s *sidebar) moveDraggedSlot(input *view.Input) {
 		if xOverlaps && yOverlaps {
 			j, k := draggedSlotIndex, i
 			s.slots[j], s.slots[k] = s.slots[k], s.slots[j]
-			break
+			return [2]int{draggedSlotIndex, i}
 		}
 	}
+
+	return noSwappedIndices
 }
 
-// fireSidebarChangeCallback schedules the sidebar change callback.
-func (s *sidebar) fireSidebarChangeCallback(input *view.Input) {
+// fireSwapCallback schedules the swap callback.
+func (s *sidebar) fireSwapCallback(input *view.Input, swappedIndices [2]int) {
 	if input == nil {
 		logger.Error("input should not be nil")
 		return
 	}
 
-	if s.changeCallback == nil {
+	if swappedIndices == noSwappedIndices {
+		logger.Error("swappedIndices should not be the zero value")
 		return
 	}
 
-	sidebar := new(Sidebar)
-	for _, slot := range s.slots {
-		var symbols []string
-		for _, thumb := range slot.thumbs {
-			symbols = append(symbols, thumb.symbol)
-		}
-		if len(symbols) != 0 {
-			sidebar.Slots = append(sidebar.Slots, &SidebarSlot{Symbols: symbols})
-		}
+	if s.slotSwapCallback == nil {
+		return
 	}
 
 	input.AddFiredCallback(func() {
-		s.changeCallback(sidebar)
+		s.slotSwapCallback(swappedIndices[0], swappedIndices[1])
 	})
 }
 
@@ -493,8 +476,8 @@ func (s *sidebar) Render(fudge float32) {
 	}
 }
 
-func (s *sidebar) SetChangeCallback(cb func(sidebar *Sidebar)) {
-	s.changeCallback = cb
+func (s *sidebar) SetSlotSwapCallback(cb func(i, j int)) {
+	s.slotSwapCallback = cb
 }
 
 func (s *sidebar) SetThumbRemoveButtonClickCallback(cb func(symbol string)) {
@@ -506,7 +489,7 @@ func (s *sidebar) SetThumbClickCallback(cb func(symbol string)) {
 }
 
 func (s *sidebar) Close() {
-	s.changeCallback = nil
+	s.slotSwapCallback = nil
 	s.thumbRemoveButtonClickCallback = nil
 	s.thumbClickCallback = nil
 }
