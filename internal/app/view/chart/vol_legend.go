@@ -144,9 +144,12 @@ func (v *volumeLegend) Update() (dirty bool) {
 		legendTablePadding+len(rows)*legendTextRenderer.LineHeight()+legendTablePadding,
 	)
 
-	// Move the table to the lower left.
+	// Move the table to the upper left.
 	bounds := v.bounds.Inset(legendBubbleMargin)
-	tableBounds = tableBounds.Add(bounds.Min)
+	tableBounds = tableBounds.Add(image.Pt(
+		bounds.Min.X,
+		bounds.Max.Y-tableBounds.Dy(),
+	))
 
 	// Move the table to the right if the mouse is in the bounds.
 	if v.mousePos.In(tableBounds) {
