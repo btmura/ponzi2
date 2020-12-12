@@ -3,6 +3,7 @@ package chart
 import (
 	"fmt"
 	"image"
+	"time"
 
 	"golang.org/x/image/font/gofont/goregular"
 
@@ -163,6 +164,22 @@ func (l *legend) Update() (dirty bool) {
 		return fmt.Sprintf("%+.2f%%", percentChange)
 	}
 
+	formatWeekday := func(day time.Weekday) string {
+		switch day {
+		case time.Monday:
+			return "M"
+		case time.Tuesday:
+			return "T"
+		case time.Wednesday:
+			return "W"
+		case time.Thursday:
+			return "R"
+		case time.Friday:
+			return "F"
+		}
+		return "?"
+	}
+
 	var empty legendCell
 
 	text := func(text string) legendCell {
@@ -206,7 +223,11 @@ func (l *legend) Update() (dirty bool) {
 	}
 
 	rows := [][3]legendCell{
-		{empty, text(curr.Date.Format("1/2/06")), empty},
+		{
+			text(formatWeekday(curr.Date.Weekday())),
+			text(curr.Date.Format("1/2/06")),
+			empty,
+		},
 		{empty, empty, empty},
 		{
 			whiteArrow(curr.Open - prev.Open),
@@ -242,6 +263,11 @@ func (l *legend) Update() (dirty bool) {
 	}
 
 	for _, ma := range l.data.MovingAverageSeriesSet {
+		symbolLabel := "☒"
+		if curr.Close >= ma.Values[i].Value {
+			symbolLabel = "◼"
+		}
+
 		typeLabel := "?"
 		switch ma.Type {
 		case model.Simple:
@@ -251,7 +277,7 @@ func (l *legend) Update() (dirty bool) {
 		}
 
 		rows = append(rows, [3]legendCell{
-			symbol("◼", movingAverageColors[l.data.Interval][ma.Intervals]),
+			symbol(symbolLabel, movingAverageColors[l.data.Interval][ma.Intervals]),
 			text(fmt.Sprintf("%s %d", typeLabel, ma.Intervals)),
 			text(formatFloat(ma.Values[i].Value)),
 		})
