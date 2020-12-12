@@ -66,7 +66,7 @@ func (v *volume) SetStyle(newStyle PriceStyle) {
 
 type volumeData struct {
 	TradingSessionSeries *model.TradingSessionSeries
-	AverageVolumeSeries  *model.AverageVolumeSeries
+	AverageVolumeSeries  *model.AverageSeries
 }
 
 func (v *volume) SetData(data volumeData) {
@@ -271,7 +271,7 @@ func volumeLineVAO(ts []*model.TradingSession, volumeRange [2]int, priceStyle Pr
 	)
 }
 
-func volumeDataLine(vs []*model.AverageVolumeValue, yRange [2]int) *gfx.VAO {
+func volumeDataLine(vs []*model.AverageValue, yRange [2]int) *gfx.VAO {
 	var yPercentValues []float32
 	for _, v := range vs {
 		yPercentValues = append(yPercentValues, volumePercent(yRange, int(v.Value)))

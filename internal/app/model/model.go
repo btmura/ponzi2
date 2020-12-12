@@ -44,7 +44,7 @@ type Chart struct {
 	Interval               Interval
 	TradingSessionSeries   *TradingSessionSeries
 	MovingAverageSeriesSet []*AverageSeries
-	AverageVolumeSeries    *AverageVolumeSeries
+	AverageVolumeSeries    *AverageSeries
 	LastUpdateTime         time.Time
 }
 
@@ -184,45 +184,6 @@ type AverageValue struct {
 
 // DeepCopy returns a deep copy of the value.
 func (a *AverageValue) DeepCopy() *AverageValue {
-	if a == nil {
-		return nil
-	}
-	deep := *a
-	return &deep
-}
-
-// AverageVolumeSeries is a time series of average volume values.
-type AverageVolumeSeries struct {
-	// Values are sorted by date in ascending order.
-	Values []*AverageVolumeValue
-}
-
-// DeepCopy returns a deep copy of the series.
-func (a *AverageVolumeSeries) DeepCopy() *AverageVolumeSeries {
-	if a == nil {
-		return nil
-	}
-	deep := *a
-	if len(deep.Values) != 0 {
-		deep.Values = make([]*AverageVolumeValue, len(a.Values))
-		for i, av := range a.Values {
-			deep.Values[i] = av.DeepCopy()
-		}
-	}
-	return &deep
-}
-
-// AverageVolumeValue is a single data point in a AverageVolumeSeries.
-type AverageVolumeValue struct {
-	// Date is the start date of the data point.
-	Date time.Time
-
-	// Value is the average volume value.
-	Value float32
-}
-
-// DeepCopy returns a deep copy of the value.
-func (a *AverageVolumeValue) DeepCopy() *AverageVolumeValue {
 	if a == nil {
 		return nil
 	}

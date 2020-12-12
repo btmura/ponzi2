@@ -67,7 +67,7 @@ func modelDailyChart(quote *iex.Quote, chart *iex.Chart) *model.Chart {
 			{Type: model.Simple, Intervals: 50, Values: m50},
 			{Type: model.Simple, Intervals: 200, Values: m200},
 		},
-		AverageVolumeSeries: &model.AverageVolumeSeries{Values: v50},
+		AverageVolumeSeries: &model.AverageSeries{Type: model.Simple, Intervals: 50, Values: v50},
 	}
 }
 
@@ -87,7 +87,7 @@ func modelWeeklyChart(quote *iex.Quote, chart *iex.Chart) *model.Chart {
 			{Type: model.Simple, Intervals: 10, Values: m10},
 			{Type: model.Simple, Intervals: 40, Values: m40},
 		},
-		AverageVolumeSeries: &model.AverageVolumeSeries{Values: v10},
+		AverageVolumeSeries: &model.AverageSeries{Type: model.Simple, Intervals: 10, Values: v10},
 	}
 }
 
@@ -328,7 +328,7 @@ func modelSimpleMovingAverages(ts []*model.TradingSession, n int) []*model.Avera
 	return ms
 }
 
-func modelAverageVolumes(ts []*model.TradingSession, n int) []*model.AverageVolumeValue {
+func modelAverageVolumes(ts []*model.TradingSession, n int) []*model.AverageValue {
 	average := func(i, n int) (avg float32) {
 		if i+1-n < 0 {
 			return 0 // Not enough data
@@ -340,9 +340,9 @@ func modelAverageVolumes(ts []*model.TradingSession, n int) []*model.AverageVolu
 		return sum / float32(n)
 	}
 
-	var vs []*model.AverageVolumeValue
+	var vs []*model.AverageValue
 	for i := range ts {
-		vs = append(vs, &model.AverageVolumeValue{
+		vs = append(vs, &model.AverageValue{
 			Date:  ts[i].Date,
 			Value: average(i, n),
 		})
@@ -368,7 +368,7 @@ func trimmedMovingAverages(vs []*model.AverageValue, start time.Time) []*model.A
 	return vs
 }
 
-func trimmedAverageVolumes(vs []*model.AverageVolumeValue, start time.Time) []*model.AverageVolumeValue {
+func trimmedAverageVolumes(vs []*model.AverageValue, start time.Time) []*model.AverageValue {
 	for i, v := range vs {
 		if v.Date == start {
 			return vs[i:]
