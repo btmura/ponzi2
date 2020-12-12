@@ -43,7 +43,7 @@ type Stock struct {
 type Chart struct {
 	Interval               Interval
 	TradingSessionSeries   *TradingSessionSeries
-	MovingAverageSeriesSet []*MovingAverageSeries
+	MovingAverageSeriesSet []*AverageSeries
 	AverageVolumeSeries    *AverageVolumeSeries
 	LastUpdateTime         time.Time
 }
@@ -135,46 +135,46 @@ func (s *TradingSession) DeepCopy() *TradingSession {
 	return &deep
 }
 
-// MovingAverageSeries is a time series of moving average values.
-type MovingAverageSeries struct {
-	// Type is the moving average type like simple or exponential.
-	Type MovingAverageType
+// AverageSeries is a time series of average values like a moving average or average volume.
+type AverageSeries struct {
+	// Type is the average type like simple or exponential.
+	Type AverageType
 
 	// Intervals is how many days or weeks a moving average value spans.
 	Intervals int
 
 	// Values are sorted by date in ascending order.
-	Values []*MovingAverageValue
+	Values []*AverageValue
 }
 
 // DeepCopy returns a deep copy of the series.
-func (m *MovingAverageSeries) DeepCopy() *MovingAverageSeries {
-	if m == nil {
+func (a *AverageSeries) DeepCopy() *AverageSeries {
+	if a == nil {
 		return nil
 	}
-	deep := *m
+	deep := *a
 	if len(deep.Values) != 0 {
-		deep.Values = make([]*MovingAverageValue, len(m.Values))
-		for i, ma := range m.Values {
+		deep.Values = make([]*AverageValue, len(a.Values))
+		for i, ma := range a.Values {
 			deep.Values[i] = ma.DeepCopy()
 		}
 	}
 	return &deep
 }
 
-// MovingAverageType is the type of moving average.
-type MovingAverageType int
+// AverageType is the type of the average.
+type AverageType int
 
-// MovingAverageType values.
-//go:generate stringer -type=MovingAverageType
+// AverageType values.
+//go:generate stringer -type=AverageType
 const (
-	MovingAverageTypeUnspecified MovingAverageType = iota
+	AverageTypeUnspecified AverageType = iota
 	Simple
 	Exponential
 )
 
-// MovingAverageValue is a single data point in a MovingAverageSeries.
-type MovingAverageValue struct {
+// AverageValue is a single data point in an AverageSeries.
+type AverageValue struct {
 	// Date is the start date of the data point.
 	Date time.Time
 
@@ -183,11 +183,11 @@ type MovingAverageValue struct {
 }
 
 // DeepCopy returns a deep copy of the value.
-func (m *MovingAverageValue) DeepCopy() *MovingAverageValue {
-	if m == nil {
+func (a *AverageValue) DeepCopy() *AverageValue {
+	if a == nil {
 		return nil
 	}
-	deep := *m
+	deep := *a
 	return &deep
 }
 

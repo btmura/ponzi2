@@ -152,7 +152,7 @@ func (t *Thumb) SetData(data Data) {
 
 	ts := dc.TradingSessionSeries
 
-	var mas []*model.MovingAverageSeries
+	var mas []*model.AverageSeries
 	for _, ma := range dc.MovingAverageSeriesSet {
 		mas = append(mas, ma)
 	}

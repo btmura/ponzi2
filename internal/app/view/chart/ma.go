@@ -22,7 +22,7 @@ func newMovingAverage(color view.Color) *movingAverage {
 
 type movingAverageData struct {
 	TradingSessionSeries *model.TradingSessionSeries
-	MovingAverageSeries  *model.MovingAverageSeries
+	MovingAverageSeries  *model.AverageSeries
 }
 
 func (m *movingAverage) SetData(data movingAverageData) {
@@ -66,7 +66,7 @@ func (m *movingAverage) Close() {
 	}
 }
 
-func movingAverageDataLine(ms []*model.MovingAverageValue, yRange [2]float32, color view.Color) *gfx.VAO {
+func movingAverageDataLine(ms []*model.AverageValue, yRange [2]float32, color view.Color) *gfx.VAO {
 	var yPercentValues []float32
 	for _, m := range ms {
 		yPercentValues = append(yPercentValues, pricePercent(yRange, m.Value))

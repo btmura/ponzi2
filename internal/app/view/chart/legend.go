@@ -99,7 +99,7 @@ func newLegend() *legend {
 type legendData struct {
 	Interval               model.Interval
 	TradingSessionSeries   *model.TradingSessionSeries
-	MovingAverageSeriesSet []*model.MovingAverageSeries
+	MovingAverageSeriesSet []*model.AverageSeries
 }
 
 func (l *legend) SetData(data legendData) {
