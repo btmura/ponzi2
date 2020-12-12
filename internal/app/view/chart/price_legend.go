@@ -3,7 +3,6 @@ package chart
 import (
 	"fmt"
 	"image"
-	"time"
 
 	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
@@ -36,7 +35,6 @@ type priceLegendData struct {
 	Interval               model.Interval
 	TradingSessionSeries   *model.TradingSessionSeries
 	MovingAverageSeriesSet []*model.AverageSeries
-	AverageVolumeSeries    *model.AverageSeries
 }
 
 func (p *priceLegend) SetData(data priceLegendData) {
@@ -89,140 +87,54 @@ func (p *priceLegend) Update() (dirty bool) {
 		prev = tss[i-1]
 	}
 
-	formatFloat := func(value float32) string {
-		return fmt.Sprintf("%.2f", value)
-	}
-
-	formatChange := func(change float32) string {
-		return fmt.Sprintf("%+.2f", change)
-	}
-
-	formatPercentChange := func(percentChange float32) string {
-		return fmt.Sprintf("%+.2f%%", percentChange)
-	}
-
-	formatWeekday := func(day time.Weekday) string {
-		switch day {
-		case time.Monday:
-			return "M"
-		case time.Tuesday:
-			return "T"
-		case time.Wednesday:
-			return "W"
-		case time.Thursday:
-			return "R"
-		case time.Friday:
-			return "F"
-		}
-		return "?"
-	}
-
 	var empty legendCell
-
-	text := func(text string) legendCell {
-		return legendCell{
-			renderer: legendTextRenderer,
-			text:     text,
-			color:    view.White,
-			size:     legendTextRenderer.Measure(text),
-		}
-	}
-
-	symbol := func(text string, color view.Color) legendCell {
-		return legendCell{
-			renderer: legendGeometricShapeRenderer,
-			text:     text,
-			color:    color,
-			size:     legendGeometricShapeRenderer.Measure(text),
-		}
-	}
-
-	whiteArrow := func(change float32) legendCell {
-		switch {
-		case change > 0:
-			return symbol("△", view.White)
-		case change < 0:
-			return symbol("▽", view.White)
-		default:
-			return empty
-		}
-	}
-
-	colorArrow := func(change float32) legendCell {
-		switch {
-		case change > 0:
-			return symbol("▲", view.Green)
-		case change < 0:
-			return symbol("▼", view.Red)
-		default:
-			return empty
-		}
-	}
 
 	rows := [][3]legendCell{
 		{
-			text(formatWeekday(curr.Date.Weekday())),
-			text(curr.Date.Format("1/2/06")),
+			legendText(formatWeekday(curr.Date.Weekday())),
+			legendText(curr.Date.Format("1/2/06")),
 			empty,
 		},
 		{empty, empty, empty},
 		{
 			whiteArrow(curr.Open - prev.Open),
-			text("Open"),
-			text(formatFloat(curr.Open)),
+			legendText("Open"),
+			legendText(formatFloat(curr.Open)),
 		},
 		{
 			whiteArrow(curr.High - prev.High),
-			text("High"),
-			text(formatFloat(curr.High)),
+			legendText("High"),
+			legendText(formatFloat(curr.High)),
 		},
 		{
 			whiteArrow(curr.Low - prev.Low),
-			text("Low"),
-			text(formatFloat(curr.Low)),
+			legendText("Low"),
+			legendText(formatFloat(curr.Low)),
 		},
 		{
 			whiteArrow(curr.Close - prev.Close),
-			text("Close"),
-			text(formatFloat(curr.Close)),
+			legendText("Close"),
+			legendText(formatFloat(curr.Close)),
 		},
 		{empty, empty, empty},
 		{
 			colorArrow(curr.Change),
-			text("Change"),
-			text(formatChange(curr.Change)),
+			legendText("Change"),
+			legendText(formatChange(curr.Change)),
 		},
-		{empty, empty, text(formatPercentChange(curr.PercentChange))},
+		{empty, empty, legendText(formatPercentChange(curr.PercentChange))},
 	}
 
 	if len(p.data.MovingAverageSeriesSet) != 0 {
 		rows = append(rows, [3]legendCell{empty, empty, empty})
 	}
 
-	symbolLabel := func(value, threshold float32) string {
-		if value >= threshold {
-			return "◼"
-		}
-		return "☒"
-	}
-
-	typeLabel := func(avgType model.AverageType) string {
-		switch avgType {
-		case model.Simple:
-			return "SMA"
-		case model.Exponential:
-			return "EMA"
-		default:
-			return "?"
-		}
-	}
-
-	for _, ma := range p.data.MovingAverageSeriesSet {
-		v := ma.Values[i].Value
+	for _, series := range p.data.MovingAverageSeriesSet {
+		value := series.Values[i].Value
 		rows = append(rows, [3]legendCell{
-			symbol(symbolLabel(curr.Close, v), movingAverageColors[p.data.Interval][ma.Intervals]),
-			text(fmt.Sprintf("%s %d", typeLabel(ma.Type), ma.Intervals)),
-			text(formatFloat(v)),
+			symbol(symbolLabel(curr.Close, value), movingAverageColors[p.data.Interval][series.Intervals]),
+			legendText(fmt.Sprintf("%s %d", typeLabel(series.Type), series.Intervals)),
+			legendText(formatFloat(value)),
 		})
 	}
 

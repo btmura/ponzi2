@@ -32,10 +32,9 @@ func newVolumeLegend() *volumeLegend {
 }
 
 type volumeLegendData struct {
-	Interval               model.Interval
-	TradingSessionSeries   *model.TradingSessionSeries
-	MovingAverageSeriesSet []*model.AverageSeries
-	AverageVolumeSeries    *model.AverageSeries
+	Interval             model.Interval
+	TradingSessionSeries *model.TradingSessionSeries
+	AverageVolumeSeries  *model.AverageSeries
 }
 
 func (v *volumeLegend) SetData(data volumeLegendData) {
@@ -88,101 +87,43 @@ func (v *volumeLegend) Update() (dirty bool) {
 		prev = tss[i-1]
 	}
 
-	formatPercentChange := func(percentChange float32) string {
-		return fmt.Sprintf("%+.2f%%", percentChange)
+	if curr.Volume == 0 {
+		v.renderable = false
+		return true
 	}
 
 	var empty legendCell
-
-	text := func(text string) legendCell {
-		return legendCell{
-			renderer: legendTextRenderer,
-			text:     text,
-			color:    view.White,
-			size:     legendTextRenderer.Measure(text),
-		}
-	}
-
-	symbol := func(text string, color view.Color) legendCell {
-		return legendCell{
-			renderer: legendGeometricShapeRenderer,
-			text:     text,
-			color:    color,
-			size:     legendGeometricShapeRenderer.Measure(text),
-		}
-	}
-
-	whiteArrow := func(change float32) legendCell {
-		switch {
-		case change > 0:
-			return symbol("△", view.White)
-		case change < 0:
-			return symbol("▽", view.White)
-		default:
-			return empty
-		}
-	}
-
-	colorArrow := func(change float32) legendCell {
-		switch {
-		case change > 0:
-			return symbol("▲", view.Green)
-		case change < 0:
-			return symbol("▼", view.Red)
-		default:
-			return empty
-		}
-	}
-
 	var rows [][3]legendCell
 
-	symbolLabel := func(value, threshold float32) string {
-		if value >= threshold {
-			return "◼"
-		}
-		return "☒"
-	}
+	dv := curr.Volume - prev.Volume
+	rows = append(rows,
+		[3]legendCell{
+			whiteArrow(float32(dv)),
+			legendText("Volume"),
+			legendText(volumeText(curr.Volume)),
+		},
+		[3]legendCell{empty, empty, empty},
+		[3]legendCell{
+			colorArrow(float32(dv)),
+			legendText("Change"),
+			legendText(volumeChangeText(dv)),
+		},
+		[3]legendCell{
+			empty,
+			empty,
+			legendText(formatPercentChange(curr.VolumePercentChange)),
+		},
+	)
 
-	typeLabel := func(avgType model.AverageType) string {
-		switch avgType {
-		case model.Simple:
-			return "SMA"
-		case model.Exponential:
-			return "EMA"
-		default:
-			return "?"
-		}
-	}
-
-	if curr.Volume != 0 {
-		dv := curr.Volume - prev.Volume
+	if series := v.data.AverageVolumeSeries; len(series.Values) == len(tss) {
+		value := series.Values[i].Value
 		rows = append(rows,
-			[3]legendCell{
-				whiteArrow(float32(dv)),
-				text("Volume"),
-				text(volumeText(curr.Volume)),
-			},
 			[3]legendCell{empty, empty, empty},
 			[3]legendCell{
-				colorArrow(float32(dv)),
-				text("Change"),
-				text(volumeChangeText(dv)),
-			},
-			[3]legendCell{
-				empty,
-				empty,
-				text(formatPercentChange(curr.VolumePercentChange)),
-			},
-			[3]legendCell{empty, empty, empty},
-		)
-
-		av := v.data.AverageVolumeSeries
-		v := av.Values[i].Value
-		rows = append(rows, [3]legendCell{
-			symbol(symbolLabel(float32(curr.Volume), v), view.Red),
-			text(fmt.Sprintf("%s %d", typeLabel(av.Type), av.Intervals)),
-			text(volumeText(int(v))),
-		})
+				symbol(symbolLabel(float32(curr.Volume), value), view.Red),
+				legendText(fmt.Sprintf("%s %d", typeLabel(series.Type), series.Intervals)),
+				legendText(volumeText(int(value))),
+			})
 	}
 
 	columns := [3]legendColumn{}

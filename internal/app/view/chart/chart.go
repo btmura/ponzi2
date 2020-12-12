@@ -272,8 +272,8 @@ func (ch *Chart) SetData(data Data) {
 	ch.timelineAxis.SetData(timelineAxisData{dc.Interval, ts})
 	ch.timelineCursor.SetData(timelineCursorData{dc.Interval, ts})
 
-	ch.priceLegend.SetData(priceLegendData{dc.Interval, ts, dc.MovingAverageSeriesSet, dc.AverageVolumeSeries})
-	ch.volumeLegend.SetData(volumeLegendData{dc.Interval, ts, dc.MovingAverageSeriesSet, dc.AverageVolumeSeries})
+	ch.priceLegend.SetData(priceLegendData{dc.Interval, ts, dc.MovingAverageSeriesSet})
+	ch.volumeLegend.SetData(volumeLegendData{dc.Interval, ts, dc.AverageVolumeSeries})
 }
 
 func (ch *Chart) SetBounds(bounds image.Rectangle) {

@@ -1,11 +1,14 @@
 package chart
 
 import (
+	"fmt"
 	"image"
+	"time"
 
 	"golang.org/x/image/font/gofont/goregular"
 
 	"github.com/btmura/ponzi2/internal/app/gfx"
+	"github.com/btmura/ponzi2/internal/app/model"
 	"github.com/btmura/ponzi2/internal/app/view"
 	"github.com/btmura/ponzi2/internal/app/view/rect"
 )
@@ -69,4 +72,90 @@ func (l *legendCell) Render(pt image.Point) {
 
 type legendColumn struct {
 	maxWidth int
+}
+
+func legendText(text string) legendCell {
+	return legendCell{
+		renderer: legendTextRenderer,
+		text:     text,
+		color:    view.White,
+		size:     legendTextRenderer.Measure(text),
+	}
+}
+
+func symbol(text string, color view.Color) legendCell {
+	return legendCell{
+		renderer: legendGeometricShapeRenderer,
+		text:     text,
+		color:    color,
+		size:     legendGeometricShapeRenderer.Measure(text),
+	}
+}
+
+func whiteArrow(change float32) legendCell {
+	switch {
+	case change > 0:
+		return symbol("△", view.White)
+	case change < 0:
+		return symbol("▽", view.White)
+	default:
+		return legendCell{}
+	}
+}
+
+func colorArrow(change float32) legendCell {
+	switch {
+	case change > 0:
+		return symbol("▲", view.Green)
+	case change < 0:
+		return symbol("▼", view.Red)
+	default:
+		return legendCell{}
+	}
+}
+
+func symbolLabel(value, threshold float32) string {
+	if value >= threshold {
+		return "◼"
+	}
+	return "☒"
+}
+
+func typeLabel(avgType model.AverageType) string {
+	switch avgType {
+	case model.Simple:
+		return "SMA"
+	case model.Exponential:
+		return "EMA"
+	default:
+		return "?"
+	}
+}
+
+func formatFloat(value float32) string {
+	return fmt.Sprintf("%.2f", value)
+}
+
+func formatChange(change float32) string {
+	return fmt.Sprintf("%+.2f", change)
+}
+
+func formatPercentChange(percentChange float32) string {
+	return fmt.Sprintf("%+.2f%%", percentChange)
+}
+
+func formatWeekday(day time.Weekday) string {
+	switch day {
+	case time.Monday:
+		return "M"
+	case time.Tuesday:
+		return "T"
+	case time.Wednesday:
+		return "W"
+	case time.Thursday:
+		return "R"
+	case time.Friday:
+		return "F"
+	}
+	return "?"
 }
