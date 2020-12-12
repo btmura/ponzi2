@@ -99,10 +99,11 @@ type Chart struct {
 	volumeCursor   *volumeCursor
 	volumeTimeline *timeline
 
+	priceLegend  *priceLegend
+	volumeLegend *volumeLegend
+
 	timelineAxis   *timelineAxis
 	timelineCursor *timelineCursor
-
-	legend *legend
 
 	// loadingTextBox renders the loading text shown when loading from a fresh state.
 	loadingTextBox *text.Box
@@ -168,10 +169,11 @@ func NewChart(priceStyle PriceStyle) *Chart {
 		volumeCursor:   new(volumeCursor),
 		volumeTimeline: newTimeline(view.LightGray, view.TransparentLightGray, view.Gray, view.TransparentGray),
 
+		priceLegend:  newPriceLegend(),
+		volumeLegend: newVolumeLegend(),
+
 		timelineAxis:   new(timelineAxis),
 		timelineCursor: new(timelineCursor),
-
-		legend: newLegend(),
 
 		loadingTextBox: text.NewBox(chartSymbolQuoteTextRenderer, "LOADING...", text.Padding(chartTextPadding)),
 		errorTextBox:   text.NewBox(chartSymbolQuoteTextRenderer, "ERROR", text.Color(view.Orange), text.Padding(chartTextPadding)),
@@ -270,7 +272,8 @@ func (ch *Chart) SetData(data Data) {
 	ch.timelineAxis.SetData(timelineAxisData{dc.Interval, ts})
 	ch.timelineCursor.SetData(timelineCursorData{dc.Interval, ts})
 
-	ch.legend.SetData(legendData{dc.Interval, ts, dc.MovingAverageSeriesSet, dc.AverageVolumeSeries})
+	ch.priceLegend.SetData(priceLegendData{dc.Interval, ts, dc.MovingAverageSeriesSet, dc.AverageVolumeSeries})
+	ch.volumeLegend.SetData(volumeLegendData{dc.Interval, ts, dc.MovingAverageSeriesSet, dc.AverageVolumeSeries})
 }
 
 func (ch *Chart) SetBounds(bounds image.Rectangle) {
@@ -340,12 +343,15 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	ch.timelineAxis.SetBounds(tr)
 	ch.timelineCursor.SetBounds(tr, tlr)
 
-	ch.legend.SetBounds(pr)
+	ch.priceLegend.SetBounds(pr)
+	ch.volumeLegend.SetBounds(vr)
 
 	ch.priceCursor.ProcessInput(input)
 	ch.volumeCursor.ProcessInput(input)
 	ch.timelineCursor.ProcessInput(input)
-	ch.legend.ProcessInput(input)
+
+	ch.priceLegend.ProcessInput(input)
+	ch.volumeLegend.ProcessInput(input)
 
 	if input.MouseScrolled.In(ch.bounds) && ch.zoomChangeCallback != nil {
 		zoomChange := ZoomChangeUnspecified
@@ -378,7 +384,10 @@ func (ch *Chart) Update() (dirty bool) {
 	if ch.volume.Update() {
 		dirty = true
 	}
-	if ch.legend.Update() {
+	if ch.priceLegend.Update() {
+		dirty = true
+	}
+	if ch.volumeLegend.Update() {
 		dirty = true
 	}
 	if ch.loadingTextBox.Update() {
@@ -439,7 +448,8 @@ func (ch *Chart) Render(fudge float32) {
 	ch.timelineAxis.Render(fudge)
 	ch.timelineCursor.Render(fudge)
 
-	ch.legend.Render(fudge)
+	ch.priceLegend.Render(fudge)
+	ch.volumeLegend.Render(fudge)
 }
 
 // SetBarButtonClickCallback sets the callback for bar button clicks.
@@ -484,7 +494,8 @@ func (ch *Chart) Close() {
 	ch.volumeTimeline.Close()
 	ch.timelineAxis.Close()
 	ch.timelineCursor.Close()
-	ch.legend.Close()
+	ch.priceLegend.Close()
+	ch.volumeLegend.Close()
 	ch.zoomChangeCallback = nil
 }
 
