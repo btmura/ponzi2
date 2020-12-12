@@ -270,7 +270,7 @@ func (ch *Chart) SetData(data Data) {
 	ch.timelineAxis.SetData(timelineAxisData{dc.Interval, ts})
 	ch.timelineCursor.SetData(timelineCursorData{dc.Interval, ts})
 
-	ch.legend.SetData(legendData{dc.Interval, ts, dc.MovingAverageSeriesSet})
+	ch.legend.SetData(legendData{dc.Interval, ts, dc.MovingAverageSeriesSet, dc.AverageVolumeSeries})
 }
 
 func (ch *Chart) SetBounds(bounds image.Rectangle) {

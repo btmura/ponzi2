@@ -100,6 +100,7 @@ type legendData struct {
 	Interval               model.Interval
 	TradingSessionSeries   *model.TradingSessionSeries
 	MovingAverageSeriesSet []*model.AverageSeries
+	AverageVolumeSeries    *model.AverageSeries
 }
 
 func (l *legend) SetData(data legendData) {
@@ -262,24 +263,30 @@ func (l *legend) Update() (dirty bool) {
 		rows = append(rows, [3]legendCell{empty, empty, empty})
 	}
 
-	for _, ma := range l.data.MovingAverageSeriesSet {
-		symbolLabel := "☒"
-		if curr.Close >= ma.Values[i].Value {
-			symbolLabel = "◼"
+	symbolLabel := func(value, threshold float32) string {
+		if value >= threshold {
+			return "◼"
 		}
+		return "☒"
+	}
 
-		typeLabel := "?"
-		switch ma.Type {
+	typeLabel := func(avgType model.AverageType) string {
+		switch avgType {
 		case model.Simple:
-			typeLabel = "SMA"
+			return "SMA"
 		case model.Exponential:
-			typeLabel = "EMA"
+			return "EMA"
+		default:
+			return "?"
 		}
+	}
 
+	for _, ma := range l.data.MovingAverageSeriesSet {
+		v := ma.Values[i].Value
 		rows = append(rows, [3]legendCell{
-			symbol(symbolLabel, movingAverageColors[l.data.Interval][ma.Intervals]),
-			text(fmt.Sprintf("%s %d", typeLabel, ma.Intervals)),
-			text(formatFloat(ma.Values[i].Value)),
+			symbol(symbolLabel(curr.Close, v), movingAverageColors[l.data.Interval][ma.Intervals]),
+			text(fmt.Sprintf("%s %d", typeLabel(ma.Type), ma.Intervals)),
+			text(formatFloat(v)),
 		})
 	}
 
@@ -292,9 +299,10 @@ func (l *legend) Update() (dirty bool) {
 				text("Volume"),
 				text(volumeText(curr.Volume)),
 			},
+			[3]legendCell{empty, empty, empty},
 			[3]legendCell{
-				empty,
-				empty,
+				colorArrow(float32(dv)),
+				text("Change"),
 				text(volumeChangeText(dv)),
 			},
 			[3]legendCell{
@@ -302,7 +310,16 @@ func (l *legend) Update() (dirty bool) {
 				empty,
 				text(formatPercentChange(curr.VolumePercentChange)),
 			},
+			[3]legendCell{empty, empty, empty},
 		)
+
+		av := l.data.AverageVolumeSeries
+		v := av.Values[i].Value
+		rows = append(rows, [3]legendCell{
+			symbol(symbolLabel(float32(curr.Volume), v), view.Red),
+			text(fmt.Sprintf("%s %d", typeLabel(av.Type), av.Intervals)),
+			text(volumeText(int(v))),
+		})
 	}
 
 	columns := [3]legendColumn{}
