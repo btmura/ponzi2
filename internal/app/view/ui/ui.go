@@ -331,9 +331,14 @@ func (u *UI) handleCursorPosEvent(x, y float64) {
 		return
 	}
 
+	defer u.WakeLoop()
+
 	u.mousePreviousPos = u.mousePos
 	u.mousePos = pos
-	u.WakeLoop()
+
+	if u.mouseLeftButtonPressed {
+		u.mouseLeftButtonPressedPos = &u.mousePos
+	}
 }
 
 func (u *UI) handleMouseButtonEvent(button glfw.MouseButton, action glfw.Action) {
@@ -352,6 +357,10 @@ func (u *UI) handleMouseButtonEvent(button glfw.MouseButton, action glfw.Action)
 
 	u.mouseLeftButtonPressed = action == glfw.Press
 	u.mouseLeftButtonReleased = action == glfw.Release
+
+	if u.mouseLeftButtonPressed {
+		u.mouseLeftButtonPressedPos = &u.mousePos
+	}
 }
 
 func (u *UI) handleScrollEvent(yoff float64) {
@@ -450,9 +459,6 @@ func (u *UI) prepareInput() *view.Input {
 	dragging := u.mouseLeftButtonPressedCount > draggingMinimumPressCount
 
 	switch {
-	case u.mouseLeftButtonPressed:
-		u.mouseLeftButtonPressedPos = &mousePos
-
 	case dragging && !u.mouseLeftButtonReleased:
 		input.MouseLeftButtonDragging = &view.MouseDraggingEvent{
 			CurrentPos:  mousePos,
