@@ -20,11 +20,22 @@ type Model struct {
 	// currentSymbol is the symbol of the stock shown in the main area.
 	currentSymbol string
 
-	// sidebarSymbols is an ordered list of symbols shown in the sidebar.
-	sidebarSymbols []string
+	// sidebar contains the user's saved symbols.
+	sidebar *Sidebar
 
 	// symbol2Stock is map from symbol to Stock data.
 	symbol2Stock map[string]*Stock
+}
+
+// Sidebar has slots which each have stock symbols.
+type Sidebar struct {
+	// Slots have one or more stock symbols.
+	Slots []*Slot
+}
+
+// Slots have one or more stock symbols.
+type Slot struct {
+	Symbols []string
 }
 
 // Stock has a stock's symbol and charts.
@@ -194,7 +205,8 @@ func (a *AverageValue) DeepCopy() *AverageValue {
 // New creates a new Model.
 func New() *Model {
 	return &Model{
-		symbol2Stock: map[string]*Stock{},
+		sidebar:      new(Sidebar),
+		symbol2Stock: make(map[string]*Stock),
 	}
 }
 
@@ -233,8 +245,10 @@ func (m *Model) SetCurrentSymbol(symbol string) (changed bool, err error) {
 // SidebarSymbols returns the sidebar's symbols.
 func (m *Model) SidebarSymbols() []string {
 	var symbols []string
-	for _, s := range m.sidebarSymbols {
-		symbols = append(symbols, s)
+	for _, slot := range m.sidebar.Slots {
+		for _, s := range slot.Symbols {
+			symbols = append(symbols, s)
+		}
 	}
 	return symbols
 }
@@ -245,13 +259,15 @@ func (m *Model) AddSidebarSymbol(symbol string) (added bool, err error) {
 		return false, err
 	}
 
-	for _, s := range m.sidebarSymbols {
-		if s == symbol {
-			return false, nil
+	for _, slot := range m.sidebar.Slots {
+		for _, s := range slot.Symbols {
+			if s == symbol {
+				return false, nil
+			}
 		}
 	}
 
-	m.sidebarSymbols = append(m.sidebarSymbols, symbol)
+	m.sidebar.Slots = append(m.sidebar.Slots, &Slot{Symbols: []string{symbol}})
 
 	// Add a stock placeholder for the new symbol if it doesn't exist.
 	if m.symbol2Stock[symbol] == nil {
@@ -267,13 +283,15 @@ func (m *Model) RemoveSidebarSymbol(symbol string) (removed bool, err error) {
 		return false, err
 	}
 
-	for i, s := range m.sidebarSymbols {
-		if s == symbol {
-			m.sidebarSymbols = append(m.sidebarSymbols[:i], m.sidebarSymbols[i+1:]...)
-			if !m.containsSymbol(symbol) {
-				delete(m.symbol2Stock, symbol)
+	for _, slot := range m.sidebar.Slots {
+		for i, s := range slot.Symbols {
+			if s == symbol {
+				slot.Symbols = append(slot.Symbols[:i], slot.Symbols[i+1:]...)
+				if !m.containsSymbol(symbol) {
+					delete(m.symbol2Stock, symbol)
+				}
+				return true, nil
 			}
-			return true, nil
 		}
 	}
 
@@ -282,13 +300,13 @@ func (m *Model) RemoveSidebarSymbol(symbol string) (removed bool, err error) {
 
 // SwapSidebarSlots swaps two sidebar slots.
 func (m *Model) SwapSidebarSlots(i, j int) (swapped bool) {
-	if i < 0 || i >= len(m.sidebarSymbols) {
-		logger.Errorf("slot index i (%d) is out of bounds (%d)", i, len(m.sidebarSymbols))
+	if i < 0 || i >= len(m.sidebar.Slots) {
+		logger.Errorf("slot index i (%d) is out of bounds (%d)", i, len(m.sidebar.Slots))
 		return false
 	}
 
-	if j < 0 || j >= len(m.sidebarSymbols) {
-		logger.Errorf("slot index j (%d) is out of bounds (%d)", j, len(m.sidebarSymbols))
+	if j < 0 || j >= len(m.sidebar.Slots) {
+		logger.Errorf("slot index j (%d) is out of bounds (%d)", j, len(m.sidebar.Slots))
 		return false
 	}
 
@@ -296,7 +314,7 @@ func (m *Model) SwapSidebarSlots(i, j int) (swapped bool) {
 		return false
 	}
 
-	m.sidebarSymbols[i], m.sidebarSymbols[j] = m.sidebarSymbols[j], m.sidebarSymbols[i]
+	m.sidebar.Slots[i], m.sidebar.Slots[j] = m.sidebar.Slots[j], m.sidebar.Slots[i]
 	return true
 }
 
@@ -369,9 +387,11 @@ func (m *Model) containsSymbol(symbol string) bool {
 		return true
 	}
 
-	for _, s := range m.sidebarSymbols {
-		if s == symbol {
-			return true
+	for _, slot := range m.sidebar.Slots {
+		for _, s := range slot.Symbols {
+			if s == symbol {
+				return true
+			}
 		}
 	}
 
