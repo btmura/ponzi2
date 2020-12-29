@@ -225,6 +225,8 @@ const (
 
 func (d dataRequestGroup) Intervals() []model.Interval {
 	switch d {
+	case dataRequestGroupUnspecified:
+		return nil
 	case intraday:
 		return []model.Interval{model.Intraday}
 	case dailyWeekly:
