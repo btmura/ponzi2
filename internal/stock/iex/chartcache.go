@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/btmura/ponzi2/internal/errs"
+	"github.com/btmura/ponzi2/internal/logger"
 )
 
 // ChartCacheKey is the key to look up chart cache entries.
@@ -37,21 +38,21 @@ type ChartCacheValue struct {
 
 // DeepCopy returns a deep copy of the value.
 func (c *ChartCacheValue) DeepCopy() *ChartCacheValue {
-	copy := *c
-	copy.Chart = copy.Chart.DeepCopy()
-	return &copy
+	deep := *c
+	deep.Chart = deep.Chart.DeepCopy()
+	return &deep
 }
 
 // NoOpChartCache is a chart cache that doesn't do anything.
 type NoOpChartCache struct{}
 
 // Get implements the iexChartCacheInterface.
-func (n *NoOpChartCache) Get(ctx context.Context, key ChartCacheKey) (*ChartCacheValue, error) {
+func (n *NoOpChartCache) Get(_ context.Context, _ ChartCacheKey) (*ChartCacheValue, error) {
 	return nil, nil
 }
 
 // Put implements the iexChartCacheInterface.
-func (n *NoOpChartCache) Put(ctx context.Context, key ChartCacheKey, val *ChartCacheValue) error {
+func (n *NoOpChartCache) Put(_ context.Context, _ ChartCacheKey, _ *ChartCacheValue) error {
 	return nil
 }
 
@@ -81,7 +82,11 @@ func OpenGOBChartCache() (*GOBChartCache, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			logger.Error(err)
+		}
+	}()
 
 	c := &GOBChartCache{}
 	dec := gob.NewDecoder(file)
@@ -92,7 +97,7 @@ func OpenGOBChartCache() (*GOBChartCache, error) {
 }
 
 // Get implements the iexChartCacheInterface.
-func (g *GOBChartCache) Get(ctx context.Context, key ChartCacheKey) (*ChartCacheValue, error) {
+func (g *GOBChartCache) Get(_ context.Context, key ChartCacheKey) (*ChartCacheValue, error) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
@@ -108,7 +113,7 @@ func (g *GOBChartCache) Get(ctx context.Context, key ChartCacheKey) (*ChartCache
 }
 
 // Put implements the iexChartCacheInterface.
-func (g *GOBChartCache) Put(ctx context.Context, key ChartCacheKey, val *ChartCacheValue) error {
+func (g *GOBChartCache) Put(_ context.Context, key ChartCacheKey, val *ChartCacheValue) error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
@@ -128,9 +133,7 @@ func (g *GOBChartCache) Put(ctx context.Context, key ChartCacheKey, val *ChartCa
 	g.Data[key] = val.DeepCopy()
 	g.Data[key].LastUpdateTime = now()
 
-	saveChartCache(g)
-
-	return nil
+	return saveChartCache(g)
 }
 
 func saveChartCache(g *GOBChartCache) error {
@@ -148,7 +151,11 @@ func saveChartCache(g *GOBChartCache) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			logger.Error(err)
+		}
+	}()
 
 	return gob.NewEncoder(file).Encode(g)
 }
