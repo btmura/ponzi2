@@ -296,13 +296,13 @@ func (c *Controller) setChartInterval(newInterval model.Interval) {
 	c.chartInterval = newInterval
 
 	if s := c.model.CurrentSymbol(); s != "" {
-		data := c.chartData(s, c.chartInterval)
-		c.ui.SetData(s, data)
+		c.ui.SetData(s, c.chartData(s, c.chartInterval))
 	}
 
-	for _, s := range c.model.SidebarSymbols() {
-		data := c.chartData(s, c.chartInterval)
-		c.ui.SetData(s, data)
+	for _, slot := range c.model.Sidebar().Slots {
+		for _, s := range slot.Symbols {
+			c.ui.SetData(s, c.chartData(s, c.chartInterval))
+		}
 	}
 
 	c.configSaver.save(c.makeConfig())
@@ -349,13 +349,17 @@ func (c *Controller) refreshCurrentStock(ctx context.Context) error {
 func (c *Controller) refreshAllStocks(ctx context.Context) error {
 	d := new(dataRequestBuilder)
 
+	var symbols []string
 	if s := c.model.CurrentSymbol(); s != "" {
-		if err := d.add([]string{s}, c.chartInterval); err != nil {
-			return err
+		symbols = append(symbols, s)
+	}
+	for _, slot := range c.model.Sidebar().Slots {
+		for _, s := range slot.Symbols {
+			symbols = append(symbols, s)
 		}
 	}
 
-	if err := d.add(c.model.SidebarSymbols(), c.chartInterval); err != nil {
+	if err := d.add(symbols, c.chartInterval); err != nil {
 		return err
 	}
 
@@ -464,8 +468,10 @@ func (c *Controller) makeConfig() *config.Config {
 	if s := c.model.CurrentSymbol(); s != "" {
 		cfg.CurrentStock = &config.Stock{Symbol: s}
 	}
-	for _, s := range c.model.SidebarSymbols() {
-		cfg.Stocks = append(cfg.Stocks, &config.Stock{Symbol: s})
+	for _, slot := range c.model.Sidebar().Slots {
+		for _, s := range slot.Symbols {
+			cfg.Stocks = append(cfg.Stocks, &config.Stock{Symbol: s})
+		}
 	}
 	cfg.Settings.ChartSettings.PriceStyle = c.chartPriceStyle
 	cfg.Settings.ChartSettings.Interval = c.chartInterval

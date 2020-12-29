@@ -54,7 +54,7 @@ func TestSetCurrentSymbol(t *testing.T) {
 func TestAddSidebarSymbol(t *testing.T) {
 	m := New()
 
-	if diff := cmp.Diff([]string(nil), m.SidebarSymbols()); diff != "" {
+	if diff := cmp.Diff(&Sidebar{}, m.Sidebar()); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
@@ -66,7 +66,14 @@ func TestAddSidebarSymbol(t *testing.T) {
 		t.Errorf("AddSidebarSymbol should not return an error if given a valid symbol.")
 	}
 
-	if diff := cmp.Diff([]string{"SPY"}, m.SidebarSymbols()); diff != "" {
+	if diff := cmp.Diff(
+		&Sidebar{
+			Slots: []*Slot{
+				{Symbols: []string{"SPY"}},
+			},
+		},
+		m.Sidebar(),
+	); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
@@ -78,7 +85,15 @@ func TestAddSidebarSymbol(t *testing.T) {
 		t.Errorf("AddSidebarSymbol should not return an error if given a valid symbol.")
 	}
 
-	if diff := cmp.Diff([]string{"SPY", "AAPL"}, m.SidebarSymbols()); diff != "" {
+	if diff := cmp.Diff(
+		&Sidebar{
+			Slots: []*Slot{
+				{Symbols: []string{"SPY"}},
+				{Symbols: []string{"AAPL"}},
+			},
+		},
+		m.Sidebar(),
+	); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
@@ -90,7 +105,15 @@ func TestAddSidebarSymbol(t *testing.T) {
 		t.Errorf("AddSidebarSymbol should not return an error if given a valid symbol.")
 	}
 
-	if diff := cmp.Diff([]string{"SPY", "AAPL"}, m.SidebarSymbols()); diff != "" {
+	if diff := cmp.Diff(
+		&Sidebar{
+			Slots: []*Slot{
+				{Symbols: []string{"SPY"}},
+				{Symbols: []string{"AAPL"}},
+			},
+		},
+		m.Sidebar(),
+	); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
@@ -102,7 +125,15 @@ func TestAddSidebarSymbol(t *testing.T) {
 		t.Errorf("AddSidebarSymbol should return an error if the given symbol is invalid.")
 	}
 
-	if diff := cmp.Diff([]string{"SPY", "AAPL"}, m.SidebarSymbols()); diff != "" {
+	if diff := cmp.Diff(
+		&Sidebar{
+			Slots: []*Slot{
+				{Symbols: []string{"SPY"}},
+				{Symbols: []string{"AAPL"}},
+			},
+		},
+		m.Sidebar(),
+	); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 }
@@ -114,7 +145,16 @@ func TestRemoveSidebarSymbol(t *testing.T) {
 	m.AddSidebarSymbol("AAPL")
 	m.AddSidebarSymbol("CEF")
 
-	if diff := cmp.Diff([]string{"SPY", "AAPL", "CEF"}, m.SidebarSymbols()); diff != "" {
+	if diff := cmp.Diff(
+		&Sidebar{
+			Slots: []*Slot{
+				{Symbols: []string{"SPY"}},
+				{Symbols: []string{"AAPL"}},
+				{Symbols: []string{"CEF"}},
+			},
+		},
+		m.Sidebar(),
+	); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
@@ -126,7 +166,15 @@ func TestRemoveSidebarSymbol(t *testing.T) {
 		t.Errorf("RemoveSidebarSypmbol should not return an error if the given symbol is valid.")
 	}
 
-	if diff := cmp.Diff([]string{"SPY", "CEF"}, m.SidebarSymbols()); diff != "" {
+	if diff := cmp.Diff(
+		&Sidebar{
+			Slots: []*Slot{
+				{Symbols: []string{"SPY"}},
+				{Symbols: []string{"CEF"}},
+			},
+		},
+		m.Sidebar(),
+	); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
@@ -138,7 +186,15 @@ func TestRemoveSidebarSymbol(t *testing.T) {
 		t.Errorf("RemoveSidebarSymbol should not return an error if the given symbol is valid.")
 	}
 
-	if diff := cmp.Diff([]string{"SPY", "CEF"}, m.SidebarSymbols()); diff != "" {
+	if diff := cmp.Diff(
+		&Sidebar{
+			Slots: []*Slot{
+				{Symbols: []string{"SPY"}},
+				{Symbols: []string{"CEF"}},
+			},
+		},
+		m.Sidebar(),
+	); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 }
@@ -148,42 +204,96 @@ func TestSwapSidebarSlots(t *testing.T) {
 	m.AddSidebarSymbol("SPY")
 	m.AddSidebarSymbol("AAPL")
 	m.AddSidebarSymbol("CEF")
-	if diff := cmp.Diff([]string{"SPY", "AAPL", "CEF"}, m.SidebarSymbols()); diff != "" {
+	if diff := cmp.Diff(
+		&Sidebar{
+			Slots: []*Slot{
+				{Symbols: []string{"SPY"}},
+				{Symbols: []string{"AAPL"}},
+				{Symbols: []string{"CEF"}},
+			},
+		},
+		m.Sidebar(),
+	); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
 	if m.SwapSidebarSlots(0, 0) {
 		t.Errorf("SwapSidebarSlots should return false with the same indices.")
 	}
-	if diff := cmp.Diff([]string{"SPY", "AAPL", "CEF"}, m.SidebarSymbols()); diff != "" {
+	if diff := cmp.Diff(
+		&Sidebar{
+			Slots: []*Slot{
+				{Symbols: []string{"SPY"}},
+				{Symbols: []string{"AAPL"}},
+				{Symbols: []string{"CEF"}},
+			},
+		},
+		m.Sidebar(),
+	); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
 	if m.SwapSidebarSlots(-3, 0) {
 		t.Errorf("SwapSidebarSlots should return false with out of bounds indices.")
 	}
-	if diff := cmp.Diff([]string{"SPY", "AAPL", "CEF"}, m.SidebarSymbols()); diff != "" {
+	if diff := cmp.Diff(
+		&Sidebar{
+			Slots: []*Slot{
+				{Symbols: []string{"SPY"}},
+				{Symbols: []string{"AAPL"}},
+				{Symbols: []string{"CEF"}},
+			},
+		},
+		m.Sidebar(),
+	); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
 	if m.SwapSidebarSlots(0, 3) {
 		t.Errorf("SwapSidebarSlots should return false with out of bounds indices.")
 	}
-	if diff := cmp.Diff([]string{"SPY", "AAPL", "CEF"}, m.SidebarSymbols()); diff != "" {
+	if diff := cmp.Diff(
+		&Sidebar{
+			Slots: []*Slot{
+				{Symbols: []string{"SPY"}},
+				{Symbols: []string{"AAPL"}},
+				{Symbols: []string{"CEF"}},
+			},
+		},
+		m.Sidebar(),
+	); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
 	if !m.SwapSidebarSlots(0, 1) {
 		t.Errorf("SwapSidebarSlots should return true when swap succeeds.")
 	}
-	if diff := cmp.Diff([]string{"AAPL", "SPY", "CEF"}, m.SidebarSymbols()); diff != "" {
+	if diff := cmp.Diff(
+		&Sidebar{
+			Slots: []*Slot{
+				{Symbols: []string{"AAPL"}},
+				{Symbols: []string{"SPY"}},
+				{Symbols: []string{"CEF"}},
+			},
+		},
+		m.Sidebar(),
+	); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
 	if !m.SwapSidebarSlots(0, 2) {
 		t.Errorf("SwapSidebarSlots should return true when swap succeeds.")
 	}
-	if diff := cmp.Diff([]string{"CEF", "SPY", "AAPL"}, m.SidebarSymbols()); diff != "" {
+	if diff := cmp.Diff(
+		&Sidebar{
+			Slots: []*Slot{
+				{Symbols: []string{"CEF"}},
+				{Symbols: []string{"SPY"}},
+				{Symbols: []string{"AAPL"}},
+			},
+		},
+		m.Sidebar(),
+	); diff != "" {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 }

@@ -33,9 +33,37 @@ type Sidebar struct {
 	Slots []*Slot
 }
 
+// DeepCopy returns a deep copy of the sidebar.
+func (s *Sidebar) DeepCopy() *Sidebar {
+	if s == nil {
+		return nil
+	}
+	deep := *s
+	if len(deep.Slots) != 0 {
+		deep.Slots = make([]*Slot, len(s.Slots))
+		for i, slot := range s.Slots {
+			deep.Slots[i] = slot.DeepCopy()
+		}
+	}
+	return &deep
+}
+
 // Slots have one or more stock symbols.
 type Slot struct {
 	Symbols []string
+}
+
+// DeepCopy returns a deep copy of the slot.
+func (s *Slot) DeepCopy() *Slot {
+	if s == nil {
+		return nil
+	}
+	deep := *s
+	if len(deep.Symbols) != 0 {
+		deep.Symbols = make([]string, len(s.Symbols))
+		copy(deep.Symbols, s.Symbols)
+	}
+	return &deep
 }
 
 // Stock has a stock's symbol and charts.
@@ -242,15 +270,9 @@ func (m *Model) SetCurrentSymbol(symbol string) (changed bool, err error) {
 	return true, nil
 }
 
-// SidebarSymbols returns the sidebar's symbols.
-func (m *Model) SidebarSymbols() []string {
-	var symbols []string
-	for _, slot := range m.sidebar.Slots {
-		for _, s := range slot.Symbols {
-			symbols = append(symbols, s)
-		}
-	}
-	return symbols
+// Sidebar returns a copy of the Sidebar.
+func (m *Model) Sidebar() *Sidebar {
+	return m.sidebar.DeepCopy()
 }
 
 // AddSidebarSymbol adds a symbol to the sidebar and returns true if the stock was newly added.
@@ -283,19 +305,24 @@ func (m *Model) RemoveSidebarSymbol(symbol string) (removed bool, err error) {
 		return false, err
 	}
 
-	for _, slot := range m.sidebar.Slots {
-		for i, s := range slot.Symbols {
+	for i := 0; i < len(m.sidebar.Slots); i++ {
+		slot := m.sidebar.Slots[i]
+		for j := 0; j < len(slot.Symbols); j++ {
+			s := slot.Symbols[j]
 			if s == symbol {
-				slot.Symbols = append(slot.Symbols[:i], slot.Symbols[i+1:]...)
+				slot.Symbols = append(slot.Symbols[:j], slot.Symbols[j+1:]...)
 				if !m.containsSymbol(symbol) {
 					delete(m.symbol2Stock, symbol)
 				}
-				return true, nil
+				removed = true
 			}
+		}
+		if len(slot.Symbols) == 0 {
+			m.sidebar.Slots = append(m.sidebar.Slots[:i], m.sidebar.Slots[i+1:]...)
 		}
 	}
 
-	return false, nil
+	return removed, nil
 }
 
 // SwapSidebarSlots swaps two sidebar slots.
