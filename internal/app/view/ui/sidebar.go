@@ -137,7 +137,7 @@ func (s *sidebar) RemoveChartThumb(symbol string) (changed bool) {
 		for _, thumb := range slot.thumbs {
 			if symbol == thumb.symbol {
 				changed = true
-				thumb.FadeOut()
+				slot.FadeOut()
 			}
 		}
 	}
