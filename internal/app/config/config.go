@@ -15,9 +15,28 @@ import (
 
 // Config configures the app.
 type Config struct {
+	// CurrentStock is the current stock shown to the user.
 	CurrentStock *Stock
-	Stocks       []*Stock
-	Settings     Settings
+
+	// Stocks is the user's saved stocks in the sidebar before the Sidebar field was added.
+	// Deprecated: Use the Sidebar field instead.
+	Stocks []Stock
+
+	// Sidebar is the sidebar with the user's saved stocks.
+	Sidebar Sidebar
+
+	// Settings is the user's settings.
+	Settings Settings
+}
+
+// Sidebar has slots with the user's saved stocks.
+type Sidebar struct {
+	Slots []Slot
+}
+
+// Slot has one or more stocks.
+type Slot struct {
+	Stocks []Stock
 }
 
 // Stock identifies a single stock by symbol.

@@ -97,10 +97,23 @@ func (c *Controller) RunLoop() error {
 		}
 	}
 
+	// Add each deprecated stock as a new slot in the sidebar for backwards compatibility.
 	for _, cs := range cfg.Stocks {
 		if s := cs.Symbol; s != "" {
+			// TODO(btmura): Change addChartThumb to addSidebarSlot.
 			if err := c.addChartThumb(ctx, s); err != nil {
 				return err
+			}
+		}
+	}
+
+	for _, slot := range cfg.Sidebar.Slots {
+		for _, cs := range slot.Stocks {
+			if s := cs.Symbol; s != "" {
+				// TODO(btmura): Change addChartThumb to addSidebarSlot.
+				if err := c.addChartThumb(ctx, s); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -464,16 +477,21 @@ func nextInterval(interval model.Interval, zoomChange chart.ZoomChange) model.In
 }
 
 func (c *Controller) makeConfig() *config.Config {
-	cfg := &config.Config{}
+	cfg := new(config.Config)
 	if s := c.model.CurrentSymbol(); s != "" {
 		cfg.CurrentStock = &config.Stock{Symbol: s}
 	}
+
 	for _, slot := range c.model.Sidebar().Slots {
+		var cfgSlot config.Slot
 		for _, s := range slot.Symbols {
-			cfg.Stocks = append(cfg.Stocks, &config.Stock{Symbol: s})
+			cfgSlot.Stocks = append(cfgSlot.Stocks, config.Stock{Symbol: s})
 		}
+		cfg.Sidebar.Slots = append(cfg.Sidebar.Slots, cfgSlot)
 	}
+
 	cfg.Settings.ChartSettings.PriceStyle = c.chartPriceStyle
 	cfg.Settings.ChartSettings.Interval = c.chartInterval
+
 	return cfg
 }
