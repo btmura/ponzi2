@@ -88,32 +88,33 @@ func (c *Controller) RunLoop() error {
 	}
 	c.setChartInterval(interval)
 
-	// Add the user's stocks to the UI.
-	if cfg.CurrentStock != nil {
-		if s := cfg.CurrentStock.Symbol; s != "" {
-			if err := c.setChart(ctx, s); err != nil {
-				return err
-			}
+	// Restore the user's current stock.
+	if s := cfg.CurrentStock.Symbol; s != "" {
+		if err := c.setChart(ctx, s); err != nil {
+			return err
 		}
 	}
 
-	// Add each deprecated stock as a new slot in the sidebar for backwards compatibility.
+	// Restore each deprecated stock as a new sidebar slot for backwards compatibility.
 	for _, cs := range cfg.Stocks {
 		if s := cs.Symbol; s != "" {
-			// TODO(btmura): Change addChartThumb to addSidebarSlot.
-			if err := c.addChartThumb(ctx, s); err != nil {
+			if err := c.addSidebarSlot(ctx, []string{s}); err != nil {
 				return err
 			}
 		}
 	}
 
+	// Restore the sidebar.
 	for _, slot := range cfg.Sidebar.Slots {
+		var symbols []string
 		for _, cs := range slot.Stocks {
 			if s := cs.Symbol; s != "" {
-				// TODO(btmura): Change addChartThumb to addSidebarSlot.
-				if err := c.addChartThumb(ctx, s); err != nil {
-					return err
-				}
+				symbols = append(symbols, s)
+			}
+		}
+		if len(symbols) != 0 {
+			if err := c.addSidebarSlot(ctx, symbols); err != nil {
+				return err
 			}
 		}
 	}
@@ -151,8 +152,8 @@ func (c *Controller) RunLoop() error {
 	})
 
 	c.ui.SetChartAddButtonClickCallback(func(symbol string) {
-		if err := c.addChartThumb(ctx, symbol); err != nil {
-			logger.Errorf("addChartThumb: %v", err)
+		if err := c.addSidebarSlot(ctx, []string{symbol}); err != nil {
+			logger.Errorf("addSidebarSlot(%s): %v", symbol, err)
 		}
 	})
 
@@ -218,28 +219,37 @@ func (c *Controller) setChart(ctx context.Context, symbol string) error {
 	return nil
 }
 
-func (c *Controller) addChartThumb(ctx context.Context, symbol string) error {
-	if symbol == "" {
-		return errs.Errorf("missing symbol")
-	}
-
-	added, err := c.model.AddSidebarSymbol(symbol)
-	if err != nil {
-		return err
-	}
-
-	// If the stock is already added, just refresh it.
-	if !added {
-		return c.stockRefresher.refreshOne(ctx, symbol, c.chartInterval)
-	}
-
-	data := c.chartData(symbol, c.chartInterval)
-
-	if !c.ui.AddChartThumb(symbol, data) {
+func (c *Controller) addSidebarSlot(ctx context.Context, symbols []string) error {
+	if len(symbols) == 0 {
 		return nil
 	}
 
-	if err := c.stockRefresher.refreshOne(ctx, symbol, c.chartInterval); err != nil {
+	for _, s := range symbols {
+		if err := model.ValidateSymbol(s); err != nil {
+			return err
+		}
+	}
+
+	// Add the slot to the model and the UI.
+	if err := c.model.AddSidebarSlot(symbols); err != nil {
+		return err
+	}
+
+	if !c.ui.AddSidebarSlot(symbols) {
+		return nil
+	}
+
+	// Set the existing data we have for the added symbols.
+	for _, s := range symbols {
+		c.ui.SetData(s, c.chartData(s, c.chartInterval))
+	}
+
+	// Ask for new data for the added symbols.
+	d := new(dataRequestBuilder)
+	if err := d.add(symbols, c.chartInterval); err != nil {
+		return err
+	}
+	if err := c.stockRefresher.refresh(ctx, d); err != nil {
 		return err
 	}
 
@@ -479,7 +489,7 @@ func nextInterval(interval model.Interval, zoomChange chart.ZoomChange) model.In
 func (c *Controller) makeConfig() *config.Config {
 	cfg := new(config.Config)
 	if s := c.model.CurrentSymbol(); s != "" {
-		cfg.CurrentStock = &config.Stock{Symbol: s}
+		cfg.CurrentStock = config.Stock{Symbol: s}
 	}
 
 	for _, slot := range c.model.Sidebar().Slots {

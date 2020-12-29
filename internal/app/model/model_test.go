@@ -58,12 +58,8 @@ func TestAddSidebarSymbol(t *testing.T) {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
-	added, err := m.AddSidebarSymbol("SPY")
-	if !added {
-		t.Errorf("AddSidebarSymbol should return true if the input symbol is new.")
-	}
-	if err != nil {
-		t.Errorf("AddSidebarSymbol should not return an error if given a valid symbol.")
+	if err := m.AddSidebarSlot([]string{"SPY"}); err != nil {
+		t.Errorf("AddSidebarSlot should not return an error if given a valid symbol.")
 	}
 
 	if diff := cmp.Diff(
@@ -77,12 +73,8 @@ func TestAddSidebarSymbol(t *testing.T) {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
-	added, err = m.AddSidebarSymbol("AAPL")
-	if !added {
-		t.Errorf("AddSidebarSymbol should return true if the input symbol is new.")
-	}
-	if err != nil {
-		t.Errorf("AddSidebarSymbol should not return an error if given a valid symbol.")
+	if err := m.AddSidebarSlot([]string{"AAPL"}); err != nil {
+		t.Errorf("AddSidebarSlot should not return an error if given a valid symbol.")
 	}
 
 	if diff := cmp.Diff(
@@ -97,18 +89,15 @@ func TestAddSidebarSymbol(t *testing.T) {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
-	added, err = m.AddSidebarSymbol("AAPL")
-	if added {
-		t.Errorf("AddSidebarSymbol should return false if the input symbol exists.")
-	}
-	if err != nil {
-		t.Errorf("AddSidebarSymbol should not return an error if given a valid symbol.")
+	if err := m.AddSidebarSlot([]string{"AAPL"}); err != nil {
+		t.Errorf("AddSidebarSlot should not return an error if given a valid symbol.")
 	}
 
 	if diff := cmp.Diff(
 		&Sidebar{
 			Slots: []*Slot{
 				{Symbols: []string{"SPY"}},
+				{Symbols: []string{"AAPL"}},
 				{Symbols: []string{"AAPL"}},
 			},
 		},
@@ -117,18 +106,15 @@ func TestAddSidebarSymbol(t *testing.T) {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
-	added, err = m.AddSidebarSymbol("AAPL AAPL")
-	if added {
-		t.Errorf("AddSidebarSymbol should return false if the input symbol is invalid.")
-	}
-	if err == nil {
-		t.Errorf("AddSidebarSymbol should return an error if the given symbol is invalid.")
+	if err := m.AddSidebarSlot([]string{"AAPL AAPL"}); err == nil {
+		t.Errorf("AddSidebarSlot should return an error if the given symbol is invalid.")
 	}
 
 	if diff := cmp.Diff(
 		&Sidebar{
 			Slots: []*Slot{
 				{Symbols: []string{"SPY"}},
+				{Symbols: []string{"AAPL"}},
 				{Symbols: []string{"AAPL"}},
 			},
 		},
@@ -141,9 +127,9 @@ func TestAddSidebarSymbol(t *testing.T) {
 func TestRemoveSidebarSymbol(t *testing.T) {
 	m := New()
 
-	m.AddSidebarSymbol("SPY")
-	m.AddSidebarSymbol("AAPL")
-	m.AddSidebarSymbol("CEF")
+	m.AddSidebarSlot([]string{"SPY"})
+	m.AddSidebarSlot([]string{"AAPL"})
+	m.AddSidebarSlot([]string{"CEF"})
 
 	if diff := cmp.Diff(
 		&Sidebar{
@@ -201,9 +187,9 @@ func TestRemoveSidebarSymbol(t *testing.T) {
 
 func TestSwapSidebarSlots(t *testing.T) {
 	m := New()
-	m.AddSidebarSymbol("SPY")
-	m.AddSidebarSymbol("AAPL")
-	m.AddSidebarSymbol("CEF")
+	m.AddSidebarSlot([]string{"SPY"})
+	m.AddSidebarSlot([]string{"AAPL"})
+	m.AddSidebarSlot([]string{"CEF"})
 	if diff := cmp.Diff(
 		&Sidebar{
 			Slots: []*Slot{
@@ -438,9 +424,9 @@ func TestStockBookkeeping(t *testing.T) {
 		t.Error("SetCurrentSymbol should remove the unused Stock.")
 	}
 
-	m.AddSidebarSymbol("FB")
+	m.AddSidebarSlot([]string{"FB"})
 	if st, _ := m.Stock("FB"); st == nil {
-		t.Errorf("AddSidebarSymbol should insert the new Stock.")
+		t.Errorf("AddSidebarSlot should insert the new Stock.")
 	}
 
 	m.RemoveSidebarSymbol("FB")
@@ -468,7 +454,7 @@ func TestContainsSymbol(t *testing.T) {
 		t.Errorf("containsSymbol should return false, since the current symbol changed to AAPL.")
 	}
 
-	m.AddSidebarSymbol("SPY")
+	m.AddSidebarSlot([]string{"SPY"})
 
 	if !m.containsSymbol("SPY") {
 		t.Errorf("containsSymbol should return true, since the sidebar now has SPY.")

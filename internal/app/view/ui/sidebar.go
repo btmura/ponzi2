@@ -105,25 +105,36 @@ func (s *sidebar) SetPriceStyle(newPriceStyle chart.PriceStyle) {
 	}
 }
 
-func (s *sidebar) AddChartThumb(symbol string) (changed bool) {
-	if err := model.ValidateSymbol(symbol); err != nil {
-		logger.Errorf("invalid symbol: %v", err)
+func (s *sidebar) AddSidebarSlot(symbols []string) (added bool) {
+	if len(symbols) == 0 {
+		logger.Error("symbols should not be empty")
 		return false
 	}
 
-	thumb := chart.NewThumb(s.priceStyle)
-	thumb.SetRemoveButtonClickCallback(func() {
-		if s.thumbRemoveButtonClickCallback != nil {
-			s.thumbRemoveButtonClickCallback(symbol)
+	for _, s := range symbols {
+		if err := model.ValidateSymbol(s); err != nil {
+			logger.Errorf("invalid symbol: %v", err)
+			return false
 		}
-	})
-	thumb.SetThumbClickCallback(func() {
-		if s.thumbClickCallback != nil {
-			s.thumbClickCallback(symbol)
-		}
-	})
+	}
 
-	s.slots = append(s.slots, newSidebarSlot(symbol, thumb))
+	var thumbs []*sidebarThumb
+	for _, symbol := range symbols {
+		t := chart.NewThumb(s.priceStyle)
+		t.SetRemoveButtonClickCallback(func() {
+			if s.thumbRemoveButtonClickCallback != nil {
+				s.thumbRemoveButtonClickCallback(symbol)
+			}
+		})
+		t.SetThumbClickCallback(func() {
+			if s.thumbClickCallback != nil {
+				s.thumbClickCallback(symbol)
+			}
+		})
+		thumbs = append(thumbs, newSidebarThumb(symbol, t))
+	}
+
+	s.slots = append(s.slots, newSidebarSlot(thumbs))
 	return true
 }
 
@@ -494,9 +505,9 @@ func (s *sidebar) Close() {
 	s.thumbClickCallback = nil
 }
 
-func newSidebarSlot(symbol string, thumb *chart.Thumb) *sidebarSlot {
+func newSidebarSlot(thumbs []*sidebarThumb) *sidebarSlot {
 	return &sidebarSlot{
-		thumbs: []*sidebarThumb{newSidebarThumb(symbol, thumb)},
+		thumbs: thumbs,
 		Fader:  view.NewStartedFader(1 * view.FPS),
 	}
 }

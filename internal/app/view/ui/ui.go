@@ -785,16 +785,22 @@ func (u *UI) SetChartPriceStyle(newPriceStyle chart.PriceStyle) {
 	u.WakeLoop()
 }
 
-// AddChartThumb adds a thumbnail with the given symbol and data.
-func (u *UI) AddChartThumb(symbol string, data chart.Data) (changed bool) {
-	if err := model.ValidateSymbol(symbol); err != nil {
-		logger.Errorf("invalid symbol: %v", err)
+// AddSidebarSlot adds a slot with the given symbols.
+func (u *UI) AddSidebarSlot(symbols []string) (added bool) {
+	if len(symbols) == 0 {
+		logger.Errorf("symbols should not be empty")
 		return false
 	}
 
-	if u.sidebar.AddChartThumb(symbol) {
+	for _, s := range symbols {
+		if err := model.ValidateSymbol(s); err != nil {
+			logger.Errorf("invalid symbol: %v", err)
+			return false
+		}
+	}
+
+	if u.sidebar.AddSidebarSlot(symbols) {
 		defer u.WakeLoop()
-		u.sidebar.SetData(symbol, data)
 		return true
 	}
 

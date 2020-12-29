@@ -16,7 +16,7 @@ import (
 // Config configures the app.
 type Config struct {
 	// CurrentStock is the current stock shown to the user.
-	CurrentStock *Stock
+	CurrentStock Stock
 
 	// Stocks is the user's saved stocks in the sidebar before the Sidebar field was added.
 	// Deprecated: Use the Sidebar field instead.

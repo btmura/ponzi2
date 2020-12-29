@@ -275,28 +275,30 @@ func (m *Model) Sidebar() *Sidebar {
 	return m.sidebar.DeepCopy()
 }
 
-// AddSidebarSymbol adds a symbol to the sidebar and returns true if the stock was newly added.
-func (m *Model) AddSidebarSymbol(symbol string) (added bool, err error) {
-	if err := ValidateSymbol(symbol); err != nil {
-		return false, err
+// AddSidebarSlot adds a slot with the given symbols to the sidebar.
+func (m *Model) AddSidebarSlot(symbols []string) error {
+	if len(symbols) == 0 {
+		return nil
 	}
 
-	for _, slot := range m.sidebar.Slots {
-		for _, s := range slot.Symbols {
-			if s == symbol {
-				return false, nil
-			}
+	for _, s := range symbols {
+		if err := ValidateSymbol(s); err != nil {
+			return err
 		}
 	}
 
-	m.sidebar.Slots = append(m.sidebar.Slots, &Slot{Symbols: []string{symbol}})
+	// NOTE: We allow slots with the same symbols to be added.
 
-	// Add a stock placeholder for the new symbol if it doesn't exist.
-	if m.symbol2Stock[symbol] == nil {
-		m.symbol2Stock[symbol] = &Stock{Symbol: symbol}
+	m.sidebar.Slots = append(m.sidebar.Slots, &Slot{Symbols: symbols})
+
+	// Add a stock placeholder for any new symbols if they don't exist.
+	for _, s := range symbols {
+		if m.symbol2Stock[s] == nil {
+			m.symbol2Stock[s] = &Stock{Symbol: s}
+		}
 	}
 
-	return true, nil
+	return nil
 }
 
 // RemoveSidebarSymbol removes a symbol from the sidebar and returns true if removed.
