@@ -45,8 +45,8 @@ type sidebar struct {
 	// slotSwapCallback is a callback fired when the slots are swapped.
 	slotSwapCallback func(i, j int)
 
-	// thumbRemoveButtonClickCallback is called when a thumb's remove button is clicked.
-	thumbRemoveButtonClickCallback func(symbol string)
+	// thumbRemoveCallback is called when a thumb is removed.
+	thumbRemoveCallback func(slotIndex, symbolIndex int)
 
 	// thumbClickCallback is called when a thumb is clicked.
 	thumbClickCallback func(symbol string)
@@ -60,6 +60,9 @@ type sidebarSlot struct {
 	// thumbs are the thumbnails in the slot.
 	thumbs []*sidebarThumb
 
+	// removed is true if the slot has been removed and fading out.
+	removed bool
+
 	// Fader fades out the slot.
 	*view.Fader
 }
@@ -71,6 +74,9 @@ type sidebarThumb struct {
 
 	// Thumb is a stock thumbnail. Could have bounds outside the slot if dragged.
 	*chart.Thumb
+
+	// removed is true if the thumbnail has been removed and fading out.
+	removed bool
 
 	// Fader fades out the thumbnail.
 	*view.Fader
@@ -122,9 +128,7 @@ func (s *sidebar) AddSidebarSlot(symbols []string) (added bool) {
 	for _, symbol := range symbols {
 		t := chart.NewThumb(s.priceStyle)
 		t.SetRemoveButtonClickCallback(func() {
-			if s.thumbRemoveButtonClickCallback != nil {
-				s.thumbRemoveButtonClickCallback(symbol)
-			}
+			s.removeChartThumb(t)
 		})
 		t.SetThumbClickCallback(func() {
 			if s.thumbClickCallback != nil {
@@ -138,21 +142,52 @@ func (s *sidebar) AddSidebarSlot(symbols []string) (added bool) {
 	return true
 }
 
-func (s *sidebar) RemoveChartThumb(symbol string) (changed bool) {
-	if err := model.ValidateSymbol(symbol); err != nil {
-		logger.Errorf("invalid symbol: %v", err)
-		return false
+func (s *sidebar) removeChartThumb(targetThumb *chart.Thumb) {
+	if targetThumb == nil {
+		logger.Error("targetThumb should not be nil")
+		return
 	}
 
+	slotIndex := 0
 	for _, slot := range s.slots {
+		if slot.removed {
+			continue
+		}
+
+		symbolIndex := 0
 		for _, thumb := range slot.thumbs {
-			if symbol == thumb.symbol {
-				changed = true
-				slot.FadeOut()
+			if thumb.removed {
+				continue
+			}
+
+			if targetThumb != thumb.Thumb {
+				continue
+			}
+
+			thumb.removed = true
+			thumb.FadeOut()
+			if s.thumbRemoveCallback != nil {
+				s.thumbRemoveCallback(slotIndex, symbolIndex)
+			}
+
+			symbolIndex++
+		}
+
+		allRemoved := true
+		for _, thumb := range slot.thumbs {
+			if !thumb.removed {
+				allRemoved = false
+				break
 			}
 		}
+
+		if allRemoved {
+			slot.removed = true
+			slot.FadeOut()
+		}
+
+		slotIndex++
 	}
-	return changed
 }
 
 func (s *sidebar) SetLoading(symbol string) (changed bool) {
@@ -463,7 +498,7 @@ func (s *sidebar) Update() (dirty bool) {
 		if slot.Update() {
 			dirty = true
 		}
-		if slot.DoneFadingOut() {
+		if slot.removed && slot.DoneFadingOut() {
 			s.slots = append(s.slots[:i], s.slots[i+1:]...)
 			slot.Close()
 			i--
@@ -491,8 +526,8 @@ func (s *sidebar) SetSlotSwapCallback(cb func(i, j int)) {
 	s.slotSwapCallback = cb
 }
 
-func (s *sidebar) SetThumbRemoveButtonClickCallback(cb func(symbol string)) {
-	s.thumbRemoveButtonClickCallback = cb
+func (s *sidebar) SetThumbRemoveCallback(cb func(slotIndex, symbolIndex int)) {
+	s.thumbRemoveCallback = cb
 }
 
 func (s *sidebar) SetThumbClickCallback(cb func(symbol string)) {
@@ -501,7 +536,7 @@ func (s *sidebar) SetThumbClickCallback(cb func(symbol string)) {
 
 func (s *sidebar) Close() {
 	s.slotSwapCallback = nil
-	s.thumbRemoveButtonClickCallback = nil
+	s.thumbRemoveCallback = nil
 	s.thumbClickCallback = nil
 }
 
@@ -524,9 +559,15 @@ func (s *sidebarSlot) ProcessInput(input *view.Input) {
 }
 
 func (s *sidebarSlot) Update() (dirty bool) {
-	for _, thumb := range s.thumbs {
+	for i := 0; i < len(s.thumbs); i++ {
+		thumb := s.thumbs[i]
 		if thumb.Update() {
 			dirty = true
+		}
+		if thumb.removed && thumb.DoneFadingOut() {
+			s.thumbs = append(s.thumbs[:i], s.thumbs[i+1:]...)
+			thumb.Close()
+			i--
 		}
 	}
 	if s.Fader.Update() {

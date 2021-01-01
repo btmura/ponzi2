@@ -144,12 +144,8 @@ func TestRemoveSidebarSymbol(t *testing.T) {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
-	removed, err := m.RemoveSidebarSymbol("AAPL")
-	if !removed {
+	if !m.RemoveSidebarSymbol(1, 0) {
 		t.Errorf("RemoveSidebarSymbol should return true if the input symbol is in the sidebar.")
-	}
-	if err != nil {
-		t.Errorf("RemoveSidebarSypmbol should not return an error if the given symbol is valid.")
 	}
 
 	if diff := cmp.Diff(
@@ -164,12 +160,8 @@ func TestRemoveSidebarSymbol(t *testing.T) {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
-	removed, err = m.RemoveSidebarSymbol("FB")
-	if removed {
+	if m.RemoveSidebarSymbol(2, 0) {
 		t.Errorf("RemoveSidebarSymbol should return false if the input symbol is not in the sidebar.")
-	}
-	if err != nil {
-		t.Errorf("RemoveSidebarSymbol should not return an error if the given symbol is valid.")
 	}
 
 	if diff := cmp.Diff(
@@ -429,7 +421,7 @@ func TestStockBookkeeping(t *testing.T) {
 		t.Errorf("AddSidebarSlot should insert the new Stock.")
 	}
 
-	m.RemoveSidebarSymbol("FB")
+	m.RemoveSidebarSymbol(0, 0)
 	if st, _ := m.Stock("FB"); st != nil {
 		t.Error("RemoveSidebarSymbol should remove the unused Stock.")
 	}
@@ -460,7 +452,7 @@ func TestContainsSymbol(t *testing.T) {
 		t.Errorf("containsSymbol should return true, since the sidebar now has SPY.")
 	}
 
-	m.RemoveSidebarSymbol("SPY")
+	m.RemoveSidebarSymbol(0, 0)
 
 	if m.containsSymbol("SPY") {
 		t.Errorf("containsSymbol should return false, since the sidebar no longer has SPY.")

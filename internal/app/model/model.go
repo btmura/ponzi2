@@ -301,30 +301,35 @@ func (m *Model) AddSidebarSlot(symbols []string) error {
 	return nil
 }
 
-// RemoveSidebarSymbol removes a symbol from the sidebar and returns true if removed.
-func (m *Model) RemoveSidebarSymbol(symbol string) (removed bool, err error) {
-	if err := ValidateSymbol(symbol); err != nil {
-		return false, err
+// RemoveSidebarSymbol removes a symbol from a sidebar slot and returns true if removed.
+func (m *Model) RemoveSidebarSymbol(slotIndex, symbolIndex int) (removed bool) {
+	if slotIndex < 0 || slotIndex >= len(m.sidebar.Slots) {
+		logger.Errorf("slot index (%d) is out of bounds (%d)", slotIndex, len(m.sidebar.Slots))
+		return false
 	}
 
-	for i := 0; i < len(m.sidebar.Slots); i++ {
-		slot := m.sidebar.Slots[i]
-		for j := 0; j < len(slot.Symbols); j++ {
-			s := slot.Symbols[j]
-			if s == symbol {
-				slot.Symbols = append(slot.Symbols[:j], slot.Symbols[j+1:]...)
-				if !m.containsSymbol(symbol) {
-					delete(m.symbol2Stock, symbol)
-				}
-				removed = true
-			}
-		}
-		if len(slot.Symbols) == 0 {
-			m.sidebar.Slots = append(m.sidebar.Slots[:i], m.sidebar.Slots[i+1:]...)
-		}
+	symbols := m.sidebar.Slots[slotIndex].Symbols
+
+	if symbolIndex < 0 || symbolIndex >= len(symbols) {
+		logger.Errorf("symbol index (%d) is out of bounds (%d)", symbolIndex, len(symbols))
+		return false
 	}
 
-	return removed, nil
+	removedSymbol := symbols[symbolIndex]
+
+	// Remove the symbol from the slot.
+	m.sidebar.Slots[slotIndex].Symbols = append(symbols[:symbolIndex], symbols[symbolIndex+1:]...)
+
+	// Also remove the slot if there are no more symbols in it.
+	if len(m.sidebar.Slots[slotIndex].Symbols) == 0 {
+		m.sidebar.Slots = append(m.sidebar.Slots[:slotIndex], m.sidebar.Slots[slotIndex+1:]...)
+	}
+
+	if !m.containsSymbol(removedSymbol) {
+		delete(m.symbol2Stock, removedSymbol)
+	}
+
+	return true
 }
 
 // SwapSidebarSlots swaps two sidebar slots.

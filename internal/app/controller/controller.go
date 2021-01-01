@@ -157,10 +157,8 @@ func (c *Controller) RunLoop() error {
 		}
 	})
 
-	c.ui.SetThumbRemoveButtonClickCallback(func(symbol string) {
-		if err := c.removeChartThumb(symbol); err != nil {
-			logger.Errorf("removeChartThumb: %v", err)
-		}
+	c.ui.SetThumbRemoveCallback(func(slotIndex, symbolIndex int) {
+		c.removeChartThumb(slotIndex, symbolIndex)
 	})
 
 	c.ui.SetThumbClickCallback(func(symbol string) {
@@ -258,37 +256,18 @@ func (c *Controller) addSidebarSlot(ctx context.Context, symbols []string) error
 	return nil
 }
 
-func (c *Controller) removeChartThumb(symbol string) error {
-	if symbol == "" {
-		return nil
+// removeChartThumb is a callback called when the UI removes a thumbnail from a slot.
+func (c *Controller) removeChartThumb(slotIndex, symbolIndex int) {
+	if c.model.RemoveSidebarSymbol(slotIndex, symbolIndex) {
+		c.configSaver.save(c.makeConfig())
 	}
-
-	removed, err := c.model.RemoveSidebarSymbol(symbol)
-	if err != nil {
-		return err
-	}
-
-	if !removed {
-		return nil
-	}
-
-	if !c.ui.RemoveChartThumb(symbol) {
-		return nil
-	}
-
-	c.configSaver.save(c.makeConfig())
-
-	return nil
 }
 
+// swapSidebarSlots is a callback that is called when the UI swaps sidebar slots.
 func (c *Controller) swapSidebarSlots(i, j int) {
-	if !c.model.SwapSidebarSlots(i, j) {
-		return
+	if c.model.SwapSidebarSlots(i, j) {
+		c.configSaver.save(c.makeConfig())
 	}
-
-	// No need to update the UI, since this function is triggered by a UI change.
-
-	c.configSaver.save(c.makeConfig())
 }
 
 func (c *Controller) setChartPriceStyle(newPriceStyle chart.PriceStyle) {

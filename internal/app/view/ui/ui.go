@@ -110,8 +110,8 @@ type UI struct {
 	// chartAddButtonClickCallback is called when the main chart's add button is clicked.
 	chartAddButtonClickCallback func(symbol string)
 
-	// thumbRemoveButtonClickCallback is called when a thumb's remove button is clicked.
-	thumbRemoveButtonClickCallback func(symbol string)
+	// thumbRemoveCallback is called when a thumb is removed.
+	thumbRemoveCallback func(slotIndex, symbolIndex int)
 
 	// thumbClickCallback is called when a thumb is clicked.
 	thumbClickCallback func(symbol string)
@@ -267,9 +267,9 @@ func (u *UI) Init(_ context.Context) (cleanup func(), err error) {
 		}
 	})
 
-	u.sidebar.SetThumbRemoveButtonClickCallback(func(symbol string) {
-		if u.thumbRemoveButtonClickCallback != nil {
-			u.thumbRemoveButtonClickCallback(symbol)
+	u.sidebar.SetThumbRemoveCallback(func(slotIndex, symbolIndex int) {
+		if u.thumbRemoveCallback != nil {
+			u.thumbRemoveCallback(slotIndex, symbolIndex)
 		}
 	})
 
@@ -706,9 +706,9 @@ func (u *UI) SetChartAddButtonClickCallback(cb func(symbol string)) {
 	u.chartAddButtonClickCallback = cb
 }
 
-// SetThumbRemoveButtonClickCallback sets the callback for when a thumb's remove button is clicked.
-func (u *UI) SetThumbRemoveButtonClickCallback(cb func(symbol string)) {
-	u.thumbRemoveButtonClickCallback = cb
+// SetThumbRemoveCallback sets the callback for when a thumb is removed.
+func (u *UI) SetThumbRemoveCallback(cb func(slotIndex, symbolIndex int)) {
+	u.thumbRemoveCallback = cb
 }
 
 // SetThumbClickCallback sets the callback for when a thumb is clicked.
@@ -800,21 +800,6 @@ func (u *UI) AddSidebarSlot(symbols []string) (added bool) {
 	}
 
 	if u.sidebar.AddSidebarSlot(symbols) {
-		defer u.WakeLoop()
-		return true
-	}
-
-	return false
-}
-
-// RemoveChartThumb removes the thumbnail with given symbol.
-func (u *UI) RemoveChartThumb(symbol string) (changed bool) {
-	if err := model.ValidateSymbol(symbol); err != nil {
-		logger.Errorf("invalid symbol: %v", err)
-		return false
-	}
-
-	if u.sidebar.RemoveChartThumb(symbol) {
 		defer u.WakeLoop()
 		return true
 	}
