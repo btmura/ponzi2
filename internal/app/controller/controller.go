@@ -229,8 +229,8 @@ func (c *Controller) addSidebarSlot(ctx context.Context, symbols []string) error
 	}
 
 	// Add the slot to the model and the UI.
-	if err := c.model.AddSidebarSlot(symbols); err != nil {
-		return err
+	if !c.model.AddSidebarSlot(symbols) {
+		return nil
 	}
 
 	if !c.ui.AddSidebarSlot(symbols) {

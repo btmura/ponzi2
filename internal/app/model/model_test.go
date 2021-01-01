@@ -58,8 +58,8 @@ func TestAddSidebarSymbol(t *testing.T) {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
-	if err := m.AddSidebarSlot([]string{"SPY"}); err != nil {
-		t.Errorf("AddSidebarSlot should not return an error if given a valid symbol.")
+	if !m.AddSidebarSlot([]string{"SPY"}) {
+		t.Errorf("AddSidebarSlot should not return false if given a valid symbol.")
 	}
 
 	if diff := cmp.Diff(
@@ -73,8 +73,8 @@ func TestAddSidebarSymbol(t *testing.T) {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
-	if err := m.AddSidebarSlot([]string{"AAPL"}); err != nil {
-		t.Errorf("AddSidebarSlot should not return an error if given a valid symbol.")
+	if !m.AddSidebarSlot([]string{"AAPL"}) {
+		t.Errorf("AddSidebarSlot should not return false if given a valid symbol.")
 	}
 
 	if diff := cmp.Diff(
@@ -89,8 +89,8 @@ func TestAddSidebarSymbol(t *testing.T) {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
-	if err := m.AddSidebarSlot([]string{"AAPL"}); err != nil {
-		t.Errorf("AddSidebarSlot should not return an error if given a valid symbol.")
+	if !m.AddSidebarSlot([]string{"AAPL"}) {
+		t.Errorf("AddSidebarSlot should not return false if given a valid symbol.")
 	}
 
 	if diff := cmp.Diff(
@@ -106,8 +106,8 @@ func TestAddSidebarSymbol(t *testing.T) {
 		t.Errorf("diff (-want, +got)\n%s", diff)
 	}
 
-	if err := m.AddSidebarSlot([]string{"AAPL AAPL"}); err == nil {
-		t.Errorf("AddSidebarSlot should return an error if the given symbol is invalid.")
+	if m.AddSidebarSlot([]string{"AAPL AAPL"}) {
+		t.Errorf("AddSidebarSlot should return false if the given symbol is invalid.")
 	}
 
 	if diff := cmp.Diff(

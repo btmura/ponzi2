@@ -276,14 +276,15 @@ func (m *Model) Sidebar() *Sidebar {
 }
 
 // AddSidebarSlot adds a slot with the given symbols to the sidebar.
-func (m *Model) AddSidebarSlot(symbols []string) error {
+func (m *Model) AddSidebarSlot(symbols []string) (added bool) {
 	if len(symbols) == 0 {
-		return nil
+		return false
 	}
 
 	for _, s := range symbols {
 		if err := ValidateSymbol(s); err != nil {
-			return err
+			logger.Errorf("invalid symbol: %s", s)
+			return false
 		}
 	}
 
@@ -298,7 +299,7 @@ func (m *Model) AddSidebarSlot(symbols []string) error {
 		}
 	}
 
-	return nil
+	return true
 }
 
 // RemoveSidebarSymbol removes a symbol from a sidebar slot and returns true if removed.
