@@ -176,38 +176,11 @@ func (h *header) SetData(data Data) {
 	}
 }
 
-// headerClicks reports what buttons were clicked.
-type headerClicks struct {
-	// BarButtonClicked is true if the bar button was clicked.
-	BarButtonClicked bool
-
-	// CandlestickButtonClicked is true if the candlestick button wan clicked.
-	CandlestickButtonClicked bool
-
-	// AddButtonClicked is true if the add button was clicked.
-	AddButtonClicked bool
-
-	// RefreshButtonClicked is true if the refresh button was clicked.
-	RefreshButtonClicked bool
-
-	// RemoveButtonClicked is true if the remove button was clicked.
-	RemoveButtonClicked bool
-}
-
-// HasClicks returns true if a clickable part of the header was clicked.
-func (c headerClicks) HasClicks() bool {
-	return c.BarButtonClicked ||
-		c.CandlestickButtonClicked ||
-		c.AddButtonClicked ||
-		c.RefreshButtonClicked ||
-		c.RemoveButtonClicked
-}
-
 func (h *header) SetBounds(bounds image.Rectangle) {
 	h.bounds = bounds
 }
 
-func (h *header) ProcessInput(input *view.Input) (body image.Rectangle, clicks headerClicks) {
+func (h *header) ProcessInput(input *view.Input) (body image.Rectangle) {
 	height := h.padding + h.symbolQuoteTextRenderer.LineHeight() + h.padding
 	buttonSize := image.Pt(height, height)
 
@@ -217,41 +190,36 @@ func (h *header) ProcessInput(input *view.Input) (body image.Rectangle, clicks h
 
 	if h.removeButton.enabled {
 		h.removeButton.SetBounds(bounds)
-		clicks.RemoveButtonClicked = h.removeButton.ProcessInput(input)
+		h.removeButton.ProcessInput(input)
 		bounds = rect.Translate(bounds, -buttonSize.X, 0)
 	}
 
 	if h.addButton.enabled {
 		h.addButton.SetBounds(bounds)
-		clicks.AddButtonClicked = h.addButton.ProcessInput(input)
+		h.addButton.ProcessInput(input)
 		bounds = rect.Translate(bounds, -buttonSize.X, 0)
 	}
 
 	if h.refreshButton.enabled || h.refreshButton.Spinning() {
 		h.refreshButton.SetBounds(bounds)
-		clicks.RefreshButtonClicked = h.refreshButton.ProcessInput(input)
+		h.refreshButton.ProcessInput(input)
 		bounds = rect.Translate(bounds, -buttonSize.X, 0)
 	}
 
 	if h.candlestickButton.enabled {
 		h.candlestickButton.SetBounds(bounds)
-		clicks.CandlestickButtonClicked = h.candlestickButton.ProcessInput(input)
+		h.candlestickButton.ProcessInput(input)
 		bounds = rect.Translate(bounds, -buttonSize.X, 0)
 	}
 
 	if h.barButton.enabled {
 		h.barButton.SetBounds(bounds)
-		clicks.BarButtonClicked = h.barButton.ProcessInput(input)
-	}
-
-	// Don't report clicks when the refresh button is just an indicator.
-	if !h.refreshButton.enabled {
-		clicks.RefreshButtonClicked = false
+		h.barButton.ProcessInput(input)
 	}
 
 	r.Max.Y -= h.padding + h.symbolQuoteTextRenderer.LineHeight() + h.padding
 
-	return r, clicks
+	return r
 }
 
 func (h *header) Update() (dirty bool) {

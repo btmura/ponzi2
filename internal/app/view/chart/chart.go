@@ -284,8 +284,7 @@ func (ch *Chart) ProcessInput(input *view.Input) {
 	ch.frameBubble.SetBounds(ch.bounds)
 
 	ch.header.SetBounds(ch.bounds)
-	r, _ := ch.header.ProcessInput(input)
-
+	r := ch.header.ProcessInput(input)
 	ch.bodyBounds = r
 	ch.loadingTextBox.SetBounds(r)
 	ch.errorTextBox.SetBounds(r)

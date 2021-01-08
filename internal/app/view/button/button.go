@@ -41,12 +41,11 @@ func (b *Button) SetBounds(bounds image.Rectangle) {
 	b.bounds = bounds
 }
 
-func (b *Button) ProcessInput(input *view.Input) (clicked bool) {
+func (b *Button) ProcessInput(input *view.Input) {
 	if input.MouseLeftButtonClicked.In(b.bounds) {
 		input.AddFiredCallback(b.clickCallback)
-		return true
+		input.ClearMouseInput()
 	}
-	return false
 }
 
 func (b *Button) Update() (dirty bool) {

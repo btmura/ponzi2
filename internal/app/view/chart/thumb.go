@@ -223,14 +223,14 @@ func (t *Thumb) ProcessInput(input *view.Input) {
 	t.frameBubble.SetBounds(t.bounds)
 
 	t.header.SetBounds(t.bounds)
-	r, clicks := t.header.ProcessInput(input)
-
+	r := t.header.ProcessInput(input)
 	t.bodyBounds = r
 	t.loadingTextBox.SetBounds(r)
 	t.errorTextBox.SetBounds(r)
 
-	if !clicks.HasClicks() && input.MouseLeftButtonClicked.In(t.bounds) {
+	if input.MouseLeftButtonClicked.In(t.bounds) {
 		input.AddFiredCallback(t.thumbClickCallback)
+		input.ClearMouseInput()
 	}
 
 	// Divide up the rectangle into sections.
